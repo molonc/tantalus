@@ -1,32 +1,73 @@
 options(stringsAsFactors = FALSE)
 library(stringr)
+library(plyr)
 
 dirs <- list.files("/share/lustre/archive", full.names = TRUE)
 
 missed <- 0
 hit <- 0
 
-for (dir in dirs) {
+output <- data.frame()
+
+ignore <- c()
+
+# for (i in 1:length(dirs)) {
+for (i in 1:length(dirs)) {
+	dir <- dirs[i]
 	base <- basename(dir)
 
-	if (str_detect(base, "SA\\d+")) {
-		files <- list.files(dir, recursive = TRUE)
+	if (str_detect(base, "SA\\d+") |
+		str_detect(base, "DAH\\d+") |
+		str_detect(base, "TK\\d+") |
+		str_detect(base, "DG\\d+") |
+		str_detect(base, "DLC\\d+") |
+		str_detect(base, "FL\\d+") |
+		str_detect(base, "^\\d+") |
+		str_detect(base, "TN\\d+") |
+		str_detect(base, "Dedhar\\S+") |
+		str_detect(base, "STG\\d+") |
+		str_detect(base, "A\\d+") |
+		str_detect(base, "POG\\d+") |
+		str_detect(base, "SEO\\S+") |
+		str_detect(base, "RG\\d+")) {
+		files <- list.files(dir, recursive = TRUE, pattern = ".bam$")
+
+		if (length(files) == 0) {
+			next
+		}
+
 		for (file in files) {
 
-			dirpath <- dirname(file)
-			filepath <- basename(file)
-
-			dirbits <- unlist(strsplit(dirpath, "/"))
-			for (dirbit in dirbits) {
-				
+			tokens <- unlist(strsplit(file, "/"))
+			if (length(tokens) == 4) {
+				df <- as.data.frame(str_split_fixed(file, "/", 4))
+				names(df) <- c("library_type", "library_id", "file_type", "file")
+				df$path <- paste0(dir, "/", file)
+				df$notes <- ""
+				output <- rbind.fill(output, df)
+				# print(df)
+				hit <- hit + 1
+			} else if (length(tokens) == 5) {
+				df <- as.data.frame(str_split_fixed(file, "/", 5))
+				names(df) <- c("library_type", "library_id", "file_type", "notes", "file")
+				df$path <- paste0(dir, "/", file)
+				output <- rbind.fill(output, df)
+				# print(df)
+				hit <- hit + 1				
+			} else {
+				print(dir)
 			}
 
-			stop()
 		}
 	} else {
+		ignore <- c(ignore, dir)
 		missed <- missed + 1
 	}
 }
 
 print(hit)
 print(missed)
+
+print(table(output$library_type))
+# print(table(output$library_id))
+print(table(output$file_type))
