@@ -18,9 +18,9 @@ class SequenceLaneViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.SequenceLaneSerializer
 
 
-class FastqFileViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.FastqFile.objects.all()
-    serializer_class = tantalus.api.serializers.FastqFileSerializer
+class PairedFastqFilesViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.PairedFastqFiles.objects.all()
+    serializer_class = tantalus.api.serializers.PairedFastqFilesSerializer
 
 
 class BamFileViewSet(viewsets.ModelViewSet):
@@ -43,9 +43,9 @@ class ServerBamFileInstanceViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.ServerBamFileInstanceSerializer
 
 
-class ServerFastqFileInstanceViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.ServerFastqFileInstance.objects.all()
-    serializer_class = tantalus.api.serializers.ServerFastqFileInstanceSerializer
+class ServerPairedFastqFilesInstanceViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.ServerPairedFastqFilesInstance.objects.all()
+    serializer_class = tantalus.api.serializers.ServerPairedFastqFilesInstanceSerializer
 
 
 

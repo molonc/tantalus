@@ -20,9 +20,9 @@ class SequenceLaneSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-class FastqFileSerializer(serializers.HyperlinkedModelSerializer):
+class PairedFastqFilesSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = tantalus.models.FastqFile
+        model = tantalus.models.PairedFastqFiles
         fields = '__all__'
 
 
@@ -50,9 +50,9 @@ class ServerBamFileInstanceSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-class ServerFastqFileInstanceSerializer(serializers.HyperlinkedModelSerializer):
+class ServerPairedFastqFilesInstanceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = tantalus.models.ServerFastqFileInstance
+        model = tantalus.models.ServerPairedFastqFilesInstance
         fields = '__all__'
 
 

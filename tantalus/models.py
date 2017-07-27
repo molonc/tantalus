@@ -171,7 +171,7 @@ class SequenceLane(models.Model):
         return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
 
 
-class FastqFile(SequenceFileResource):
+class PairedFastqFiles(models.Model):
     """
     Fastq file of Illumina Sequencing.
     """
@@ -187,6 +187,18 @@ class FastqFile(SequenceFileResource):
     read_set = models.ForeignKey(
         DNALibraryReadSet,
         on_delete=models.CASCADE,
+    )
+
+    reads_1_file = models.ForeignKey(
+        SequenceFileResource,
+        on_delete=models.CASCADE,
+        related_name='asdf2',
+    )
+
+    reads_2_file = models.ForeignKey(
+        SequenceFileResource,
+        on_delete=models.CASCADE,
+        related_name='asdf1',
     )
 
     def __unicode__(self):
@@ -230,6 +242,18 @@ class BamFile(SequenceFileResource):
     read_set = models.ForeignKey(
         DNALibraryReadSet,
         on_delete=models.CASCADE,
+    )
+
+    bam_file = models.ForeignKey(
+        SequenceFileResource,
+        on_delete=models.CASCADE,
+        related_name='abam_file',
+    )
+
+    bam_index_file = models.ForeignKey(
+        SequenceFileResource,
+        on_delete=models.CASCADE,
+        related_name='abam_index_file',
     )
 
     def __unicode__(self):
@@ -333,7 +357,7 @@ class ServerBamFileInstance(ServerFileInstance):
     )
 
 
-class ServerFastqFileInstance(ServerFileInstance):
+class ServerPairedFastqFilesInstance(ServerFileInstance):
     """
     Instance of a sequence file.
     """
@@ -341,7 +365,7 @@ class ServerFastqFileInstance(ServerFileInstance):
     history = HistoricalRecords()
 
     fastq_file = models.ForeignKey(
-        FastqFile,
+        PairedFastqFiles,
         on_delete=models.CASCADE,
     )
 
