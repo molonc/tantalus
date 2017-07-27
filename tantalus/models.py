@@ -83,6 +83,9 @@ class IndexedReads(models.Model):
         null=False,
     )
 
+    def __unicode__(self):
+        return '{}-{}'.format(self.index_1, self.index_2)
+
 
 class SequenceLane(models.Model):
     """

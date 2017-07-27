@@ -1,12 +1,20 @@
 from rest_framework import viewsets
-from rest_framework import generics
-from tantalus.models import SequenceFileResource
-from tantalus.api.serializers import SequenceFileResourceSerializer
+import tantalus.models
+import tantalus.api.serializers
 
 
-# generics.ListCreateAPIView
-# generics.RetrieveUpdateDestroyAPIView
+class SequenceFileResourceViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.SequenceFileResource.objects.all()
+    serializer_class = tantalus.api.serializers.SequenceFileResourceSerializer
 
-class SequenceFileResourceList(generics.ListCreateAPIView):
-    queryset = SequenceFileResource.objects.all()
-    serializer_class = SequenceFileResourceSerializer
+
+class IndexedReadsViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.IndexedReads.objects.all()
+    serializer_class = tantalus.api.serializers.IndexedReadsSerializer
+
+
+class SequenceLaneViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.SequenceLane.objects.all()
+    serializer_class = tantalus.api.serializers.SequenceLaneSerializer
+
+
