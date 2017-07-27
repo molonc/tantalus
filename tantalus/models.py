@@ -255,7 +255,7 @@ class ServerFileInstance(models.Model):
     )
 
     filename = models.CharField(
-        'Storage Account',
+        'Bam Filename',
         max_length=500,
         blank=False,
         null=False,
