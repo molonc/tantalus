@@ -90,33 +90,12 @@ class IndexedReads(models.Model):
         return '{}-{}'.format(self.index_1, self.index_2)
 
 
-class SequenceLane(models.Model):
+class DNALibrary(models.Model):
     """
-    Lane of Illumina Sequencing.
+    DNA Library, possibly multiplexed.
     """
 
     history = HistoricalRecords()
-
-    flowcell_id = create_id_field('FlowCell ID')
-
-    lane_number = models.PositiveSmallIntegerField(
-        'Lane Number',
-        blank=False,
-        null=False,
-    )
-
-    sequencing_centre = models.CharField(
-        'Sequencing Centre',
-        max_length=50,
-        blank=False,
-        null=False,
-    )
-
-    indices = models.ManyToManyField(
-        IndexedReads,
-        verbose_name="Indices",
-        blank=False,
-    )
 
     library_id = create_id_field('Library ID')
 
@@ -136,6 +115,58 @@ class SequenceLane(models.Model):
         choices=library_type_choices,
     )
 
+    indices = models.ManyToManyField(
+        IndexedReads,
+        verbose_name="Indices",
+    )
+
+    def __unicode__(self):
+        return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
+
+
+class DNALibraryReadSet(models.Model):
+    """
+    Subset of a DNA Library, possibly multiplexed.
+    """
+
+    history = HistoricalRecords()
+
+    dna_library = models.ForeignKey(
+        DNALibrary,
+        on_delete=models.CASCADE,
+    )
+
+    indices = models.ManyToManyField(
+        IndexedReads,
+        verbose_name="Indices",
+    )
+
+    def __unicode__(self):
+        return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
+
+
+class SequenceLane(models.Model):
+    """
+    Lane of Illumina Sequencing.
+    """
+
+    history = HistoricalRecords()
+
+    sequencing_centre = create_id_field('Sequencing Centre')
+
+    flowcell_id = create_id_field('FlowCell ID')
+
+    lane_number = models.PositiveSmallIntegerField(
+        'Lane Number',
+        blank=False,
+        null=False,
+    )
+
+    dna_library = models.ForeignKey(
+        DNALibrary,
+        on_delete=models.CASCADE,
+    )
+
     def __unicode__(self):
         return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
 
@@ -151,6 +182,11 @@ class FastqFile(SequenceFileResource):
         SequenceLane,
         verbose_name="Lanes",
         blank=False,
+    )
+    
+    read_set = models.ForeignKey(
+        DNALibraryReadSet,
+        on_delete=models.CASCADE,
     )
 
     def __unicode__(self):
@@ -191,13 +227,18 @@ class BamFile(SequenceFileResource):
         blank=False,
     )
 
+    read_set = models.ForeignKey(
+        DNALibraryReadSet,
+        on_delete=models.CASCADE,
+    )
+
     def __unicode__(self):
         return 'bam:{}'.format(SequenceFileResource.__unicode__(self))
 
 
-class Storage(models.Model):
+class ServerStorage(models.Model):
     """
-    Base class for resource stores.
+    Server / Path location in which files are stored.
     """
 
     history = HistoricalRecords()
@@ -208,14 +249,6 @@ class Storage(models.Model):
         blank=False,
         null=False,
     )
-
-
-class ServerStorage(Storage):
-    """
-    Server / Path location in which files are stored.
-    """
-
-    history = HistoricalRecords()
 
     server_name = models.CharField(
         'Server Name',
@@ -235,12 +268,19 @@ class ServerStorage(Storage):
         return '{}:{}'.format(self.server_name, self.directory)
 
 
-class AzureBlobStorage(Storage):
+class AzureBlobStorage(models.Model):
     """
     Azure blob storage for sequence files.
     """
 
     history = HistoricalRecords()
+
+    name = models.CharField(
+        'Store Name',
+        max_length=50,
+        blank=False,
+        null=False,
+    )
 
     account = models.CharField(
         'Storage Account',
