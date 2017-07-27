@@ -4,15 +4,13 @@ from tantalus.api import views
 
 
 router = routers.DefaultRouter()
-router.register(r'sequence_file_resource', views.SequenceFileResourceViewSet)
+router.register(r'sequence_file_resource', views.SequenceDataFileViewSet)
 router.register(r'indexed_reads', views.IndexedReadsViewSet)
 router.register(r'sequence_lane', views.SequenceLaneViewSet)
 router.register(r'fastq_file', views.PairedFastqFilesViewSet)
 router.register(r'bam_file', views.BamFileViewSet)
-router.register(r'server_storage', views.ServerStorageViewSet)
-router.register(r'azure_blob_storage', views.AzureBlobStorageViewSet)
-router.register(r'server_bam_file_instance', views.ServerBamFileInstanceViewSet)
-router.register(r'server_fastq_file_instance', views.ServerPairedFastqFilesInstanceViewSet)
+router.register(r'azure_blob_storage', views.AzureBlobFileInstanceViewSet)
+router.register(r'server_file_instance', views.ServerFileInstanceViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),

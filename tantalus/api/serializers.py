@@ -2,9 +2,9 @@ from rest_framework import serializers
 import tantalus.models
 
 
-class SequenceFileResourceSerializer(serializers.HyperlinkedModelSerializer):
+class SequenceDataFileSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = tantalus.models.SequenceFileResource
+        model = tantalus.models.SequenceDataFile
         fields = '__all__'
 
 
@@ -32,27 +32,15 @@ class BamFileSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-class ServerStorageSerializer(serializers.HyperlinkedModelSerializer):
+class ServerFileInstanceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = tantalus.models.ServerStorage
+        model = tantalus.models.ServerFileInstance
         fields = '__all__'
 
 
-class AzureBlobStorageSerializer(serializers.HyperlinkedModelSerializer):
+class AzureBlobFileInstanceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = tantalus.models.AzureBlobStorage
-        fields = '__all__'
-
-
-class ServerBamFileInstanceSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = tantalus.models.ServerBamFileInstance
-        fields = '__all__'
-
-
-class ServerPairedFastqFilesInstanceSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = tantalus.models.ServerPairedFastqFilesInstance
+        model = tantalus.models.AzureBlobFileInstance
         fields = '__all__'
 
 

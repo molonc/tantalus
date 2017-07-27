@@ -29,19 +29,12 @@ def create_id_field(name):
     )
 
 
-class SequenceFileResource(models.Model):
+class Sample(models.Model):
     """
-    Base class of file sequence file resources.
+    Physical tumour or other tissue sample.
     """
 
     history = HistoricalRecords()
-
-    md5 = models.CharField(
-        'MD5',
-        max_length=50,
-        blank=False,
-        null=False,
-    )
 
     sample_id_space_choices = (
         ('SA','Aparicio'),
@@ -59,10 +52,36 @@ class SequenceFileResource(models.Model):
 
     sample_id = create_id_field('Sample ID')
 
-    sequencing_id = create_id_field('Sequencing ID')
+    def __unicode__(self):
+        return '{}_{}'.format(self.sample_id_space, self.sample_id)
+
+
+class SequenceDataFile(models.Model):
+    """
+    Sequence data file.
+    """
+
+    history = HistoricalRecords()
+
+    md5 = models.CharField(
+        'MD5',
+        max_length=50,
+        blank=False,
+        null=False,
+    )
+
+    size = models.BigIntegerField(
+        'Size',
+        null=False,
+    )
+
+    created = models.DateField(
+        'Created',
+        null=False,
+    )
 
     def __unicode__(self):
-        return '{}_{}'.format(self.sample_id, self.sequencing_id)
+        return '{}'.format(self.md5)
 
 
 class IndexedReads(models.Model):
@@ -72,22 +91,20 @@ class IndexedReads(models.Model):
 
     history = HistoricalRecords()
 
-    index_1 = models.CharField(
-        'Index 1',
+    index_sequence = models.CharField(
+        'Index Sequence',
         max_length=50,
         blank=False,
         null=False,
     )
 
-    index_2 = models.CharField(
-        'Index 2',
-        max_length=50,
-        blank=False,
-        null=False,
+    sample = models.ForeignKey(
+        Sample,
+        on_delete=models.CASCADE,
     )
 
     def __unicode__(self):
-        return '{}-{}'.format(self.index_1, self.index_2)
+        return '{}'.format(self.index_sequence)
 
 
 class DNALibrary(models.Model):
@@ -115,16 +132,21 @@ class DNALibrary(models.Model):
         choices=library_type_choices,
     )
 
+    sample = models.ManyToManyField(
+        Sample,
+        verbose_name='Sample',
+    )
+
     indices = models.ManyToManyField(
         IndexedReads,
-        verbose_name="Indices",
+        verbose_name='Indices',
     )
 
     def __unicode__(self):
-        return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
+        return '{}_{}'.format(self.library_type, self.library_id)
 
 
-class DNALibraryReadSet(models.Model):
+class DNALibrarySubset(models.Model):
     """
     Subset of a DNA Library, possibly multiplexed.
     """
@@ -138,11 +160,8 @@ class DNALibraryReadSet(models.Model):
 
     indices = models.ManyToManyField(
         IndexedReads,
-        verbose_name="Indices",
+        verbose_name='Indices',
     )
-
-    def __unicode__(self):
-        return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
 
 
 class SequenceLane(models.Model):
@@ -180,32 +199,29 @@ class PairedFastqFiles(models.Model):
 
     lanes = models.ManyToManyField(
         SequenceLane,
-        verbose_name="Lanes",
+        verbose_name='Lanes',
         blank=False,
     )
     
-    read_set = models.ForeignKey(
-        DNALibraryReadSet,
+    read_subset = models.ForeignKey(
+        DNALibrarySubset,
         on_delete=models.CASCADE,
     )
 
     reads_1_file = models.ForeignKey(
-        SequenceFileResource,
+        SequenceDataFile,
         on_delete=models.CASCADE,
-        related_name='asdf2',
+        related_name='reads_1_file',
     )
 
     reads_2_file = models.ForeignKey(
-        SequenceFileResource,
+        SequenceDataFile,
         on_delete=models.CASCADE,
-        related_name='asdf1',
+        related_name='reads_2_file',
     )
 
-    def __unicode__(self):
-        return 'fastq:{}'.format(SequenceFileResource.__unicode__(self))
 
-
-class BamFile(SequenceFileResource):
+class BamFile(models.Model):
     """
     Base class of bam files.
     """
@@ -235,43 +251,38 @@ class BamFile(SequenceFileResource):
 
     lanes = models.ManyToManyField(
         SequenceLane,
-        verbose_name="Lanes",
+        verbose_name='Lanes',
         blank=False,
     )
 
-    read_set = models.ForeignKey(
-        DNALibraryReadSet,
+    read_subset = models.ForeignKey(
+        DNALibrarySubset,
         on_delete=models.CASCADE,
     )
 
     bam_file = models.ForeignKey(
-        SequenceFileResource,
+        SequenceDataFile,
         on_delete=models.CASCADE,
-        related_name='abam_file',
+        related_name='bam_file',
     )
 
     bam_index_file = models.ForeignKey(
-        SequenceFileResource,
+        SequenceDataFile,
         on_delete=models.CASCADE,
-        related_name='abam_index_file',
+        related_name='bam_index_file',
     )
 
-    def __unicode__(self):
-        return 'bam:{}'.format(SequenceFileResource.__unicode__(self))
 
-
-class ServerStorage(models.Model):
+class ServerFileInstance(models.Model):
     """
-    Server / Path location in which files are stored.
+    Instance of a file on a server
     """
 
     history = HistoricalRecords()
 
-    name = models.CharField(
-        'Store Name',
-        max_length=50,
-        blank=False,
-        null=False,
+    file_resource = models.ForeignKey(
+        SequenceDataFile,
+        on_delete=models.CASCADE,
     )
 
     server_name = models.CharField(
@@ -281,91 +292,52 @@ class ServerStorage(models.Model):
         null=False,
     )
 
-    directory = models.CharField(
+    store_directory = models.CharField(
         'Store Directory',
         max_length=250,
         blank=False,
         null=False,
     )
 
-    def __unicode__(self):
-        return '{}:{}'.format(self.server_name, self.directory)
-
-
-class AzureBlobStorage(models.Model):
-    """
-    Azure blob storage for sequence files.
-    """
-
-    history = HistoricalRecords()
-
-    name = models.CharField(
-        'Store Name',
-        max_length=50,
-        blank=False,
-        null=False,
-    )
-
-    account = models.CharField(
-        'Storage Account',
-        max_length=50,
-        blank=False,
-        null=False,
-    )
-
-    container = models.CharField(
-        'Storage Container',
-        max_length=50,
-        blank=False,
-        null=False,
-    )
-
-    def __unicode__(self):
-        return '{}/{}'.format(self.account, self.container)
-
-
-class ServerFileInstance(models.Model):
-    """
-    Instance of a sequence file.
-    """
-
-    history = HistoricalRecords()
-
-    server_storage = models.ForeignKey(
-        ServerStorage,
-        on_delete=models.CASCADE,
-    )
-
     filename = models.CharField(
-        'Bam Filename',
+        'Filename',
         max_length=500,
         blank=False,
         null=False,
     )
 
 
-class ServerBamFileInstance(ServerFileInstance):
+class AzureBlobFileInstance(models.Model):
     """
-    Instance of a sequence file.
-    """
-
-    history = HistoricalRecords()
-
-    bam_file = models.ForeignKey(
-        BamFile,
-        on_delete=models.CASCADE,
-    )
-
-
-class ServerPairedFastqFilesInstance(ServerFileInstance):
-    """
-    Instance of a sequence file.
+    Azure blob storage for sequence files.
     """
 
     history = HistoricalRecords()
 
-    fastq_file = models.ForeignKey(
-        PairedFastqFiles,
+    file_resource = models.ForeignKey(
+        SequenceDataFile,
         on_delete=models.CASCADE,
     )
+
+    storage_account = models.CharField(
+        'Storage Account',
+        max_length=50,
+        blank=False,
+        null=False,
+    )
+
+    storage_container = models.CharField(
+        'Storage Container',
+        max_length=50,
+        blank=False,
+        null=False,
+    )
+
+    filename = models.CharField(
+        'Filename',
+        max_length=500,
+        blank=False,
+        null=False,
+    )
+
 

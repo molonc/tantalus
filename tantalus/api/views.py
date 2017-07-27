@@ -3,9 +3,9 @@ import tantalus.models
 import tantalus.api.serializers
 
 
-class SequenceFileResourceViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.SequenceFileResource.objects.all()
-    serializer_class = tantalus.api.serializers.SequenceFileResourceSerializer
+class SequenceDataFileViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.SequenceDataFile.objects.all()
+    serializer_class = tantalus.api.serializers.SequenceDataFileSerializer
 
 
 class IndexedReadsViewSet(viewsets.ModelViewSet):
@@ -28,26 +28,14 @@ class BamFileViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.BamFileSerializer
 
 
-class ServerStorageViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.ServerStorage.objects.all()
-    serializer_class = tantalus.api.serializers.ServerStorageSerializer
+class AzureBlobFileInstanceViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.AzureBlobFileInstance.objects.all()
+    serializer_class = tantalus.api.serializers.AzureBlobFileInstanceSerializer
 
 
-class AzureBlobStorageViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.AzureBlobStorage.objects.all()
-    serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
-
-
-class ServerBamFileInstanceViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.ServerBamFileInstance.objects.all()
-    serializer_class = tantalus.api.serializers.ServerBamFileInstanceSerializer
-
-
-class ServerPairedFastqFilesInstanceViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.ServerPairedFastqFilesInstance.objects.all()
-    serializer_class = tantalus.api.serializers.ServerPairedFastqFilesInstanceSerializer
-
-
+class ServerFileInstanceViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.ServerFileInstance.objects.all()
+    serializer_class = tantalus.api.serializers.ServerFileInstanceSerializer
 
 
 
