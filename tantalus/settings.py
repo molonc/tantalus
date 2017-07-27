@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'simple_history',
     'taggit',
+    'django_extensions',
 ]
 
 MIDDLEWARE_CLASSES = [
