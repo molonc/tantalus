@@ -61,6 +61,9 @@ class SequenceFileResource(models.Model):
 
     sequencing_id = create_id_field('Sequencing ID')
 
+    def __unicode__(self):
+        return '{}_{}'.format(self.sample_id, self.sequencing_id)
+
 
 class IndexedReads(models.Model):
     """
@@ -133,6 +136,9 @@ class SequenceLane(models.Model):
         choices=library_type_choices,
     )
 
+    def __unicode__(self):
+        return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
+
 
 class FastqFile(SequenceFileResource):
     """
@@ -146,6 +152,9 @@ class FastqFile(SequenceFileResource):
         verbose_name="Lanes",
         blank=False,
     )
+
+    def __unicode__(self):
+        return 'fastq:{}'.format(SequenceFileResource.__unicode__(self))
 
 
 class BamFile(SequenceFileResource):
@@ -181,6 +190,9 @@ class BamFile(SequenceFileResource):
         verbose_name="Lanes",
         blank=False,
     )
+
+    def __unicode__(self):
+        return 'bam:{}'.format(SequenceFileResource.__unicode__(self))
 
 
 class Storage(models.Model):
@@ -219,6 +231,9 @@ class ServerStorage(Storage):
         null=False,
     )
 
+    def __unicode__(self):
+        return '{}:{}'.format(self.server_name, self.directory)
+
 
 class AzureBlobStorage(Storage):
     """
@@ -240,6 +255,9 @@ class AzureBlobStorage(Storage):
         blank=False,
         null=False,
     )
+
+    def __unicode__(self):
+        return '{}/{}'.format(self.account, self.container)
 
 
 class ServerFileInstance(models.Model):
