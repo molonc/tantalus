@@ -5,7 +5,9 @@ Tantalus models
 from __future__ import unicode_literals
 
 from django.db import models
-from history.models import HistoricalRecords
+import taggit.models
+import simple_history
+from simple_history.models import HistoricalRecords
 
 # import taggit.managers
 # from taggit.managers import TaggableManager
@@ -107,7 +109,6 @@ class SequenceLane(models.Model):
     indices = models.ManyToManyField(
         IndexedReads,
         verbose_name="Indices",
-        null=False,
         blank=False,
     )
 
@@ -140,7 +141,6 @@ class FastqFile(SequenceFileResource):
     lanes = models.ManyToManyField(
         SequenceLane,
         verbose_name="Lanes",
-        null=False,
         blank=False,
     )
 
@@ -176,7 +176,6 @@ class BamFile(SequenceFileResource):
     lanes = models.ManyToManyField(
         SequenceLane,
         verbose_name="Lanes",
-        null=False,
         blank=False,
     )
 
@@ -218,7 +217,7 @@ class ServerStorage(Storage):
     )
 
 
-class AzureBlobStorage(ResourceStore):
+class AzureBlobStorage(Storage):
     """
     Azure blob storage for sequence files.
     """
