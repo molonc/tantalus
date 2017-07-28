@@ -2,6 +2,12 @@ from rest_framework import serializers
 import tantalus.models
 
 
+class SampleSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = tantalus.models.Sample
+        fields = '__all__'
+
+
 class SequenceDataFileSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.SequenceDataFile
@@ -11,6 +17,18 @@ class SequenceDataFileSerializer(serializers.HyperlinkedModelSerializer):
 class IndexedReadsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.IndexedReads
+        fields = '__all__'
+
+
+class DNALibrarySerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = tantalus.models.DNALibrary
+        fields = '__all__'
+
+
+class DNALibrarySubsetSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = tantalus.models.DNALibrarySubset
         fields = '__all__'
 
 

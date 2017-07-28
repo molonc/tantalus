@@ -3,6 +3,12 @@ import tantalus.models
 import tantalus.api.serializers
 
 
+class SampleViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.Sample.objects.all()
+    serializer_class = tantalus.api.serializers.SampleSerializer
+    filter_fields = ('sample_id',)
+
+
 class SequenceDataFileViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.SequenceDataFile.objects.all()
     serializer_class = tantalus.api.serializers.SequenceDataFileSerializer
@@ -11,6 +17,17 @@ class SequenceDataFileViewSet(viewsets.ModelViewSet):
 class IndexedReadsViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.IndexedReads.objects.all()
     serializer_class = tantalus.api.serializers.IndexedReadsSerializer
+    filter_fields = ('dnalibrary',)
+
+
+class DNALibraryViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.DNALibrary.objects.all()
+    serializer_class = tantalus.api.serializers.DNALibrarySerializer
+
+
+class DNALibrarySubsetViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.DNALibrarySubset.objects.all()
+    serializer_class = tantalus.api.serializers.DNALibrarySubsetSerializer
 
 
 class SequenceLaneViewSet(viewsets.ModelViewSet):

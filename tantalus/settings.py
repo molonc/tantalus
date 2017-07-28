@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'simple_history',
     'taggit',
     'django_extensions',
+    'django_filters',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -130,4 +131,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
