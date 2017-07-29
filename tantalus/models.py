@@ -341,3 +341,22 @@ class AzureBlobFileInstance(models.Model):
     )
 
 
+class Transfer(models.Model):
+    name = models.CharField(
+        'Name',
+        max_length=50,
+        blank=False,
+        null=False,
+    )
+
+    state = models.CharField(
+        'State',
+        max_length=50,
+        null=True,
+    )
+
+    result = models.IntegerField(
+        'Result',
+        null=True,
+    )
+

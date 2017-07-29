@@ -15,9 +15,12 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+import tantalus.views
 
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('tantalus.api.urls')),
+    url(r'^transfers/$', tantalus.views.TransferListView.as_view(), name='transfer-list'),
+    url(r'^transfers/create$', tantalus.views.TransferCreate.as_view(success_url='/transfers/'), name='transfer-create'),
 ]

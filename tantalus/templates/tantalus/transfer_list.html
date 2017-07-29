@@ -1,0 +1,8 @@
+<h1>Transfer Tasks</h1>
+<ul>
+{% for transfer in object_list %}
+    <li>{{ transfer.name }} : {{ transfer.state }} - {{ transfer.result }}</li>
+{% empty %}
+    <li>No transfer tasks yet.</li>
+{% endfor %}
+</ul>
