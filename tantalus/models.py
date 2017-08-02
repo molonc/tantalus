@@ -84,29 +84,6 @@ class SequenceDataFile(models.Model):
         return '{}'.format(self.md5)
 
 
-class IndexedReads(models.Model):
-    """
-    Multiplexed read index information
-    """
-
-    history = HistoricalRecords()
-
-    index_sequence = models.CharField(
-        'Index Sequence',
-        max_length=50,
-        blank=False,
-        null=False,
-    )
-
-    sample = models.ForeignKey(
-        Sample,
-        on_delete=models.CASCADE,
-    )
-
-    def __unicode__(self):
-        return '{}'.format(self.index_sequence)
-
-
 class DNALibrary(models.Model):
     """
     DNA Library, possibly multiplexed.
@@ -132,23 +109,13 @@ class DNALibrary(models.Model):
         choices=library_type_choices,
     )
 
-    sample = models.ManyToManyField(
-        Sample,
-        verbose_name='Sample',
-    )
-
-    indices = models.ManyToManyField(
-        IndexedReads,
-        verbose_name='Indices',
-    )
-
     def __unicode__(self):
         return '{}_{}'.format(self.library_type, self.library_id)
 
 
-class DNALibrarySubset(models.Model):
+class DNASequences(models.Model):
     """
-    Subset of a DNA Library, possibly multiplexed.
+    Sequences of a DNA Library, possibly a subset of a multiplexed library.
     """
 
     history = HistoricalRecords()
@@ -158,9 +125,29 @@ class DNALibrarySubset(models.Model):
         on_delete=models.CASCADE,
     )
 
-    indices = models.ManyToManyField(
-        IndexedReads,
-        verbose_name='Indices',
+    index_format_choices = [
+        ('S', 'Single'),
+        ('D', 'Dual'),
+    ]
+
+    index_format = models.CharField(
+        'Index Format',
+        max_length=50,
+        blank=True,
+        null=True,
+        choices=index_format_choices,
+    )
+
+    index_sequence = models.CharField(
+        'Index Sequence',
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+
+    sample = models.ForeignKey(
+        Sample,
+        on_delete=models.CASCADE,
     )
 
 
@@ -203,9 +190,10 @@ class PairedFastqFiles(models.Model):
         blank=False,
     )
     
-    read_subset = models.ForeignKey(
-        DNALibrarySubset,
-        on_delete=models.CASCADE,
+    dna_sequences = models.ManyToManyField(
+        DNASequences,
+        verbose_name='Sequences',
+        blank=False,
     )
 
     reads_1_file = models.ForeignKey(
@@ -255,9 +243,10 @@ class BamFile(models.Model):
         blank=False,
     )
 
-    read_subset = models.ForeignKey(
-        DNALibrarySubset,
-        on_delete=models.CASCADE,
+    dna_sequences = models.ManyToManyField(
+        DNASequences,
+        verbose_name='Sequences',
+        blank=False,
     )
 
     bam_file = models.ForeignKey(

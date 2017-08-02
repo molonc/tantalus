@@ -14,20 +14,14 @@ class SequenceDataFileViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.SequenceDataFileSerializer
 
 
-class IndexedReadsViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.IndexedReads.objects.all()
-    serializer_class = tantalus.api.serializers.IndexedReadsSerializer
-    filter_fields = ('dnalibrary',)
-
-
 class DNALibraryViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.DNALibrary.objects.all()
     serializer_class = tantalus.api.serializers.DNALibrarySerializer
 
 
-class DNALibrarySubsetViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.DNALibrarySubset.objects.all()
-    serializer_class = tantalus.api.serializers.DNALibrarySubsetSerializer
+class DNASequencesViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.DNASequences.objects.all()
+    serializer_class = tantalus.api.serializers.DNASequencesSerializer
 
 
 class SequenceLaneViewSet(viewsets.ModelViewSet):

@@ -14,21 +14,15 @@ class SequenceDataFileSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-class IndexedReadsSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = tantalus.models.IndexedReads
-        fields = '__all__'
-
-
 class DNALibrarySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.DNALibrary
         fields = '__all__'
 
 
-class DNALibrarySubsetSerializer(serializers.HyperlinkedModelSerializer):
+class DNASequencesSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = tantalus.models.DNALibrarySubset
+        model = tantalus.models.DNASequences
         fields = '__all__'
 
 
