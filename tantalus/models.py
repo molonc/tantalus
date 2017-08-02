@@ -269,8 +269,8 @@ class Server(models.Model):
 
     history = HistoricalRecords()
 
-    server_name = models.CharField(
-        'Server Name',
+    name = models.CharField(
+        'Name',
         max_length=50,
         blank=False,
         null=False,
