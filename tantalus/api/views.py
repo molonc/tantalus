@@ -39,14 +39,19 @@ class BamFileViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.BamFileSerializer
 
 
-class AzureBlobFileInstanceViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.AzureBlobFileInstance.objects.all()
-    serializer_class = tantalus.api.serializers.AzureBlobFileInstanceSerializer
+class ServerViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.Server.objects.all()
+    serializer_class = tantalus.api.serializers.ServerSerializer
 
 
 class ServerFileInstanceViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.ServerFileInstance.objects.all()
     serializer_class = tantalus.api.serializers.ServerFileInstanceSerializer
+
+
+class AzureBlobFileInstanceViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.AzureBlobFileInstance.objects.all()
+    serializer_class = tantalus.api.serializers.AzureBlobFileInstanceSerializer
 
 
 

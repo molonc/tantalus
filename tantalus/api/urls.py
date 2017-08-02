@@ -11,8 +11,9 @@ router.register(r'dna_sequences', views.DNASequencesViewSet)
 router.register(r'sequence_lane', views.SequenceLaneViewSet)
 router.register(r'paired_fastq_files', views.PairedFastqFilesViewSet)
 router.register(r'bam_file', views.BamFileViewSet)
-router.register(r'azure_blob_storage', views.AzureBlobFileInstanceViewSet)
+router.register(r'server', views.ServerViewSet)
 router.register(r'server_file_instance', views.ServerFileInstanceViewSet)
+router.register(r'azure_blob_storage', views.AzureBlobFileInstanceViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),

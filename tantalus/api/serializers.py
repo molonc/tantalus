@@ -44,6 +44,12 @@ class BamFileSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
+class ServerSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = tantalus.models.Server
+        fields = '__all__'
+
+
 class ServerFileInstanceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.ServerFileInstance

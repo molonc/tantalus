@@ -262,17 +262,12 @@ class BamFile(models.Model):
     )
 
 
-class ServerFileInstance(models.Model):
+class Server(models.Model):
     """
-    Instance of a file on a server
+    Details of a specific file storage server.
     """
 
     history = HistoricalRecords()
-
-    file_resource = models.ForeignKey(
-        SequenceDataFile,
-        on_delete=models.CASCADE,
-    )
 
     server_name = models.CharField(
         'Server Name',
@@ -281,11 +276,22 @@ class ServerFileInstance(models.Model):
         null=False,
     )
 
-    store_directory = models.CharField(
-        'Store Directory',
-        max_length=250,
-        blank=False,
-        null=False,
+
+class ServerFileInstance(models.Model):
+    """
+    Instance of a file on a server
+    """
+
+    history = HistoricalRecords()
+
+    server = models.ForeignKey(
+        Server,
+        on_delete=models.CASCADE,
+    )
+
+    file_resource = models.ForeignKey(
+        SequenceDataFile,
+        on_delete=models.CASCADE,
     )
 
     filename = models.CharField(
