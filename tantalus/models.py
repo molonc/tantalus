@@ -75,7 +75,7 @@ class SequenceDataFile(models.Model):
         null=False,
     )
 
-    created = models.DateField(
+    created = models.DateTimeField(
         'Created',
         null=False,
     )
