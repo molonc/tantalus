@@ -24,7 +24,7 @@ def get_size(filename):
 
 def get_create(filename):
     try:
-        return pd.Timestamp(time.ctime(os.path.getmtime(filename)))
+        return pd.Timestamp(time.ctime(os.path.getmtime(filename)), tz='Canada/Pacific')
     except Exception as e:
         print e
         return None
