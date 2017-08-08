@@ -9,7 +9,6 @@ https://www.bcgsc.ca/wiki/display/MO/Colossus+Documentation
 import requests
 from tantalus.models import *
 import re
-import json
 
 HOSTNAME='http://127.0.0.1:8000/apps/api/'
 JSON_FORMAT='?format=json'
