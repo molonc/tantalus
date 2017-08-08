@@ -138,7 +138,7 @@ REST_FRAMEWORK = {
 
 # Celery settings
 
-CELERY_BROKER_URL = 'amqp://guest:guest@localhost//'
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672/'
 
 #: Only add pickle to this list if your broker is secured
 #: from unwanted access (see userguide/security.html)
