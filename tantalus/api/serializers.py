@@ -40,44 +40,58 @@ class SequenceDatasetSerializer(TaggitSerializer, serializers.HyperlinkedModelSe
     class Meta:
         model = tantalus.models.SequenceDataset
         fields = '__all__'
+    def to_representation(self, obj):
+        if isinstance(obj, tantalus.models.SingleEndFastqFile):
+            return SingleEndFastqFileSerializer(obj, context=self.context).to_representation(obj)
+        elif isinstance(obj, tantalus.models.PairedEndFastqFiles):
+           return PairedEndFastqFilesSerializer(obj, context=self.context).to_representation(obj)
+        elif isinstance(obj, tantalus.models.BamFile):
+           return BamFileSerializer(obj, context=self.context).to_representation(obj)
+        return super(SequenceDatasetSerializer, self).to_representation(obj)
 
 
 class SingleEndFastqFileSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
     tags = TagListSerializerField()
     class Meta:
         model = tantalus.models.SingleEndFastqFile
-        fields = '__all__'
+        exclude = ['polymorphic_ctype']
 
 
 class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
     tags = TagListSerializerField()
     class Meta:
         model = tantalus.models.PairedEndFastqFiles
-        fields = '__all__'
+        exclude = ['polymorphic_ctype']
 
 
 class BamFileSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.BamFile
-        fields = '__all__'
+        exclude = ['polymorphic_ctype']
 
 
 class StorageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.Storage
-        fields = '__all__'
+        exclude = ['polymorphic_ctype']
+    def to_representation(self, obj):
+        if isinstance(obj, tantalus.models.ServerStorage):
+            return ServerStorageSerializer(obj, context=self.context).to_representation(obj)
+        elif isinstance(obj, tantalus.models.AzureBlobStorage):
+           return AzureBlobStorageSerializer(obj, context=self.context).to_representation(obj)
+        return super(StorageSerializer, self).to_representation(obj)
 
 
 class ServerStorageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.ServerStorage
-        fields = '__all__'
+        exclude = ['polymorphic_ctype']
 
 
 class AzureBlobStorageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.AzureBlobStorage
-        fields = '__all__'
+        exclude = ['polymorphic_ctype']
 
 
 class FileInstanceSerializer(serializers.HyperlinkedModelSerializer):
