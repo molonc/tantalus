@@ -7,8 +7,15 @@ https://www.bcgsc.ca/wiki/display/MO/Colossus+Documentation
 
 
 import requests
+import sys
+import os
+import django
+
+sys.path.append('./')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tantalus.settings')
+django.setup()
+
 from tantalus.models import *
-import re
 
 HOSTNAME='http://127.0.0.1:8000/apps/api/'
 JSON_FORMAT='?format=json'
@@ -16,23 +23,18 @@ DEFAULT_LIBRARY_TYPE='SC WGS'
 INDEX_FORMAT='D' #Data coming from colossus should all be dual indexed
 
 
-def parse_sample_id(s, colossus_sample_id):
+def parse_sample_id(colossus_sample_id):
     """
     Parses the sample ID from Colossus database into a sample ID namespace and sample ID number.
     Eg. SA928 in the colossus database gets turned into "SA", and "928".
     """
 
-    for namespace in s.sample_id_space_choices:
-        match = re.search('(?P<namespace>[a-zA-Z]+)(?P<id>.+$)', colossus_sample_id)
-        test_namespace = match.group(1)
-        test_id = match.group(2)
+    if colossus_sample_id.startswith('SA'):
+        sample_namespace = 'SA'
+    else:
+        raise Exception('unrecognized sample namespace')
 
-        # giving back the acronym, and not the verbose form of the sample id space
-        # eg. namespace is ('SA', 'Aparicio), namespace[0] will have the value of 'SA'
-        if test_namespace == namespace[0]:
-            return namespace[0], test_id
-
-    return None, None
+    return sample_namespace, colossus_sample_id
 
 
 def get_json(resource_name):
@@ -94,7 +96,7 @@ def add_new_samples(samples):
     for sample in samples:
         print "ADDING this sample: {}".format(sample)
         s = Sample()
-        sample_namespace, sample_id_number = parse_sample_id(s, sample)
+        sample_namespace, sample_id_number = parse_sample_id(sample)
         if (sample_namespace != None):
             s.sample_id_space = sample_namespace
             s.sample_id = sample_id_number
@@ -102,50 +104,52 @@ def add_new_samples(samples):
 
 
 def delete_samples(samples):
-    # TODO: when implemented, delete all related too ?
     for sample in samples:
         print "DELETING this sample: {}".format(sample)
+        sample_id_space, sample_id = parse_sample_id(sample)
+        s = Sample.objects.filter(sample_id_space=sample_id_space, sample_id=sample_id)
+        s.delete()
 
 
 def add_new_libraries(libs):
     for lib in libs:
         l = DNALibrary(
-            library_id = lib,
-            library_type=DEFAULT_LIBRARY_TYPE
-        )
+            library_id=lib,
+            library_type=DEFAULT_LIBRARY_TYPE)
         l.save()
         print "ADDING this library: {}".format(lib)
         update_tantalus_dnasequences(lib)
 
 
 def delete_libraries(libs):
-    # TODO: when implemented, delete all related to ?
     for lib in libs:
         print "DELETING this library: {}".format(lib)
+        l = DNALibrary.objects.filter(
+            library_id=lib,
+            library_type=DEFAULT_LIBRARY_TYPE)
+        l.delete()
 
 
-def add_new_sequencelanes(seqs, seq_lib_map):
+def add_new_sequencelanes(seqs):
+    json_colossus_sequencelanes = get_json('sequencing')
+
+    flowcell_map = {j['sequencingdetail']['flow_cell_id']: j
+                    for j in json_colossus_sequencelanes}
+
     for seq in seqs:
-
         ## no flow cell or lane for this seq - don't add this
         if seq == "":
             print "no flowcell or lane"
 
         else:
             sequencelane = SequenceLane()
-            flowcell_id_and_lane = seq.split('_')
-            sequencelane.flowcell_id = flowcell_id_and_lane[0]
-
-            # has flow cell id and no lane
-            if (len(flowcell_id_and_lane) == 1):
-                # TODO: add default and save model - set lane to null and blank in models
-                print "hi no lane here"
-
-            # has both flow cell id and lane
-            elif len(flowcell_id_and_lane) == 2:
-                sequencelane.lane_number = flowcell_id_and_lane[1]
-                sequencelane.dna_library = DNALibrary.objects.get(library_id=seq_lib_map[seq])
-                sequencelane.save()
+            sequencelane.flowcell_id = seq.split('_')[0]
+            if flowcell_map[seq]['sequencingdetail']['sequencing_center'] == 'BCCAGSC':
+                sequencelane.sequencing_library_id = flowcell_map[seq]['sequencingdetail']['gsc_library_id']
+            if '_' in seq:
+                sequencelane.lane_number = seq.split('_')[1]
+            sequencelane.dna_library = DNALibrary.objects.get(library_id=flowcell_map[seq]['library'])
+            sequencelane.save()
 
 
 
@@ -156,7 +160,7 @@ def delete_sequencelanes(seqs, seq_lib_map):
 def add_new_sublibs(sublibs, library):
     for sublib in sublibs:
         # the foreign key name is sample_id, and the name of the field inside sample is also sample_id, which is why this key is accessed twice
-        sample_id_space, sample_id = parse_sample_id(Sample(), sublib['sample_id']['sample_id'])
+        sample_id_space, sample_id = parse_sample_id(sublib['sample_id']['sample_id'])
         sample = Sample.objects.get(sample_id_space = sample_id_space, sample_id = sample_id)
 
         s = DNASequences(
@@ -166,10 +170,9 @@ def add_new_sublibs(sublibs, library):
         )
 
         if (s.index_format == 'D'):
-            s.index_sequence = "{i5}-{i7}".format(
-                i5 = sublib['primer_i5'],
-                i7 = sublib['primer_i7'],
-            )
+            s.index_sequence = "{i7}-{i5}".format(
+                i7=sublib['primer_i7'],
+                i5=sublib['primer_i5'])
             s.save()
 
         else:
@@ -188,6 +191,7 @@ def update_tantalus_samples():
     samples_to_add, samples_to_delete = get_difference(tantalus_samples, colossus_samples)
     add_new_samples(samples_to_add)
     delete_samples(samples_to_delete)
+
 
 def update_tantalus_DNAlibrary():
     tantalus_libs = DNALibrary.objects.values_list('library_id', flat=True)
@@ -213,8 +217,9 @@ def update_tantalus_sequencelane():
                             for j in json_colossus_sequencelanes}
 
     sequences_to_add, sequences_to_delete = get_difference(tantalus_sequencelanes, colossus_sequencelanes)
-    add_new_sequencelanes(sequences_to_add, sequence_library_map)
+    add_new_sequencelanes(sequences_to_add)
     delete_sequencelanes(sequences_to_delete, sequence_library_map)
+
 
 def update_tantalus_dnasequences(library):
     # called in add_new_libraries, is passed a library pool id
@@ -238,11 +243,12 @@ def update_tantalus():
     update_tantalus_sequencelane()
 
 
+delete_samples(['SA928'])
+delete_libraries(['A90652A'])
 
-
-
-
-
+add_new_samples(['SA928'])
+add_new_libraries(['A90652A'])
+add_new_sequencelanes(['CB95TANXX_6'])
 
 
 

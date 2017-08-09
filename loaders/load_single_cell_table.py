@@ -1,7 +1,9 @@
 import os
 import sys
+import string
 import pandas as pd
 import django
+
 
 sys.path.append('./')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tantalus.settings')
@@ -9,7 +11,16 @@ django.setup()
 
 import tantalus.models
 
-data = pd.HDFStore('loaders/single_cell_hiseq_fastq_metadata.h5', 'r')['/metadata'].head(1000)
+tantalus.models.ServerStorage.objects.all().delete()
+tantalus.models.SequenceDataFile.objects.all().delete()
+tantalus.models.FileInstance.objects.all().delete()
+tantalus.models.PairedEndFastqFiles.objects.all().delete()
+
+def reverse_complement(sequence):
+    return sequence[::-1].translate(string.maketrans('ACTGactg','TGACtgac'))
+
+data = pd.HDFStore('loaders/single_cell_hiseq_fastq_metadata.h5', 'r')['/metadata']
+data = data[data['id'] == 'PX0593']
 
 storage = tantalus.models.ServerStorage()
 storage.name = 'rocks'
@@ -42,6 +53,8 @@ for idx in data.index:
     fastq_files.reads_1_file = reads_files['1']
     fastq_files.reads_2_file = reads_files['2']
     fastq_files.save()
+    fastq_files.lanes = tantalus.models.SequenceLane.objects.filter(flowcell_id=data.loc[idx, 'flowcell'], lane_number=data.loc[idx, 'lane'])
+    fastq_files.dna_sequences = tantalus.models.DNASequences.objects.filter(index_sequence=reverse_complement(data.loc[idx, 'code1']) + '-' + data.loc[idx, 'code2'])
     fastq_files.sequence_data.add(reads_files['1'])
     fastq_files.sequence_data.add(reads_files['2'])
     fastq_files.save()
