@@ -21,6 +21,7 @@ import tantalus.views
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('tantalus.api.urls')),
-    url(r'^transfers/$', tantalus.views.TransferListView.as_view(), name='transfer-list'),
-    url(r'^transfers/create$', tantalus.views.TransferCreate.as_view(success_url='/transfers/'), name='transfer-create'),
+    url(r'^transfers/$', tantalus.views.FileTransferListView.as_view(), name='transfer-list'),
+    url(r'^deployments/$', tantalus.views.DeploymentListView.as_view(), name='deployment-list-1'),
+    url(r'^deployments/create$', tantalus.views.DeploymentCreateView.as_view(success_url='/deployments/'), name='deployment-create'),
 ]

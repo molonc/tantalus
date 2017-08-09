@@ -1,0 +1,8 @@
+<h1>Deployments</h1>
+<ul>
+{% for deployment in object_list %}
+    <li>{{ deployment.name }} : {{ deployment.state }} - {{ deployment.result }}</li>
+{% empty %}
+    <li>No deployment tasks yet.</li>
+{% endfor %}
+</ul>

@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from celery import shared_task, Task
-from tantalus.models import Transfer
+from tantalus.models import FileTransfer
 import time
 
 

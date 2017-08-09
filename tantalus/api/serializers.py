@@ -1,5 +1,8 @@
 from rest_framework import serializers
 import tantalus.models
+from taggit_serializer.serializers import (
+    TagListSerializerField,
+    TaggitSerializer)
 
 
 class SampleSerializer(serializers.HyperlinkedModelSerializer):
@@ -32,9 +35,24 @@ class SequenceLaneSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-class PairedFastqFilesSerializer(serializers.HyperlinkedModelSerializer):
+class SequenceDatasetSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
+    tags = TagListSerializerField()
     class Meta:
-        model = tantalus.models.PairedFastqFiles
+        model = tantalus.models.SequenceDataset
+        fields = '__all__'
+
+
+class SingleEndFastqFileSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
+    tags = TagListSerializerField()
+    class Meta:
+        model = tantalus.models.SingleEndFastqFile
+        fields = '__all__'
+
+
+class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
+    tags = TagListSerializerField()
+    class Meta:
+        model = tantalus.models.PairedEndFastqFiles
         fields = '__all__'
 
 
@@ -44,21 +62,39 @@ class BamFileSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-class ServerSerializer(serializers.HyperlinkedModelSerializer):
+class StorageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = tantalus.models.Server
+        model = tantalus.models.Storage
         fields = '__all__'
 
 
-class ServerFileInstanceSerializer(serializers.HyperlinkedModelSerializer):
+class ServerStorageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = tantalus.models.ServerFileInstance
+        model = tantalus.models.ServerStorage
         fields = '__all__'
 
 
-class AzureBlobFileInstanceSerializer(serializers.HyperlinkedModelSerializer):
+class AzureBlobStorageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = tantalus.models.AzureBlobFileInstance
+        model = tantalus.models.AzureBlobStorage
+        fields = '__all__'
+
+
+class FileInstanceSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = tantalus.models.FileInstance
+        fields = '__all__'
+
+
+class DeploymentSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = tantalus.models.Deployment
+        fields = '__all__'
+
+
+class FileTransferSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = tantalus.models.FileTransfer
         fields = '__all__'
 
 

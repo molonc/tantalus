@@ -1,17 +1,21 @@
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import ModelFormMixin
-from tantalus.models import Transfer
+from tantalus.models import FileTransfer, Deployment
 from tantalus.tasks import run_transfer
 
 
-class TransferListView(ListView):
-    model = Transfer
+class FileTransferListView(ListView):
+    model = FileTransfer
 
 
-class TransferCreate(CreateView):
-    model = Transfer
-    fields = ['name']
+class DeploymentListView(ListView):
+    model = Deployment
+
+
+class DeploymentCreateView(CreateView):
+    model = Deployment
+    fields = ['from_storage', 'to_storage', 'files']
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()

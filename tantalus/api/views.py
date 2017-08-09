@@ -29,9 +29,19 @@ class SequenceLaneViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.SequenceLaneSerializer
 
 
-class PairedFastqFilesViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.PairedFastqFiles.objects.all()
-    serializer_class = tantalus.api.serializers.PairedFastqFilesSerializer
+class SequenceDatasetViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.SequenceDataset.objects.all()
+    serializer_class = tantalus.api.serializers.SequenceDatasetSerializer
+
+
+class SingleEndFastqFileViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.SingleEndFastqFile.objects.all()
+    serializer_class = tantalus.api.serializers.SingleEndFastqFileSerializer
+
+
+class PairedEndFastqFilesViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.PairedEndFastqFiles.objects.all()
+    serializer_class = tantalus.api.serializers.PairedEndFastqFilesSerializer
 
 
 class BamFileViewSet(viewsets.ModelViewSet):
@@ -39,19 +49,33 @@ class BamFileViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.BamFileSerializer
 
 
-class ServerViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.Server.objects.all()
-    serializer_class = tantalus.api.serializers.ServerSerializer
+class StorageViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.Storage.objects.all()
+    serializer_class = tantalus.api.serializers.StorageSerializer
 
 
-class ServerFileInstanceViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.ServerFileInstance.objects.all()
-    serializer_class = tantalus.api.serializers.ServerFileInstanceSerializer
+class ServerStorageViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.ServerStorage.objects.all()
+    serializer_class = tantalus.api.serializers.ServerStorageSerializer
 
 
-class AzureBlobFileInstanceViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.AzureBlobFileInstance.objects.all()
-    serializer_class = tantalus.api.serializers.AzureBlobFileInstanceSerializer
+class AzureBlobStorageViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.AzureBlobStorage.objects.all()
+    serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
 
+
+class FileInstanceViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.FileInstance.objects.all()
+    serializer_class = tantalus.api.serializers.FileInstanceSerializer
+
+
+class DeploymentViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.Deployment.objects.all()
+    serializer_class = tantalus.api.serializers.DeploymentSerializer
+
+
+class FileTransferViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.FileTransfer.objects.all()
+    serializer_class = tantalus.api.serializers.FileTransferSerializer
 
 
