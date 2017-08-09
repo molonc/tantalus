@@ -168,6 +168,8 @@ class SequenceLane(models.Model):
 
     sequencing_centre = create_id_field('Sequencing Centre')
 
+    sequencing_library_id = create_id_field('Sequencing Library ID')
+
     flowcell_id = create_id_field('FlowCell ID')
 
     lane_number = models.PositiveSmallIntegerField(
