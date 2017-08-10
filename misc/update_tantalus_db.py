@@ -144,6 +144,7 @@ def add_new_sequencelanes(seqs):
         else:
             sequencelane = SequenceLane()
             sequencelane.flowcell_id = seq.split('_')[0]
+            sequencelane.sequencing_centre = flowcell_map[seq]['sequencingdetail']['sequencing_center']
             if flowcell_map[seq]['sequencingdetail']['sequencing_center'] == 'BCCAGSC':
                 sequencelane.sequencing_library_id = flowcell_map[seq]['sequencingdetail']['gsc_library_id']
             if '_' in seq:
