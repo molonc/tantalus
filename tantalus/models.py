@@ -166,16 +166,58 @@ class SequenceLane(models.Model):
 
     history = HistoricalRecords()
 
-    sequencing_centre = create_id_field('Sequencing Centre')
-
-    sequencing_library_id = create_id_field('Sequencing Library ID')
-
     flowcell_id = create_id_field('FlowCell ID')
 
     lane_number = models.PositiveSmallIntegerField(
         'Lane Number',
         blank=False,
         null=False,
+    )
+
+    sequencing_centre = create_id_field('Sequencing Centre')
+
+    sequencing_library_id = create_id_field('Sequencing Library ID')
+
+    sequencing_instrument_choices = (
+        ('HX','HiSeqX'),
+        ('H2500','HiSeq2500'),
+        ('N550','NextSeq550'),
+        ('MI','MiSeq'),
+        ('O','other'),
+    )
+
+    sequencing_instrument = models.CharField(
+        'Sequencing instrument',
+        max_length=50,
+        blank=False,
+        null=False,
+        choices=sequencing_instrument_choices,
+    )
+
+    read_type_choices = (
+        ('P', 'PET'),
+        ('S', 'SET')
+    )
+
+    read_type = models.CharField(
+        'Read type',
+        max_length=50,
+        blank=False,
+        null=False,
+        choices=read_type_choices,
+    )
+
+    index_read_type_choices = (
+        ('D', 'Dual Index (i7 and i5)'),
+        ('N', 'No Indexing')
+    )
+
+    index_read_type = models.CharField(
+        'Index read type',
+        max_length=50,
+        blank=False,
+        null=False,
+        choices=index_read_type_choices,
     )
 
     dna_library = models.ForeignKey(

@@ -26,6 +26,7 @@ storage = tantalus.models.ServerStorage()
 storage.name = 'rocks'
 storage.server_ip = 'rocks.cluster.bccrc.ca'
 storage.storage_directory = '/share/lustre/archive'
+storage.full_clean()
 storage.save()
 
 for idx in data.index:
@@ -39,6 +40,7 @@ for idx in data.index:
         seqfile.size = data.loc[idx, 'size' + read_end]
         seqfile.created = pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific')
         seqfile.file_type = 'FQ'
+        seqfile.full_clean()
         seqfile.save()
 
         reads_files[read_end] = seqfile
@@ -47,6 +49,7 @@ for idx in data.index:
         serverfile.storage = storage
         serverfile.file_resource = seqfile
         serverfile.filename = fastq_filename
+        serverfile.full_clean()
         serverfile.save()
 
     fastq_files = tantalus.models.PairedEndFastqFiles()
@@ -57,6 +60,7 @@ for idx in data.index:
     fastq_files.dna_sequences = tantalus.models.DNASequences.objects.filter(index_sequence=reverse_complement(data.loc[idx, 'code1']) + '-' + data.loc[idx, 'code2'])
     fastq_files.sequence_data.add(reads_files['1'])
     fastq_files.sequence_data.add(reads_files['2'])
+    fastq_files.full_clean()
     fastq_files.save()
 
 

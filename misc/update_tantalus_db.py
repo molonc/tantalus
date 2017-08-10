@@ -145,13 +145,15 @@ def add_new_sequencelanes(seqs):
             sequencelane = SequenceLane()
             sequencelane.flowcell_id = seq.split('_')[0]
             sequencelane.sequencing_centre = flowcell_map[seq]['sequencingdetail']['sequencing_center']
+            sequencelane.sequencing_instrument = flowcell_map[seq]['sequencing_instrument']
+            sequencelane.read_type = flowcell_map[seq]['read_type']
+            sequencelane.index_read_type = flowcell_map[seq]['index_read_type']
             if flowcell_map[seq]['sequencingdetail']['sequencing_center'] == 'BCCAGSC':
                 sequencelane.sequencing_library_id = flowcell_map[seq]['sequencingdetail']['gsc_library_id']
             if '_' in seq:
                 sequencelane.lane_number = seq.split('_')[1]
             sequencelane.dna_library = DNALibrary.objects.get(library_id=flowcell_map[seq]['library'])
             sequencelane.save()
-
 
 
 def delete_sequencelanes(seqs, seq_lib_map):
