@@ -13,13 +13,12 @@ def main():
     #create container
     service = get_service()
     service.create_container("testcontainer")
-    service.create_container("testcontainer")
 
     #upload a file to the container
     service.create_blob_from_path(
         "testcontainer",
         "blob-test-code",
-        "blob_test.py")
+        "blob_demo.py")
 
     #list blobs
     for blob in service.list_blobs("testcontainer"):
