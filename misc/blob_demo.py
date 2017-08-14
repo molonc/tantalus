@@ -16,9 +16,9 @@ def main():
 
     #upload a file to the container
     service.create_blob_from_path(
-        "testcontainer",
-        "blob-test-code",
-        "blob_demo.py")
+        "testcontainer", # name of container
+        "blob-test-code", # name of the blob
+        "blob_demo.py") #relative path on machine this code is executed on
 
     #list blobs
     for blob in service.list_blobs("testcontainer"):

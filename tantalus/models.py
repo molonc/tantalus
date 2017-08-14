@@ -269,6 +269,9 @@ class SingleEndFastqFile(SequenceDataset):
         related_name='reads_file',
     )
 
+    def __str__(self):
+        return "SingleEndFastQ {}".format(self.id)
+
 
 class PairedEndFastqFiles(SequenceDataset):
     """
@@ -288,6 +291,9 @@ class PairedEndFastqFiles(SequenceDataset):
         on_delete=models.CASCADE,
         related_name='reads_2_file',
     )
+
+    def __str__(self):
+        return "PairedEndFastq {}".format(self.id)
 
 
 class BamFile(SequenceDataset):
@@ -437,7 +443,7 @@ class Deployment(models.Model):
         related_name='deployment_to_storage',
     )
 
-    files = models.ManyToManyField(
+    datasets = models.ManyToManyField(
         SequenceDataset,
         verbose_name='Datasets',
         blank=False,
