@@ -14,12 +14,14 @@ from polymorphic.models import PolymorphicModel
 simple_history.register(taggit.models.Tag)
 
 
-def create_id_field(name):
+def create_id_field(name, *args, **kwargs):
     return models.CharField(
         name,
         max_length=50,
         blank=False,
         null=False,
+        *args,
+        **kwargs
     )
 
 
@@ -44,7 +46,10 @@ class Sample(models.Model):
         choices=sample_id_space_choices,
     )
 
-    sample_id = create_id_field('Sample ID')
+    sample_id = create_id_field('Sample ID',
+                                unique=True,
+                                )
+
 
     def __unicode__(self):
         return '{}_{}'.format(self.sample_id_space, self.sample_id)
@@ -133,7 +138,7 @@ class DNALibrary(models.Model):
 
     history = HistoricalRecords()
 
-    library_id = create_id_field('Library ID')
+    library_id = create_id_field('Library ID', unique=True)
 
     library_type_choices = [
         ('exome', 'Bulk Whole Exome Sequence'),
@@ -192,6 +197,9 @@ class DNASequences(models.Model):
         on_delete=models.CASCADE,
     )
 
+    class Meta:
+        unique_together = ('dna_library', 'index_sequence')
+
 
 class SequenceLane(models.Model):
     """
@@ -248,6 +256,9 @@ class SequenceLane(models.Model):
 
     def __unicode__(self):
         return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
+
+    class Meta:
+        unique_together = ('flowcell_id', 'lane_number')
 
 
 class SequenceDataset(PolymorphicModel):
@@ -491,6 +502,8 @@ class FileInstance(models.Model):
         null=False,
     )
 
+    class Meta:
+        unique_together = ('file_resource', 'storage')
 
 class FileTransfer(models.Model):
     """
