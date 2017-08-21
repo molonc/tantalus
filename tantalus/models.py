@@ -307,7 +307,7 @@ class SingleEndFastqFile(SequenceDataset):
 
     def default_reads_filename(self):
         return self.filename_template.format(
-            sample_id=self.dna_sequences.sample_id,
+            sample_id=self.dna_sequences.sample.sample_id,
             library_type=self.dna_sequences.dna_library.library_type,
             date=self.reads_file.get_filename_time(),
             uid=self.reads_file.get_filename_uid(),
@@ -340,7 +340,7 @@ class PairedEndFastqFiles(SequenceDataset):
 
     def default_reads_1_filename(self):
         return self.filename_template.format(
-            sample_id=self.dna_sequences.sample_id,
+            sample_id=self.dna_sequences.sample.sample_id,
             library_type=self.dna_sequences.dna_library.library_type,
             date=self.reads_1_file.get_filename_time(),
             uid=self.reads_1_file.get_filename_uid(),
@@ -349,7 +349,7 @@ class PairedEndFastqFiles(SequenceDataset):
 
     def default_reads_2_filename(self):
         return self.filename_template.format(
-            sample_id=self.dna_sequences.sample_id,
+            sample_id=self.dna_sequences.sample.sample_id,
             library_type=self.dna_sequences.dna_library.library_type,
             date=self.reads_2_file.get_filename_time(),
             uid=self.reads_2_file.get_filename_uid(),
@@ -401,7 +401,7 @@ class BamFile(SequenceDataset):
 
     def default_bam_filename(self):
         return self.filename_template.format(
-            sample_id=self.dna_sequences.sample_id,
+            sample_id=self.dna_sequences.sample.sample_id,
             library_type=self.dna_sequences.dna_library.library_type,
             date=self.reads_1_file.get_filename_time(),
             uid=self.reads_1_file.get_filename_uid(),
@@ -409,7 +409,7 @@ class BamFile(SequenceDataset):
 
     def default_bam_index_filename(self):
         return self.filename_template.format(
-            sample_id=self.dna_sequences.sample_id,
+            sample_id=self.dna_sequences.sample.sample_id,
             library_type=self.dna_sequences.dna_library.library_type,
             date=self.reads_2_file.get_filename_time(),
             uid=self.reads_2_file.get_filename_uid(),
