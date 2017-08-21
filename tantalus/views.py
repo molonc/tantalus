@@ -49,7 +49,7 @@ def start_transfers(deployment):
             raise ValueError('seq data {} not deployed on {}'.format(seq_data, deployment.from_storage))
 
         elif len(file_instances) > 1:
-            raise ValueError('multiple seq data {} instances on {}'.format(seeq_data, deployment.from_storage))
+            raise ValueError('multiple seq data {} instances on {}'.format(seq_data, deployment.from_storage))
 
         file_instance = file_instances[0]
 
