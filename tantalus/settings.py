@@ -135,6 +135,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = '/var/www/html/tantalus/static/'
+
+
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
@@ -146,7 +149,7 @@ REST_FRAMEWORK = {
 
 # Celery settings
 
-CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672/'
+CELERY_BROKER_URL = 'amqp://guest:guest@10.9.215.82:5672/'
 
 #: Only add pickle to this list if your broker is secured
 #: from unwanted access (see userguide/security.html)
