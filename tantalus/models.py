@@ -67,6 +67,7 @@ class SequenceDataFile(models.Model):
         max_length=50,
         blank=False,
         null=False,
+        unique=True,
     )
 
     size = models.BigIntegerField(

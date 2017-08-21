@@ -18,6 +18,11 @@ class SampleSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class SequenceDataFileSerializer(serializers.HyperlinkedModelSerializer):
+    md5 = serializers.CharField(
+        validators=[
+            UniqueValidator(queryset=tantalus.models.SequenceDataFile.objects.all())
+        ]
+    )
     class Meta:
         model = tantalus.models.SequenceDataFile
         fields = '__all__'
