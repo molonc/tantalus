@@ -3,9 +3,15 @@ import tantalus.models
 from taggit_serializer.serializers import (
     TagListSerializerField,
     TaggitSerializer)
+from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 
 
 class SampleSerializer(serializers.HyperlinkedModelSerializer):
+    sample_id = serializers.CharField(
+        validators=[
+            UniqueValidator(queryset=tantalus.models.Sample.objects.all())
+        ]
+    )
     class Meta:
         model = tantalus.models.Sample
         fields = '__all__'
@@ -18,6 +24,11 @@ class SequenceDataFileSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class DNALibrarySerializer(serializers.HyperlinkedModelSerializer):
+    library_id = serializers.CharField(
+        validators=[
+            UniqueValidator(queryset=tantalus.models.DNALibrary.objects.all())
+        ]
+    )
     class Meta:
         model = tantalus.models.DNALibrary
         fields = '__all__'
@@ -27,12 +38,25 @@ class DNASequencesSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.DNASequences
         fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=tantalus.models.DNASequences.objects.all(),
+                fields=('dna_library', 'index_sequence')
+            )
+        ]
+
 
 
 class SequenceLaneSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.SequenceLane
         fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=tantalus.models.SequenceLane.objects.all(),
+                fields=('flowcell_id', 'lane_number')
+            )
+        ]
 
 
 class SequenceDatasetSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
@@ -98,6 +122,12 @@ class FileInstanceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.FileInstance
         fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=tantalus.models.FileInstance.objects.all(),
+                fields=('file_resource', 'storage')
+            )
+        ]
 
 
 class DeploymentSerializer(serializers.HyperlinkedModelSerializer):
