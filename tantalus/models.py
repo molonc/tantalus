@@ -88,8 +88,42 @@ class SequenceDataFile(models.Model):
         choices=file_type_choices,
     )
 
+    compression_choices = (
+        ('gzip', 'gzip'),
+        ('bzip2', 'bzip2'),
+        ('none', 'none'),
+    )
+
+    compression = models.CharField(
+        'Compression',
+        max_length=50,
+        blank=False,
+        null=False,
+        choices=compression_choices,
+    )
+
+    default_filename = models.CharField(
+        'Default Filename',
+        max_length=500,
+        blank=False,
+        null=False,
+    )
+
     def __unicode__(self):
         return '{}'.format(self.md5)
+
+    def get_filename_time(self):
+        return self.created.strftime('%Y%m%d_%H%M%S')
+
+    def get_filename_uid(self):
+        return self.md5[:8]
+
+    def get_compression_suffix(self):
+        return {
+            'gzip': '.gz',
+            'bzip2': '.bz2',
+            'none': '',
+        }[self.compression]
 
 
 class DNALibrary(models.Model):
@@ -102,11 +136,11 @@ class DNALibrary(models.Model):
     library_id = create_id_field('Library ID')
 
     library_type_choices = [
-        ('Exome','Bulk Whole Exome Sequence'),
-        ('WGS','Bulk Whole Genome Sequence'),
-        ('SC WGS','Single Cell Whole Genome Sequence'),
-        ('RNA-Seq','Bulk RNA-Seq'),
-        ('SC RNA-Seq','Single Cell RNA-Seq'),
+        ('exome', 'Bulk Whole Exome Sequence'),
+        ('wgs', 'Bulk Whole Genome Sequence'),
+        ('sc_wgs', 'Single Cell Whole Genome Sequence'),
+        ('rnaseq', 'Bulk RNA-Seq'),
+        ('sc_rnaseq', 'Single Cell RNA-Seq'),
     ]
 
     library_type = models.CharField(
@@ -115,6 +149,19 @@ class DNALibrary(models.Model):
         blank=False,
         null=False,
         choices=library_type_choices,
+    )
+
+    index_format_choices = (
+        ('D', 'Dual Index (i7 and i5)'),
+        ('N', 'No Indexing')
+    )
+
+    index_format = models.CharField(
+        'Index format',
+        max_length=50,
+        blank=False,
+        null=False,
+        choices=index_format_choices,
     )
 
     def __unicode__(self):
@@ -131,19 +178,6 @@ class DNASequences(models.Model):
     dna_library = models.ForeignKey(
         DNALibrary,
         on_delete=models.CASCADE,
-    )
-
-    index_format_choices = [
-        ('S', 'Single'),
-        ('D', 'Dual'),
-    ]
-
-    index_format = models.CharField(
-        'Index Format',
-        max_length=50,
-        blank=True,
-        null=True,
-        choices=index_format_choices,
     )
 
     index_sequence = models.CharField(
@@ -207,19 +241,6 @@ class SequenceLane(models.Model):
         choices=read_type_choices,
     )
 
-    index_read_type_choices = (
-        ('D', 'Dual Index (i7 and i5)'),
-        ('N', 'No Indexing')
-    )
-
-    index_read_type = models.CharField(
-        'Index read type',
-        max_length=50,
-        blank=False,
-        null=False,
-        choices=index_read_type_choices,
-    )
-
     dna_library = models.ForeignKey(
         DNALibrary,
         on_delete=models.CASCADE,
@@ -243,10 +264,9 @@ class SequenceDataset(PolymorphicModel):
         blank=False,
     )
     
-    dna_sequences = models.ManyToManyField(
+    dna_sequences = models.ForeignKey(
         DNASequences,
-        verbose_name='Sequences',
-        blank=False,
+        on_delete=models.CASCADE,
     )
 
     sequence_data = models.ManyToManyField(
@@ -269,6 +289,19 @@ class SingleEndFastqFile(SequenceDataset):
         related_name='reads_file',
     )
 
+    def __str__(self):
+        return "SingleEndFastQ {}".format(self.id)
+
+    filename_template = '{sample_id}/{library_type}/{sample_id}_{library_type}_{date}_{uid}.fastq{compression}'
+
+    def default_reads_filename(self):
+        return self.filename_template.format(
+            sample_id=self.dna_sequences.sample_id,
+            library_type=self.dna_sequences.dna_library.library_type,
+            date=self.reads_file.get_filename_time(),
+            uid=self.reads_file.get_filename_uid(),
+            compression=self.reads_file.get_compression_suffix())
+
 
 class PairedEndFastqFiles(SequenceDataset):
     """
@@ -288,6 +321,29 @@ class PairedEndFastqFiles(SequenceDataset):
         on_delete=models.CASCADE,
         related_name='reads_2_file',
     )
+
+    def __str__(self):
+        return "PairedEndFastq {}".format(self.id)
+
+    filename_template = '{sample_id}/{library_type}/{sample_id}_{library_type}_{date}_{uid}_{read_end}.fastq{compression}'
+
+    def default_reads_1_filename(self):
+        return self.filename_template.format(
+            sample_id=self.dna_sequences.sample_id,
+            library_type=self.dna_sequences.dna_library.library_type,
+            date=self.reads_1_file.get_filename_time(),
+            uid=self.reads_1_file.get_filename_uid(),
+            read_end='1',
+            compression=self.reads_1_file.get_compression_suffix())
+
+    def default_reads_2_filename(self):
+        return self.filename_template.format(
+            sample_id=self.dna_sequences.sample_id,
+            library_type=self.dna_sequences.dna_library.library_type,
+            date=self.reads_2_file.get_filename_time(),
+            uid=self.reads_2_file.get_filename_uid(),
+            read_end='2',
+            compression=self.reads_2_file.get_compression_suffix())
 
 
 class BamFile(SequenceDataset):
@@ -329,6 +385,24 @@ class BamFile(SequenceDataset):
         on_delete=models.CASCADE,
         related_name='bam_index_file',
     )
+
+    filename_template = '{sample_id}/{library_type}/{sample_id}_{library_type}_{date}_{uid}.{suffix}'
+
+    def default_bam_filename(self):
+        return self.filename_template.format(
+            sample_id=self.dna_sequences.sample_id,
+            library_type=self.dna_sequences.dna_library.library_type,
+            date=self.reads_1_file.get_filename_time(),
+            uid=self.reads_1_file.get_filename_uid(),
+            suffix='bam')
+
+    def default_bam_index_filename(self):
+        return self.filename_template.format(
+            sample_id=self.dna_sequences.sample_id,
+            library_type=self.dna_sequences.dna_library.library_type,
+            date=self.reads_2_file.get_filename_time(),
+            uid=self.reads_2_file.get_filename_uid(),
+            suffix='bam.bai')
 
 
 class Storage(PolymorphicModel):
@@ -418,6 +492,29 @@ class FileInstance(models.Model):
     )
 
 
+class FileTransfer(models.Model):
+    """
+    Transfer of a specific data file.
+    """
+
+    file_instance = models.ForeignKey(
+        FileInstance,
+        blank=False,
+        null=False,
+    )
+
+    new_filename = models.CharField(
+        'New Filename',
+        max_length=500,
+        blank=False,
+        null=False,
+    )
+
+    running = models.BooleanField('Running', default=False)
+    finished = models.BooleanField('Finished', default=False)
+    success = models.BooleanField('Success', default=False)
+
+
 class Deployment(models.Model):
     """
     Deployment from one storage to another.
@@ -437,50 +534,20 @@ class Deployment(models.Model):
         related_name='deployment_to_storage',
     )
 
-    files = models.ManyToManyField(
+    datasets = models.ManyToManyField(
         SequenceDataset,
         verbose_name='Datasets',
         blank=False,
     )
 
-    state = models.CharField(
-        'State',
-        max_length=50,
-        null=True,
-    )
-
-    result = models.IntegerField(
-        'Result',
-        null=True,
-    )
-
-
-class FileTransfer(models.Model):
-    """
-    Transfer of a specific data file.
-    """
-
-    deployment = models.ForeignKey(
-        Deployment,
+    file_transfers = models.ManyToManyField(
+        FileTransfer,
+        verbose_name='File Transfers',
         blank=False,
-        null=False,
     )
 
-    datafile = models.ForeignKey(
-        SequenceDataFile,
-        blank=False,
-        null=False,
-    )
-
-    state = models.CharField(
-        'State',
-        max_length=50,
-        null=True,
-    )
-
-    result = models.IntegerField(
-        'Result',
-        null=True,
-    )
+    running = models.BooleanField('Running', default=False)
+    finished = models.BooleanField('Finished', default=False)
+    errors = models.BooleanField('Errors', default=False)
 
 

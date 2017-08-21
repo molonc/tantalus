@@ -40,7 +40,7 @@ for idx in data.index:
         seqfile.size = data.loc[idx, 'size' + read_end]
         seqfile.created = pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific')
         seqfile.file_type = 'FQ'
-        seqfile.full_clean()
+        seqfile.compression = 'gzip'
         seqfile.save()
 
         reads_files[read_end] = seqfile
@@ -49,19 +49,28 @@ for idx in data.index:
         serverfile.storage = storage
         serverfile.file_resource = seqfile
         serverfile.filename = fastq_filename
-        serverfile.full_clean()
         serverfile.save()
+
+    fastq_dna_sequences = tantalus.models.DNASequences.objects.filter(index_sequence=reverse_complement(data.loc[idx, 'code1']) + '-' + data.loc[idx, 'code2'])
+    assert len(fastq_dna_sequences) == 1
 
     fastq_files = tantalus.models.PairedEndFastqFiles()
     fastq_files.reads_1_file = reads_files['1']
     fastq_files.reads_2_file = reads_files['2']
+    fastq_files.dna_sequences = fastq_dna_sequences[0]
     fastq_files.save()
     fastq_files.lanes = tantalus.models.SequenceLane.objects.filter(flowcell_id=data.loc[idx, 'flowcell'], lane_number=data.loc[idx, 'lane'])
-    fastq_files.dna_sequences = tantalus.models.DNASequences.objects.filter(index_sequence=reverse_complement(data.loc[idx, 'code1']) + '-' + data.loc[idx, 'code2'])
     fastq_files.sequence_data.add(reads_files['1'])
     fastq_files.sequence_data.add(reads_files['2'])
-    fastq_files.full_clean()
     fastq_files.save()
+
+    reads_files['1'].default_filename = fastq_files.default_reads_1_filename()
+    reads_files['2'].default_filename = fastq_files.default_reads_2_filename()
+
+    reads_files['1'].full_clean()
+    reads_files['2'].full_clean()
+    serverfile.full_clean()
+    fastq_files.full_clean()
 
 
 

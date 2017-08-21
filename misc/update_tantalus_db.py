@@ -17,7 +17,7 @@ django.setup()
 
 from tantalus.models import *
 
-HOSTNAME='http://127.0.0.1:8000/apps/api/'
+HOSTNAME='http://10.9.215.82:7000/apps/api/'
 JSON_FORMAT='?format=json'
 DEFAULT_LIBRARY_TYPE='SC WGS'
 INDEX_FORMAT='D' #Data coming from colossus should all be dual indexed
@@ -115,7 +115,8 @@ def add_new_libraries(libs):
     for lib in libs:
         l = DNALibrary(
             library_id=lib,
-            library_type=DEFAULT_LIBRARY_TYPE)
+            library_type=DEFAULT_LIBRARY_TYPE,
+            index_format=INDEX_FORMAT)
         l.save()
         print "ADDING this library: {}".format(lib)
         update_tantalus_dnasequences(lib)
@@ -126,7 +127,8 @@ def delete_libraries(libs):
         print "DELETING this library: {}".format(lib)
         l = DNALibrary.objects.filter(
             library_id=lib,
-            library_type=DEFAULT_LIBRARY_TYPE)
+            library_type=DEFAULT_LIBRARY_TYPE,
+            index_format=INDEX_FORMAT)
         l.delete()
 
 
@@ -160,19 +162,19 @@ def delete_sequencelanes(seqs, seq_lib_map):
     pass
 
 
-def add_new_sublibs(sublibs, library):
+def add_new_sublibs(sublibs, library_id):
     for sublib in sublibs:
         # the foreign key name is sample_id, and the name of the field inside sample is also sample_id, which is why this key is accessed twice
         sample_id_space, sample_id = parse_sample_id(sublib['sample_id']['sample_id'])
         sample = Sample.objects.get(sample_id_space = sample_id_space, sample_id = sample_id)
+        library = DNALibrary.objects.get(library_id=library_id)
 
         s = DNASequences(
             sample = sample,
-            index_format = INDEX_FORMAT,
-            dna_library = DNALibrary.objects.get(library_id=library)
+            dna_library = DNALibrary.objects.get(library_id=library_id)
         )
 
-        if (s.index_format == 'D'):
+        if (library.index_format == 'D'):
             s.index_sequence = "{i7}-{i5}".format(
                 i7=sublib['primer_i7'],
                 i5=sublib['primer_i5'])
