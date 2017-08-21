@@ -4,7 +4,7 @@
 
 ### Setup
 
-Make sure you have (Rabbit-MQ)[https://www.rabbitmq.com/] installed.  On OSX:
+Make sure you have [Rabbit-MQ](https://www.rabbitmq.com/) installed.  On OSX:
 
 ```
 brew install Rabbit-MQ
