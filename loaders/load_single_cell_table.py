@@ -69,6 +69,8 @@ for idx in data.index:
 
     reads_files['1'].full_clean()
     reads_files['2'].full_clean()
+    reads_files['1'].save()
+    reads_files['2'].save()
     serverfile.full_clean()
     fastq_files.full_clean()
 
