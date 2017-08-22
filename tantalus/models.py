@@ -29,10 +29,14 @@ class Sample(models.Model):
 
     history = HistoricalRecords()
 
+    APARICIO = 'SA'
+    HUNTSMAN = 'DG'
+    OTHER = 'O'
+
     sample_id_space_choices = (
-        ('SA','Aparicio'),
-        ('DG','Huntsman'),
-        ('O','Other'),
+        (APARICIO, 'Aparicio'),
+        (HUNTSMAN, 'Huntsman'),
+        (OTHER, 'Other'),
     )
 
     sample_id_space = models.CharField(
@@ -62,10 +66,14 @@ class SequenceDataFile(models.Model):
 
     created = models.DateTimeField()
 
+    BAM = 'BAM'
+    BAI = 'BAI'
+    FQ = 'FQ'
+
     file_type_choices = (
-        ('BAM', 'BAM'),
-        ('BAI', 'BAM Index'),
-        ('FQ', 'Fastq'),
+        (BAM, 'BAM'),
+        (BAI, 'BAM Index'),
+        (FQ, 'Fastq'),
     )
 
     file_type = models.CharField(
@@ -73,10 +81,14 @@ class SequenceDataFile(models.Model):
         choices=file_type_choices,
     )
 
+    GZIP = 'GZIP'
+    BZIP2 = 'BZIP2'
+    UNCOMPRESSED = 'UNCOMPRESSED'
+
     compression_choices = (
-        ('gzip', 'gzip'),
-        ('bzip2', 'bzip2'),
-        ('none', 'none'),
+        (GZIP, 'gzip'),
+        (BZIP2, 'bzip2'),
+        (UNCOMPRESSED, 'uncompressed'),
     )
 
     compression = models.CharField(
@@ -99,9 +111,9 @@ class SequenceDataFile(models.Model):
 
     def get_compression_suffix(self):
         return {
-            'gzip': '.gz',
-            'bzip2': '.bz2',
-            'none': '',
+            GZIP: '.gz',
+            BZIP2: '.bz2',
+            UNCOMPRESSED: '',
         }[self.compression]
 
 
@@ -114,12 +126,18 @@ class DNALibrary(models.Model):
 
     library_id = create_id_field(unique=True)
 
+    EXOME = 'EXOME'
+    WGS = 'WGS'
+    RNASEQ = 'RNASEQ'
+    SINGLE_CELL_WGS = 'SC_WGS'
+    SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
+        
     library_type_choices = [
-        ('exome', 'Bulk Whole Exome Sequence'),
-        ('wgs', 'Bulk Whole Genome Sequence'),
-        ('sc_wgs', 'Single Cell Whole Genome Sequence'),
-        ('rnaseq', 'Bulk RNA-Seq'),
-        ('sc_rnaseq', 'Single Cell RNA-Seq'),
+        (EXOME, 'Bulk Whole Exome Sequence'),
+        (WGS, 'Bulk Whole Genome Sequence'),
+        (RNASEQ, 'Bulk RNA-Seq'),
+        (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
+        (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
     ]
 
     library_type = models.CharField(
@@ -127,9 +145,14 @@ class DNALibrary(models.Model):
         choices=library_type_choices,
     )
 
+    SINGLE_INDEX = 'S'
+    DUAL_INDEX = 'D'
+    NO_INDEXING = 'N'
+
     index_format_choices = (
-        ('D', 'Dual Index (i7 and i5)'),
-        ('N', 'No Indexing')
+        (SINGLE_INDEX, 'Single Index'),
+        (DUAL_INDEX, 'Dual Index (i7 and i5)'),
+        (NO_INDEXING, 'No Indexing')
     )
 
     index_format = models.CharField(

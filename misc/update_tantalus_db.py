@@ -19,8 +19,8 @@ from tantalus.models import *
 
 HOSTNAME='http://10.9.215.82:7000/apps/api/'
 JSON_FORMAT='?format=json'
-DEFAULT_LIBRARY_TYPE='SC WGS'
-INDEX_FORMAT='D' #Data coming from colossus should all be dual indexed
+DEFAULT_LIBRARY_TYPE=DNALibrary.SINGLE_CELL_WGS
+INDEX_FORMAT=DNALibrary.DUAL_INDEX #Data coming from colossus should all be dual indexed
 
 
 def parse_sample_id(colossus_sample_id):
@@ -30,7 +30,7 @@ def parse_sample_id(colossus_sample_id):
     """
 
     if colossus_sample_id.startswith('SA'):
-        sample_namespace = 'SA'
+        sample_namespace = Sample.APARICIO
     else:
         raise Exception('unrecognized sample namespace')
 
@@ -174,7 +174,7 @@ def add_new_sublibs(sublibs, library_id):
             dna_library = DNALibrary.objects.get(library_id=library_id)
         )
 
-        if (library.index_format == 'D'):
+        if (library.index_format == DNALibrary.DUAL_INDEX):
             s.index_sequence = "{i7}-{i5}".format(
                 i7=sublib['primer_i7'],
                 i5=sublib['primer_i5'])
@@ -246,6 +246,9 @@ def update_tantalus():
     update_tantalus_samples()
     update_tantalus_DNAlibrary()  #calls update_tantalus_dnasequences inside as well
     update_tantalus_sequencelane()
+
+
+DNALibrary.objects.all().delete()
 
 
 delete_samples(['SA928'])

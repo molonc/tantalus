@@ -49,8 +49,8 @@ for idx in data.index:
         seqfile.md5 = data.loc[idx, 'md5' + read_end]
         seqfile.size = data.loc[idx, 'size' + read_end]
         seqfile.created = pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific')
-        seqfile.file_type = 'FQ'
-        seqfile.compression = 'gzip'
+        seqfile.file_type = tantalus.models.SequenceDataFile.FQ
+        seqfile.compression = tantalus.models.SequenceDataFile.GZIP
         seqfile.save()
 
         reads_files[read_end] = seqfile
