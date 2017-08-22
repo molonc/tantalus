@@ -1,11 +1,13 @@
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import ModelFormMixin
+from django.db import transaction
 from tantalus.models import FileTransfer, Deployment
 
 
 class FileTransferListView(ListView):
     model = FileTransfer
+    template_name="tantalus/transfer_list.html"
 
 
 class DeploymentListView(ListView):
@@ -17,24 +19,22 @@ class DeploymentCreateView(CreateView):
     fields = ['from_storage', 'to_storage', 'datasets']
 
     def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        if form.is_valid():
-            self.object = form.save()
-            self.object.state = 'Started'
-            self.object.save()
+        try:
+            with transaction.atomic():
+                form = self.get_form()
+                if form.is_valid():
+                    self.object = form.save()
+                    self.object.state = 'Started'
+                    self.object.save()
 
-            file_transfer_ids = []
+                    file_transfer_ids = []
 
-            deployment = self.object
-
-            try:
-                start_transfers(deployment)
-            except ValueError as e:
-                pass
-                # TODO: set error
-                
-            return super(ModelFormMixin, self).form_valid(form)
-        else:
+                    deployment = self.object
+                    start_transfers(deployment)
+                    return super(ModelFormMixin, self).form_valid(form)
+        except ValueError as e:
+            error_message = ' '.join(e.args)
+            #TODO: override methods + update template so that error message is passed through and is useful
             return self.form_invalid(form)
 
 
