@@ -18,8 +18,6 @@ def create_id_field(name, *args, **kwargs):
     return models.CharField(
         name,
         max_length=50,
-        blank=False,
-        null=False,
         *args,
         **kwargs
     )
@@ -39,10 +37,7 @@ class Sample(models.Model):
     )
 
     sample_id_space = models.CharField(
-        'Sample ID Space',
         max_length=50,
-        blank=False,
-        null=False,
         choices=sample_id_space_choices,
     )
 
@@ -65,19 +60,15 @@ class SequenceDataFile(models.Model):
     md5 = models.CharField(
         'MD5',
         max_length=50,
-        blank=False,
-        null=False,
         unique=True,
     )
 
     size = models.BigIntegerField(
         'Size',
-        null=False,
     )
 
     created = models.DateTimeField(
         'Created',
-        null=False,
     )
 
     file_type_choices = (
@@ -89,8 +80,6 @@ class SequenceDataFile(models.Model):
     file_type = models.CharField(
         'Type',
         max_length=50,
-        blank=False,
-        null=False,
         choices=file_type_choices,
     )
 
@@ -103,16 +92,12 @@ class SequenceDataFile(models.Model):
     compression = models.CharField(
         'Compression',
         max_length=50,
-        blank=False,
-        null=False,
         choices=compression_choices,
     )
 
     default_filename = models.CharField(
         'Default Filename',
         max_length=500,
-        blank=False,
-        null=False,
     )
 
     def __unicode__(self):
@@ -152,8 +137,6 @@ class DNALibrary(models.Model):
     library_type = models.CharField(
         'Library Type',
         max_length=50,
-        blank=False,
-        null=False,
         choices=library_type_choices,
     )
 
@@ -165,8 +148,6 @@ class DNALibrary(models.Model):
     index_format = models.CharField(
         'Index format',
         max_length=50,
-        blank=False,
-        null=False,
         choices=index_format_choices,
     )
 
@@ -213,8 +194,6 @@ class SequenceLane(models.Model):
 
     lane_number = models.PositiveSmallIntegerField(
         'Lane Number',
-        blank=False,
-        null=False,
     )
 
     sequencing_centre = create_id_field('Sequencing Centre')
@@ -232,8 +211,6 @@ class SequenceLane(models.Model):
     sequencing_instrument = models.CharField(
         'Sequencing instrument',
         max_length=50,
-        blank=False,
-        null=False,
         choices=sequencing_instrument_choices,
     )
 
@@ -245,8 +222,6 @@ class SequenceLane(models.Model):
     read_type = models.CharField(
         'Read type',
         max_length=50,
-        blank=False,
-        null=False,
         choices=read_type_choices,
     )
 
@@ -273,7 +248,6 @@ class SequenceDataset(PolymorphicModel):
     lanes = models.ManyToManyField(
         SequenceLane,
         verbose_name='Lanes',
-        blank=False,
     )
     
     dna_sequences = models.ForeignKey(
@@ -284,7 +258,6 @@ class SequenceDataset(PolymorphicModel):
     sequence_data = models.ManyToManyField(
         SequenceDataFile,
         verbose_name='Data',
-        blank=False,
     )
 
 
@@ -374,16 +347,12 @@ class BamFile(SequenceDataset):
     reference_genome = models.CharField(
         'Reference Genome',
         max_length=50,
-        blank=False,
-        null=False,
         choices=reference_genome_choices,
     )
 
     aligner = models.CharField(
         'Aligner',
         max_length=50,
-        blank=False,
-        null=False,
     )
 
     bam_file = models.ForeignKey(
@@ -427,8 +396,6 @@ class Storage(PolymorphicModel):
     name = models.CharField(
         'Name',
         max_length=50,
-        blank=False,
-        null=False,
     )
 
     def __unicode__(self):
@@ -445,15 +412,11 @@ class ServerStorage(Storage):
     server_ip = models.CharField(
         'Server IP',
         max_length=50,
-        blank=False,
-        null=False,
     )
 
     storage_directory = models.CharField(
         'Storage Directory',
         max_length=500,
-        blank=False,
-        null=False,
     )
 
 
@@ -467,22 +430,16 @@ class AzureBlobStorage(Storage):
     storage_account = models.CharField(
         'Storage Account',
         max_length=50,
-        blank=False,
-        null=False,
     )
 
     storage_container = models.CharField(
         'Storage Container',
         max_length=50,
-        blank=False,
-        null=False,
     )
 
     storage_key = models.CharField(
         'Storage Key',
         max_length=200,
-        blank=False,
-        null=False,
     )
 
 
@@ -506,8 +463,6 @@ class FileInstance(models.Model):
     filename = models.CharField(
         'Filename',
         max_length=500,
-        blank=False,
-        null=False,
     )
 
     class Meta:
@@ -520,15 +475,11 @@ class FileTransfer(models.Model):
 
     file_instance = models.ForeignKey(
         FileInstance,
-        blank=False,
-        null=False,
     )
 
     new_filename = models.CharField(
         'New Filename',
         max_length=500,
-        blank=False,
-        null=False,
     )
 
     running = models.BooleanField('Running', default=False)
@@ -543,28 +494,22 @@ class Deployment(models.Model):
 
     from_storage = models.ForeignKey(
         Storage,
-        blank=False,
-        null=False,
         related_name='deployment_from_storage',
     )
 
     to_storage = models.ForeignKey(
         Storage,
-        blank=False,
-        null=False,
         related_name='deployment_to_storage',
     )
 
     datasets = models.ManyToManyField(
         SequenceDataset,
         verbose_name='Datasets',
-        blank=False,
     )
 
     file_transfers = models.ManyToManyField(
         FileTransfer,
         verbose_name='File Transfers',
-        blank=False,
     )
 
     running = models.BooleanField('Running', default=False)
