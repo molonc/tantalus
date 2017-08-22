@@ -14,9 +14,8 @@ from polymorphic.models import PolymorphicModel
 simple_history.register(taggit.models.Tag)
 
 
-def create_id_field(name, *args, **kwargs):
+def create_id_field(*args, **kwargs):
     return models.CharField(
-        name,
         max_length=50,
         *args,
         **kwargs
@@ -41,10 +40,7 @@ class Sample(models.Model):
         choices=sample_id_space_choices,
     )
 
-    sample_id = create_id_field('Sample ID',
-                                unique=True,
-                                )
-
+    sample_id = create_id_field(unique=True)
 
     def __unicode__(self):
         return '{}_{}'.format(self.sample_id_space, self.sample_id)
@@ -58,18 +54,13 @@ class SequenceDataFile(models.Model):
     history = HistoricalRecords()
 
     md5 = models.CharField(
-        'MD5',
         max_length=50,
         unique=True,
     )
 
-    size = models.BigIntegerField(
-        'Size',
-    )
+    size = models.BigIntegerField()
 
-    created = models.DateTimeField(
-        'Created',
-    )
+    created = models.DateTimeField()
 
     file_type_choices = (
         ('BAM', 'BAM'),
@@ -78,7 +69,6 @@ class SequenceDataFile(models.Model):
     )
 
     file_type = models.CharField(
-        'Type',
         max_length=50,
         choices=file_type_choices,
     )
@@ -90,13 +80,11 @@ class SequenceDataFile(models.Model):
     )
 
     compression = models.CharField(
-        'Compression',
         max_length=50,
         choices=compression_choices,
     )
 
     default_filename = models.CharField(
-        'Default Filename',
         max_length=500,
     )
 
@@ -124,7 +112,7 @@ class DNALibrary(models.Model):
 
     history = HistoricalRecords()
 
-    library_id = create_id_field('Library ID', unique=True)
+    library_id = create_id_field(unique=True)
 
     library_type_choices = [
         ('exome', 'Bulk Whole Exome Sequence'),
@@ -135,7 +123,6 @@ class DNALibrary(models.Model):
     ]
 
     library_type = models.CharField(
-        'Library Type',
         max_length=50,
         choices=library_type_choices,
     )
@@ -146,7 +133,6 @@ class DNALibrary(models.Model):
     )
 
     index_format = models.CharField(
-        'Index format',
         max_length=50,
         choices=index_format_choices,
     )
@@ -168,7 +154,6 @@ class DNASequences(models.Model):
     )
 
     index_sequence = models.CharField(
-        'Index Sequence',
         max_length=50,
         blank=True,
         null=True,
@@ -190,15 +175,13 @@ class SequenceLane(models.Model):
 
     history = HistoricalRecords()
 
-    flowcell_id = create_id_field('FlowCell ID')
+    flowcell_id = create_id_field()
 
-    lane_number = models.PositiveSmallIntegerField(
-        'Lane Number',
-    )
+    lane_number = models.PositiveSmallIntegerField()
 
-    sequencing_centre = create_id_field('Sequencing Centre')
+    sequencing_centre = create_id_field()
 
-    sequencing_library_id = create_id_field('Sequencing Library ID')
+    sequencing_library_id = create_id_field()
 
     sequencing_instrument_choices = (
         ('HX','HiSeqX'),
@@ -209,7 +192,6 @@ class SequenceLane(models.Model):
     )
 
     sequencing_instrument = models.CharField(
-        'Sequencing instrument',
         max_length=50,
         choices=sequencing_instrument_choices,
     )
@@ -220,7 +202,6 @@ class SequenceLane(models.Model):
     )
 
     read_type = models.CharField(
-        'Read type',
         max_length=50,
         choices=read_type_choices,
     )
@@ -345,13 +326,11 @@ class BamFile(SequenceDataset):
     )
 
     reference_genome = models.CharField(
-        'Reference Genome',
         max_length=50,
         choices=reference_genome_choices,
     )
 
     aligner = models.CharField(
-        'Aligner',
         max_length=50,
     )
 
@@ -394,7 +373,6 @@ class Storage(PolymorphicModel):
     history = HistoricalRecords()
 
     name = models.CharField(
-        'Name',
         max_length=50,
     )
 
@@ -410,12 +388,10 @@ class ServerStorage(Storage):
     history = HistoricalRecords()
 
     server_ip = models.CharField(
-        'Server IP',
         max_length=50,
     )
 
     storage_directory = models.CharField(
-        'Storage Directory',
         max_length=500,
     )
 
@@ -428,17 +404,14 @@ class AzureBlobStorage(Storage):
     history = HistoricalRecords()
 
     storage_account = models.CharField(
-        'Storage Account',
         max_length=50,
     )
 
     storage_container = models.CharField(
-        'Storage Container',
         max_length=50,
     )
 
     storage_key = models.CharField(
-        'Storage Key',
         max_length=200,
     )
 
@@ -461,7 +434,6 @@ class FileInstance(models.Model):
     )
 
     filename = models.CharField(
-        'Filename',
         max_length=500,
     )
 
@@ -478,7 +450,6 @@ class FileTransfer(models.Model):
     )
 
     new_filename = models.CharField(
-        'New Filename',
         max_length=500,
     )
 
