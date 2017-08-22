@@ -12,6 +12,7 @@ django.setup()
 import tantalus.models
 
 tantalus.models.ServerStorage.objects.all().delete()
+tantalus.models.AzureBlobStorage.objects.all().delete()
 tantalus.models.SequenceDataFile.objects.all().delete()
 tantalus.models.FileInstance.objects.all().delete()
 tantalus.models.PairedEndFastqFiles.objects.all().delete()
