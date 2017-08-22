@@ -478,6 +478,13 @@ class AzureBlobStorage(Storage):
         null=False,
     )
 
+    storage_key = models.CharField(
+        'Storage Key',
+        max_length=200,
+        blank=False,
+        null=False,
+    )
+
 
 class FileInstance(models.Model):
     """

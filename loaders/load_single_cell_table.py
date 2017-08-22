@@ -29,6 +29,15 @@ storage.storage_directory = '/share/lustre/archive'
 storage.full_clean()
 storage.save()
 
+blob_storage = tantalus.models.AzureBlobStorage()
+blob_storage.name = 'azure_sc_fastqs'
+blob_storage.storage_account = 'singlecellstorage'
+blob_storage.storage_container = 'fastqs'
+blob_storage.storage_key = 'okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn4G3YMEKebnCnsRwVu9fRhh2RiMQ=='
+blob_storage.full_clean()
+blob_storage.save()
+
+
 for idx in data.index:
     reads_files = {}
 

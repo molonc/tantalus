@@ -7,10 +7,6 @@ from azure.storage.blob import BlockBlobService
 import paramiko
 
 
-ACCOUNT="singlecellstorage"
-KEY="okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn4G3YMEKebnCnsRwVu9fRhh2RiMQ=="
-
-
 @shared_task
 def transfer_file(file_transfer_id):
     file_transfer = FileTransfer.objects.get(pk=file_transfer_id)
@@ -48,13 +44,15 @@ def transfer_file(file_transfer_id):
 
 @shared_task
 def transfer_file_server_azure(file_transfer):
-    block_blob_service = BlockBlobService(account_name=ACCOUNT, account_key=KEY)
+    block_blob_service = BlockBlobService(
+        account_name=file_transfer.deployment.to_storage.storage_account,
+        account_key=file_transfer.deployment.to_storage.storage_key)
 
     def progress_callback(current, total):
         file_transfer.progress = float(current) / float(total)
 
     block_blob_service.create_blob_from_path(
-        file_transfer.deployment.from_storage.storage_container,
+        file_transfer.deployment.to_storage.storage_container,
         file_transfer.new_filename,
         file_transfer.file_instance.filename,
         progress_callback=progress_callback)
@@ -64,12 +62,12 @@ def transfer_file_server_azure(file_transfer):
 
 @shared_task
 def transfer_file_azure_server(file_transfer):
-    block_blob_service = BlockBlobService(account_name=ACCOUNT, account_key=KEY)
+    block_blob_service = BlockBlobService(
+        account_name=file_transfer.deployment.from_storage.storage_account,
+        account_key=file_transfer.deployment.from_storage.storage_key)
 
     def progress_callback(current, total):
         file_transfer.progress = float(current) / float(total)
-
-    new_filename = '?'
 
     block_blob_service.get_blob_to_path(
         file_transfer.from_storage.storage_container,
