@@ -25,8 +25,9 @@ data = data[data['id'] == 'PX0593']
 
 storage = tantalus.models.ServerStorage()
 storage.name = 'rocks'
-storage.server_ip = 'rocks.cluster.bccrc.ca'
+storage.server_ip = 'rocks3.cluster.bccrc.ca'
 storage.storage_directory = '/share/lustre/archive'
+storage.username = 'jngo'
 storage.full_clean()
 storage.save()
 
@@ -37,7 +38,6 @@ blob_storage.storage_container = 'fastqs'
 blob_storage.storage_key = 'okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn4G3YMEKebnCnsRwVu9fRhh2RiMQ=='
 blob_storage.full_clean()
 blob_storage.save()
-
 
 for idx in data.index:
     reads_files = {}

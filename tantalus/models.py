@@ -297,6 +297,7 @@ class SingleEndFastqFile(SequenceDataset):
             index_sequence=self.dna_sequences.get_filename_index_sequence(),
             dataset_id=str(self.id).zfill(10),
             compression=reads_files[read_end].get_compression_suffix())
+            #TODO: fix typo here?
 
 
 class PairedEndFastqFiles(SequenceDataset):
@@ -423,6 +424,10 @@ class ServerStorage(Storage):
         max_length=500,
     )
 
+    username = models.CharField(
+        max_length=30
+    )
+
 
 class AzureBlobStorage(Storage):
     """
@@ -522,6 +527,7 @@ class Deployment(models.Model):
 
     file_transfers = models.ManyToManyField(
         FileTransfer,
+        blank=True,
     )
 
     running = models.BooleanField('Running', default=False)

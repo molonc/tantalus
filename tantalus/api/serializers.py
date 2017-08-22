@@ -4,7 +4,8 @@ from taggit_serializer.serializers import (
     TagListSerializerField,
     TaggitSerializer)
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
-
+from rest_framework.exceptions import ValidationError
+from tantalus.utils import start_transfers
 
 class SampleSerializer(serializers.HyperlinkedModelSerializer):
     sample_id = serializers.CharField(
@@ -107,14 +108,22 @@ class StorageSerializer(serializers.HyperlinkedModelSerializer):
         if isinstance(obj, tantalus.models.ServerStorage):
             return ServerStorageSerializer(obj, context=self.context).to_representation(obj)
         elif isinstance(obj, tantalus.models.AzureBlobStorage):
-           return AzureBlobStorageSerializer(obj, context=self.context).to_representation(obj)
+            return AzureBlobStorageSerializer(obj, context=self.context).to_representation(obj)
         return super(StorageSerializer, self).to_representation(obj)
 
 
 class ServerStorageSerializer(serializers.HyperlinkedModelSerializer):
+    # generic_url = serializers.SerializerMethodField(method_name='_get_generic_url')
+
     class Meta:
         model = tantalus.models.ServerStorage
         exclude = ['polymorphic_ctype']
+
+    def to_representation(self, obj):
+        res = super(ServerStorageSerializer, self).to_representation(obj)
+        return res
+
+
 
 
 class AzureBlobStorageSerializer(serializers.HyperlinkedModelSerializer):
@@ -139,6 +148,22 @@ class DeploymentSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = tantalus.models.Deployment
         fields = '__all__'
+
+    def create(self, validated_data):
+        try:
+            #remove many2many relationships from validated_data
+            datasets = validated_data.pop('datasets', [])
+            file_transfers = validated_data.pop('file_transfers', [])
+
+            instance = tantalus.models.Deployment(**validated_data)
+            instance.save()
+            instance.datasets = datasets
+            instance.file_transfers = file_transfers
+            start_transfers(instance)
+            return instance
+
+        except ValueError as e:
+            raise ValidationError(" ".join(e.args), code=None)
 
 
 class FileTransferSerializer(serializers.HyperlinkedModelSerializer):

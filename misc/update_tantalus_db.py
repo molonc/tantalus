@@ -248,15 +248,16 @@ def update_tantalus():
     update_tantalus_sequencelane()
 
 
-DNALibrary.objects.all().delete()
+if __name__ == '__main__':
+    DNALibrary.objects.all().delete()
 
 
-delete_samples(['SA928'])
-delete_libraries(['A90652A'])
+    delete_samples(['SA928'])
+    delete_libraries(['A90652A'])
 
-add_new_samples(['SA928'])
-add_new_libraries(['A90652A'])
-add_new_sequencelanes(['CB95TANXX_6'])
+    add_new_samples(['SA928'])
+    add_new_libraries(['A90652A'])
+    add_new_sequencelanes(['CB95TANXX_6'])
 
 
 
