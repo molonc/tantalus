@@ -73,7 +73,7 @@ def start_transfers(deployment):
                 new_filename=seq_data.default_filename)
             file_transfer.save()
 
-            transfer_file.delay(file_transfer, queue=deployment.from_storage.name)
+            transfer_file.apply_async(args=(file_transfer,), queue=deployment.from_storage.name)
 
         deployement.file_transfers.add(existing_transfers[0])
 
