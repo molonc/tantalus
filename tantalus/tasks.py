@@ -106,7 +106,7 @@ def transfer_file_server_server(file_transfer):
 
 def _check_deployment_complete(deployment):
     for file_transfer in deployment.file_transfers.all():
-        if file_transfer.failed:
+        if file_transfer.finished and not file_transfer.success:
             deployment.errors = True
     deployment.save()
 
