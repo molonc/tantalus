@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from celery import shared_task, Task
-from tantalus.models import Deployment, FileTransfer
+import tantalus.models
 import time
 from azure.storage.blob import BlockBlobService
 import paramiko
@@ -9,7 +9,7 @@ import paramiko
 
 @shared_task
 def transfer_file(file_transfer_id):
-    file_transfer = FileTransfer.objects.get(pk=file_transfer_id)
+    file_transfer = tantalus.models.FileTransfer.objects.get(pk=file_transfer_id)
 
     from_storage_type = file_transfer.from_storage.__class__.__name__
     to_storage_type = file_transfer.to_storage.__class__.__name__
