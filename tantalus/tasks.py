@@ -37,6 +37,7 @@ def transfer_file(file_transfer_id):
 
     file_transfer.running = False
     file_transfer.finished = True
+    file_transfer.success = True
     file_transfer.save()
 
     for deployment in file_transfer.deployment_set.all():
