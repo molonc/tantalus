@@ -75,6 +75,6 @@ def start_transfers(deployment):
 
             transfer_file.apply_async(args=(file_transfer.id,), queue=deployment.from_storage.name)
 
-        deployement.file_transfers.add(existing_transfers[0])
+        deployment.file_transfers.add(file_transfer)
 
 
