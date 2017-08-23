@@ -476,12 +476,12 @@ class FileTransfer(models.Model):
 
     from_storage = models.ForeignKey(
         Storage,
-        related_name='from_storage',
+        related_name='file_transfer_from_storage',
     )
 
     to_storage = models.ForeignKey(
         Storage,
-        related_name='to_storage',
+        related_name='file_transfer_to_storage',
     )
 
     file_instance = models.ForeignKey(
@@ -504,12 +504,12 @@ class Deployment(models.Model):
 
     from_storage = models.ForeignKey(
         Storage,
-        related_name='from_storage',
+        related_name='deployment_from_storage',
     )
 
     to_storage = models.ForeignKey(
         Storage,
-        related_name='to_storage',
+        related_name='deployment_to_storage',
     )
 
     datasets = models.ManyToManyField(
