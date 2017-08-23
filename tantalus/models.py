@@ -111,9 +111,9 @@ class SequenceDataFile(models.Model):
 
     def get_compression_suffix(self):
         return {
-            GZIP: '.gz',
-            BZIP2: '.bz2',
-            UNCOMPRESSED: '',
+            self.GZIP: '.gz',
+            self.BZIP2: '.bz2',
+            self.UNCOMPRESSED: '',
         }[self.compression]
 
 
@@ -186,6 +186,12 @@ class DNASequences(models.Model):
         Sample,
         on_delete=models.CASCADE,
     )
+
+    def get_filename_index_sequence(self):
+        if self.index_sequence == '':
+            return 'N'
+        else:
+            return self.index_sequence
 
     class Meta:
         unique_together = ('dna_library', 'index_sequence')
@@ -281,15 +287,16 @@ class SingleEndFastqFile(SequenceDataset):
     def __str__(self):
         return "SingleEndFastQ {}".format(self.id)
 
-    filename_template = '{sample_id}/{library_type}/{sample_id}_{library_type}_{date}_{uid}.fastq{compression}'
+    filename_template = '{sample_id}/{library_type}/{library_id}/{sample_id}_{index_sequence}_{dataset_id}.fastq{compression}'
 
     def default_reads_filename(self):
         return self.filename_template.format(
             sample_id=self.dna_sequences.sample.sample_id,
             library_type=self.dna_sequences.dna_library.library_type,
-            date=self.reads_file.get_filename_time(),
-            uid=self.reads_file.get_filename_uid(),
-            compression=self.reads_file.get_compression_suffix())
+            library_id=self.dna_sequences.dna_library.library_id,
+            index_sequence=self.dna_sequences.get_filename_index_sequence(),
+            dataset_id=str(self.id).zfill(10),
+            compression=reads_files[read_end].get_compression_suffix())
 
 
 class PairedEndFastqFiles(SequenceDataset):
@@ -314,25 +321,24 @@ class PairedEndFastqFiles(SequenceDataset):
     def __str__(self):
         return "PairedEndFastq {}".format(self.id)
 
-    filename_template = '{sample_id}/{library_type}/{sample_id}_{library_type}_{date}_{uid}_{read_end}.fastq{compression}'
+    filename_template = '{sample_id}/{library_type}/{library_id}/{sample_id}_{index_sequence}_R{read_end}_{dataset_id}.fastq{compression}'
+
+    def default_reads_filename(self, read_end):
+        reads_files = {'1': self.reads_1_file, '2': self.reads_2_file}
+        return self.filename_template.format(
+            sample_id=self.dna_sequences.sample.sample_id,
+            library_type=self.dna_sequences.dna_library.library_type,
+            library_id=self.dna_sequences.dna_library.library_id,
+            index_sequence=self.dna_sequences.get_filename_index_sequence(),
+            read_end=read_end,
+            dataset_id=str(self.id).zfill(10),
+            compression=reads_files[read_end].get_compression_suffix())
 
     def default_reads_1_filename(self):
-        return self.filename_template.format(
-            sample_id=self.dna_sequences.sample.sample_id,
-            library_type=self.dna_sequences.dna_library.library_type,
-            date=self.reads_1_file.get_filename_time(),
-            uid=self.reads_1_file.get_filename_uid(),
-            read_end='1',
-            compression=self.reads_1_file.get_compression_suffix())
+        return self.default_reads_filename('1')
 
     def default_reads_2_filename(self):
-        return self.filename_template.format(
-            sample_id=self.dna_sequences.sample.sample_id,
-            library_type=self.dna_sequences.dna_library.library_type,
-            date=self.reads_2_file.get_filename_time(),
-            uid=self.reads_2_file.get_filename_uid(),
-            read_end='2',
-            compression=self.reads_2_file.get_compression_suffix())
+        return self.default_reads_filename('2')
 
 
 class BamFile(SequenceDataset):
@@ -369,23 +375,22 @@ class BamFile(SequenceDataset):
         related_name='bam_index_file',
     )
 
-    filename_template = '{sample_id}/{library_type}/{sample_id}_{library_type}_{date}_{uid}.{suffix}'
+    filename_template = '{sample_id}/{library_type}/{library_id}/{sample_id}_{index_sequence}_{dataset_id}.{suffix}'
+
+    def default_filename(self, suffix):
+        return self.filename_template.format(
+            sample_id=self.dna_sequences.sample.sample_id,
+            library_type=self.dna_sequences.dna_library.library_type,
+            library_id=self.dna_sequences.dna_library.library_id,
+            index_sequence=self.dna_sequences.get_filename_index_sequence(),
+            dataset_id=str(self.id).zfill(10),
+            suffix=suffix)
 
     def default_bam_filename(self):
-        return self.filename_template.format(
-            sample_id=self.dna_sequences.sample.sample_id,
-            library_type=self.dna_sequences.dna_library.library_type,
-            date=self.reads_1_file.get_filename_time(),
-            uid=self.reads_1_file.get_filename_uid(),
-            suffix='bam')
+        return default_filename('bam')
 
     def default_bam_index_filename(self):
-        return self.filename_template.format(
-            sample_id=self.dna_sequences.sample.sample_id,
-            library_type=self.dna_sequences.dna_library.library_type,
-            date=self.reads_2_file.get_filename_time(),
-            uid=self.reads_2_file.get_filename_uid(),
-            suffix='bam.bai')
+        return default_filename('bam.bai')
 
 
 class Storage(PolymorphicModel):
@@ -462,6 +467,7 @@ class FileInstance(models.Model):
 
     class Meta:
         unique_together = ('file_resource', 'storage')
+
 
 class FileTransfer(models.Model):
     """
