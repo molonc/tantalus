@@ -68,7 +68,6 @@ def start_transfers(deployment):
         else:
             file_transfer = FileTransfer(
                 deployment=deployment,
-                state="Started",
                 file_instance=file_instance,
                 new_filename=seq_data.default_filename)
             file_transfer.save()
