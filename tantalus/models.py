@@ -492,6 +492,10 @@ class FileTransfer(models.Model):
         max_length=500,
     )
 
+    progress = models.FloatField(
+        default=0.,
+    )
+
     running = models.BooleanField('Running', default=False)
     finished = models.BooleanField('Finished', default=False)
     success = models.BooleanField('Success', default=False)
