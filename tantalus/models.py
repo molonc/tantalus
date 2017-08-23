@@ -474,6 +474,16 @@ class FileTransfer(models.Model):
     Transfer of a specific data file.
     """
 
+    from_storage = models.ForeignKey(
+        Storage,
+        related_name='from_storage',
+    )
+
+    to_storage = models.ForeignKey(
+        Storage,
+        related_name='to_storage',
+    )
+
     file_instance = models.ForeignKey(
         FileInstance,
     )
@@ -494,22 +504,20 @@ class Deployment(models.Model):
 
     from_storage = models.ForeignKey(
         Storage,
-        related_name='deployment_from_storage',
+        related_name='from_storage',
     )
 
     to_storage = models.ForeignKey(
         Storage,
-        related_name='deployment_to_storage',
+        related_name='to_storage',
     )
 
     datasets = models.ManyToManyField(
         SequenceDataset,
-        verbose_name='Datasets',
     )
 
     file_transfers = models.ManyToManyField(
         FileTransfer,
-        verbose_name='File Transfers',
     )
 
     running = models.BooleanField('Running', default=False)

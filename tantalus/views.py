@@ -70,10 +70,11 @@ def start_transfers(deployment):
             file_transfer = existing_transfers[0]
 
         else:
-            file_transfer = FileTransfer(
-                deployment=deployment,
-                file_instance=file_instance,
-                new_filename=seq_data.default_filename)
+            file_transfer = FileTransfer()
+            file_transfer.from_storage = deployment.from_storage
+            file_transfer.to_storage = deployment.to_storage
+            file_transfer.file_instance = file_instance
+            file_transfer.new_filename = seq_data.default_filename
             file_transfer.save()
 
             transfer_file.apply_async(args=(file_transfer.id,), queue=deployment.from_storage.name)

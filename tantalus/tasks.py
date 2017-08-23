@@ -11,8 +11,8 @@ import paramiko
 def transfer_file(file_transfer_id):
     file_transfer = FileTransfer.objects.get(pk=file_transfer_id)
 
-    from_storage_type = file_transfer.deployment.from_storage.__class__.__name__
-    to_storage_type = file_transfer.deployment.to_storage.__class__.__name__
+    from_storage_type = file_transfer.from_storage.__class__.__name__
+    to_storage_type = file_transfer.to_storage.__class__.__name__
 
     file_transfer.running = True
     file_transfer.save()
@@ -30,7 +30,7 @@ def transfer_file(file_transfer_id):
         raise Exception('unsupported transfer')
 
     file_instance = tantalus.models.FileInstance(
-        storage=file_transfer.deployment.to_storage,
+        storage=file_transfer.to_storage,
         file_resource=file_transfer.file_instance.file_resource,
         filename=file_transfer.new_filename)
     file_instance.save()
@@ -45,14 +45,14 @@ def transfer_file(file_transfer_id):
 @shared_task
 def transfer_file_server_azure(file_transfer):
     block_blob_service = BlockBlobService(
-        account_name=file_transfer.deployment.to_storage.storage_account,
-        account_key=file_transfer.deployment.to_storage.storage_key)
+        account_name=file_transfer.to_storage.storage_account,
+        account_key=file_transfer.to_storage.storage_key)
 
     def progress_callback(current, total):
         file_transfer.progress = float(current) / float(total)
 
     block_blob_service.create_blob_from_path(
-        file_transfer.deployment.to_storage.storage_container,
+        file_transfer.to_storage.storage_container,
         file_transfer.new_filename,
         file_transfer.file_instance.filename,
         progress_callback=progress_callback)
@@ -63,8 +63,8 @@ def transfer_file_server_azure(file_transfer):
 @shared_task
 def transfer_file_azure_server(file_transfer):
     block_blob_service = BlockBlobService(
-        account_name=file_transfer.deployment.from_storage.storage_account,
-        account_key=file_transfer.deployment.from_storage.storage_key)
+        account_name=file_transfer.from_storage.storage_account,
+        account_key=file_transfer.from_storage.storage_key)
 
     def progress_callback(current, total):
         file_transfer.progress = float(current) / float(total)
@@ -84,8 +84,8 @@ def transfer_file_server_server(file_transfer):
     client.load_system_host_keys()
 
     client.connect(
-        file_transfer.deployment.to_storage.ip_address,
-        username=file_transfer.deployment.to_storage.username)
+        file_transfer.to_storage.ip_address,
+        username=file_transfer.to_storage.username)
 
     sftp = paramiko.SFTPClient.from_transport(client.get_transport())
 
