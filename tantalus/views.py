@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import ModelFormMixin
@@ -35,8 +36,9 @@ class DeploymentCreateView(CreateView):
                     return super(ModelFormMixin, self).form_valid(form)
         except ValueError as e:
             error_message = ' '.join(e.args)
+            messages.error(request, error_message)
             #TODO: override methods + update template so that error message is passed through and is useful
-            return self.form_invalid(form)
+        return self.form_invalid(form)
 
 
 def start_transfers(deployment):
