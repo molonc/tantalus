@@ -18,9 +18,15 @@ pip install django-celery
 
 ### Running
 
-Start the celery worker:
+The tantalus module must be importable, the easiest way is to set your PYTHONPATH.
 
 ```
-celery -A tantalus worker -l info
+export PYTHONPATH=/home/amcpherson/tantalus
+```
+
+Start the celery worker, for instance on rocks:
+
+```
+celery -A tantalus worker -l DEBUG --queues rocks -c 4
 ```
 

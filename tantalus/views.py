@@ -22,6 +22,7 @@ class DeploymentCreateView(CreateView):
 
     def post(self, request, *args, **kwargs):
         try:
+            self.object = None
             with transaction.atomic():
                 form = self.get_form()
                 if form.is_valid():
