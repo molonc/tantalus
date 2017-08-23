@@ -36,7 +36,7 @@ def transfer_file(file_transfer_id):
     file_instance.save()
 
     file_transfer.running = False
-    file_trasnfer.finished = True
+    file_transfer.finished = True
     file_transfer.save()
 
     _check_deployment_complete(file_transfer.deployment)
