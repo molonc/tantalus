@@ -39,7 +39,8 @@ def transfer_file(file_transfer_id):
     file_transfer.finished = True
     file_transfer.save()
 
-    _check_deployment_complete(file_transfer.deployment)
+    for deployment in file_transfer.deployment_set.all():
+        _check_deployment_complete(deployment)
 
 
 @shared_task
@@ -50,6 +51,7 @@ def transfer_file_server_azure(file_transfer):
 
     def progress_callback(current, total):
         file_transfer.progress = float(current) / float(total)
+        file_transfer.save()
 
     block_blob_service.create_blob_from_path(
         file_transfer.to_storage.storage_container,
@@ -68,6 +70,7 @@ def transfer_file_azure_server(file_transfer):
 
     def progress_callback(current, total):
         file_transfer.progress = float(current) / float(total)
+        file_transfer.save()
 
     block_blob_service.get_blob_to_path(
         file_transfer.from_storage.storage_container,
@@ -91,6 +94,7 @@ def transfer_file_server_server(file_transfer):
 
     def progress_callback(current, total):
         file_transfer.progress = float(current) / float(total)
+        file_transfer.save()
 
     sftp.put(
         file_transfer.file_instance.filename,
