@@ -2,7 +2,7 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import ModelFormMixin
 from django.db import transaction
-from tantalus.models import FileTransfer, Deployment
+from tantalus.models import FileTransfer, Deployment, SequenceDataFile
 
 
 class FileTransferListView(ListView):
@@ -42,7 +42,9 @@ def start_transfers(deployment):
     """ Start a set of transfers for a deployment.
     """
 
-    for seq_data in deployment.datasets.all().values_list('sequence_data', flat=True):
+    for seq_data_id in deployment.datasets.all().select_related('sequence_data').values_list('sequence_data', flat=True):
+        seq_data = SequenceDataFile.objects.get(id=seq_data_id)
+
         file_instances = seq_data.fileinstance_set.filter(storage=deployment.from_storage)
 
         if len(file_instances) == 0:
