@@ -12,21 +12,25 @@ class SampleViewSet(viewsets.ModelViewSet):
 class SequenceDataFileViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.SequenceDataFile.objects.all()
     serializer_class = tantalus.api.serializers.SequenceDataFileSerializer
+    filter_fields = ('md5',)
 
 
 class DNALibraryViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.DNALibrary.objects.all()
     serializer_class = tantalus.api.serializers.DNALibrarySerializer
+    filter_fields = ('library_id',)
 
 
 class DNASequencesViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.DNASequences.objects.all()
     serializer_class = tantalus.api.serializers.DNASequencesSerializer
+    filter_fields = ('dna_library__library_id', 'index_sequence',)
 
 
 class SequenceLaneViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.SequenceLane.objects.all()
     serializer_class = tantalus.api.serializers.SequenceLaneSerializer
+    filter_fields = ('flowcell_id', 'lane_number',)
 
 
 class SequenceDatasetViewSet(viewsets.ModelViewSet):
@@ -37,16 +41,19 @@ class SequenceDatasetViewSet(viewsets.ModelViewSet):
 class SingleEndFastqFileViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.SingleEndFastqFile.objects.all()
     serializer_class = tantalus.api.serializers.SingleEndFastqFileSerializer
+    filter_fields = ('reads_file__md5',)
 
 
 class PairedEndFastqFilesViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.PairedEndFastqFiles.objects.all()
     serializer_class = tantalus.api.serializers.PairedEndFastqFilesSerializer
+    filter_fields = ('reads_1_file__md5', 'reads_2_file__md5')
 
 
 class BamFileViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.BamFile.objects.all()
     serializer_class = tantalus.api.serializers.BamFileSerializer
+    filter_fields = ('bam_file__md5', 'bam_index_file__md5')
 
 
 class StorageViewSet(viewsets.ModelViewSet):
@@ -67,6 +74,7 @@ class AzureBlobStorageViewSet(viewsets.ModelViewSet):
 class FileInstanceViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.FileInstance.objects.all()
     serializer_class = tantalus.api.serializers.FileInstanceSerializer
+    filter_fields = ('file_resource__md5', 'storage__name',)
 
 
 class DeploymentViewSet(viewsets.ModelViewSet):
