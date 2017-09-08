@@ -227,11 +227,13 @@ class FileTransferTest(TestCase):
         perform_transfer_file_server_server(file_transfer = file_transfer)
 
         try:
-            sftp.stat(os.path.join(new_test_file))
+            sftp.stat(new_test_file)
         except:
             self.fail("Test for file transfer failed - {} was not found".format(new_test_file))
 
+        sftp.remove(new_test_file)
         client.close()
+
 
     def test_file_transfer_server_azure(self):
         from_storage = self.storage_servers['local']
@@ -255,7 +257,7 @@ class FileTransferTest(TestCase):
         # this should reflect folder structure on cloud blob storage
         # when performing the file transfer, the root "/" should be stripped, otherwise it creates a
         # <no name> folder at the root of the cloud storage to act as the "root" folder
-        new_test_file = os.path.join("/testing/folder/depth/", "new_test_file")
+        new_test_file = os.path.join("/testing/folder/depth/", "new_test_file").strip("/")
         file_transfer = FileTransfer(
             from_storage = from_storage,
             to_storage = to_storage,
@@ -268,8 +270,6 @@ class FileTransferTest(TestCase):
         # remember to strip the root "/" in tests, because we stripped this when transferring to the cloud
         self.assertTrue(new_test_file.strip("/") in [blob.name
                                           for blob in service.list_blobs(to_storage.storage_container)])
-
-
 
 
     def test_file_transfer_azure_server(self):

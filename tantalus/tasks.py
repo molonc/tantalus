@@ -2,9 +2,6 @@ from __future__ import absolute_import
 
 from celery import shared_task, Task
 import tantalus.models
-import os
-from azure.storage.blob import BlockBlobService
-import paramiko
 from tantalus.file_transfer_utils import *
 
 
@@ -31,17 +28,6 @@ def transfer_file(file_transfer_id):
 
     else:
         raise Exception('unsupported transfer')
-
-    file_instance = tantalus.models.FileInstance(
-        storage=file_transfer.to_storage,
-        file_resource=file_transfer.file_instance.file_resource,
-        filename=file_transfer.new_filename)
-    file_instance.save()
-
-    file_transfer.running = False
-    file_transfer.finished = True
-    file_transfer.success = True
-    file_transfer.save()
 
     for deployment in file_transfer.deployment_set.all():
         _check_deployment_complete(deployment)
