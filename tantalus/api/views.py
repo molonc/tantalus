@@ -24,7 +24,7 @@ class DNALibraryViewSet(viewsets.ModelViewSet):
 class DNASequencesViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.DNASequences.objects.all()
     serializer_class = tantalus.api.serializers.DNASequencesSerializer
-    filter_fields = ('dna_library__library_id', 'index_sequence',)
+    filter_fields = ('dna_library__library_id', 'dna_library__id', 'index_sequence',)
 
 
 class SequenceLaneViewSet(viewsets.ModelViewSet):
@@ -41,19 +41,21 @@ class SequenceDatasetViewSet(viewsets.ModelViewSet):
 class SingleEndFastqFileViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.SingleEndFastqFile.objects.all()
     serializer_class = tantalus.api.serializers.SingleEndFastqFileSerializer
-    filter_fields = ('reads_file__md5',)
+    filter_fields = ('reads_file__md5', 'reads_file__id',)
 
 
 class PairedEndFastqFilesViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.PairedEndFastqFiles.objects.all()
     serializer_class = tantalus.api.serializers.PairedEndFastqFilesSerializer
-    filter_fields = ('reads_1_file__md5', 'reads_2_file__md5')
+    filter_fields = ('reads_1_file__md5', 'reads_1_file__id',
+                     'reads_2_file__md5', 'reads_2_file__id')
 
 
 class BamFileViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.BamFile.objects.all()
     serializer_class = tantalus.api.serializers.BamFileSerializer
-    filter_fields = ('bam_file__md5', 'bam_index_file__md5')
+    filter_fields = ('bam_file__md5', 'bam_file__id'
+                     'bam_index_file__md5', 'bam_index_file__id')
 
 
 class StorageViewSet(viewsets.ModelViewSet):
@@ -74,7 +76,8 @@ class AzureBlobStorageViewSet(viewsets.ModelViewSet):
 class FileInstanceViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.FileInstance.objects.all()
     serializer_class = tantalus.api.serializers.FileInstanceSerializer
-    filter_fields = ('file_resource__md5', 'storage__name',)
+    filter_fields = ('file_resource__md5', 'file_resource__id',
+                     'storage__name',)
 
 
 class DeploymentViewSet(viewsets.ModelViewSet):

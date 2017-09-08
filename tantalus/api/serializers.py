@@ -7,7 +7,7 @@ from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from rest_framework.exceptions import ValidationError
 from tantalus.utils import start_transfers
 
-class SampleSerializer(serializers.HyperlinkedModelSerializer):
+class SampleSerializer(serializers.ModelSerializer):
     sample_id = serializers.CharField(
         validators=[
             UniqueValidator(queryset=tantalus.models.Sample.objects.all())
@@ -18,7 +18,7 @@ class SampleSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-class SequenceDataFileSerializer(serializers.HyperlinkedModelSerializer):
+class SequenceDataFileSerializer(serializers.ModelSerializer):
     md5 = serializers.CharField(
         validators=[
             UniqueValidator(queryset=tantalus.models.SequenceDataFile.objects.all())
@@ -29,7 +29,7 @@ class SequenceDataFileSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-class DNALibrarySerializer(serializers.HyperlinkedModelSerializer):
+class DNALibrarySerializer(serializers.ModelSerializer):
     library_id = serializers.CharField(
         validators=[
             UniqueValidator(queryset=tantalus.models.DNALibrary.objects.all())
@@ -40,7 +40,7 @@ class DNALibrarySerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-class DNASequencesSerializer(serializers.HyperlinkedModelSerializer):
+class DNASequencesSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.DNASequences
         fields = '__all__'
@@ -53,7 +53,7 @@ class DNASequencesSerializer(serializers.HyperlinkedModelSerializer):
 
 
 
-class SequenceLaneSerializer(serializers.HyperlinkedModelSerializer):
+class SequenceLaneSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.SequenceLane
         fields = '__all__'
@@ -65,7 +65,7 @@ class SequenceLaneSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class SequenceDatasetSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
+class SequenceDatasetSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
     class Meta:
         model = tantalus.models.SequenceDataset
@@ -80,27 +80,27 @@ class SequenceDatasetSerializer(TaggitSerializer, serializers.HyperlinkedModelSe
         return super(SequenceDatasetSerializer, self).to_representation(obj)
 
 
-class SingleEndFastqFileSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
+class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
     class Meta:
         model = tantalus.models.SingleEndFastqFile
         exclude = ['polymorphic_ctype']
 
 
-class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.HyperlinkedModelSerializer):
+class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
     class Meta:
         model = tantalus.models.PairedEndFastqFiles
         exclude = ['polymorphic_ctype']
 
 
-class BamFileSerializer(serializers.HyperlinkedModelSerializer):
+class BamFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.BamFile
         exclude = ['polymorphic_ctype']
 
 
-class StorageSerializer(serializers.HyperlinkedModelSerializer):
+class StorageSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.Storage
         exclude = ['polymorphic_ctype']
@@ -112,7 +112,7 @@ class StorageSerializer(serializers.HyperlinkedModelSerializer):
         return super(StorageSerializer, self).to_representation(obj)
 
 
-class ServerStorageSerializer(serializers.HyperlinkedModelSerializer):
+class ServerStorageSerializer(serializers.ModelSerializer):
     # generic_url = serializers.SerializerMethodField(method_name='_get_generic_url')
 
     class Meta:
@@ -126,7 +126,7 @@ class ServerStorageSerializer(serializers.HyperlinkedModelSerializer):
 
 
 
-class AzureBlobStorageSerializer(serializers.HyperlinkedModelSerializer):
+class AzureBlobStorageSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.AzureBlobStorage
         exclude = ['polymorphic_ctype']
@@ -144,7 +144,7 @@ class FileInstanceSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class DeploymentSerializer(serializers.HyperlinkedModelSerializer):
+class DeploymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.Deployment
         fields = '__all__'
@@ -166,7 +166,7 @@ class DeploymentSerializer(serializers.HyperlinkedModelSerializer):
             raise ValidationError(" ".join(e.args), code=None)
 
 
-class FileTransferSerializer(serializers.HyperlinkedModelSerializer):
+class FileTransferSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.FileTransfer
         fields = '__all__'
