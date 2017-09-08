@@ -92,12 +92,24 @@ class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.ModelSerialize
     class Meta:
         model = tantalus.models.PairedEndFastqFiles
         exclude = ['polymorphic_ctype']
+        validators = [
+            UniqueTogetherValidator(
+                queryset=tantalus.models.PairedEndFastqFiles.objects.all(),
+                fields=('reads_1_file', 'reads_2_file')
+            )
+        ]
 
 
 class BamFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.BamFile
         exclude = ['polymorphic_ctype']
+        validators = [
+            UniqueTogetherValidator(
+                queryset=tantalus.models.BamFile.objects.all(),
+                fields=('bam_file', 'bam_index_file')
+            )
+        ]
 
 
 class StorageSerializer(serializers.ModelSerializer):

@@ -341,6 +341,9 @@ class PairedEndFastqFiles(SequenceDataset):
     def default_reads_2_filename(self):
         return self.default_reads_filename('2')
 
+    class Meta:
+        unique_together = ('reads_1_file', 'reads_2_file')
+
 
 class BamFile(SequenceDataset):
     """
@@ -392,6 +395,9 @@ class BamFile(SequenceDataset):
 
     def default_bam_index_filename(self):
         return default_filename('bam.bai')
+
+    class Meta:
+        unique_together = ('bam_file', 'bam_index_file')
 
 
 class Storage(PolymorphicModel):
