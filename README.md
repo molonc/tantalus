@@ -30,3 +30,10 @@ Start the celery worker, for instance on rocks:
 celery -A tantalus worker -l DEBUG --queues rocks -c 4
 ```
 
+### Tests
+
+To run the tests, type:
+
+```
+python manage.py test tantalus/tests/
+```
