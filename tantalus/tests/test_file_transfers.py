@@ -166,9 +166,8 @@ def _add_file_instances_to_server(storage, file_resource, filename, dnasequence,
 
     # creating files on the server
     if create:
-        hostname = socket.gethostname()
         cmd = "touch " + os.path.join(storage.storage_directory, filename)
-        if (hostname == storage.server_ip):
+        if (LOCAL_IP == storage.server_ip):
             subprocess.call(cmd, shell=True)
         else:
             client = paramiko.SSHClient()

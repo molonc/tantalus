@@ -24,6 +24,7 @@ def check_file_exists_on_cloud(service, storage, file_transfer):
     filename = file_transfer.file_instance.filename.strip("/")
     if not service.exists(storage.storage_container, filename):
         # TODO: delete file instance object?
+        update_file_transfer(file_transfer, success=False)
         raise FileDoesNotActuallyExist(
             "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
             filename = filename,
@@ -40,6 +41,7 @@ def check_file_exists_on_server(storage, file_transfer):
     filename = file_transfer.file_instance.filename
     if not os.path.isfile(filename):
         # TODO: delete file instance object?
+        update_file_transfer(file_transfer, success=False)
         raise FileDoesNotActuallyExist(
             "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
                 filename=filename,
