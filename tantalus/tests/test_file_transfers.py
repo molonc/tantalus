@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from tantalus.models import *
 from misc.update_tantalus_db import *
-import socket
+import socket, getpass
 from tantalus.file_transfer_utils import *
 from django.utils import timezone
 
@@ -24,8 +24,13 @@ AZURE_STORAGE_ACCOUNT = "singlecellstorage"
 AZURE_STORAGE_CONTAINER = "jess-testing"
 AZURE_STORAGE_KEY = "okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn4G3YMEKebnCnsRwVu9fRhh2RiMQ=="
 
-LOCAL_TEST_DIRECTORY = "/Users/jngo/test-file-transfer/"
-LOCAL_IP = "momac31.bccrc.ca"
+LOCAL_USER = getpass.getuser()
+LOCAL_TEST_DIRECTORY = "/Users/" + LOCAL_USER + "/test-file-transfer/"
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("8.8.8.8", 80))
+LOCAL_IP = s.getsockname()[0]
+s.close()
+
 
 # Use with the _add_test_files function to create multiple files
 BASE_FILENAME = "test_file"
