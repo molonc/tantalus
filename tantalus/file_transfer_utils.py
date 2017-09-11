@@ -21,14 +21,14 @@ def check_file_exists_on_cloud(service, storage, file_transfer):
     :param file_transfer: file transfer instance
     :return: raises FileDoesNotActuallyExist exception
     """
-    filename = file_transfer.file_instance.filename
+    filename = file_transfer.file_instance.filename.strip("/")
     if not service.exists(storage.storage_container, filename):
         # TODO: delete file instance object?
         raise FileDoesNotActuallyExist(
             "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
             filename = filename,
             storage = storage.name,
-            pk = file_transfer.file_instance))
+            pk = file_transfer.file_instance_id))
 
 def check_file_exists_on_server(storage, file_transfer):
     """
@@ -44,7 +44,7 @@ def check_file_exists_on_server(storage, file_transfer):
             "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
                 filename=filename,
                 storage=storage.name,
-                pk=file_transfer.file_instance))
+                pk=file_transfer.file_instance_id))
 
 
 def get_md5(f, chunk_size=134217728):
@@ -100,7 +100,6 @@ def perform_transfer_file_azure_server(file_transfer):
             file_transfer.save()
 
     cloud_filename = file_transfer.file_instance.filename.strip("/") # TODO: throw error? path/name of blob
-
     block_blob_service.get_blob_to_path(
         file_transfer.from_storage.storage_container,
         cloud_filename, #TODO: throw error? path/name of blob
