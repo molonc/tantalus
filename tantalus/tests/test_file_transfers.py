@@ -59,6 +59,12 @@ def connect_sftp_server(server_ip, username):
     return client, sftp
 
 
+def _clean_up_test_files(directory_to_clean):
+    files_to_remove = os.listdir(directory_to_clean)
+    for filename in files_to_remove:
+        os.remove(os.path.join(directory_to_clean, filename))
+
+
 def _clear_test_cloud_storage(blob_storage):
     service = get_block_blob_service(blob_storage)
     for blob in service.list_blobs(blob_storage.storage_container):
@@ -138,7 +144,19 @@ def _create_file_resource(count):
         test_seqfile.save()
 
 
-def _add_file_instances_to_server(storage, file_resource, filename, dnasequence):
+def _add_file_instances_to_server(storage, file_resource, filename, dnasequence, create=True):
+    """
+    Adds the file instance for the given file resource, and a SingleEndFastq instance to represent the file
+    Has a create flag to determine whether or not the files are actually created on the servers
+
+    :param storage:
+    :param file_resource:
+    :param filename:
+    :param dnasequence:
+    :param create: if create is true, the files on the server will also be created,
+    this is used to test the FileDoesNotActuallyExist exception - defaults to true otherwise
+    :return:
+    """
     serverfile = FileInstance(
         storage = storage,
         file_resource = file_resource,
@@ -146,16 +164,18 @@ def _add_file_instances_to_server(storage, file_resource, filename, dnasequence)
     )
     serverfile.save()
 
-    hostname = socket.gethostname()
-    cmd = "touch " + os.path.join(storage.storage_directory, filename)
-    if (hostname == storage.server_ip):
-        subprocess.call(cmd, shell=True)
-    else:
-        client = paramiko.SSHClient()
-        client.load_system_host_keys()
-        client.connect(storage.server_ip)
-        client.exec_command(cmd)
-        client.close()
+    # creating files on the server
+    if create:
+        hostname = socket.gethostname()
+        cmd = "touch " + os.path.join(storage.storage_directory, filename)
+        if (hostname == storage.server_ip):
+            subprocess.call(cmd, shell=True)
+        else:
+            client = paramiko.SSHClient()
+            client.load_system_host_keys()
+            client.connect(storage.server_ip)
+            client.exec_command(cmd)
+            client.close()
 
     fastq_files = SingleEndFastqFile(
         reads_file = file_resource,
@@ -201,6 +221,10 @@ class FileTransferTest(TestCase):
         cls.storage_servers = _add_storages()
 
 
+    def setUp(self):
+        _clean_up_test_files(LOCAL_TEST_DIRECTORY)
+
+
     def test_file_transfer_server_server(self):
         from_storage = self.storage_servers['local']
         to_storage = self.storage_servers['rocks']
@@ -215,7 +239,8 @@ class FileTransferTest(TestCase):
             storage = from_storage,
             file_resource = SequenceDataFile.objects.all()[0],
             filename = filename,
-            dnasequence = DNASequences.objects.all()[0]
+            dnasequence = DNASequences.objects.all()[0],
+            create=True
         )
 
         new_test_file = os.path.join(to_storage.storage_directory + "new_test_file")
@@ -239,6 +264,33 @@ class FileTransferTest(TestCase):
         sftp.remove(new_test_file)
         client.close()
 
+    def test_file_transfer_server_server_FileDoesNotActuallyExist(self):
+        from_storage = self.storage_servers['local']
+        to_storage = self.storage_servers['rocks']
+        filename = os.path.join(from_storage.storage_directory, BASE_FILENAME)
+        _create_file_resource(count=1)
+
+        _add_file_instances_to_server(
+            storage=from_storage,
+            file_resource=SequenceDataFile.objects.all()[0],
+            filename=filename,
+            dnasequence=DNASequences.objects.all()[0],
+            create=False
+        )
+        client, sftp = connect_sftp_server(to_storage.server_ip, to_storage.username)
+        self.assertRaises(IOError, sftp.stat, filename)
+        client.close()
+
+        new_test_file = os.path.join(to_storage.storage_directory + "new_test_file")
+        file_transfer = FileTransfer(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+            new_filename=new_test_file,
+        )
+
+        self.assertRaises(FileDoesNotActuallyExist, perform_transfer_file_server_server, file_transfer)
+
 
     def test_file_transfer_server_azure(self):
         from_storage = self.storage_servers['local']
@@ -257,6 +309,7 @@ class FileTransferTest(TestCase):
             file_resource = SequenceDataFile.objects.all()[0],
             filename = filename,
             dnasequence = DNASequences.objects.all()[0],
+            create = True
         )
 
         # this should reflect folder structure on cloud blob storage
@@ -286,8 +339,7 @@ class FileTransferTest(TestCase):
         _create_file_resource(count=1)
         _clear_test_cloud_storage(from_storage)
 
-        # removing test file from previous tests
-        os.remove(local_filename)
+        # make sure no test file from previous tests
         self.assertFalse(os.path.isfile(local_filename))
 
         # creating file to populate test cloud storage
@@ -301,6 +353,8 @@ class FileTransferTest(TestCase):
             from_storage.storage_container,  # name of container
             cloud_filename.strip("/"),  # name of the blob
             local_filename)
+        self.assertTrue(cloud_filename.strip("/") in [blob.name
+                                                     for blob in service.list_blobs(from_storage.storage_container)])
 
         # deleting file used to populate the test cloud storage
         os.remove(local_filename)
@@ -325,3 +379,31 @@ class FileTransferTest(TestCase):
         # check if file exists after transfer
         perform_transfer_file_azure_server(file_transfer=file_transfer)
         self.assertTrue(os.path.isfile(local_filename))
+
+    def test_file_transfer_azure_server_FileDoesNotActuallyExist(self):
+        from_storage = self.storage_servers['blob_storage']
+        to_storage = self.storage_servers['local']
+        service = get_block_blob_service(from_storage)
+        local_filename = os.path.join(to_storage.storage_directory, BASE_FILENAME)
+        cloud_filename = "/testing2/folder2/depth2/TESTING-CLOUD-FILE"
+        _create_file_resource(count=1)
+        _clear_test_cloud_storage(from_storage)
+
+        # creating file instance object and related file type object for the file on the test cloud storage
+        _add_file_instances_to_cloud(
+            storage=from_storage,
+            file_resource=SequenceDataFile.objects.all()[0],
+            filename=cloud_filename,
+            dnasequence=DNASequences.objects.all()[0],
+        )
+
+        # creating file transfer object for test
+        file_transfer = FileTransfer(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+            new_filename=local_filename,
+        )
+
+        # check that exception is thrown - no file on cloud
+        self.assertRaises(FileDoesNotActuallyExist, perform_transfer_file_azure_server, file_transfer)
