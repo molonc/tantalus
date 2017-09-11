@@ -383,7 +383,6 @@ class FileTransferTest(TestCase):
     def test_file_transfer_azure_server_FileDoesNotActuallyExist(self):
         from_storage = self.storage_servers['blob_storage']
         to_storage = self.storage_servers['local']
-        service = get_block_blob_service(from_storage)
         local_filename = os.path.join(to_storage.storage_directory, BASE_FILENAME)
         cloud_filename = "/testing2/folder2/depth2/TESTING-CLOUD-FILE"
         _create_file_resource(count=1)
