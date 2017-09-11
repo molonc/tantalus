@@ -39,6 +39,7 @@ def transfer_file_server_azure(file_transfer):
         perform_transfer_file_server_azure(file_transfer)
     except:
         print "helpful error message thrown here"
+        raise
     # TODO: make directory, permissions, check exists
 
 
@@ -48,7 +49,7 @@ def transfer_file_azure_server(file_transfer):
         perform_transfer_file_azure_server(file_transfer)
     except:
         print "helpful error message thrown here"
-
+        raise
     # TODO: make directory, permissions, check exists
 
 
@@ -58,6 +59,7 @@ def transfer_file_server_server(file_transfer):
         perform_transfer_file_server_server(file_transfer)
     except:
         print "helpful error message thrown here"
+        raise
     # TODO: make directory, permissions, check exists
 
 
