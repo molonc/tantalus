@@ -27,7 +27,8 @@ AZURE_STORAGE_CONTAINER = "jess-testing"
 AZURE_STORAGE_KEY = "okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn4G3YMEKebnCnsRwVu9fRhh2RiMQ=="
 
 LOCAL_USER = getpass.getuser()
-LOCAL_TEST_DIRECTORY = os.path.realpath(os.path.dirname(__file__))
+LOCAL_TEST_DIRECTORY = os.path.join(os.path.realpath(os.path.dirname(__file__)),
+                                    "test-file-directory")
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(("8.8.8.8", 80))
 LOCAL_IP = s.getsockname()[0]
@@ -60,7 +61,8 @@ def connect_sftp_server(server_ip, username):
 def _clean_up_test_files(directory_to_clean):
     files_to_remove = os.listdir(directory_to_clean)
     for filename in files_to_remove:
-        os.remove(os.path.join(directory_to_clean, filename))
+        if filename != ".gitignore":
+            os.remove(os.path.join(directory_to_clean, filename))
 
 
 def _clear_test_cloud_storage(blob_storage):
