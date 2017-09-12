@@ -296,8 +296,7 @@ class SingleEndFastqFile(SequenceDataset):
             library_id=self.dna_sequences.dna_library.library_id,
             index_sequence=self.dna_sequences.get_filename_index_sequence(),
             dataset_id=str(self.id).zfill(10),
-            compression=reads_files[read_end].get_compression_suffix())
-            #TODO: fix typo here?
+            compression=self.reads_file.get_compression_suffix())
 
 
 class PairedEndFastqFiles(SequenceDataset):
@@ -391,10 +390,10 @@ class BamFile(SequenceDataset):
             suffix=suffix)
 
     def default_bam_filename(self):
-        return default_filename('bam')
+        return self.default_filename('bam')
 
     def default_bam_index_filename(self):
-        return default_filename('bam.bai')
+        return self.default_filename('bam.bai')
 
     class Meta:
         unique_together = ('bam_file', 'bam_index_file')
