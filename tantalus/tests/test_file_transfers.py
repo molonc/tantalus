@@ -10,14 +10,16 @@ from tantalus.file_transfer_utils import *
 from django.utils import timezone
 
 
+ROCKS_USER = 'jngo'
+
 ## TEST CONSTANTS ##
-COMPUTE2_TEST_DIRECTORY = "/home/jngo/tantalus-test/"
+COMPUTE2_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(ROCKS_USER)
 COMPUTE2_IP = "10.9.2.187"
 
-BEAST_TEST_DIRECTORY = "/home/jngo/tantalus-test/"
+BEAST_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(ROCKS_USER)
 BEAST_IP = "10.9.4.26"
 
-ROCKS_TEST_DIRECTORY = "/home/jngo/tantalus-test/"
+ROCKS_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(ROCKS_USER)
 ROCKS_IP = "10.9.4.27"
 
 AZURE_STORAGE_ACCOUNT = "singlecellstorage"
@@ -25,7 +27,7 @@ AZURE_STORAGE_CONTAINER = "jess-testing"
 AZURE_STORAGE_KEY = "okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn4G3YMEKebnCnsRwVu9fRhh2RiMQ=="
 
 LOCAL_USER = getpass.getuser()
-LOCAL_TEST_DIRECTORY = "/Users/" + LOCAL_USER + "/test-file-transfer/"
+LOCAL_TEST_DIRECTORY = os.path.realpath(os.path.dirname(__file__))
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(("8.8.8.8", 80))
 LOCAL_IP = s.getsockname()[0]
@@ -42,10 +44,6 @@ FILE_SIZE = "20"
 FILE_CREATION_DATE = timezone.now()
 FILE_TYPE= SequenceDataFile.FQ
 FILE_COMPRESSION = SequenceDataFile.UNCOMPRESSED
-
-
-USER="jngo"
-PASSWORD="MySecurePassword!"
 
 
 ## HELPER TEST FUNCTIONS ##
@@ -77,7 +75,7 @@ def _add_storages():
         name = 'rocks',
         server_ip = ROCKS_IP,
         storage_directory = ROCKS_TEST_DIRECTORY,
-        username = USER,
+        username = ROCKS_USER,
     )
     rocks.full_clean()
     rocks.save()
@@ -96,7 +94,7 @@ def _add_storages():
         name='compute2',
         server_ip=COMPUTE2_IP,
         storage_directory=BEAST_TEST_DIRECTORY,
-        username=USER,
+        username=ROCKS_USER,
     )
     compute2.full_clean()
     compute2.save()
@@ -105,7 +103,7 @@ def _add_storages():
         name = 'beast',
         server_ip = BEAST_IP,
         storage_directory = BEAST_TEST_DIRECTORY,
-        username = USER,
+        username = ROCKS_USER,
     )
     beast.full_clean()
     beast.save()
@@ -114,7 +112,7 @@ def _add_storages():
         name = 'jngo',
         server_ip=LOCAL_IP,
         storage_directory = LOCAL_TEST_DIRECTORY,
-        username=USER,
+        username=ROCKS_USER,
     )
     local.full_clean()
     local.save()
