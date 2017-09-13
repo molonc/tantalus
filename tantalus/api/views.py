@@ -36,6 +36,14 @@ class SequenceLaneViewSet(viewsets.ModelViewSet):
 class SequenceDatasetViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.SequenceDataset.objects.all()
     serializer_class = tantalus.api.serializers.SequenceDatasetSerializer
+    filter_fields = (
+                     # filters for SequenceLanes
+                     'lanes',
+                     'lanes__flowcell_id', 'lanes__lane_number',
+                     # filters for DNASequences
+                     'dna_sequences',
+                     'dna_sequences__dna_library__library_id', 'dna_sequences__dna_library', 'dna_sequences__index_sequence'
+                     )
 
 
 class SingleEndFastqFileViewSet(viewsets.ModelViewSet):
