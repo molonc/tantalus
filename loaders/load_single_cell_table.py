@@ -59,6 +59,7 @@ for idx in data.index:
         serverfile.storage = storage
         serverfile.file_resource = seqfile
         serverfile.filename = fastq_filename
+        serverfile.full_clean()
         serverfile.save()
 
     fastq_dna_sequences = tantalus.models.DNASequences.objects.filter(index_sequence=reverse_complement(data.loc[idx, 'code1']) + '-' + data.loc[idx, 'code2'])
@@ -70,8 +71,7 @@ for idx in data.index:
     fastq_files.dna_sequences = fastq_dna_sequences[0]
     fastq_files.save()
     fastq_files.lanes = tantalus.models.SequenceLane.objects.filter(flowcell_id=data.loc[idx, 'flowcell'], lane_number=data.loc[idx, 'lane'])
-    fastq_files.sequence_data.add(reads_files['1'])
-    fastq_files.sequence_data.add(reads_files['2'])
+    fastq_files.full_clean()
     fastq_files.save()
 
     reads_files['1'].default_filename = fastq_files.default_reads_1_filename()
@@ -81,8 +81,6 @@ for idx in data.index:
     reads_files['2'].full_clean()
     reads_files['1'].save()
     reads_files['2'].save()
-    serverfile.full_clean()
-    fastq_files.full_clean()
 
 
 

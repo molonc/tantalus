@@ -183,7 +183,6 @@ def _add_file_instances_to_server(storage, file_resource, filename, dnasequence,
     fastq_files.save()
 
     fastq_files.lanes = [SequenceLane.objects.get(id=1)]
-    fastq_files.sequence_data.add(file_resource)
     fastq_files.save()
 
 def _add_file_instances_to_cloud(storage, file_resource, filename, dnasequence):
@@ -203,7 +202,6 @@ def _add_file_instances_to_cloud(storage, file_resource, filename, dnasequence):
 
     # separating assignment of m2m relationships because object needs to exist first
     fastq_files.lanes = [SequenceLane.objects.all()[0]]
-    fastq_files.sequence_data.add(file_resource)
     fastq_files.save()
 
 ## TESTS ##

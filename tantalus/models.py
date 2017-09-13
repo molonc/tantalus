@@ -265,10 +265,8 @@ class SequenceDataset(PolymorphicModel):
         on_delete=models.CASCADE,
     )
 
-    sequence_data = models.ManyToManyField(
-        SequenceDataFile,
-        verbose_name='Data',
-    )
+    def get_data_fileset(self):
+        return []
 
 
 class SingleEndFastqFile(SequenceDataset):
@@ -298,6 +296,8 @@ class SingleEndFastqFile(SequenceDataset):
             dataset_id=str(self.id).zfill(10),
             compression=self.reads_file.get_compression_suffix())
 
+    def get_data_fileset(self):
+        return [self.reads_file]
 
 class PairedEndFastqFiles(SequenceDataset):
     """
@@ -339,6 +339,9 @@ class PairedEndFastqFiles(SequenceDataset):
 
     def default_reads_2_filename(self):
         return self.default_reads_filename('2')
+
+    def get_data_fileset(self):
+        return [self.reads_1_file, self.reads_2_file]
 
     class Meta:
         unique_together = ('reads_1_file', 'reads_2_file')
@@ -394,6 +397,9 @@ class BamFile(SequenceDataset):
 
     def default_bam_index_filename(self):
         return self.default_filename('bam.bai')
+
+    def get_data_fileset(self):
+        return [self.bam_file, self.bam_index_file]
 
     class Meta:
         unique_together = ('bam_file', 'bam_index_file')
