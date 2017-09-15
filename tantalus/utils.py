@@ -2,47 +2,6 @@ from tantalus.models import FileTransfer, SequenceDataFile
 from tasks import transfer_file
 
 
-def get_default_filename(dataset, seq_data_file):
-    """
-    Get the default filename of the given sequence data file and the dataset it belongs too
-    :param dataset: SequenceDataset object
-    :param seq_data_file: SequenceDataFile object that needs to be named
-    :return: filename string in UNIX
-    """
-
-    filetype = dataset.__class__.__name__
-
-    id = seq_data_file.id
-    if filetype == 'PairedEndFastqFiles':
-        if id == dataset.reads_1_file.id:
-            return dataset.default_reads_1_filename()
-        elif id == dataset.reads_2_file.id:
-            return dataset.default_reads_2_filename()
-        else:
-            #TODO: is this exception needed?
-            raise Exception("ERROR: This model instance of SequenceDataset with pk: {} is corrupted - please notify database admin").format(pk=dataset.id)
-
-    elif filetype == 'BamFile':
-        if id == dataset.bam_file.id:
-            return dataset.default_bam_filename()
-        elif id == dataset.bam_index_file.id:
-            return dataset.default_bam_index_filename()
-        else:
-            #TODO: is this exception needed?
-            raise Exception("ERROR: This model instance of SequenceDataset with pk: {} is corrupted - please notify database admin").format(pk=dataset.id)
-
-    elif filetype == 'SingleEndFastqFile':
-        if id == dataset.reads_file.id:
-            return dataset.default_reads_filename()
-        else:
-            raise Exception("ERROR: This model instance of SequenceDataset with pk: {} is corrupted - please notify database admin").format(pk=dataset.id)
-
-    else:
-        # TODO: is this exception needed?
-        raise Exception('Unsupported default naming for file')
-
-
-
 def start_transfers(deployment):
     """ Start a set of transfers for a deployment.
     """
@@ -86,7 +45,7 @@ def start_transfers(deployment):
                 file_transfer.to_storage = deployment.to_storage
                 file_transfer.file_instance = file_instance
                 #TODO: add tests for the naming and transfer starting
-                file_transfer.new_filename = get_default_filename(dataset, seq_data_file)
+                file_transfer.new_filename = seq_data_file.default_filename
                 file_transfer.save()
 
                 transfer_file.apply_async(args=(file_transfer.id,), queue=deployment.from_storage.name)

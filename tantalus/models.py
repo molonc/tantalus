@@ -266,7 +266,7 @@ class SequenceDataset(PolymorphicModel):
     )
 
     def get_data_fileset(self):
-        return []
+        raise NotImplementedError()
 
 
 class SingleEndFastqFile(SequenceDataset):

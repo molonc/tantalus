@@ -123,7 +123,7 @@ def perform_transfer_file_azure_server(file_transfer):
         cloud_filename).properties.content_settings.content_md5
     try:
         #for empty files, the md5 returned is None, so don't compare md5s for these files since they dont use the null hash
-        if md5!=None and os.path.getsize(file_transfer.file_instance.filename)!=0: # TODO: refactor to use file instance size
+        if md5!=None and file_transfer.file_instance.file_resource.size!=0:
             check_md5(md5, file_transfer)
         create_file_instance(file_transfer)
         # updating the status of the file transfer to a completed state, successful transfer
@@ -159,7 +159,7 @@ def perform_transfer_file_server_azure(file_transfer):
 
     try:
         #for empty files, the md5 returned is None, so don't compare md5s for these files since they dont use the null hash
-        if md5!=None and os.path.getsize(local_filepath)!=0: #TODO: refactor to use file instance size
+        if md5!=None and file_transfer.file_instance.file_resource.size!=0:
             check_md5(md5, file_transfer)
 
         create_file_instance(file_transfer)
