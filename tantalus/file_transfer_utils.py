@@ -40,7 +40,7 @@ def check_file_exists_on_server(storage, file_transfer):
     :return: raises FileDoesNotActuallyExist exception
     """
     filename = file_transfer.file_instance.filename
-    filepath = os.path.join(storage.storage_directory, filename)
+    filepath = os.path.join(storage.storage_directory, filename.strip('/'))
     if not os.path.isfile(filepath):
         # TODO: delete file instance object?
         update_file_transfer(file_transfer, success=False)
@@ -107,7 +107,7 @@ def perform_transfer_file_azure_server(file_transfer):
 
     # make subdirectories for file if they don't exist
     #TODO: refactor this into helper?
-    filepath = os.path.join(str(file_transfer.to_storage.storage_directory), file_transfer.new_filename)
+    filepath = os.path.join(str(file_transfer.to_storage.storage_directory), file_transfer.new_filename.strip('/'))
     dirname, filename = os.path.split(filepath.rstrip('/'))
     cmd = "mkdir -p " + dirname
     subprocess.call(cmd, shell=True)
@@ -188,8 +188,8 @@ def perform_transfer_file_server_server(file_transfer):
 
     # TODO: refactor this into helper?
     # creating subdirectories for remote path if they don't exist
-    local_filepath = os.path.join(file.from_storage.storage_directory, file_transfer.file_instance.filename)
-    remote_filepath = os.path.join(file_transfer.to_storage.storage_directory, file_transfer.new_filename)
+    local_filepath = os.path.join(file_transfer.from_storage.storage_directory, file_transfer.file_instance.filename.strip('/'))
+    remote_filepath = os.path.join(file_transfer.to_storage.storage_directory, file_transfer.new_filename.strip('/'))
     dirname, filename = os.path.split(remote_filepath.rstrip('/'))
     cmd = "mkdir -p " + dirname
     client.exec_command(cmd)

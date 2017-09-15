@@ -236,28 +236,28 @@ class FileTransferTest(TestCase):
     def test_file_transfer_server_server(self):
         from_storage = self.storage_servers['local']
         to_storage = self.storage_servers['rocks']
-        filename = os.path.join(from_storage.storage_directory, BASE_FILENAME)
+        remote_filepath = os.path.join(to_storage.storage_directory, BASE_FILENAME)
         _create_file_resource(count=1)
 
 
+        #checking that the file does not already exist on the remote server from a previous test
         client, sftp = connect_sftp_server(to_storage.server_ip, to_storage.username)
-        self.assertRaises(IOError, sftp.stat, BASE_FILENAME)
+        self.assertRaises(IOError, sftp.stat, remote_filepath)
         client.close()
 
         _add_file_instances_to_server(
             storage = from_storage,
             file_resource = SequenceDataFile.objects.all()[0],
-            filename = filename,
+            filename = BASE_FILENAME,
             dnasequence = DNASequences.objects.all()[0],
             create=True
         )
 
-        new_test_file = os.path.join(to_storage.storage_directory + "test/subs/new_test_file")
         file_transfer = FileTransfer(
             from_storage = from_storage,
             to_storage = to_storage,
             file_instance = FileInstance.objects.all()[0],
-            new_filename = new_test_file,
+            new_filename = BASE_FILENAME,
         )
 
         # self.assertRaises(IOError, sftp.stat, filename)
@@ -266,11 +266,11 @@ class FileTransferTest(TestCase):
         perform_transfer_file_server_server(file_transfer = file_transfer)
 
         try:
-            sftp.stat(new_test_file)
+            sftp.stat(remote_filepath)
         except:
-            self.fail("Test for file transfer failed - {} was not found".format(new_test_file))
+            self.fail("Test for file transfer failed - {} was not found".format(remote_filepath))
 
-        sftp.remove(new_test_file)
+        sftp.remove(remote_filepath)
         client.close()
 
     def test_file_transfer_server_server_FileDoesNotActuallyExist(self):
