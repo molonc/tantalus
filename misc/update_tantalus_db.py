@@ -133,10 +133,17 @@ def delete_libraries(libs):
 
 
 def add_new_sequencelanes(seqs):
+    """
+
+    :param seqs: a list of sequence flowcell_ids that will be added to tantalus
+    :return: void
+    """
     json_colossus_sequencelanes = get_json('sequencing')
 
-    flowcell_map = {j['sequencingdetail']['flow_cell_id']: j
-                    for j in json_colossus_sequencelanes}
+    flowcell_map = {}
+    for j in json_colossus_sequencelanes:
+        for lane in j['lane_set']:
+            flowcell_map[lane['flow_cell_id']] = j
 
     for seq in seqs:
         ## no flow cell or lane for this seq - don't add this
