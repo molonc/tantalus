@@ -3,6 +3,7 @@ import paramiko
 import os, io
 import hashlib
 from tantalus.models import *
+import subprocess
 
 class DataCorruptionError(Exception):
     """ Raised when MD5 calculated does not match the saved database md5 for the file resource """
@@ -39,12 +40,13 @@ def check_file_exists_on_server(storage, file_transfer):
     :return: raises FileDoesNotActuallyExist exception
     """
     filename = file_transfer.file_instance.filename
-    if not os.path.isfile(filename):
+    filepath = os.path.join(storage.storage_directory, filename)
+    if not os.path.isfile(filepath):
         # TODO: delete file instance object?
         update_file_transfer(file_transfer, success=False)
         raise FileDoesNotActuallyExist(
-            "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
-                filename=filename,
+            "{filepath} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
+                filepath=filepath,
                 storage=storage.name,
                 pk=file_transfer.file_instance_id))
 
@@ -102,10 +104,18 @@ def perform_transfer_file_azure_server(file_transfer):
             file_transfer.save()
 
     cloud_filename = file_transfer.file_instance.filename.strip("/") # TODO: throw error? path/name of blob
+
+    # make subdirectories for file if they don't exist
+    #TODO: refactor this into helper?
+    filepath = os.path.join(str(file_transfer.to_storage.storage_directory), file_transfer.new_filename)
+    dirname, filename = os.path.split(filepath.rstrip('/'))
+    cmd = "mkdir -p " + dirname
+    subprocess.call(cmd, shell=True)
+
     block_blob_service.get_blob_to_path(
         file_transfer.from_storage.storage_container,
         cloud_filename, #TODO: throw error? path/name of blob
-        file_transfer.new_filename, #path/name of file
+        filepath, #path/name of file
         progress_callback=progress_callback)
 
     md5 = block_blob_service.get_blob_properties(
@@ -113,7 +123,7 @@ def perform_transfer_file_azure_server(file_transfer):
         cloud_filename).properties.content_settings.content_md5
     try:
         #for empty files, the md5 returned is None, so don't compare md5s for these files since they dont use the null hash
-        if md5!=None and os.path.getsize(file_transfer.file_instance.filename)!=0:
+        if md5!=None and os.path.getsize(file_transfer.file_instance.filename)!=0: # TODO: refactor to use file instance size
             check_md5(md5, file_transfer)
         create_file_instance(file_transfer)
         # updating the status of the file transfer to a completed state, successful transfer
@@ -137,18 +147,19 @@ def perform_transfer_file_server_azure(file_transfer):
 
     # uploading file to test cloud storage, remember to strip the slash! Otherwise this creates an additional
     # <no name> root folder
-    cloud_filename = file_transfer.new_filename.strip("/")
+    cloud_filepath = file_transfer.new_filename.strip('/')
+    local_filepath = os.path.join(file_transfer.from_storage.storage_directory, file_transfer.file_instance.filename.strip('/'))
     block_blob_service.create_blob_from_path(
         file_transfer.to_storage.storage_container,
-        cloud_filename, #path/name of blob
-        file_transfer.file_instance.filename, #path/name of file
+        cloud_filepath, #path/name of blob
+        local_filepath, #path/name of file
         progress_callback=progress_callback)
 
-    md5 = block_blob_service.get_blob_properties(file_transfer.to_storage.storage_container, cloud_filename).properties.content_settings.content_md5
+    md5 = block_blob_service.get_blob_properties(file_transfer.to_storage.storage_container, cloud_filepath).properties.content_settings.content_md5
 
     try:
         #for empty files, the md5 returned is None, so don't compare md5s for these files since they dont use the null hash
-        if md5!=None and os.path.getsize(file_transfer.file_instance.filename)!=0:
+        if md5!=None and os.path.getsize(local_filepath)!=0: #TODO: refactor to use file instance size
             check_md5(md5, file_transfer)
 
         create_file_instance(file_transfer)
@@ -175,16 +186,22 @@ def perform_transfer_file_server_server(file_transfer):
             file_transfer.progress = float(current) / float(total)
             file_transfer.save()
 
-    # TODO: Figure out what this new file name is - relative or abs?
-    new_filename = os.path.join(file_transfer.to_storage.storage_directory, file_transfer.new_filename)
+    # TODO: refactor this into helper?
+    # creating subdirectories for remote path if they don't exist
+    local_filepath = os.path.join(file.from_storage.storage_directory, file_transfer.file_instance.filename)
+    remote_filepath = os.path.join(file_transfer.to_storage.storage_directory, file_transfer.new_filename)
+    dirname, filename = os.path.split(remote_filepath.rstrip('/'))
+    cmd = "mkdir -p " + dirname
+    client.exec_command(cmd)
 
     check_file_exists_on_server(file_transfer.from_storage, file_transfer)
+
     sftp.put(
-        file_transfer.file_instance.filename,  # absolute path
-        new_filename, # absolute path of file in the remote server
+        local_filepath,  # absolute path
+        remote_filepath, # absolute path of file in the remote server
         callback=progress_callback)
 
-    transferred_file = sftp.file(new_filename, mode='r')
+    transferred_file = sftp.file(remote_filepath, mode='r')
     # b flag for binary is not needed because SSH treats all files as binary
     md5 = get_md5(transferred_file)
 
