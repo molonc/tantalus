@@ -22,7 +22,7 @@ def check_file_exists_on_cloud(service, storage, file_transfer):
     :param file_transfer: file transfer instance
     :return: raises FileDoesNotActuallyExist exception
     """
-    filename = file_transfer.file_instance.filename.strip("/")
+    filename = file_transfer.file_instance.file_resource.filename.strip("/")
     if not service.exists(storage.storage_container, filename):
         # TODO: delete file instance object?
         update_file_transfer(file_transfer, success=False)
@@ -39,7 +39,7 @@ def check_file_exists_on_server(storage, file_transfer):
     :param file_transfer:
     :return: raises FileDoesNotActuallyExist exception
     """
-    filename = file_transfer.file_instance.filename
+    filename = file_transfer.file_instance.file_resource.filename
     filepath = os.path.join(storage.storage_directory, filename.strip('/'))
     if not os.path.isfile(filepath):
         # TODO: delete file instance object?
@@ -82,8 +82,7 @@ def update_file_transfer(file_transfer, success=False):
 def create_file_instance(file_transfer):
     file_instance = FileInstance(
         storage=file_transfer.to_storage,
-        file_resource=file_transfer.file_instance.file_resource,
-        filename=file_transfer.new_filename)
+        file_resource=file_transfer.file_instance.file_resource,)
     file_instance.save()
 
 
@@ -103,7 +102,7 @@ def perform_transfer_file_azure_server(file_transfer):
             file_transfer.progress = float(current) / float(total)
             file_transfer.save()
 
-    cloud_filename = file_transfer.file_instance.filename.strip("/") # TODO: throw error? path/name of blob
+    cloud_filename = file_transfer.file_instance.file_resource.filename.strip("/") # TODO: throw error? path/name of blob
 
     # make subdirectories for file if they don't exist
     #TODO: refactor this into helper?
@@ -148,7 +147,7 @@ def perform_transfer_file_server_azure(file_transfer):
     # uploading file to test cloud storage, remember to strip the slash! Otherwise this creates an additional
     # <no name> root folder
     cloud_filepath = file_transfer.new_filename.strip('/')
-    local_filepath = os.path.join(file_transfer.from_storage.storage_directory, file_transfer.file_instance.filename.strip('/'))
+    local_filepath = os.path.join(file_transfer.from_storage.storage_directory, file_transfer.file_instance.file_resource.filename.strip('/'))
     block_blob_service.create_blob_from_path(
         file_transfer.to_storage.storage_container,
         cloud_filepath, #path/name of blob
@@ -172,6 +171,10 @@ def perform_transfer_file_server_azure(file_transfer):
 
 
 def perform_transfer_file_server_server(file_transfer):
+    # check that file exists on local server
+    check_file_exists_on_server(file_transfer.from_storage, file_transfer)
+
+    # setting up SSHClient
     client = paramiko.SSHClient()
     client.load_system_host_keys()
 
@@ -188,21 +191,24 @@ def perform_transfer_file_server_server(file_transfer):
 
     # TODO: refactor this into helper?
     # creating subdirectories for remote path if they don't exist
-    local_filepath = os.path.join(file_transfer.from_storage.storage_directory, file_transfer.file_instance.filename.strip('/'))
+    local_filepath = os.path.join(file_transfer.from_storage.storage_directory, file_transfer.file_instance.file_resource.filename.strip('/'))
     remote_filepath = os.path.join(file_transfer.to_storage.storage_directory, file_transfer.new_filename.strip('/'))
     dirname, filename = os.path.split(remote_filepath.rstrip('/'))
     cmd = "mkdir -p " + dirname
-    client.exec_command(cmd)
+    stdin, stdout, stderr = client.exec_command(cmd) # asynchronous command
 
-    check_file_exists_on_server(file_transfer.from_storage, file_transfer)
+    # This is a blocking call - ensures that all subdirectories are created before proceeding
+    stderr.channel.recv_exit_status()
 
+    # put file into remote server
     sftp.put(
         local_filepath,  # absolute path
         remote_filepath, # absolute path of file in the remote server
         callback=progress_callback)
 
-    transferred_file = sftp.file(remote_filepath, mode='r')
+    # retrieve transferred file object
     # b flag for binary is not needed because SSH treats all files as binary
+    transferred_file = sftp.file(remote_filepath, mode='r')
     md5 = get_md5(transferred_file)
 
     try:

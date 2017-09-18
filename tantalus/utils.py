@@ -45,7 +45,7 @@ def start_transfers(deployment):
                 file_transfer.to_storage = deployment.to_storage
                 file_transfer.file_instance = file_instance
                 #TODO: add tests for the naming and transfer starting
-                file_transfer.new_filename = seq_data_file.default_filename
+                file_transfer.new_filename = seq_data_file.filename
                 file_transfer.save()
 
                 transfer_file.apply_async(args=(file_transfer.id,), queue=deployment.from_storage.name)

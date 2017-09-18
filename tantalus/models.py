@@ -96,7 +96,7 @@ class SequenceDataFile(models.Model):
         choices=compression_choices,
     )
 
-    default_filename = models.CharField(
+    filename = models.CharField(
         max_length=500,
     )
 
@@ -475,10 +475,6 @@ class FileInstance(models.Model):
     file_resource = models.ForeignKey(
         SequenceDataFile,
         on_delete=models.CASCADE,
-    )
-
-    filename = models.CharField(
-        max_length=500,
     )
 
     class Meta:

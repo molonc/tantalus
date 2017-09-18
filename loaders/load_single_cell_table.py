@@ -51,6 +51,7 @@ for idx in data.index:
         seqfile.created = pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific')
         seqfile.file_type = tantalus.models.SequenceDataFile.FQ
         seqfile.compression = tantalus.models.SequenceDataFile.GZIP
+        seqfile.filename =fastq_filename
         seqfile.save()
 
         reads_files[read_end] = seqfile
@@ -58,7 +59,6 @@ for idx in data.index:
         serverfile = tantalus.models.FileInstance()
         serverfile.storage = storage
         serverfile.file_resource = seqfile
-        serverfile.filename = fastq_filename
         serverfile.full_clean()
         serverfile.save()
 
@@ -73,9 +73,6 @@ for idx in data.index:
     fastq_files.lanes = tantalus.models.SequenceLane.objects.filter(flowcell_id=data.loc[idx, 'flowcell'], lane_number=data.loc[idx, 'lane'])
     fastq_files.full_clean()
     fastq_files.save()
-
-    reads_files['1'].default_filename = fastq_files.default_reads_1_filename()
-    reads_files['2'].default_filename = fastq_files.default_reads_2_filename()
 
     reads_files['1'].full_clean()
     reads_files['2'].full_clean()
