@@ -9,9 +9,9 @@ class SampleViewSet(viewsets.ModelViewSet):
     filter_fields = ('sample_id',)
 
 
-class SequenceDataFileViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.SequenceDataFile.objects.all()
-    serializer_class = tantalus.api.serializers.SequenceDataFileSerializer
+class FileResourceViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.FileResource.objects.all()
+    serializer_class = tantalus.api.serializers.FileResourceSerializer
     filter_fields = ('md5',)
 
 
@@ -33,9 +33,9 @@ class SequenceLaneViewSet(viewsets.ModelViewSet):
     filter_fields = ('flowcell_id', 'lane_number',)
 
 
-class SequenceDatasetViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.SequenceDataset.objects.all()
-    serializer_class = tantalus.api.serializers.SequenceDatasetSerializer
+class AbstractFileSetViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.AbstractFileSet.objects.all()
+    serializer_class = tantalus.api.serializers.AbstractFileSetSerializer
     filter_fields = (
                      # filters for SequenceLanes
                      'lanes',

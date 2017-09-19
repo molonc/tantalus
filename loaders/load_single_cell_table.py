@@ -13,7 +13,7 @@ import tantalus.models
 
 tantalus.models.ServerStorage.objects.all().delete()
 tantalus.models.AzureBlobStorage.objects.all().delete()
-tantalus.models.SequenceDataFile.objects.all().delete()
+tantalus.models.FileResource.objects.all().delete()
 tantalus.models.FileInstance.objects.all().delete()
 tantalus.models.PairedEndFastqFiles.objects.all().delete()
 
@@ -45,12 +45,12 @@ for idx in data.index:
     for read_end in ('1', '2'):
         fastq_filename = data.loc[idx, 'read' + read_end]
 
-        seqfile = tantalus.models.SequenceDataFile()
+        seqfile = tantalus.models.FileResource()
         seqfile.md5 = data.loc[idx, 'md5' + read_end]
         seqfile.size = data.loc[idx, 'size' + read_end]
         seqfile.created = pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific')
-        seqfile.file_type = tantalus.models.SequenceDataFile.FQ
-        seqfile.compression = tantalus.models.SequenceDataFile.GZIP
+        seqfile.file_type = tantalus.models.FileResource.FQ
+        seqfile.compression = tantalus.models.FileResource.GZIP
         seqfile.filename =fastq_filename
         seqfile.save()
 

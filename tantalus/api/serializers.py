@@ -18,14 +18,14 @@ class SampleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SequenceDataFileSerializer(serializers.ModelSerializer):
+class FileResourceSerializer(serializers.ModelSerializer):
     md5 = serializers.CharField(
         validators=[
-            UniqueValidator(queryset=tantalus.models.SequenceDataFile.objects.all())
+            UniqueValidator(queryset=tantalus.models.FileResource.objects.all())
         ]
     )
     class Meta:
-        model = tantalus.models.SequenceDataFile
+        model = tantalus.models.FileResource
         fields = '__all__'
 
 
@@ -65,10 +65,10 @@ class SequenceLaneSerializer(serializers.ModelSerializer):
         ]
 
 
-class SequenceDatasetSerializer(TaggitSerializer, serializers.ModelSerializer):
+class AbstractFileSetSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
     class Meta:
-        model = tantalus.models.SequenceDataset
+        model = tantalus.models.AbstractFileSet
         fields = '__all__'
     def to_representation(self, obj):
         if isinstance(obj, tantalus.models.SingleEndFastqFile):
@@ -77,7 +77,7 @@ class SequenceDatasetSerializer(TaggitSerializer, serializers.ModelSerializer):
            return PairedEndFastqFilesSerializer(obj, context=self.context).to_representation(obj)
         elif isinstance(obj, tantalus.models.BamFile):
            return BamFileSerializer(obj, context=self.context).to_representation(obj)
-        return super(SequenceDatasetSerializer, self).to_representation(obj)
+        return super(AbstractFileSetSerializer, self).to_representation(obj)
 
 
 class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer):

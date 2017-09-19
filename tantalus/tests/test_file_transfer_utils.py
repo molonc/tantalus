@@ -50,8 +50,8 @@ NEW_FILENAME = "new_test_file"
 FILE_MD5 = 0 # iterated by 1 to create a unique md5 for each test file
 FILE_SIZE = "20"
 FILE_CREATION_DATE = timezone.now()
-FILE_TYPE= SequenceDataFile.FQ
-FILE_COMPRESSION = SequenceDataFile.UNCOMPRESSED
+FILE_TYPE= FileResource.FQ
+FILE_COMPRESSION = FileResource.UNCOMPRESSED
 
 
 ## HELPER TEST FUNCTIONS ##
@@ -138,7 +138,7 @@ def _create_file_resource(count):
     for i in range (0, count):
         md5 = str(FILE_MD5 + i)
 
-        test_seqfile = SequenceDataFile(
+        test_seqfile = FileResource(
             md5 = md5,
             size = FILE_SIZE,
             created = FILE_CREATION_DATE,
@@ -240,7 +240,7 @@ class FileTransferTest(TestCase):
 
         # creating the file resource
         _create_file_resource(count=1)
-        file_resource = SequenceDataFile.objects.all()[0]
+        file_resource = FileResource.objects.all()[0]
 
         # checking that the file does not already exist on the remote server from a previous test
         client, sftp = connect_sftp_server(to_storage.server_ip, to_storage.username)
@@ -290,7 +290,7 @@ class FileTransferTest(TestCase):
 
         # creating the file resource
         _create_file_resource(count=1)
-        file_resource = SequenceDataFile.objects.all()[0]
+        file_resource = FileResource.objects.all()[0]
 
 
         # add the file instance, but do NOT actually add the file - this is testing the exception is being thrown
@@ -327,7 +327,7 @@ class FileTransferTest(TestCase):
 
         # creating file resource for test
         _create_file_resource(count=1)
-        file_resource = SequenceDataFile.objects.all()[0]
+        file_resource = FileResource.objects.all()[0]
 
         # clearing test cloud storage files
         _clear_test_cloud_storage(to_storage)
@@ -370,7 +370,7 @@ class FileTransferTest(TestCase):
 
         # Create test file resource
         _create_file_resource(count=1)
-        file_resource = SequenceDataFile.objects.all()[0]
+        file_resource = FileResource.objects.all()[0]
 
         # file transfer location
         local_filename = os.path.join(to_storage.storage_directory, file_resource.filename)
@@ -398,7 +398,7 @@ class FileTransferTest(TestCase):
         # creating file instance object and related file type object for the file on the test cloud storage
         _add_file_instances_to_cloud(
             storage = from_storage,
-            file_resource = SequenceDataFile.objects.all()[0],
+            file_resource = FileResource.objects.all()[0],
             dnasequence = DNASequences.objects.all()[0],
         )
 
@@ -424,7 +424,7 @@ class FileTransferTest(TestCase):
 
         # file resource for test
         _create_file_resource(count=1)
-        file_resource = SequenceDataFile.objects.all()[0]
+        file_resource = FileResource.objects.all()[0]
 
         # clear test cloud storage
         _clear_test_cloud_storage(from_storage)
@@ -432,7 +432,7 @@ class FileTransferTest(TestCase):
         # creating file instance object and related file type object for the file on the test cloud storage
         _add_file_instances_to_cloud(
             storage=from_storage,
-            file_resource=SequenceDataFile.objects.all()[0],
+            file_resource=FileResource.objects.all()[0],
             dnasequence=DNASequences.objects.all()[0],
         )
 

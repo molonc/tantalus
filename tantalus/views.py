@@ -3,7 +3,7 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import ModelFormMixin
 from django.db import transaction
-from tantalus.models import FileTransfer, Deployment, SequenceDataFile
+from tantalus.models import FileTransfer, Deployment, FileResource
 from tasks import transfer_file
 from tantalus.utils import start_transfers
 

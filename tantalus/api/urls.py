@@ -5,11 +5,11 @@ from tantalus.api import views
 
 router = routers.DefaultRouter()
 router.register(r'sample', views.SampleViewSet)
-router.register(r'sequence_data_file', views.SequenceDataFileViewSet)
+router.register(r'sequence_data_file', views.FileResourceViewSet)
 router.register(r'dna_library', views.DNALibraryViewSet)
 router.register(r'dna_sequences', views.DNASequencesViewSet)
 router.register(r'sequence_lane', views.SequenceLaneViewSet)
-router.register(r'dataset/generic', views.SequenceDatasetViewSet)
+router.register(r'dataset/generic', views.AbstractFileSetViewSet)
 router.register(r'dataset/single_end_fastq_file', views.SingleEndFastqFileViewSet)
 router.register(r'dataset/paired_end_fastq_files', views.PairedEndFastqFilesViewSet)
 router.register(r'dataset/bam_file', views.BamFileViewSet)

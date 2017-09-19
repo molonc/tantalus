@@ -50,7 +50,7 @@ class Sample(models.Model):
         return '{}_{}'.format(self.sample_id_space, self.sample_id)
 
 
-class SequenceDataFile(models.Model):
+class FileResource(models.Model):
     """
     Sequence data file.
     """
@@ -247,7 +247,7 @@ class SequenceLane(models.Model):
         unique_together = ('flowcell_id', 'lane_number')
 
 
-class SequenceDataset(PolymorphicModel):
+class AbstractFileSet(PolymorphicModel):
     """
     General Sequence Dataset.
     """
@@ -269,7 +269,7 @@ class SequenceDataset(PolymorphicModel):
         raise NotImplementedError()
 
 
-class SingleEndFastqFile(SequenceDataset):
+class SingleEndFastqFile(AbstractFileSet):
     """
     Fastq file of single ended Illumina Sequencing.
     """
@@ -277,7 +277,7 @@ class SingleEndFastqFile(SequenceDataset):
     history = HistoricalRecords()
 
     reads_file = models.ForeignKey(
-        SequenceDataFile,
+        FileResource,
         on_delete=models.CASCADE,
         related_name='reads_file',
     )
@@ -299,7 +299,7 @@ class SingleEndFastqFile(SequenceDataset):
     def get_data_fileset(self):
         return [self.reads_file]
 
-class PairedEndFastqFiles(SequenceDataset):
+class PairedEndFastqFiles(AbstractFileSet):
     """
     Fastq file of paired ended Illumina Sequencing.
     """
@@ -307,13 +307,13 @@ class PairedEndFastqFiles(SequenceDataset):
     history = HistoricalRecords()
 
     reads_1_file = models.ForeignKey(
-        SequenceDataFile,
+        FileResource,
         on_delete=models.CASCADE,
         related_name='reads_1_file',
     )
 
     reads_2_file = models.ForeignKey(
-        SequenceDataFile,
+        FileResource,
         on_delete=models.CASCADE,
         related_name='reads_2_file',
     )
@@ -347,7 +347,7 @@ class PairedEndFastqFiles(SequenceDataset):
         unique_together = ('reads_1_file', 'reads_2_file')
 
 
-class BamFile(SequenceDataset):
+class BamFile(AbstractFileSet):
     """
     Base class of bam files.
     """
@@ -370,13 +370,13 @@ class BamFile(SequenceDataset):
     )
 
     bam_file = models.ForeignKey(
-        SequenceDataFile,
+        FileResource,
         on_delete=models.CASCADE,
         related_name='bam_file',
     )
 
     bam_index_file = models.ForeignKey(
-        SequenceDataFile,
+        FileResource,
         on_delete=models.CASCADE,
         related_name='bam_index_file',
     )
@@ -473,7 +473,7 @@ class FileInstance(models.Model):
     )
 
     file_resource = models.ForeignKey(
-        SequenceDataFile,
+        FileResource,
         on_delete=models.CASCADE,
     )
 
@@ -529,7 +529,7 @@ class Deployment(models.Model):
     )
 
     datasets = models.ManyToManyField(
-        SequenceDataset,
+        AbstractFileSet,
     )
 
     file_transfers = models.ManyToManyField(
