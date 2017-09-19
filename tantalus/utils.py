@@ -6,6 +6,7 @@ def create_deployment_file_transfers(deployment):
     """ Start a set of transfers for a deployment.
     """
 
+    files_to_transfer = []
     # get all AbstractFileSets related to this deployment
     for dataset in deployment.datasets.all():
         file_resources = dataset.get_data_fileset()
@@ -48,7 +49,8 @@ def create_deployment_file_transfers(deployment):
                 file_transfer.new_filename = file_resource.filename
                 file_transfer.save()
 
-
+                files_to_transfer.append(file_transfer
+                                         )
             deployment.file_transfers.add(file_transfer)
-
+            return files_to_transfer
 
