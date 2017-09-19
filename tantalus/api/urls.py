@@ -5,7 +5,7 @@ from tantalus.api import views
 
 router = routers.DefaultRouter()
 router.register(r'sample', views.SampleViewSet)
-router.register(r'sequence_data_file', views.FileResourceViewSet)
+router.register(r'file_resource', views.FileResourceViewSet)
 router.register(r'dna_library', views.DNALibraryViewSet)
 router.register(r'dna_sequences', views.DNASequencesViewSet)
 router.register(r'sequence_lane', views.SequenceLaneViewSet)
