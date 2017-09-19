@@ -176,8 +176,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
                 instance.datasets = datasets
                 instance.file_transfers = file_transfers
 
-                files_transfers = create_deployment_file_transfers(instance)
-            for file_transfer in files_transfers:
+                create_deployment_file_transfers(instance)
+            for file_transfer in instance.file_transfers.all():
                 transfer_file.apply_async(args=(file_transfer.id,), queue=instance.from_storage.name)
             return instance
 
