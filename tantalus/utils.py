@@ -49,8 +49,9 @@ def create_deployment_file_transfers(deployment):
                 file_transfer.new_filename = file_resource.filename
                 file_transfer.save()
 
-                files_to_transfer.append(file_transfer
-                                         )
+                files_to_transfer.append(file_transfer)
+
             deployment.file_transfers.add(file_transfer)
-            return files_to_transfer
+
+    return files_to_transfer
 
