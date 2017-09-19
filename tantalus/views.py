@@ -5,7 +5,7 @@ from django.views.generic.edit import ModelFormMixin
 from django.db import transaction
 from tantalus.models import FileTransfer, Deployment, FileResource
 from tasks import transfer_file
-from tantalus.utils import start_transfers
+from tantalus.utils import create_deployment_file_transfers
 
 class FileTransferListView(ListView):
     model = FileTransfer
@@ -33,7 +33,7 @@ class DeploymentCreateView(CreateView):
                     file_transfer_ids = []
 
                     deployment = self.object
-                    start_transfers(deployment)
+                    create_deployment_file_transfers(deployment)
                     return super(ModelFormMixin, self).form_valid(form)
         except ValueError as e:
             error_message = ' '.join(e.args)

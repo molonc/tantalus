@@ -1,11 +1,14 @@
+from django.db import transaction
 from rest_framework import serializers
-import tantalus.models
 from taggit_serializer.serializers import (
     TagListSerializerField,
     TaggitSerializer)
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from rest_framework.exceptions import ValidationError
-from tantalus.utils import start_transfers
+from tantalus.utils import create_deployment_file_transfers
+from tantalus.tasks import transfer_file
+import tantalus.models
+
 
 class SampleSerializer(serializers.ModelSerializer):
     sample_id = serializers.CharField(
@@ -163,18 +166,23 @@ class DeploymentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
-            #remove many2many relationships from validated_data
-            datasets = validated_data.pop('datasets', [])
-            file_transfers = validated_data.pop('file_transfers', [])
+            with transaction.atomic():
+                #remove many2many relationships from validated_data
+                datasets = validated_data.pop('datasets', [])
+                file_transfers = validated_data.pop('file_transfers', [])
 
-            instance = tantalus.models.Deployment(**validated_data)
-            instance.save()
-            instance.datasets = datasets
-            instance.file_transfers = file_transfers
-            start_transfers(instance)
+                instance = tantalus.models.Deployment(**validated_data)
+                instance.save()
+                instance.datasets = datasets
+                instance.file_transfers = file_transfers
+
+                files_transfers = create_deployment_file_transfers(instance)
+            for file_transfer in files_transfers:
+                transfer_file.apply_async(args=(file_transfer.id,), queue=instance.from_storage.name)
             return instance
 
         except ValueError as e:
+            # TODO: construct JSON response
             raise ValidationError(" ".join(e.args), code=None)
 
 

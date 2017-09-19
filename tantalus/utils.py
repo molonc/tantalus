@@ -1,8 +1,8 @@
-from tantalus.models import FileTransfer, FileResource
-from tasks import transfer_file
+from tantalus.models import FileTransfer
+# from tasks import transfer_file
 
 
-def start_transfers(deployment):
+def create_deployment_file_transfers(deployment):
     """ Start a set of transfers for a deployment.
     """
 
@@ -48,7 +48,6 @@ def start_transfers(deployment):
                 file_transfer.new_filename = file_resource.filename
                 file_transfer.save()
 
-                transfer_file.apply_async(args=(file_transfer.id,), queue=deployment.from_storage.name)
 
             deployment.file_transfers.add(file_transfer)
 
