@@ -40,44 +40,34 @@ blob_storage.full_clean()
 blob_storage.save()
 
 for idx in data.index:
-    reads_files = {}
-
-    for read_end in ('1', '2'):
-        fastq_filename = data.loc[idx, 'read' + read_end]
-
-        seqfile = tantalus.models.FileResource()
-        seqfile.md5 = data.loc[idx, 'md5' + read_end]
-        seqfile.size = data.loc[idx, 'size' + read_end]
-        seqfile.created = pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific')
-        seqfile.file_type = tantalus.models.FileResource.FQ
-        seqfile.compression = tantalus.models.FileResource.GZIP
-        seqfile.filename =fastq_filename
-        seqfile.save()
-
-        reads_files[read_end] = seqfile
-
-        serverfile = tantalus.models.FileInstance()
-        serverfile.storage = storage
-        serverfile.file_resource = seqfile
-        serverfile.full_clean()
-        serverfile.save()
-
     fastq_dna_sequences = tantalus.models.DNASequences.objects.filter(index_sequence=reverse_complement(data.loc[idx, 'code1']) + '-' + data.loc[idx, 'code2'])
     assert len(fastq_dna_sequences) == 1
 
     fastq_files = tantalus.models.PairedEndFastqFiles()
-    fastq_files.reads_1_file = reads_files['1']
-    fastq_files.reads_2_file = reads_files['2']
     fastq_files.dna_sequences = fastq_dna_sequences[0]
     fastq_files.save()
     fastq_files.lanes = tantalus.models.SequenceLane.objects.filter(flowcell_id=data.loc[idx, 'flowcell'], lane_number=data.loc[idx, 'lane'])
     fastq_files.full_clean()
     fastq_files.save()
 
-    reads_files['1'].full_clean()
-    reads_files['2'].full_clean()
-    reads_files['1'].save()
-    reads_files['2'].save()
+    for read_end in ('1', '2'):
+        fastq_filename = data.loc[idx, 'read' + read_end]
 
+        seqfile = tantalus.models.FileResource()
+        seqfile.file_set = fastq_files
+        seqfile.md5 = data.loc[idx, 'md5' + read_end]
+        seqfile.size = data.loc[idx, 'size' + read_end]
+        seqfile.created = pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific')
+        seqfile.file_type = tantalus.models.FileResource.FQ
+        seqfile.read_end = int(read_end)
+        seqfile.compression = tantalus.models.FileResource.GZIP
+        seqfile.filename =fastq_filename
+        seqfile.save()
+
+        serverfile = tantalus.models.FileInstance()
+        serverfile.storage = storage
+        serverfile.file_resource = seqfile
+        serverfile.full_clean()
+        serverfile.save()
 
 

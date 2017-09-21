@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+import django_filters
 import tantalus.models
 import tantalus.api.serializers
 
@@ -9,10 +10,18 @@ class SampleViewSet(viewsets.ModelViewSet):
     filter_fields = ('sample_id',)
 
 
+class FileResourceFilterSet(django_filters.FilterSet):
+    library_id = django_filters.CharFilter(name='file_set__dna_sequences__dna_library__library_id')
+    class Meta:
+        model = tantalus.models.FileResource
+        fields = ['md5', 'library_id']
+
+
 class FileResourceViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class = tantalus.api.serializers.FileResourceSerializer
     filter_fields = ('md5',)
+    filter_class = FileResourceFilterSet
 
 
 class DNALibraryViewSet(viewsets.ModelViewSet):
@@ -49,21 +58,24 @@ class AbstractFileSetViewSet(viewsets.ModelViewSet):
 class SingleEndFastqFileViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.SingleEndFastqFile.objects.all()
     serializer_class = tantalus.api.serializers.SingleEndFastqFileSerializer
-    filter_fields = ('reads_file__md5', 'reads_file',)
+
+
+class PairedEndFastqFilesFilterSet(django_filters.FilterSet):
+    library_id = django_filters.CharFilter(name='dna_sequences__dna_library__library_id')
+    class Meta:
+        model = tantalus.models.PairedEndFastqFiles
+        fields = ['library_id']
 
 
 class PairedEndFastqFilesViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.PairedEndFastqFiles.objects.all()
     serializer_class = tantalus.api.serializers.PairedEndFastqFilesSerializer
-    filter_fields = ('reads_1_file__md5', 'reads_1_file',
-                     'reads_2_file__md5', 'reads_2_file')
+    filter_class = PairedEndFastqFilesFilterSet
 
 
 class BamFileViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.BamFile.objects.all()
     serializer_class = tantalus.api.serializers.BamFileSerializer
-    filter_fields = ('bam_file__md5', 'bam_file'
-                     'bam_index_file__md5', 'bam_index_file')
 
 
 class StorageViewSet(viewsets.ModelViewSet):

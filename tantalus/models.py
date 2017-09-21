@@ -50,73 +50,6 @@ class Sample(models.Model):
         return '{}_{}'.format(self.sample_id_space, self.sample_id)
 
 
-class FileResource(models.Model):
-    """
-    Sequence data file.
-    """
-
-    history = HistoricalRecords()
-
-    md5 = models.CharField(
-        max_length=50,
-        unique=True,
-    )
-
-    size = models.BigIntegerField()
-
-    created = models.DateTimeField()
-
-    BAM = 'BAM'
-    BAI = 'BAI'
-    FQ = 'FQ'
-
-    file_type_choices = (
-        (BAM, 'BAM'),
-        (BAI, 'BAM Index'),
-        (FQ, 'Fastq'),
-    )
-
-    file_type = models.CharField(
-        max_length=50,
-        choices=file_type_choices,
-    )
-
-    GZIP = 'GZIP'
-    BZIP2 = 'BZIP2'
-    UNCOMPRESSED = 'UNCOMPRESSED'
-
-    compression_choices = (
-        (GZIP, 'gzip'),
-        (BZIP2, 'bzip2'),
-        (UNCOMPRESSED, 'uncompressed'),
-    )
-
-    compression = models.CharField(
-        max_length=50,
-        choices=compression_choices,
-    )
-
-    filename = models.CharField(
-        max_length=500,
-    )
-
-    def __unicode__(self):
-        return '{}'.format(self.md5)
-
-    def get_filename_time(self):
-        return self.created.strftime('%Y%m%d_%H%M%S')
-
-    def get_filename_uid(self):
-        return self.md5[:8]
-
-    def get_compression_suffix(self):
-        return {
-            self.GZIP: '.gz',
-            self.BZIP2: '.bz2',
-            self.UNCOMPRESSED: '',
-        }[self.compression]
-
-
 class DNALibrary(models.Model):
     """
     DNA Library, possibly multiplexed.
@@ -265,9 +198,6 @@ class AbstractFileSet(PolymorphicModel):
         on_delete=models.CASCADE,
     )
 
-    def get_data_fileset(self):
-        raise NotImplementedError()
-
 
 class SingleEndFastqFile(AbstractFileSet):
     """
@@ -276,28 +206,9 @@ class SingleEndFastqFile(AbstractFileSet):
 
     history = HistoricalRecords()
 
-    reads_file = models.ForeignKey(
-        FileResource,
-        on_delete=models.CASCADE,
-        related_name='reads_file',
-    )
-
     def __str__(self):
         return "SingleEndFastQ {}".format(self.id)
 
-    filename_template = '{sample_id}/{library_type}/{library_id}/{sample_id}_{index_sequence}_{dataset_id}.fastq{compression}'
-
-    def default_reads_filename(self):
-        return self.filename_template.format(
-            sample_id=self.dna_sequences.sample.sample_id,
-            library_type=self.dna_sequences.dna_library.library_type,
-            library_id=self.dna_sequences.dna_library.library_id,
-            index_sequence=self.dna_sequences.get_filename_index_sequence(),
-            dataset_id=str(self.id).zfill(10),
-            compression=self.reads_file.get_compression_suffix())
-
-    def get_data_fileset(self):
-        return [self.reads_file]
 
 class PairedEndFastqFiles(AbstractFileSet):
     """
@@ -306,45 +217,8 @@ class PairedEndFastqFiles(AbstractFileSet):
 
     history = HistoricalRecords()
 
-    reads_1_file = models.ForeignKey(
-        FileResource,
-        on_delete=models.CASCADE,
-        related_name='reads_1_file',
-    )
-
-    reads_2_file = models.ForeignKey(
-        FileResource,
-        on_delete=models.CASCADE,
-        related_name='reads_2_file',
-    )
-
     def __str__(self):
         return "PairedEndFastq {}".format(self.id)
-
-    filename_template = '{sample_id}/{library_type}/{library_id}/{sample_id}_{index_sequence}_R{read_end}_{dataset_id}.fastq{compression}'
-
-    def default_reads_filename(self, read_end):
-        reads_files = {'1': self.reads_1_file, '2': self.reads_2_file}
-        return self.filename_template.format(
-            sample_id=self.dna_sequences.sample.sample_id,
-            library_type=self.dna_sequences.dna_library.library_type,
-            library_id=self.dna_sequences.dna_library.library_id,
-            index_sequence=self.dna_sequences.get_filename_index_sequence(),
-            read_end=read_end,
-            dataset_id=str(self.id).zfill(10),
-            compression=reads_files[read_end].get_compression_suffix())
-
-    def default_reads_1_filename(self):
-        return self.default_reads_filename('1')
-
-    def default_reads_2_filename(self):
-        return self.default_reads_filename('2')
-
-    def get_data_fileset(self):
-        return [self.reads_1_file, self.reads_2_file]
-
-    class Meta:
-        unique_together = ('reads_1_file', 'reads_2_file')
 
 
 class BamFile(AbstractFileSet):
@@ -369,40 +243,81 @@ class BamFile(AbstractFileSet):
         max_length=50,
     )
 
-    bam_file = models.ForeignKey(
-        FileResource,
+
+class FileResource(models.Model):
+    """
+    Sequence data file.
+    """
+
+    history = HistoricalRecords()
+
+    file_set = models.ForeignKey(
+        AbstractFileSet,
         on_delete=models.CASCADE,
-        related_name='bam_file',
     )
 
-    bam_index_file = models.ForeignKey(
-        FileResource,
-        on_delete=models.CASCADE,
-        related_name='bam_index_file',
+    md5 = models.CharField(
+        max_length=50,
+        unique=True,
     )
 
-    filename_template = '{sample_id}/{library_type}/{library_id}/{sample_id}_{index_sequence}_{dataset_id}.{suffix}'
+    size = models.BigIntegerField()
 
-    def default_filename(self, suffix):
-        return self.filename_template.format(
-            sample_id=self.dna_sequences.sample.sample_id,
-            library_type=self.dna_sequences.dna_library.library_type,
-            library_id=self.dna_sequences.dna_library.library_id,
-            index_sequence=self.dna_sequences.get_filename_index_sequence(),
-            dataset_id=str(self.id).zfill(10),
-            suffix=suffix)
+    created = models.DateTimeField()
 
-    def default_bam_filename(self):
-        return self.default_filename('bam')
+    BAM = 'BAM'
+    BAI = 'BAI'
+    FQ = 'FQ'
 
-    def default_bam_index_filename(self):
-        return self.default_filename('bam.bai')
+    file_type_choices = (
+        (BAM, 'BAM'),
+        (BAI, 'BAM Index'),
+        (FQ, 'Fastq'),
+    )
 
-    def get_data_fileset(self):
-        return [self.bam_file, self.bam_index_file]
+    file_type = models.CharField(
+        max_length=50,
+        choices=file_type_choices,
+    )
 
-    class Meta:
-        unique_together = ('bam_file', 'bam_index_file')
+    read_end = models.PositiveSmallIntegerField(
+        null=True,
+    )
+
+    GZIP = 'GZIP'
+    BZIP2 = 'BZIP2'
+    UNCOMPRESSED = 'UNCOMPRESSED'
+
+    compression_choices = (
+        (GZIP, 'gzip'),
+        (BZIP2, 'bzip2'),
+        (UNCOMPRESSED, 'uncompressed'),
+    )
+
+    compression = models.CharField(
+        max_length=50,
+        choices=compression_choices,
+    )
+
+    filename = models.CharField(
+        max_length=500,
+    )
+
+    def __unicode__(self):
+        return '{}'.format(self.md5)
+
+    def get_filename_time(self):
+        return self.created.strftime('%Y%m%d_%H%M%S')
+
+    def get_filename_uid(self):
+        return self.md5[:8]
+
+    def get_compression_suffix(self):
+        return {
+            self.GZIP: '.gz',
+            self.BZIP2: '.bz2',
+            self.UNCOMPRESSED: '',
+        }[self.compression]
 
 
 class Storage(PolymorphicModel):

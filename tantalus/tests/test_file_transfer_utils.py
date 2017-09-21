@@ -134,8 +134,16 @@ def _add_storages():
     return storages
 
 
-def _create_file_resource(count):
-    for i in range (0, count):
+def _add_file_set(count):
+    for i in range(0, count):
+        p = PairedEndFastqFiles(dna_sequences = DNASequences.objects.all()[0])
+        p.save()
+        p.lanes = SequenceLane.objects.all()[0],
+        p.save()
+
+
+def _add_file_resource(count):
+    for i in range(0, count):
         md5 = str(FILE_MD5 + i)
 
         test_seqfile = FileResource(
@@ -144,7 +152,8 @@ def _create_file_resource(count):
             created = FILE_CREATION_DATE,
             file_type = FILE_TYPE,
             compression = FILE_COMPRESSION,
-            filename = BASE_FILENAME + "_" + str(i)
+            filename = BASE_FILENAME + "_" + str(i),
+            file_set = AbstractFileSet.objects.all()[0],
         )
         test_seqfile.save()
 
@@ -188,14 +197,6 @@ def _add_file_instances_to_server(storage, file_resource, dnasequence, create=Tr
             client.exec_command(cmd3)
             client.close()
 
-    fastq_files = SingleEndFastqFile(
-        reads_file = file_resource,
-        dna_sequences=dnasequence,
-    )
-    fastq_files.save()
-
-    fastq_files.lanes = [SequenceLane.objects.get(id=1)]
-    fastq_files.save()
 
 def _add_file_instances_to_cloud(storage, file_resource, dnasequence):
     serverfile = FileInstance(
@@ -204,19 +205,8 @@ def _add_file_instances_to_cloud(storage, file_resource, dnasequence):
     )
     serverfile.save()
 
-    # creating singleendfastq object with no m2m relationships
-    fastq_files = SingleEndFastqFile(
-        reads_file=file_resource,
-        dna_sequences=dnasequence,
-    )
-    fastq_files.save()
-
-    # separating assignment of m2m relationships because object needs to exist first
-    fastq_files.lanes = [SequenceLane.objects.all()[0]]
-    fastq_files.save()
 
 ## TESTS ##
-
 class FileTransferTest(TestCase):
     storage_servers = {}
 
@@ -226,7 +216,11 @@ class FileTransferTest(TestCase):
         add_new_libraries(['A90652A'])
         add_new_sequencelanes(['CB95TANXX_6'])
 
+        # setting up test wide variables
         cls.storage_servers = _add_storages()
+        cls.file_set = _add_file_set(1)
+        _add_file_resource(1)
+        cls.file_resource = FileResource.objects.all()[0]
 
 
     def setUp(self):
@@ -237,10 +231,7 @@ class FileTransferTest(TestCase):
         # test specific set up for transfer from local server to remote server (rocks)
         from_storage = self.storage_servers['local']
         to_storage = self.storage_servers['rocks']
-
-        # creating the file resource
-        _create_file_resource(count=1)
-        file_resource = FileResource.objects.all()[0]
+        file_resource = self.file_resource
 
         # checking that the file does not already exist on the remote server from a previous test
         client, sftp = connect_sftp_server(to_storage.server_ip, to_storage.username)
@@ -287,11 +278,7 @@ class FileTransferTest(TestCase):
         # test specific set up for transfer from local server to remote server (rocks)
         from_storage = self.storage_servers['local']
         to_storage = self.storage_servers['rocks']
-
-        # creating the file resource
-        _create_file_resource(count=1)
-        file_resource = FileResource.objects.all()[0]
-
+        file_resource = self.file_resource
 
         # add the file instance, but do NOT actually add the file - this is testing the exception is being thrown
         _add_file_instances_to_server(
@@ -324,10 +311,7 @@ class FileTransferTest(TestCase):
         from_storage = self.storage_servers['local']
         to_storage = self.storage_servers['blob_storage']
         service = get_block_blob_service(to_storage)
-
-        # creating file resource for test
-        _create_file_resource(count=1)
-        file_resource = FileResource.objects.all()[0]
+        file_resource = self.file_resource
 
         # clearing test cloud storage files
         _clear_test_cloud_storage(to_storage)
@@ -367,10 +351,7 @@ class FileTransferTest(TestCase):
         from_storage = self.storage_servers['blob_storage']
         to_storage = self.storage_servers['local']
         service = get_block_blob_service(from_storage)
-
-        # Create test file resource
-        _create_file_resource(count=1)
-        file_resource = FileResource.objects.all()[0]
+        file_resource = self.file_resource
 
         # file transfer location
         local_filename = os.path.join(to_storage.storage_directory, file_resource.filename)
@@ -398,7 +379,7 @@ class FileTransferTest(TestCase):
         # creating file instance object and related file type object for the file on the test cloud storage
         _add_file_instances_to_cloud(
             storage = from_storage,
-            file_resource = FileResource.objects.all()[0],
+            file_resource = file_resource,
             dnasequence = DNASequences.objects.all()[0],
         )
 
@@ -421,10 +402,7 @@ class FileTransferTest(TestCase):
         # test specific set up
         from_storage = self.storage_servers['blob_storage']
         to_storage = self.storage_servers['local']
-
-        # file resource for test
-        _create_file_resource(count=1)
-        file_resource = FileResource.objects.all()[0]
+        file_resource = self.file_resource
 
         # clear test cloud storage
         _clear_test_cloud_storage(from_storage)
@@ -432,7 +410,7 @@ class FileTransferTest(TestCase):
         # creating file instance object and related file type object for the file on the test cloud storage
         _add_file_instances_to_cloud(
             storage=from_storage,
-            file_resource=FileResource.objects.all()[0],
+            file_resource=file_resource,
             dnasequence=DNASequences.objects.all()[0],
         )
 
