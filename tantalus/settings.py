@@ -20,10 +20,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'ioyk5-@he-+et%vlbeb8&(di%ohg63fx2qogbhg9w@5)9p3_h('
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.environ.get('DJANGO_DEBUG', False))
 
 ALLOWED_HOSTS = ['10.9.215.82']
 
@@ -90,9 +90,9 @@ WSGI_APPLICATION = 'tantalus.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tantalus',
-        'USER': 'amcpherson',
-        'PASSWORD': 'shahuser',
+        'NAME': os.environ.get('TANTALUS_POSTGRESQL_NAME'),
+        'USER': os.environ.get('TANTALUS_POSTGRESQL_USER'),
+        'PASSWORD': os.environ.get('TANTALUS_POSTGRESQL_PASSWORD'),
         'HOST': '10.9.215.82',
         'PORT': '5432',
     }
@@ -143,7 +143,7 @@ STATIC_ROOT = '/var/www/html/tantalus/static/'
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 1000,
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ),
