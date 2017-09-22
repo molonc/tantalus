@@ -134,7 +134,7 @@ def _add_storages():
     return storages
 
 
-def _add_file_set(count):
+def _add_dataset(count):
     for i in range(0, count):
         p = PairedEndFastqFiles(dna_sequences = DNASequences.objects.all()[0])
         p.save()
@@ -153,7 +153,7 @@ def _add_file_resource(count):
             file_type = FILE_TYPE,
             compression = FILE_COMPRESSION,
             filename = BASE_FILENAME + "_" + str(i),
-            file_set = AbstractFileSet.objects.all()[0],
+            dataset = AbstractDataSet.objects.all()[0],
         )
         test_seqfile.save()
 
@@ -218,7 +218,7 @@ class FileTransferTest(TestCase):
 
         # setting up test wide variables
         cls.storage_servers = _add_storages()
-        cls.file_set = _add_file_set(1)
+        cls.dataset = _add_dataset(1)
         _add_file_resource(1)
         cls.file_resource = FileResource.objects.all()[0]
 

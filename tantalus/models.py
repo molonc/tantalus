@@ -180,7 +180,7 @@ class SequenceLane(models.Model):
         unique_together = ('flowcell_id', 'lane_number')
 
 
-class AbstractFileSet(PolymorphicModel):
+class AbstractDataSet(PolymorphicModel):
     """
     General Sequence Dataset.
     """
@@ -195,11 +195,13 @@ class AbstractFileSet(PolymorphicModel):
     
     dna_sequences = models.ForeignKey(
         DNASequences,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
     )
 
 
-class SingleEndFastqFile(AbstractFileSet):
+class SingleEndFastqFile(AbstractDataSet):
     """
     Fastq file of single ended Illumina Sequencing.
     """
@@ -210,7 +212,7 @@ class SingleEndFastqFile(AbstractFileSet):
         return "SingleEndFastQ {}".format(self.id)
 
 
-class PairedEndFastqFiles(AbstractFileSet):
+class PairedEndFastqFiles(AbstractDataSet):
     """
     Fastq file of paired ended Illumina Sequencing.
     """
@@ -221,7 +223,7 @@ class PairedEndFastqFiles(AbstractFileSet):
         return "PairedEndFastq {}".format(self.id)
 
 
-class BamFile(AbstractFileSet):
+class BamFile(AbstractDataSet):
     """
     Base class of bam files.
     """
@@ -251,8 +253,8 @@ class FileResource(models.Model):
 
     history = HistoricalRecords()
 
-    file_set = models.ForeignKey(
-        AbstractFileSet,
+    dataset = models.ForeignKey(
+        AbstractDataSet,
         on_delete=models.CASCADE,
     )
 
@@ -444,7 +446,7 @@ class Deployment(models.Model):
     )
 
     datasets = models.ManyToManyField(
-        AbstractFileSet,
+        AbstractDataSet,
     )
 
     file_transfers = models.ManyToManyField(

@@ -40,7 +40,7 @@ def create_reads_file(data, in_storage, directory_to_strip=DIRECTORY_TO_STRIP):
             fastq_filename = data.loc[idx, 'read' + read_end]
 
             file_resource = tantalus.models.FileResource()
-            file_resource.file_set = fastq_files
+            file_resource.dataset = fastq_files
             file_resource.md5 = data.loc[idx, 'md5' + read_end]
             file_resource.size = data.loc[idx, 'size' + read_end]
             file_resource.created = pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific')

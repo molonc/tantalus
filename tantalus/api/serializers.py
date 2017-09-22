@@ -68,10 +68,10 @@ class SequenceLaneSerializer(serializers.ModelSerializer):
         ]
 
 
-class AbstractFileSetSerializer(TaggitSerializer, serializers.ModelSerializer):
+class AbstractDataSetSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
     class Meta:
-        model = tantalus.models.AbstractFileSet
+        model = tantalus.models.AbstractDataSet
         fields = '__all__'
     def to_representation(self, obj):
         if isinstance(obj, tantalus.models.SingleEndFastqFile):
@@ -80,7 +80,7 @@ class AbstractFileSetSerializer(TaggitSerializer, serializers.ModelSerializer):
            return PairedEndFastqFilesSerializer(obj, context=self.context).to_representation(obj)
         elif isinstance(obj, tantalus.models.BamFile):
            return BamFileSerializer(obj, context=self.context).to_representation(obj)
-        return super(AbstractFileSetSerializer, self).to_representation(obj)
+        return super(AbstractDataSetSerializer, self).to_representation(obj)
 
 
 class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer):

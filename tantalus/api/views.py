@@ -12,7 +12,7 @@ class SampleViewSet(viewsets.ModelViewSet):
 
 
 class FileResourceFilterSet(django_filters.FilterSet):
-    library_id = django_filters.CharFilter(name='file_set__dna_sequences__dna_library__library_id')
+    library_id = django_filters.CharFilter(name='dataset__dna_sequences__dna_library__library_id')
     class Meta:
         model = tantalus.models.FileResource
         fields = ['md5', 'library_id']
@@ -43,9 +43,9 @@ class SequenceLaneViewSet(viewsets.ModelViewSet):
     filter_fields = ('flowcell_id', 'lane_number',)
 
 
-class AbstractFileSetViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.AbstractFileSet.objects.all()
-    serializer_class = tantalus.api.serializers.AbstractFileSetSerializer
+class AbstractDataSetViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.AbstractDataSet.objects.all()
+    serializer_class = tantalus.api.serializers.AbstractDataSetSerializer
     filter_fields = (
                      # filters for SequenceLanes
                      'lanes',

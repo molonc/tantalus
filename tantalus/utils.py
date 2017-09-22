@@ -7,7 +7,7 @@ def create_deployment_file_transfers(deployment):
     """
 
     files_to_transfer = []
-    # get all AbstractFileSets related to this deployment
+    # get all AbstractDataSets related to this deployment
     for dataset in deployment.datasets.all():
 
         #for each fileresource in the fileset

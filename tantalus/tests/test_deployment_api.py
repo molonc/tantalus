@@ -4,7 +4,7 @@ from tantalus.models import *
 from misc.update_tantalus_db import add_new_samples, add_new_libraries, add_new_sequencelanes
 from loaders.load_single_cell_table import load_library_and_get_data, create_reads_file
 from rest_framework.test import APIRequestFactory, force_authenticate, APITestCase
-from django.contrib.auth.models import User
+from account.models import User
 from rest_framework import status
 from django.urls import reverse
 import requests
@@ -80,7 +80,7 @@ class DeploymentAPITest(APITestCase):
 
 
     def test_create_deployment_valid(self):
-        dataset = AbstractFileSet.objects.all()
+        dataset = AbstractDataSet.objects.all()
         dataset = [dataset[0].id, dataset[1].id]
 
         from_storage = self.storage_servers['test_rocks']
@@ -103,7 +103,7 @@ class DeploymentAPITest(APITestCase):
         self.assertEqual(deployment.to_storage, to_storage)
 
     def test_create_deployment_already_existing_deployment(self):
-        dataset = AbstractFileSet.objects.all()
+        dataset = AbstractDataSet.objects.all()
         dataset = [dataset[0].id, dataset[1].id]
 
         from_storage = self.storage_servers['test_rocks']
