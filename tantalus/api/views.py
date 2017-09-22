@@ -70,8 +70,11 @@ class PairedEndFastqFilesFilterSet(django_filters.FilterSet):
 
 class PairedEndFastqFilesViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.PairedEndFastqFiles.objects.all()
-    serializer_class = tantalus.api.serializers.PairedEndFastqFilesSerializer
     filter_class = PairedEndFastqFilesFilterSet
+    def get_serializer_class(self):
+        if self.request.method in ('GET',):
+            return tantalus.api.serializers.PairedEndFastqFilesReadSerializer
+        return tantalus.api.serializers.PairedEndFastqFilesSerializer
 
 
 class BamFileViewSet(viewsets.ModelViewSet):
