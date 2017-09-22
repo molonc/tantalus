@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['10.9.215.82']
 
+AUTH_USER_MODEL = 'account.User'
 
 # Application definition
 
@@ -35,6 +36,7 @@ LOCAL_APPS = (
 )
 
 INSTALLED_APPS = [
+    'account',
     'tantalus',
     'django.contrib.admin',
     'django.contrib.auth',
