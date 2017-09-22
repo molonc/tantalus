@@ -85,6 +85,9 @@ class AbstractFileSetSerializer(TaggitSerializer, serializers.ModelSerializer):
 
 class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
+    lanes = SequenceLaneSerializer(many=True, read_only=True)
+    dna_sequences = DNASequencesSerializer(read_only=True)
+    fileresource_set = FileResourceSerializer(many=True, read_only=True)
     class Meta:
         model = tantalus.models.SingleEndFastqFile
         exclude = ['polymorphic_ctype']
@@ -92,12 +95,19 @@ class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer
 
 class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
+    lanes = SequenceLaneSerializer(many=True, read_only=True)
+    dna_sequences = DNASequencesSerializer(read_only=True)
+    fileresource_set = FileResourceSerializer(many=True, read_only=True)
     class Meta:
         model = tantalus.models.PairedEndFastqFiles
         exclude = ['polymorphic_ctype']
 
 
-class BamFileSerializer(serializers.ModelSerializer):
+class BamFileSerializer(TaggitSerializer, serializers.ModelSerializer):
+    tags = TagListSerializerField()
+    lanes = SequenceLaneSerializer(many=True, read_only=True)
+    dna_sequences = DNASequencesSerializer(read_only=True)
+    fileresource_set = FileResourceSerializer(many=True, read_only=True)
     class Meta:
         model = tantalus.models.BamFile
         exclude = ['polymorphic_ctype']
