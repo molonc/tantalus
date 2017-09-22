@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.permissions import IsAdminUser
 import django_filters
 import tantalus.models
 import tantalus.api.serializers
@@ -81,16 +82,19 @@ class BamFileViewSet(viewsets.ModelViewSet):
 class StorageViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.Storage.objects.all()
     serializer_class = tantalus.api.serializers.StorageSerializer
+    permission_classes = (IsAdminUser,)
 
 
 class ServerStorageViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.ServerStorage.objects.all()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
+    permission_classes = (IsAdminUser,)
 
 
 class AzureBlobStorageViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.AzureBlobStorage.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
+    permission_classes = (IsAdminUser,)
 
 
 class FileInstanceViewSet(viewsets.ModelViewSet):
