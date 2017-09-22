@@ -85,8 +85,8 @@ class AbstractDataSetSerializer(TaggitSerializer, serializers.ModelSerializer):
 
 class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
-    lanes = SequenceLaneSerializer(many=True, read_only=True)
-    dna_sequences = DNASequencesSerializer(read_only=True)
+    lanes = SequenceLaneSerializer(many=True)
+    dna_sequences = DNASequencesSerializer()
     fileresource_set = FileResourceSerializer(many=True, read_only=True)
     class Meta:
         model = tantalus.models.SingleEndFastqFile
@@ -95,8 +95,8 @@ class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer
 
 class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
-    lanes = SequenceLaneSerializer(many=True, read_only=True)
-    dna_sequences = DNASequencesSerializer(read_only=True)
+    lanes = SequenceLaneSerializer(many=True)
+    dna_sequences = DNASequencesSerializer()
     fileresource_set = FileResourceSerializer(many=True, read_only=True)
     class Meta:
         model = tantalus.models.PairedEndFastqFiles
@@ -105,8 +105,8 @@ class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.ModelSerialize
 
 class BamFileSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
-    lanes = SequenceLaneSerializer(many=True, read_only=True)
-    dna_sequences = DNASequencesSerializer(read_only=True)
+    lanes = SequenceLaneSerializer(many=True)
+    dna_sequences = DNASequencesSerializer()
     fileresource_set = FileResourceSerializer(many=True, read_only=True)
     class Meta:
         model = tantalus.models.BamFile
