@@ -3,6 +3,13 @@ from __future__ import absolute_import
 from celery import shared_task, Task
 import tantalus.models
 from tantalus.file_transfer_utils import *
+import subprocess
+
+
+@shared_task
+def create_subdirectories(file_transfer_id):
+    file_transfer = tantalus.models.FileTransfer.objects.get(pk=file_transfer_id)
+    perform_create_subdirectories(file_transfer)
 
 
 @shared_task

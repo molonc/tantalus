@@ -146,11 +146,11 @@ class SequenceLane(models.Model):
     sequencing_library_id = create_id_field()
 
     sequencing_instrument_choices = (
-        ('HX','HiSeqX'),
-        ('H2500','HiSeq2500'),
-        ('N550','NextSeq550'),
-        ('MI','MiSeq'),
-        ('O','other'),
+        ('HX', 'HiSeqX'),
+        ('H2500', 'HiSeq2500'),
+        ('N550', 'NextSeq550'),
+        ('MI', 'MiSeq'),
+        ('O', 'other'),
     )
 
     sequencing_instrument = models.CharField(
@@ -467,6 +467,10 @@ class FileTransfer(models.Model):
         default=0.,
     )
 
+    error_messages = models.TextField(
+        blank=True,
+    )
+
     running = models.BooleanField('Running', default=False)
     finished = models.BooleanField('Finished', default=False)
     success = models.BooleanField('Success', default=False)
@@ -502,5 +506,3 @@ class Deployment(models.Model):
     running = models.BooleanField('Running', default=False)
     finished = models.BooleanField('Finished', default=False)
     errors = models.BooleanField('Errors', default=False)
-
-

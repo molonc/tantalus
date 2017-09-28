@@ -78,6 +78,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('new_filename', models.CharField(max_length=500)),
+                ('error_messages', models.TextField(blank=True)),
                 ('progress', models.FloatField(default=0.0)),
                 ('running', models.BooleanField(default=False, verbose_name='Running')),
                 ('finished', models.BooleanField(default=False, verbose_name='Finished')),

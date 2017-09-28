@@ -37,11 +37,10 @@ def create_reads_file(data, in_storage, directory_to_strip=DIRECTORY_TO_STRIP):
             file_resource.read_end = int(read_end)
             file_resource.compression = tantalus.models.FileResource.GZIP
 
-            test_filename = fastq_filename.replace(directory_to_strip, "")
-            file_resource.filename = test_filename
+            relative_filename = fastq_filename.replace(directory_to_strip, "")
+            file_resource.filename = relative_filename
             # print file_resource.filename
 
-            file_resource.filename = fastq_filename
             file_resource.save()
 
             reads_files[read_end] = file_resource

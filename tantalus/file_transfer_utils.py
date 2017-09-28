@@ -3,16 +3,7 @@ import paramiko
 import os, io
 import hashlib
 from tantalus.models import *
-import subprocess
-
-class DataCorruptionError(Exception):
-    """ Raised when MD5 calculated does not match the saved database md5 for the file resource """
-
-
-class FileDoesNotActuallyExist(Exception):
-    """ Raised when the file does not actually exist,
-    although there is a fileinstance object in the database that says the file exists """
-
+from tantalus.exceptions.file_transfer_exceptions import DataCorruptionError, FileDoesNotActuallyExist
 
 def check_file_exists_on_cloud(service, storage, file_transfer):
     """
@@ -72,7 +63,7 @@ def check_md5(md5, file_transfer):
         raise DataCorruptionError
 
 
-def update_file_transfer(file_transfer, success=False):
+def update_file_transfer(file_transfer, success=False, error_message=None):
     file_transfer.running = False
     file_transfer.finished = True
     file_transfer.success = success
@@ -93,6 +84,20 @@ def get_block_blob_service(storage):
     return block_blob_service
 
 
+def perform_create_subdirectories(file_transfer):
+    filepath = os.path.join(str(file_transfer.to_storage.storage_directory), file_transfer.new_filename.strip('/'))
+    dirname = os.path.dirname(filepath)
+    error = False
+    try:
+        os.makedirs(dirname)
+    except Exception as e:
+        error = True
+        error_message = str(e)
+    if error:
+        print error_message
+    os.system('ls ' + dirname)
+
+
 def perform_transfer_file_azure_server(file_transfer):
     block_blob_service = get_block_blob_service(storage=file_transfer.from_storage)
     check_file_exists_on_cloud(block_blob_service, file_transfer.from_storage, file_transfer)
@@ -107,9 +112,6 @@ def perform_transfer_file_azure_server(file_transfer):
     # make subdirectories for file if they don't exist
     #TODO: refactor this into helper?
     filepath = os.path.join(str(file_transfer.to_storage.storage_directory), file_transfer.new_filename.strip('/'))
-    dirname, filename = os.path.split(filepath.rstrip('/'))
-    cmd = "mkdir -p " + dirname
-    subprocess.call(cmd, shell=True)
 
     block_blob_service.get_blob_to_path(
         file_transfer.from_storage.storage_container,
@@ -128,7 +130,7 @@ def perform_transfer_file_azure_server(file_transfer):
         # updating the status of the file transfer to a completed state, successful transfer
         update_file_transfer(file_transfer, success=True)
 
-    except DataCorruptionError:
+    except DataCorruptionError as e:
         # updating the status of the file transfer to a completed state, failed transfer
         update_file_transfer(file_transfer, success=False)
         # TODO: propagate errors to tasks and raise them to form json response with error code after updating file transfer object
@@ -193,12 +195,6 @@ def perform_transfer_file_server_server(file_transfer):
     # creating subdirectories for remote path if they don't exist
     local_filepath = os.path.join(file_transfer.from_storage.storage_directory, file_transfer.file_instance.file_resource.filename.strip('/'))
     remote_filepath = os.path.join(file_transfer.to_storage.storage_directory, file_transfer.new_filename.strip('/'))
-    dirname, filename = os.path.split(remote_filepath.rstrip('/'))
-    cmd = "mkdir -p " + dirname
-    stdin, stdout, stderr = client.exec_command(cmd) # asynchronous command
-
-    # This is a blocking call - ensures that all subdirectories are created before proceeding
-    stderr.channel.recv_exit_status()
 
     # put file into remote server
     sftp.put(
