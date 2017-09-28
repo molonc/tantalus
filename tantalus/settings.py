@@ -25,7 +25,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('DJANGO_DEBUG', False))
 
-ALLOWED_HOSTS = ['10.9.215.82']
+ALLOWED_HOSTS = [os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1')]
 
 AUTH_USER_MODEL = 'account.User'
 
@@ -80,8 +80,6 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = 'tantalus.wsgi.application'
 
 
 # Database
