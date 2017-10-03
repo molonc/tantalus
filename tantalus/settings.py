@@ -161,3 +161,4 @@ CELERY_ACCEPT_CONTENT = ['json']
 # CELERY_RESULT_BACKEND = 'db+sqlite:///results.sqlite'
 CELERY_RESULT_BACKEND = 'rpc://'
 CELERY_TASK_SERIALIZER = 'json'
+LOGIN_URL = '/account/login'

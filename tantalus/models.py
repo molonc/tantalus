@@ -5,6 +5,7 @@ Tantalus models
 from __future__ import unicode_literals
 
 from django.db import models
+from django.core.urlresolvers import reverse
 import taggit.models
 import simple_history
 from simple_history.models import HistoricalRecords
@@ -48,6 +49,9 @@ class Sample(models.Model):
 
     def __unicode__(self):
         return '{}_{}'.format(self.sample_id_space, self.sample_id)
+
+    def get_absolute_url(self):
+        return reverse("sample-detail", kwargs={"pk": self.pk})
 
 
 class DNALibrary(models.Model):

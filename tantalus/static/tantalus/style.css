@@ -1,0 +1,185 @@
+.header {
+    background-color:#424242;
+}
+
+.subheader {
+    background-color: #DCE775;
+    color: #212121;
+    margin-bottom: 5px;
+    padding-left: 5px;
+}
+
+#welcome {
+    color: #33691E;
+    text-align:right;
+}
+
+/* Messages styles */
+.success {
+    color: #33691E;
+    font-style: italic;
+    background-color: #DCEDC8;
+    border: solid 1px #33691E;
+    padding: 5px;
+}
+
+.warning {
+    color: #D84315;
+    font-style: italic;
+    background-color: #FFE0B2;
+    border: solid 1px #D84315;
+    padding: 5px;
+}
+
+.error {
+    color: #D32F2F;
+    font-style: italic;
+    background-color: #FFCDD2;
+    border: solid 1px #D32F2F;
+    padding: 5px;
+}
+
+/* end of Messages styles*/
+
+h4 {
+    color: #5D4037;
+    /*font-style: italic;*/
+}
+
+legend {
+    color: #5D4037;
+}
+
+td, th {
+    padding:4px;
+}
+
+#thid {
+    padding: 0px;
+    /*padding-right: 25px;*/
+    width: 30%;
+}
+
+#tdid {
+    padding: 0px;
+    padding-left: 10px;
+    width: 70%;
+}
+
+/*translate new lines to <br> */
+.notes {
+    white-space: pre-line;
+}
+
+.emph {
+    font-size: 13px;
+    font-style: normal;
+    color: #FF3D00;
+    background-color: #FFF3E0;
+    border: solid 1px #757575;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.counter {
+  font-size: 11px;
+  font-style: normal;
+  color: #212121;
+  background-color: #DCE775;
+  padding: 0 6px;
+  border-radius: 9px;
+}
+
+.graybg {
+    background-color: #F5F5F5;
+}
+a:hover {
+    color: #FF5722;
+}
+
+.left-inner-addon {
+    position: relative;
+}
+
+.left-inner-addon input {
+    padding-left: 30px;    
+}
+
+.left-inner-addon i {
+    position: absolute;
+    padding: 10px 12px;
+    pointer-events: none;
+}
+
+.right-inner-addon {
+    position: relative;
+}
+
+.right-inner-addon input {
+    padding-right: 30px;    
+}
+
+.right-inner-addon i {
+    position: absolute;
+    right: 0px;
+    padding: 10px 12px;
+    pointer-events: none;
+}
+
+.errorlist {
+    color:#D32F2F;
+    font-style: italic;
+}
+
+.helptext {
+    /*font-style: italic;*/
+    margin-bottom: 5px;
+    color: #616161;
+    font-size: 12px;
+}
+
+/* Login styles */
+.modal {
+  text-align: center;
+}
+
+@media screen and (min-width: 768px) { 
+  .modal:before {
+    display: inline-block;
+    vertical-align: middle;
+    content: " ";
+    height: 100%;
+  }
+}
+
+.modal-dialog {
+  display: inline-block;
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* end of Login styles*/
+
+#footer {
+    clear: both;
+    position: relative;
+    z-index: 10;
+    height: 3em;
+    margin-top: -3em;
+}
+
+/* back to top class */
+a.back-to-top {
+    display: none;
+    width: 40px;
+    height: 40px;
+    text-indent: -9999px;
+    position: fixed;
+    z-index: 999;
+    right: 20px;
+    bottom: 20px;
+    background: #C5E1A5 url("up-arrow.png") no-repeat center 50%;
+    -webkit-border-radius: 30px;
+    -moz-border-radius: 30px;
+    border-radius: 30px;
+}

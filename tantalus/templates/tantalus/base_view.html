@@ -1,0 +1,74 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.2/css/font-awesome.min.css">
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+    <!-- Bootstrap-select assets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/i18n/defaults-*.min.js"></script>
+    <!-- end of Bootstrap-select assets -->
+
+    <!-- DataTable -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.12/datatables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js"></script>
+    <!-- end of DataTable -->
+
+    <link rel="stylesheet" href="{% static 'tantalus/style.css' %}" />
+
+    <title>Tantalus</title>
+</head>
+<body>
+	<!-- Header -->
+    <nav class="navbar navbar-default header" >
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#collapse-icon" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" style="color:white;" href="{% url 'home' %}"><i class="fa fa-home" aria-hidden="true"></i> Tantalus</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="collapse-icon">
+                <ul class="nav navbar-nav navbar-right">
+                    <form name="search-form" class="navbar-form navbar-right" action="{% url 'search' %}" role="search">
+                        <div class="form-group right-inner-addon">
+                            <i class="icon-search"></i>
+                            <input type="text" name="query_str" class="form-control" placeholder="Search..." />
+                        </div>
+                    </form>
+                </ul>
+            </div>
+        </div>
+    </nav><br>
+    <!-- end of Header -->
+
+    <div class="container" id="welcome">
+        {% if user.is_authenticated %}
+        <span>Welcome, <b>{{user.username}}</b></span>
+        <span> / </span>
+        <a href="{% url 'account:password_update' %}">Change Password</a>
+        <span> / </span>
+        <a href="{% url 'account:logout' %}">Logout</a>
+        {% else %}
+        <a href="{% url 'account:login' %}">Login</a>
+        {% endif %}
+    </div>
+
+    {% block body %}{% endblock %}
+
+</body>
+</html>

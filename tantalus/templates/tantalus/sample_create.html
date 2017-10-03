@@ -3,18 +3,18 @@
 
 {% block body %}
     <div class="container graybg">
-        <form action="{% url 'deployment-create' %}" method="post">
+        <form action="{% url 'sample-add' %}" method="POST">
             {% csrf_token %}
             <fieldset>
-                <legend>Deployment Information</legend>
+                <legend>Sample Information</legend>
                 <table class="table-condensed">
                     <thead>
-                    {{ form.as_p }}
+                    {{form}}
                     </thead>
                 </table>
              </fieldset>
-            <input class="btn btn-primary btn-sm" type="submit" value="Start" />
-            <a class="btn btn-default btn-sm" href="{% url 'deployment-list' %}">Cancel</a>
+            <input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
+            <a class="btn btn-default btn-sm" href="{% url 'sample-list' %}">Cancel</a>
         </form><br>
     </div>
 {% endblock %}

@@ -1,8 +1,45 @@
-<h1>Deployments</h1>
-<ul>
-{% for deployment in object_list %}
-    <li>{{ deployment.name }} : {{ deployment.state }} - {{ deployment.result }}</li>
-{% empty %}
-    <li>No deployment tasks yet.</li>
-{% endfor %}
-</ul>
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">Select a deployment to view its details</h4>
+        <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'deployment-create' %}">Add Deployment</a>
+    </div>
+    <div class="container" style="background-color:#F5F5F5;">
+        {% if deployments %}    
+            <div class="table-responsive">
+                <table id="datatable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Datasets</th>
+                            <th>File Transfers</th>
+                            <th>Running</th>
+                            <th>Finished</th>
+                            <th>Errors</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <br/>
+                        {% for deployment in deployments %}
+                            <tr>
+                                <td>{{deployment.from_storage}}</td>
+                                <td>{{deployment.to_storage}}</td>
+                                <td>{{deployment.datasets}}</td>
+                                <td>{{deployment.file_transfers}}</td>
+                                <td>{{deployment.running}}</td>
+                                <td>{{deployment.finished}}</td>
+                                <td>{{deployment.errors}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No deployments yet.</i></h>
+        {% endif %}
+    </div>
+{% endblock %}

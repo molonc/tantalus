@@ -1,8 +1,46 @@
-<h1>Transfer Tasks</h1>
-<ul>
-{% for transfer in object_list %}
-    <li>{{ transfer.name }} : {{ transfer.state }} - {{ transfer.result }}</li>
-{% empty %}
-    <li>No transfer tasks yet.</li>
-{% endfor %}
-</ul>
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">Select a transfer to view its details</h4>
+    </div>
+    <div class="container" style="background-color:#F5F5F5;">
+        {% if transfers %}
+            <div class="table-responsive">
+                <table id="datatable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Progress</th>
+                            <th>Running</th>
+                            <th>Finished</th>
+                            <th>Success</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <br/>
+                        {% for transfer in transfers %}
+                            <tr>
+                                <td>{{transfer.from_storage}}</td>
+                                <td>{{transfer.to_storage}}</td>
+                                <td>{{transfer.file_instance}}</td>
+                                <td>{{transfer.new_filename}}</td>
+                                <td>{{transfer.progress}}</td>
+                                <td>{{transfer.running}}</td>
+                                <td>{{transfer.finished}}</td>
+                                <td>{{transfer.success}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No transfers yet.</i></h>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -13,15 +13,23 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.views.generic import TemplateView
+from django.views.generic.base import RedirectView
 import tantalus.views
-
+import account.views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('tantalus.api.urls')),
-    url(r'^transfers/$', tantalus.views.FileTransferListView.as_view(), name='transfer-list'),
-    url(r'^deployments/$', tantalus.views.DeploymentListView.as_view(), name='deployment-list-1'),
+    url(r'^account/', include('account.urls')),
+    url(r'^search/', tantalus.views.search_view, name='search'),
+    url(r'^transfers/$', tantalus.views.FileTransferView.as_view(), name='transfer-list'),
+    url(r'^deployments/$', tantalus.views.DeploymentView.as_view(), name='deployment-list'),
     url(r'^deployments/create$', tantalus.views.DeploymentCreateView.as_view(success_url='/deployments/'), name='deployment-create'),
+    url(r'^samples/$', tantalus.views.sample_list, name='sample-list'),
+    url(r'^samples/create$', tantalus.views.SampleCreate.as_view(), name='sample-add'),
+    url(r'^$', tantalus.views.HomeView.as_view(), name='home')
 ]
