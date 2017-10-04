@@ -24,23 +24,12 @@ def load_library_and_get_data(gsc_library_id):
 
 def create_reads_file(data, in_storage, directory_to_strip=DIRECTORY_TO_STRIP):
     for idx in data.index:
-        fastq_dna_sequences = tantalus.models.DNASequences.objects.filter(
-            index_sequence=reverse_complement(data.loc[idx, 'code1']) + '-' + data.loc[idx, 'code2'])
-        assert len(fastq_dna_sequences) == 1
-
-        fastq_files = tantalus.models.PairedEndFastqFiles()
-        fastq_files.dna_sequences = fastq_dna_sequences[0]
-        fastq_files.save()
-        fastq_files.lanes = tantalus.models.SequenceLane.objects.filter(flowcell_id=data.loc[idx, 'flowcell'],
-                                                                        lane_number=data.loc[idx, 'lane'])
-        fastq_files.full_clean()
-        fastq_files.save()
+        reads_files = {}
 
         for read_end in ('1', '2'):
             fastq_filename = data.loc[idx, 'read' + read_end]
 
             file_resource = tantalus.models.FileResource()
-            file_resource.dataset = fastq_files
             file_resource.md5 = data.loc[idx, 'md5' + read_end]
             file_resource.size = data.loc[idx, 'size' + read_end]
             file_resource.created = pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific')
@@ -55,12 +44,30 @@ def create_reads_file(data, in_storage, directory_to_strip=DIRECTORY_TO_STRIP):
             file_resource.filename = fastq_filename
             file_resource.save()
 
+            reads_files[read_end] = file_resource
+
             serverfile = tantalus.models.FileInstance()
             serverfile.storage = in_storage
             serverfile.file_resource = file_resource
             serverfile.full_clean()
             serverfile.save()
 
+        fastq_dna_sequences = tantalus.models.DNASequences.objects.filter(index_sequence=reverse_complement(data.loc[idx, 'code1']) + '-' + data.loc[idx, 'code2'])
+        assert len(fastq_dna_sequences) == 1
+
+        fastq_files = tantalus.models.PairedEndFastqFiles()
+        fastq_files.reads_1_file = reads_files['1']
+        fastq_files.reads_2_file = reads_files['2']
+        fastq_files.dna_sequences = fastq_dna_sequences[0]
+        fastq_files.save()
+        fastq_files.lanes = tantalus.models.SequenceLane.objects.filter(flowcell_id=data.loc[idx, 'flowcell'], lane_number=data.loc[idx, 'lane'])
+        fastq_files.full_clean()
+        fastq_files.save()
+
+        reads_files['1'].full_clean()
+        reads_files['2'].full_clean()
+        reads_files['1'].save()
+        reads_files['2'].save()
 
 if __name__ == '__main__':
 

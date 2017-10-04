@@ -180,72 +180,6 @@ class SequenceLane(models.Model):
         unique_together = ('flowcell_id', 'lane_number')
 
 
-class AbstractDataSet(PolymorphicModel):
-    """
-    General Sequence Dataset.
-    """
-
-    tags = TaggableManager()
-    history = HistoricalRecords()
-
-    lanes = models.ManyToManyField(
-        SequenceLane,
-        verbose_name='Lanes',
-    )
-    
-    dna_sequences = models.ForeignKey(
-        DNASequences,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True
-    )
-
-
-class SingleEndFastqFile(AbstractDataSet):
-    """
-    Fastq file of single ended Illumina Sequencing.
-    """
-
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return "SingleEndFastQ {}".format(self.id)
-
-
-class PairedEndFastqFiles(AbstractDataSet):
-    """
-    Fastq file of paired ended Illumina Sequencing.
-    """
-
-    history = HistoricalRecords()
-
-    def __str__(self):
-        return "PairedEndFastq {}".format(self.id)
-
-
-class BamFile(AbstractDataSet):
-    """
-    Base class of bam files.
-    """
-
-    history = HistoricalRecords()
-
-    reference_genome_choices = (
-        ('hg19','Human Genome 19'),
-        ('hg18','Human Genome 18'),
-        ('none','Unaligned'),
-    )
-
-    reference_genome = models.CharField(
-        max_length=50,
-        choices=reference_genome_choices,
-    )
-
-    aligner = models.CharField(
-        max_length=50,
-    )
-
-
 class FileResource(models.Model):
     """
     Sequence data file.
@@ -253,14 +187,8 @@ class FileResource(models.Model):
 
     history = HistoricalRecords()
 
-    dataset = models.ForeignKey(
-        AbstractDataSet,
-        on_delete=models.CASCADE,
-    )
-
     md5 = models.CharField(
         max_length=50,
-        unique=True,
     )
 
     size = models.BigIntegerField()
@@ -303,6 +231,7 @@ class FileResource(models.Model):
 
     filename = models.CharField(
         max_length=500,
+        unique=True,
     )
 
     def __unicode__(self):
@@ -322,6 +251,118 @@ class FileResource(models.Model):
         }[self.compression]
 
 
+class AbstractDataSet(PolymorphicModel):
+    """
+    General Sequence Dataset.
+    """
+
+    tags = TaggableManager()
+    history = HistoricalRecords()
+
+    lanes = models.ManyToManyField(
+        SequenceLane,
+        verbose_name='Lanes',
+    )
+    
+    dna_sequences = models.ForeignKey(
+        DNASequences,
+        on_delete=models.CASCADE,
+    )
+
+    def get_data_fileset(self):
+        raise NotImplementedError()
+
+
+class SingleEndFastqFile(AbstractDataSet):
+    """
+    Fastq file of single ended Illumina Sequencing.
+    """
+
+    history = HistoricalRecords()
+
+    reads_file = models.OneToOneField(
+        FileResource,
+        on_delete=models.CASCADE,
+        related_name='reads_file',
+    )
+
+    def __str__(self):
+        return "SingleEndFastQ {}".format(self.id)
+
+    def get_data_fileset(self):
+        return [self.reads_file]
+
+
+class PairedEndFastqFiles(AbstractDataSet):
+    """
+    Fastq file of paired ended Illumina Sequencing.
+    """
+
+    history = HistoricalRecords()
+
+    reads_1_file = models.ForeignKey(
+        FileResource,
+        on_delete=models.CASCADE,
+        related_name='reads_1_file',
+    )
+
+    reads_2_file = models.ForeignKey(
+        FileResource,
+        on_delete=models.CASCADE,
+        related_name='reads_2_file',
+    )
+
+    def __str__(self):
+        return "PairedEndFastq {}".format(self.id)
+
+    def get_data_fileset(self):
+        return [self.reads_1_file, self.reads_2_file]
+
+    class Meta:
+        unique_together = ('reads_1_file', 'reads_2_file')
+
+
+class BamFile(AbstractDataSet):
+    """
+    Base class of bam files.
+    """
+
+    history = HistoricalRecords()
+
+    reference_genome_choices = (
+        ('hg19','Human Genome 19'),
+        ('hg18','Human Genome 18'),
+        ('none','Unaligned'),
+    )
+
+    reference_genome = models.CharField(
+        max_length=50,
+        choices=reference_genome_choices,
+    )
+
+    aligner = models.CharField(
+        max_length=50,
+    )
+
+    bam_file = models.ForeignKey(
+        FileResource,
+        on_delete=models.CASCADE,
+        related_name='bam_file',
+    )
+
+    bam_index_file = models.ForeignKey(
+        FileResource,
+        on_delete=models.CASCADE,
+        related_name='bam_index_file',
+    )
+
+    def get_data_fileset(self):
+        return [self.bam_file, self.bam_index_file]
+
+    class Meta:
+        unique_together = ('bam_file', 'bam_index_file')
+
+
 class Storage(PolymorphicModel):
     """
     Details of a specific file storage location.
@@ -331,6 +372,7 @@ class Storage(PolymorphicModel):
 
     name = models.CharField(
         max_length=50,
+        unique=True,
     )
 
     def __unicode__(self):
@@ -428,6 +470,9 @@ class FileTransfer(models.Model):
     running = models.BooleanField('Running', default=False)
     finished = models.BooleanField('Finished', default=False)
     success = models.BooleanField('Success', default=False)
+
+    class Meta:
+        unique_together = ('from_storage', 'to_storage', 'file_instance')
 
 
 class Deployment(models.Model):

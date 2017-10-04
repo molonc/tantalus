@@ -15,13 +15,12 @@ class FileResourceFilterSet(django_filters.FilterSet):
     library_id = django_filters.CharFilter(name='dataset__dna_sequences__dna_library__library_id')
     class Meta:
         model = tantalus.models.FileResource
-        fields = ['md5', 'library_id']
+        fields = ['library_id']
 
 
 class FileResourceViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class = tantalus.api.serializers.FileResourceSerializer
-    filter_fields = ('md5',)
     filter_class = FileResourceFilterSet
 
 

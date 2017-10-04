@@ -10,7 +10,7 @@ from tantalus.file_transfer_utils import *
 from django.utils import timezone
 import shutil
 
-ROCKS_USER = 'jngo'
+ROCKS_USER = 'amcpherson'
 
 ## TEST CONSTANTS ##
 
@@ -134,9 +134,10 @@ def _add_storages():
     return storages
 
 
-def _add_dataset(count):
+def _add_dataset(count, file_resource):
     for i in range(0, count):
-        p = PairedEndFastqFiles(dna_sequences = DNASequences.objects.all()[0])
+        p = SingleEndFastqFile(dna_sequences = DNASequences.objects.all()[0])
+        p.reads_file = file_resource
         p.save()
         p.lanes = SequenceLane.objects.all()[0],
         p.save()
@@ -153,7 +154,6 @@ def _add_file_resource(count):
             file_type = FILE_TYPE,
             compression = FILE_COMPRESSION,
             filename = BASE_FILENAME + "_" + str(i),
-            dataset = AbstractDataSet.objects.all()[0],
         )
         test_seqfile.save()
 
@@ -218,9 +218,9 @@ class FileTransferTest(TestCase):
 
         # setting up test wide variables
         cls.storage_servers = _add_storages()
-        cls.dataset = _add_dataset(1)
         _add_file_resource(1)
         cls.file_resource = FileResource.objects.all()[0]
+        cls.dataset = _add_dataset(1, cls.file_resource)
 
 
     def setUp(self):

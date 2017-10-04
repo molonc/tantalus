@@ -9,9 +9,10 @@ def create_deployment_file_transfers(deployment):
     files_to_transfer = []
     # get all AbstractDataSets related to this deployment
     for dataset in deployment.datasets.all():
+        file_resources = dataset.get_data_fileset()
 
         #for each fileresource in the fileset
-        for file_resource in dataset.fileresource_set.all():
+        for file_resource in file_resources:
             file_instances = file_resource.fileinstance_set.filter(storage=deployment.to_storage)
 
             if len(file_instances) >= 1:
