@@ -93,6 +93,10 @@ DATABASES = {
         'PASSWORD': os.environ.get('TANTALUS_POSTGRESQL_PASSWORD'),
         'HOST': '10.9.215.82',
         'PORT': '5432',
+        'TEST': {
+            'NAME': 'tantalus_test'
+        }
+
     }
 }
 

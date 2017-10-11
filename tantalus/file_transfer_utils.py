@@ -3,7 +3,13 @@ import paramiko
 import os, io
 import hashlib
 from tantalus.models import *
-from tantalus.exceptions.file_transfer_exceptions import DataCorruptionError, FileDoesNotActuallyExist
+from tantalus.exceptions.file_transfer_exceptions import *
+import errno
+
+
+# if available memory on the storage is less than this, include this as a possible source of error if the transfer fails
+__MINIMUM_FREE_DISK_SPACE = 50e10
+
 
 def check_file_exists_on_cloud(service, storage, file_transfer):
     """
@@ -22,6 +28,7 @@ def check_file_exists_on_cloud(service, storage, file_transfer):
             filename = filename,
             storage = storage.name,
             pk = file_transfer.file_instance_id))
+
 
 def check_file_exists_on_server(storage, file_transfer):
     """
@@ -64,6 +71,13 @@ def check_md5(md5, file_transfer):
 
 
 def update_file_transfer(file_transfer, success=False, error_message=None):
+    """
+    updates the file transfer object to a completed state, indicates success status
+    :param file_transfer: FileTransfer object
+    :param success: Boolean value, indicating whether transfer was successful
+    :param error_message: the error message, if any
+    :return:
+    """
     file_transfer.running = False
     file_transfer.finished = True
     file_transfer.success = success
@@ -113,15 +127,21 @@ def perform_transfer_file_azure_server(file_transfer):
     #TODO: refactor this into helper?
     filepath = os.path.join(str(file_transfer.to_storage.storage_directory), file_transfer.new_filename.strip('/'))
 
-    block_blob_service.get_blob_to_path(
-        file_transfer.from_storage.storage_container,
-        cloud_filename, #TODO: throw error? path/name of blob
-        filepath, #path/name of file
-        progress_callback=progress_callback)
+    try:
+        block_blob_service.get_blob_to_path(
+            file_transfer.from_storage.storage_container,
+            cloud_filename, #TODO: throw error? path/name of blob
+            filepath, #path/name of file
+            progress_callback=progress_callback)
+
+    except Exception as e:
+        update_file_transfer(file_transfer, success=False, error_message=str(e))
+        raise
 
     md5 = block_blob_service.get_blob_properties(
         file_transfer.from_storage.storage_container,
         cloud_filename).properties.content_settings.content_md5
+
     try:
         #for empty files, the md5 returned is None, so don't compare md5s for these files since they dont use the null hash
         if md5!=None and file_transfer.file_instance.file_resource.size!=0:
@@ -150,11 +170,18 @@ def perform_transfer_file_server_azure(file_transfer):
     # <no name> root folder
     cloud_filepath = file_transfer.new_filename.strip('/')
     local_filepath = os.path.join(file_transfer.from_storage.storage_directory, file_transfer.file_instance.file_resource.filename.strip('/'))
-    block_blob_service.create_blob_from_path(
-        file_transfer.to_storage.storage_container,
-        cloud_filepath, #path/name of blob
-        local_filepath, #path/name of file
-        progress_callback=progress_callback)
+
+    try:
+        block_blob_service.create_blob_from_path(
+            file_transfer.to_storage.storage_container,
+            cloud_filepath, #path/name of blob
+            local_filepath, #path/name of file
+            progress_callback=progress_callback)
+
+    except Exception as e:
+        update_file_transfer(file_transfer, success=False, error_message=str(e))
+        raise
+
 
     md5 = block_blob_service.get_blob_properties(file_transfer.to_storage.storage_container, cloud_filepath).properties.content_settings.content_md5
 
@@ -197,10 +224,40 @@ def perform_transfer_file_server_server(file_transfer):
     remote_filepath = os.path.join(file_transfer.to_storage.storage_directory, file_transfer.new_filename.strip('/'))
 
     # put file into remote server
-    sftp.put(
-        local_filepath,  # absolute path
-        remote_filepath, # absolute path of file in the remote server
-        callback=progress_callback)
+    try:
+        sftp.put(
+            local_filepath,  # absolute path
+            remote_filepath, # absolute path of file in the remote server
+            callback=progress_callback)
+
+    except EnvironmentError as e: # IOError and OSError exceptions are caught here
+        # TODO: add other errors where we would simply pop off file transfer again
+        if e.errno == errno.EPIPE: # Error code 32 - broken pipe
+            update_file_transfer(file_transfer, success=False, error_message=e.strerror)
+            raise RecoverableFileTransferError(e.strerror)
+            # TODO: make the celery work try the file transfer again
+
+        elif e.message == 'Failure': # SFTP code 4 failure - An error occurred, but no specific error code exists to describe the failure
+            #  warning: ensure that any failures with checks don't overwrite actual exceptions
+
+            e.message = e.message + " - No specific error code was given.\nPossible reasons include:"
+
+            # check uploading a file to a full filesystem
+            cmd = "df " + file_transfer.to_storage.storage_directory
+            stdin, stdout, stderr = client.exec_command(cmd)
+            stdout.channel.recv_exit_status() # This is a blocking call to wait for output
+            available_space = stdout.readlines()[1].split()[3] # parse out available space from output
+
+            if float(available_space) < __MINIMUM_FREE_DISK_SPACE:
+                e.message = e.message + "\n- A file is being uploaded to a full filesystem - available disk space is {} kilobytes".format(available_space)
+                print e.message
+
+            raise
+
+    except Exception as e:
+        update_file_transfer(file_transfer, success=False, error_message=str(e))
+        print str(e)
+        raise
 
     # retrieve transferred file object
     # b flag for binary is not needed because SSH treats all files as binary

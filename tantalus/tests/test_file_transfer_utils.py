@@ -15,6 +15,7 @@ ROCKS_USER = 'jngo'
 # !!!! NOTE - NEVER PUT ANYTHING IMPORTANT IN THE TEST DIRECTORIES - THEY WILL BE WIPED AFTER EVERY TEST !!!!
 COMPUTE2_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(ROCKS_USER)
 COMPUTE2_IP = "10.9.2.187"
+COMPUTE2_LIMITED_SPACE_DIRECTORY = "/mnt/test" # this directory has 10mb of space
 
 BEAST_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(ROCKS_USER)
 BEAST_IP = "10.9.4.26"
@@ -29,6 +30,11 @@ AZURE_STORAGE_KEY = "okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn
 LOCAL_USER = getpass.getuser()
 LOCAL_TEST_DIRECTORY = os.path.join(os.path.realpath(os.path.dirname(__file__)),
                                     "test-file-destination-directory")
+
+# TODO: replace this path with a huge file
+PATH_TO_HUGE_FILE = "/Users/jngo/dummydir"
+HUGE_FILE_FILENAME = "HUGE_FILE_OF_YES.txt"
+
 # LOCAL_TEST_DIRECTORY = "/Users/jngo/cloud-test-file-transfer"
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(("8.8.8.8", 80))
@@ -99,7 +105,7 @@ def _add_storages():
     compute2 = ServerStorage(
         name='compute2',
         server_ip=COMPUTE2_IP,
-        storage_directory=BEAST_TEST_DIRECTORY,
+        storage_directory=COMPUTE2_TEST_DIRECTORY,
         username=ROCKS_USER,
     )
     compute2.full_clean()
@@ -147,7 +153,7 @@ def _add_file_resource(count):
     for i in range(0, count):
         md5 = str(FILE_MD5 + i)
 
-        test_seqfile = FileResource(
+        file_resource = FileResource(
             md5=md5,
             size=FILE_SIZE,
             created=FILE_CREATION_DATE,
@@ -155,7 +161,7 @@ def _add_file_resource(count):
             compression=FILE_COMPRESSION,
             filename=BASE_FILENAME + "_" + str(i),
         )
-        test_seqfile.save()
+        file_resource.save()
 
 
 def _add_file_instances_to_server(storage, file_resource, create=True):
@@ -207,6 +213,17 @@ def _add_file_instances_to_cloud(storage, file_resource):
 
 ## TESTS ##
 class FileTransferTest(TestCase):
+    """
+    Tests for the file transfer utils. This does not test the celery tasks, or retrying them.
+
+    NOTE:
+    the TestCase test class does not commit changes to the database, so assertions about the object's state should not be used,
+    they will not work.
+
+    If testing with commits to the database are required, see documentation here on TransactionTestCase or SimpleTestCase:
+    https://docs.djangoproject.com/en/1.9/topics/testing/tools/#provided-test-case-classes
+    """
+
     storage_servers = {}
 
     @classmethod
@@ -292,6 +309,135 @@ class FileTransferTest(TestCase):
         # assert exception is thrown
         self.assertRaises(FileDoesNotActuallyExist, perform_transfer_file_server_server, file_transfer)
 
+
+    def test_file_transfer_server_server_EnvironmentError_broken_pipe(self):
+        """
+        THIS TEST MUST BE MANUALLY RUN WITH A LARGE FILE.
+
+        1. Create or point at a large file (~2-3Gb in size), I create mine with the following command in a terminal:
+        "yes > HUGE_FILE_OF_YES.txt"
+        The larger the file size, the more time you have to complete steps 5-8.
+
+        2. Change the HUGE_FILE_FILENAME to the filename. Eg. "HUGE_FILE_OF_YES.txt"
+
+        3. Change the PATH_TO_HUGE_FILE variable to be the path of where the large file is located
+
+        4. run only this test
+
+        5. ssh into rocks and use the following command: ps -aux | grep ssh | grep jngo
+            NOTE: replace jngo with with ROCKS_USER
+
+        6. get the pid of the following process "/usr/libexec/openssh/sftp-server"
+
+        7. kill the process, by using the kill command. Eg: kill 28404
+
+        8. upon killing the process, this test should pass
+        """
+        # start a big file transfer
+        # search for process id
+        # kill it while transferring
+
+        # test specific set up for transfer from local server to remote server (rocks)
+        from_storage = ServerStorage.objects.create(
+            name='jngo_large_file',
+            server_ip=LOCAL_IP,
+            storage_directory=PATH_TO_HUGE_FILE,
+            username=ROCKS_USER,
+        )
+
+        to_storage = self.storage_servers['rocks']
+
+        # Making custom file resource for the large file
+        file_resource = FileResource.objects.create(
+            md5="12345",
+            size=FILE_SIZE,
+            created=FILE_CREATION_DATE,
+            file_type=FILE_TYPE,
+            compression=FILE_COMPRESSION,
+            filename=HUGE_FILE_FILENAME
+        )
+
+        # checking that the file does not already exist on the remote server from a previous test
+        client, sftp = connect_sftp_server(to_storage.server_ip, to_storage.username)
+        remote_filepath = os.path.join(to_storage.storage_directory, file_resource.filename)
+        self.assertRaises(IOError, sftp.stat, remote_filepath)
+
+        # removing all subdirectories in remote server if any created from a previous test
+        cmd = str("rm -rf " + to_storage.storage_directory)
+        client.exec_command(cmd)
+        cmd2 = str("mkdir -p " + to_storage.storage_directory)
+        client.exec_command(cmd2)
+        client.close()
+
+        # adding the file instance to the local server
+        _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=True)
+
+        # creating the file transfer object - this file transfer is huge
+        file_transfer = FileTransfer(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+            new_filename=file_resource.filename
+        )
+        file_transfer.full_clean()
+        file_transfer.save()
+
+        # self.assertRaises(EnvironmentError, perform_transfer_file_server_server, file_transfer)
+        self.fail() # Please see test comments, comment this line out, and then uncomment the above line to run this test
+
+    def test_file_transfer_server_server_EnvironmentError_no_disk_space(self):
+        # test specific set up for transfer from local server to remote server with very small storage - 10 mb(compute2_limited_space)
+        local_large_file_storage = ServerStorage.objects.create(
+            name='jngo_large_file',
+            server_ip=LOCAL_IP,
+            storage_directory=PATH_TO_HUGE_FILE,
+            username=ROCKS_USER,
+        )
+
+        compute2_limited_space = ServerStorage(
+            name='compute2_limited_space',
+            server_ip=COMPUTE2_IP,
+            storage_directory=COMPUTE2_LIMITED_SPACE_DIRECTORY,
+            username=ROCKS_USER,
+        )
+        compute2_limited_space.full_clean()
+        compute2_limited_space.save()
+
+        from_storage = local_large_file_storage
+        to_storage = compute2_limited_space
+
+        # Making custom file resource for the large file
+        file_resource = FileResource.objects.create(
+            md5="12345",
+            size=FILE_SIZE,
+            created=FILE_CREATION_DATE,
+            file_type=FILE_TYPE,
+            compression=FILE_COMPRESSION,
+            filename=HUGE_FILE_FILENAME
+        )
+
+        # adding the file instance to the local server
+        _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=True)
+
+        # creating the file transfer object - this file transfer is huge
+        file_transfer = FileTransfer(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+            new_filename=file_resource.filename
+        )
+        file_transfer.full_clean()
+        file_transfer.save()
+
+        # perform_transfer_file_server_server(file_transfer)
+        self.assertRaises(EnvironmentError, perform_transfer_file_server_server, file_transfer)
+
+        # clean up test file
+        client, sftp = connect_sftp_server(to_storage.server_ip, to_storage.username)
+        testfile_path = os.path.join(to_storage.storage_directory, file_resource.filename)
+        sftp.remove(testfile_path)
+        client.close()
+
     def test_file_transfer_server_azure(self):
         # test specific setup for local server transfer to cloud
         from_storage = self.storage_servers['local']
@@ -374,6 +520,7 @@ class FileTransferTest(TestCase):
         perform_transfer_file_azure_server(file_transfer=file_transfer)
         self.assertTrue(os.path.isfile(
             os.path.join(to_storage.storage_directory, file_resource.filename.strip('/'))))
+
 
     def test_file_transfer_azure_server_FileDoesNotActuallyExist(self):
         # test specific set up

@@ -64,6 +64,10 @@ def transfer_file_azure_server(file_transfer):
 def transfer_file_server_server(file_transfer):
     try:
         perform_transfer_file_server_server(file_transfer)
+    except RecoverableFileTransferError:
+        # TODO: add retry feature
+        print "helpful error message thrown here"
+        raise
     except:
         print "helpful error message thrown here"
         raise
