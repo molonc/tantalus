@@ -116,3 +116,8 @@ class FileTransferViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.FileTransferSerializer
 
 
+class GSCQueryViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.GSCQuery.objects.all()
+    serializer_class = tantalus.api.serializers.GSCQuerySerializer
+
+

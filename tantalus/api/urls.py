@@ -19,6 +19,7 @@ router.register(r'storage/azure_blob', views.AzureBlobStorageViewSet)
 router.register(r'file_instance', views.FileInstanceViewSet)
 router.register(r'deployment', views.DeploymentViewSet)
 router.register(r'file_transfer', views.FileTransferViewSet)
+router.register(r'gsc_query', views.GSCQueryViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),

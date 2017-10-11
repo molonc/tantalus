@@ -228,3 +228,11 @@ class FileTransferSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.FileTransfer
         fields = '__all__'
+
+
+class GSCQuerySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.GSCQuery
+        fields = '__all__'
+
+

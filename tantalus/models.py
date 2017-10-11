@@ -479,6 +479,24 @@ class FileTransfer(models.Model):
         unique_together = ('from_storage', 'to_storage', 'file_instance')
 
 
+class GSCQuery(models.Model):
+    """
+    Query GSC API for data paths.
+    """
+
+    samples = models.ManyToManyField(
+        Sample,
+    )
+
+    exception_message = models.CharField(
+        max_length=1000,
+    )
+
+    running = models.BooleanField('Running', default=False)
+    finished = models.BooleanField('Finished', default=False)
+    success = models.BooleanField('Success', default=False)
+
+
 class Deployment(models.Model):
     """
     Deployment from one storage to another.
