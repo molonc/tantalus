@@ -12,8 +12,10 @@ django-taggit==0.22.1
 django-taggit-serializer==0.1.5
 djangorestframework==3.6.3
 kombu==4.1.0
+pandas==0.20.3
 paramiko==2.2.1
 psycopg2==2.7.3
 pytz==2017.2
 six==1.10.0
+tables==3.4.2
 vine==1.1.4
