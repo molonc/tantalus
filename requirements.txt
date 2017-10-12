@@ -19,3 +19,4 @@ pytz==2017.2
 six==1.10.0
 tables==3.4.2
 vine==1.1.4
+xlrd

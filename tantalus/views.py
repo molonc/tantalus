@@ -1,3 +1,4 @@
+import xlrd
 from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -10,11 +11,12 @@ from django.views.generic.base import TemplateView
 from django.db import transaction
 from django.shortcuts import get_object_or_404, render
 from tantalus.models import FileTransfer, Deployment, FileResource
+from tantalus.utils import read_excel_sheets
 from tasks import transfer_file
 from tantalus.utils import create_deployment_file_transfers
 from misc.helpers import Render
 from .models import Sample
-from .forms import SampleForm
+from .forms import SampleForm, ExcelForm
 
 def search_view(request):
     query_str = request.GET.get('query_str')
@@ -94,37 +96,51 @@ class SampleCreate(TemplateView):
 
     template_name="tantalus/sample_create.html"
 
-    def get_context_and_render(self, request, form, pk=None):
+    def get_context_and_render(self, request, form, excel_form, pk=None):
         context = {
             'pk':pk,
-            'form': form
+            'form': form,
+            'excel_form': excel_form
         }
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
         form = SampleForm()
-        return self.get_context_and_render(request, form)
+        excel_form = ExcelForm()
+        return self.get_context_and_render(request, form, excel_form)
 
     def post(self, request, *args, **kwargs):
         form = SampleForm(request.POST)
+        excel_form = ExcelForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
             msg = "Successfully created the Sample."
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
-
-        msg = "Failed to create the sample. Please fix the errors below."
-        messages.error(request, msg)
-        return self.get_context_and_render(request, form)
+        elif excel_form.is_valid():
+            samples = read_excel_sheets(request.FILES.get('excel_file'))
+            for sheet in samples:
+                for index, row in sheet.iterrows():
+                    sample = Sample()
+                    sample.sample_id = str(row['sample_id'])
+                    sample.sample_id_space = str(row['sample_id_space'])
+                    sample.save()
+                    msg = "Successfully created the Sample."
+                    messages.success(request, msg)
+                return HttpResponseRedirect(sample.get_absolute_url())
+        else:
+            msg = "Failed to create the sample. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form, excel_form)
 
 class HomeView(TemplateView):
     template_name = 'tantalus/index.html'
     
     def get_context_data(self, **kwargs):
         context = {
-    		'deployment_count': Deployment.objects.all().count(),
+            'deployment_count': Deployment.objects.all().count(),
             'sample_count': Sample.objects.all().count(),
-    		'transfer_count': FileTransfer.objects.all().count()
-    	}
+            'transfer_count': FileTransfer.objects.all().count()
+        }
         return context

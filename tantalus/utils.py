@@ -1,9 +1,11 @@
 from tantalus.models import FileTransfer
 from tantalus.exceptions.api_exceptions import DeploymentNotCreated
+import pandas as pd
 
 
 def create_deployment_file_transfers(deployment):
-    """ Start a set of transfers for a deployment.
+    """ 
+    Start a set of transfers for a deployment.
     """
 
     files_to_transfer = []
@@ -60,3 +62,23 @@ def create_deployment_file_transfers(deployment):
             deployment.file_transfers.add(file_transfer)
 
     return files_to_transfer
+
+def read_excel_sheets(filename):
+    """ 
+    Load and read an excel file, extracting specific columns.
+    """
+    
+    required_columns = ['sample_id', 'sample_id_space']
+
+    try:
+        data = pd.read_excel(filename, sheetname=None)
+    except IOError:
+        raise ValueError('Unable to find file', filename)
+    
+    # convert all column names in the loaded file to lowercase
+    for sheetname in data:
+            data[sheetname].columns = [c.lower() for c in data[sheetname].columns]
+
+    for sheetname in data:
+        if set(required_columns).issubset(data[sheetname].columns):
+            yield data[sheetname]

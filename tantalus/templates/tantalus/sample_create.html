@@ -6,15 +6,31 @@
         <form action="{% url 'sample-add' %}" method="POST">
             {% csrf_token %}
             <fieldset>
-                <legend>Sample Information</legend>
+                <legend>Add a single sample</legend>
                 <table class="table-condensed">
                     <thead>
                     {{form}}
                     </thead>
                 </table>
-             </fieldset>
-            <input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
-            <a class="btn btn-default btn-sm" href="{% url 'sample-list' %}">Cancel</a>
+            	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
+            </fieldset>
         </form><br>
+        <form action="{% url 'sample-add' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <fieldset>
+            <legend>Or, add multiple samples from an Excel file</legend>
+	            <table class="table-condensed">
+	                <thead>
+	                {{excel_form}}
+	                </thead>
+	            </table>
+	            <input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">	
+         	</fieldset>
+        </form><br>
+        <fieldset>
+            <legend></legend>
+                <a class="btn btn-default btn-sm" style="float:right; margin-top:5px;" href="{% url 'sample-list' %}">Cancel</a>
+        </fieldset>
+        <br>
     </div>
 {% endblock %}
