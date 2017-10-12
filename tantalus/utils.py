@@ -1,11 +1,32 @@
+from __future__ import absolute_import
 from tantalus.models import FileTransfer
 from tantalus.exceptions.api_exceptions import DeploymentNotCreated
+from tantalus.tasks import transfer_file, create_subdirectories
+from celery import chain
 import pandas as pd
+
+
+def start_file_transfers(files_to_transfer, deployment_instance):
+    """
+    Start a set of file transfers.
+    """
+
+    for file_transfer in files_to_transfer:
+        to_storage_type = file_transfer.to_storage.__class__.__name__
+        if to_storage_type == 'ServerStorage':
+            # TODO: only 1 mkdir task is allowed to run at a time?
+            chain(
+                create_subdirectories.signature((file_transfer.id,), immutable=True).set(
+                    queue=deployment_instance.to_storage.name),
+                transfer_file.signature((file_transfer.id,), immutable=True).set(queue=deployment_instance.from_storage.name)
+            ).apply_async()
+        else:
+            transfer_file.apply_async(args=(file_transfer.id,), queue=deployment_instance.from_storage.name)
 
 
 def create_deployment_file_transfers(deployment):
     """ 
-    Start a set of transfers for a deployment.
+    Create a set of transfers for a deployment.
     """
 
     files_to_transfer = []
@@ -62,6 +83,17 @@ def create_deployment_file_transfers(deployment):
             deployment.file_transfers.add(file_transfer)
 
     return files_to_transfer
+
+
+def start_deployment(deployment):
+    """ 
+    Start a set of transfers for a deployment.
+    """
+
+    with transaction.atomic():
+        files_to_transfer = create_deployment_file_transfers(deployment)
+        transaction.on_commit(lambda: start_file_transfers(files_to_transfer, deployment))
+
 
 def read_excel_sheets(filename):
     """ 

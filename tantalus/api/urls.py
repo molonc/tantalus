@@ -21,6 +21,9 @@ router.register(r'deployment', views.DeploymentViewSet)
 router.register(r'file_transfer', views.FileTransferViewSet)
 router.register(r'gsc_query', views.GSCQueryViewSet)
 
+# name to specify name space, all the views can be referred to as reverse('app_name:view_name')
+# eg. reverse('api:deployment-list')
+app_name='api'
 urlpatterns = [
     url(r'^', include(router.urls)),
 ]

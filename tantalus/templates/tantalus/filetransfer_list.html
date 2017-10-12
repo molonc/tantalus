@@ -19,6 +19,7 @@
                             <th>Running</th>
                             <th>Finished</th>
                             <th>Success</th>
+                            <th>Error message</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -34,13 +35,14 @@
                                 <td>{{transfer.running}}</td>
                                 <td>{{transfer.finished}}</td>
                                 <td>{{transfer.success}}</td>
+                                <td>{{transfer.error_messages}}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         {% else %}
-            <h5><i class="text-warning">No transfers yet.</i></h>
+            <h5><i class="text-warning">No transfers yet.</i></h5>
         {% endif %}
     </div>
 {% endblock %}

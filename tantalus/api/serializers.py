@@ -5,10 +5,12 @@ from taggit_serializer.serializers import (
     TaggitSerializer)
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from rest_framework.exceptions import ValidationError
-from tantalus.utils import create_deployment_file_transfers, DeploymentNotCreated
-from tantalus.tasks import transfer_file, create_subdirectories
-import tantalus.models
 from celery import chain
+
+import tantalus.models
+from tantalus.utils import start_deployment
+from tantalus.tasks import transfer_file, create_subdirectories
+from tantalus.exceptions.api_exceptions import *
 
 
 class SampleSerializer(serializers.ModelSerializer):
@@ -190,19 +192,6 @@ class DeploymentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-
-        def start_async_transfers(files_to_transfer):
-            for file_transfer in files_to_transfer:
-                to_storage_type = file_transfer.to_storage.__class__.__name__
-                if to_storage_type == 'ServerStorage':
-                    # TODO: only 1 mkdir task is allowed to run at a time?
-                    chain(
-                        create_subdirectories.signature((file_transfer.id,), immutable=True).set(queue=instance.to_storage.name),
-                        transfer_file.signature((file_transfer.id,), immutable=True).set(queue=instance.from_storage.name)
-                    ).apply_async()
-                else:
-                    transfer_file.apply_async(args=(file_transfer.id,), queue=instance.from_storage.name)
-
         try:
             with transaction.atomic():
                 # remove many2many relationships from validated_data
@@ -214,9 +203,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
                 instance.datasets = datasets
                 instance.file_transfers = file_transfers
 
-                files_to_transfer = create_deployment_file_transfers(instance)
+                start_deployment(instance)
 
-                transaction.on_commit(lambda: start_async_transfers(files_to_transfer))
             return instance
 
         except DeploymentNotCreated as e:

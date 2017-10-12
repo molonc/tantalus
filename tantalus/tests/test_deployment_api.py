@@ -97,7 +97,6 @@ class DeploymentAPITest(APITransactionTestCase):
     2. All of the (valid) FileInstance objects used for this testing module have a physical file saved at TEST_FILE_STORAGE
 
     """
-    allow_database_queries = True
 
     def add_storages(self):
         self.test_rocks = ServerStorage.objects.create(
@@ -144,7 +143,7 @@ class DeploymentAPITest(APITransactionTestCase):
     def post_deployment_api(self, data):
         self.client.force_login(self.user)
         print "making API request with the following response: "
-        response = self.client.post(reverse('deployment-list'), data, format='json')
+        response = self.client.post(reverse('api:deployment-list'), data, format='json')
         print response
         return response
 

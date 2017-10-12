@@ -13,10 +13,11 @@ from django.shortcuts import get_object_or_404, render
 from tantalus.models import FileTransfer, Deployment, FileResource
 from tantalus.utils import read_excel_sheets
 from tasks import transfer_file
-from tantalus.utils import create_deployment_file_transfers
+from tantalus.utils import start_deployment
 from misc.helpers import Render
 from .models import Sample
 from .forms import SampleForm, ExcelForm
+
 
 def search_view(request):
     query_str = request.GET.get('query_str')
@@ -74,13 +75,9 @@ class DeploymentCreateView(CreateView):
                     self.object = form.save()
                     self.object.state = 'Started'
                     self.object.save()
-
-                    file_transfer_ids = []
-
-                    deployment = self.object
-                    # TODO: start celery tasks
-                    create_deployment_file_transfers(deployment)
+                    start_deployment(self.object)
                     return super(ModelFormMixin, self).form_valid(form)
+
         except ValueError as e:
             error_message = ' '.join(e.args)
             messages.error(request, error_message)

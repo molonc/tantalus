@@ -22,12 +22,12 @@ def check_file_exists_on_cloud(service, storage, file_transfer):
     filename = file_transfer.file_instance.file_resource.filename.strip("/")
     if not service.exists(storage.storage_container, filename):
         # TODO: delete file instance object?
-        update_file_transfer(file_transfer, success=False)
-        raise FileDoesNotActuallyExist(
-            "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
+        error_message = "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
             filename = filename,
             storage = storage.name,
-            pk = file_transfer.file_instance_id))
+            pk = file_transfer.file_instance_id)
+        update_file_transfer(file_transfer, success=False, error_message=error_message)
+        raise FileDoesNotActuallyExist(error_message)
 
 
 def check_file_exists_on_server(storage, file_transfer):
@@ -41,12 +41,12 @@ def check_file_exists_on_server(storage, file_transfer):
     filepath = os.path.join(storage.storage_directory, filename.strip('/'))
     if not os.path.isfile(filepath):
         # TODO: delete file instance object?
-        update_file_transfer(file_transfer, success=False)
-        raise FileDoesNotActuallyExist(
-            "{filepath} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
+        error_message = "{filepath} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
                 filepath=filepath,
                 storage=storage.name,
-                pk=file_transfer.file_instance_id))
+                pk=file_transfer.file_instance_id)
+        update_file_transfer(file_transfer, success=False, error_message=error_message)
+        raise FileDoesNotActuallyExist(error_message)
 
 
 def get_md5(f, chunk_size=134217728):
@@ -67,10 +67,65 @@ def get_md5(f, chunk_size=134217728):
 def check_md5(md5, file_transfer):
     database_saved_md5 = file_transfer.file_instance.file_resource.md5
     if (md5 != database_saved_md5):
-        raise DataCorruptionError
+        error_message = "Data has been corrupted - file md5 is {} while database md5 is {}".format(md5, database_saved_md5)
+        print error_message
+        raise DataCorruptionError(error_message)
 
 
-def update_file_transfer(file_transfer, success=False, error_message=None):
+def check_data_corruption(md5, file_transfer):
+    """
+    Checks for data corruption through md5 comparison.
+    Updates FileTransfer object with error message and throws DataCorruptionError if md5s do not match
+
+    :param md5: 32 character hexadecimal md5 string OR 24 character base64 md5 string if base_64_encoding==true
+    :param file_transfer: file transfer object
+    :return:
+    """
+
+    try:
+        # if md5 sums match, create the file instance
+        check_md5(md5, file_transfer)
+        create_file_instance(file_transfer)
+
+        # updating the status of the file transfer to a completed state, successful transfer
+        update_file_transfer(file_transfer, success=True)
+    except DataCorruptionError as e:
+        # updating the status of the file transfer to a completed state, failed transfer
+        update_file_transfer(
+                file_transfer,
+                success=False,
+                error_message=e.message
+        )
+        # TODO move this update of file transfer to tasks
+        raise DataCorruptionError(e.message)
+
+
+def check_data_corruption_with_base_64_md5(md5, file_transfer):
+    """
+    Checks for data corruption through md5 comparison.
+    Updates FileTransfer object with error message and throws DataCorruptionError if md5s do not match
+
+    :param md5: 24 character base64 md5 string if base_64_encoding==true or None
+    :param file_transfer: file transfer object
+    :return:
+    """
+
+    # for empty files, the base_64_md5 returned by azure is None, so skip comparing md5s for these files
+    if md5 is None:
+        if file_transfer.file_instance.file_resource.size == 0:
+            create_file_instance(file_transfer)
+            update_file_transfer(file_transfer, success=True)
+        else:
+            update_file_transfer(file_transfer, success=True,
+                                 error_message="Null MD5 hash for file but file should not be size 0")
+            raise DataCorruptionError()
+    else:
+        # convert the base_64_md5 to hexadecimal encoded md5 to compare with database md5s
+        md5 = md5.decode("base64").encode("hex")
+        check_data_corruption(md5, file_transfer)
+
+
+def update_file_transfer(file_transfer, success=False, error_message=""):
     """
     updates the file transfer object to a completed state, indicates success status
     :param file_transfer: FileTransfer object
@@ -81,6 +136,7 @@ def update_file_transfer(file_transfer, success=False, error_message=None):
     file_transfer.running = False
     file_transfer.finished = True
     file_transfer.success = success
+    file_transfer.error_messages = error_message
     file_transfer.save()
 
 
@@ -138,22 +194,12 @@ def perform_transfer_file_azure_server(file_transfer):
         update_file_transfer(file_transfer, success=False, error_message=str(e))
         raise
 
-    md5 = block_blob_service.get_blob_properties(
+    base_64_md5 = block_blob_service.get_blob_properties(
         file_transfer.from_storage.storage_container,
         cloud_filename).properties.content_settings.content_md5
+    check_data_corruption_with_base_64_md5(base_64_md5, file_transfer)
 
-    try:
-        #for empty files, the md5 returned is None, so don't compare md5s for these files since they dont use the null hash
-        if md5!=None and file_transfer.file_instance.file_resource.size!=0:
-            check_md5(md5, file_transfer)
-        create_file_instance(file_transfer)
-        # updating the status of the file transfer to a completed state, successful transfer
-        update_file_transfer(file_transfer, success=True)
-
-    except DataCorruptionError as e:
-        # updating the status of the file transfer to a completed state, failed transfer
-        update_file_transfer(file_transfer, success=False)
-        # TODO: propagate errors to tasks and raise them to form json response with error code after updating file transfer object
+    # TODO: propagate errors to tasks and raise them to form json response with error code after updating file transfer object
 
 
 
@@ -179,24 +225,14 @@ def perform_transfer_file_server_azure(file_transfer):
             progress_callback=progress_callback)
 
     except Exception as e:
+        print str(e)
         update_file_transfer(file_transfer, success=False, error_message=str(e))
         raise
 
+    base_64_md5 = block_blob_service.get_blob_properties(file_transfer.to_storage.storage_container, cloud_filepath).properties.content_settings.content_md5
+    #TODO: add tests for this
+    check_data_corruption_with_base_64_md5(base_64_md5, file_transfer)
 
-    md5 = block_blob_service.get_blob_properties(file_transfer.to_storage.storage_container, cloud_filepath).properties.content_settings.content_md5
-
-    try:
-        #for empty files, the md5 returned is None, so don't compare md5s for these files since they dont use the null hash
-        if md5!=None and file_transfer.file_instance.file_resource.size!=0:
-            check_md5(md5, file_transfer)
-
-        create_file_instance(file_transfer)
-        # updating the status of the file transfer to a completed state, successful transfer
-        update_file_transfer(file_transfer, success=True)
-
-    except DataCorruptionError:
-        # updating the status of the file transfer to a completed state, failed transfer
-        update_file_transfer(file_transfer, success=False)
 
 
 def perform_transfer_file_server_server(file_transfer):
@@ -252,6 +288,7 @@ def perform_transfer_file_server_server(file_transfer):
                 e.message = e.message + "\n- A file is being uploaded to a full filesystem - available disk space is {} kilobytes".format(available_space)
                 print e.message
 
+            update_file_transfer(file_transfer, success=False, error_message=e.message)
             raise
 
     except Exception as e:
@@ -263,17 +300,8 @@ def perform_transfer_file_server_server(file_transfer):
     # b flag for binary is not needed because SSH treats all files as binary
     transferred_file = sftp.file(remote_filepath, mode='r')
     md5 = get_md5(transferred_file)
-
-    try:
-        # if md5 sums match, create the file instance
-        check_md5(md5, file_transfer)
-        create_file_instance(file_transfer)
-
-        # updating the status of the file transfer to a completed state, successful transfer
-        update_file_transfer(file_transfer, success=True)
-    except DataCorruptionError:
-        # updating the status of the file transfer to a completed state, failed transfer
-        update_file_transfer(file_transfer, success=False)
+    #TODO: add tests for this
+    check_data_corruption(md5, file_transfer)
 
     transferred_file.close()
     client.close()
