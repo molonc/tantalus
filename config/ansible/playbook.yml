@@ -1,0 +1,31 @@
+---
+- hosts: all
+  remote_user: amcpherson
+  tasks:
+    - name: Clone tantalus repo
+      git:
+        repo: "https://{{ githubuser | urlencode }}:{{ githubpassword }}@svn.bcgsc.ca/bitbucket/scm/sc/tantalus.git"
+        dest: $HOME/production/tantalus
+
+    - name: Install requirements
+      pip:
+        requirements: $HOME/production/tantalus/requirements.txt
+        virtualenv: $HOME/production/tantalus/venv
+        virtualenv_python: python2
+
+    - name: Start supervisord
+      shell: "if [ ! -S $HOME/production/tantalus/tmp/supervisor.sock ]; then $HOME/production/tantalus/venv/bin/supervisord -c $HOME/production/tantalus/supervisord.conf; fi"
+      environment:
+        DJANGO_SECRET_KEY: whateveryouwant
+        DJANGO_DEBUG: TRUE
+        TANTALUS_POSTGRESQL_NAME: tantalus_dev
+        TANTALUS_POSTGRESQL_USER: amcpherson
+        TANTALUS_POSTGRESQL_PASSWORD: shahlab
+
+    - name: Start celery
+      supervisorctl:
+        name: celeryd
+        state: restarted
+        config: $HOME/production/tantalus/supervisord.conf
+        supervisorctl_path: $HOME/production/tantalus/venv/bin/supervisorctl
+
