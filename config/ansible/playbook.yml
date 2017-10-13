@@ -16,11 +16,11 @@
     - name: Start supervisord
       shell: "if [ ! -S $HOME/production/tantalus/tmp/supervisor.sock ]; then $HOME/production/tantalus/venv/bin/supervisord -c $HOME/production/tantalus/supervisord.conf; fi"
       environment:
-        DJANGO_SECRET_KEY: whateveryouwant
-        DJANGO_DEBUG: TRUE
-        TANTALUS_POSTGRESQL_NAME: tantalus_dev
-        TANTALUS_POSTGRESQL_USER: amcpherson
-        TANTALUS_POSTGRESQL_PASSWORD: shahlab
+        TANTALUS_SECRET_KEY: "{{ lookup('env', 'TANTALUS_SECRET_KEY') }}"
+        TANTALUS_DEBUG: "{{ lookup('env', 'TANTALUS_DEBUG') }}"
+        TANTALUS_POSTGRESQL_NAME: "{{ lookup('env', 'TANTALUS_POSTGRESQL_NAME') }}"
+        TANTALUS_POSTGRESQL_USER: "{{ lookup('env', 'TANTALUS_POSTGRESQL_USER') }}"
+        TANTALUS_POSTGRESQL_PASSWORD: "{{ lookup('env', 'TANTALUS_POSTGRESQL_PASSWORD') }}"
 
     - name: Start celery
       supervisorctl:
