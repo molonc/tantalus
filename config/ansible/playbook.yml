@@ -19,6 +19,7 @@
     - name: Start supervisord
       shell: "$HOME/production/tantalus/venv/bin/supervisord -c $HOME/production/tantalus/supervisord.conf"
       environment:
+        TANTALUS_QUEUE_PREFIX: "{{ queue_prefix }}"
         TANTALUS_SECRET_KEY: "{{ lookup('env', 'TANTALUS_SECRET_KEY') }}"
         TANTALUS_DEBUG: "{{ lookup('env', 'TANTALUS_DEBUG') }}"
         TANTALUS_POSTGRESQL_NAME: "{{ lookup('env', 'TANTALUS_POSTGRESQL_NAME') }}"
