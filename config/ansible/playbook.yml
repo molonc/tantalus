@@ -4,7 +4,7 @@
   tasks:
     - name: Clone tantalus repo
       git:
-        repo: "https://{{ githubuser | urlencode }}:{{ githubpassword }}@svn.bcgsc.ca/bitbucket/scm/sc/tantalus.git"
+        repo: "https://{{ stashuser | urlencode }}:{{ stashpassword }}@svn.bcgsc.ca/bitbucket/scm/sc/tantalus.git"
         dest: $HOME/production/tantalus
 
     - name: Install requirements
