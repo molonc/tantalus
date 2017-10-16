@@ -402,6 +402,12 @@ class ServerStorage(Storage):
         max_length=30
     )
 
+    def get_mkdir_queue_name(self):
+        return self.name + '.mkdir'
+
+    def get_transfer_queue_name(self):
+        return self.name + '.transfer'
+
 
 class AzureBlobStorage(Storage):
     """
