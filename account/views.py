@@ -1,9 +1,3 @@
-"""
-Created on June 17, 2016
-
-@author: Jafar Taghiyar (jtaghiyar@bccrc.ca)
-"""
-
 #============================
 # Django imports
 #----------------------------

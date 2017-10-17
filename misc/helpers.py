@@ -1,9 +1,3 @@
-"""
-Created on May 31, 2016
-
-@author: Jafar Taghiyar (jtaghiyar@bccrc.ca)
-"""
-
 from django.db import models
 from django.shortcuts import render
 

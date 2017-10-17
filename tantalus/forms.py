@@ -1,9 +1,3 @@
-"""
-Created on May 24, 2016
-
-@author: Jafar Taghiyar (jtaghiyar@bccrc.ca)
-"""
-
 import os
 
 #===========================
