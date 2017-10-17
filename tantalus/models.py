@@ -51,7 +51,7 @@ class Sample(models.Model):
         return '{}_{}'.format(self.sample_id_space, self.sample_id)
 
     def get_absolute_url(self):
-        return reverse("sample-detail", kwargs={"pk": self.pk})
+        return reverse("sample-list")
 
 
 class DNALibrary(models.Model):

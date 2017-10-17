@@ -21,7 +21,7 @@
                         <br/>
                         {% for sample in samples %}
                             <tr>
-                                <td><a href="{% url 'sample-detail' pk=sample.pk %}">{{sample.sample_id}}</a></td>
+                                <td>{{sample.sample_id}}</td>
                                 <td>{{sample.sample_id_space}}</td>
                             </tr>
                         {% endfor %}
