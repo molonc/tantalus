@@ -121,3 +121,8 @@ class GSCQueryViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.GSCQuerySerializer
 
 
+class MD5CheckViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.MD5Check.objects.all()
+    serializer_class = tantalus.api.serializers.MD5CheckSerializer
+
+

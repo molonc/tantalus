@@ -112,7 +112,7 @@ def _add_file_instances_to_server(storage, file_resource, create=True):
     :param storage:
     :param file_resource:
     :param create: if create is true, the files on the server will also be created,
-    this is used to test the FileDoesNotActuallyExist exception - defaults to true otherwise
+    this is used to test the FileDoesNotExist exception - defaults to true otherwise
     :return:
     """
     serverfile = FileInstance(
@@ -238,7 +238,6 @@ class FileTransferTest(TransactionTestCase):
             from_storage=from_storage,
             to_storage=to_storage,
             file_instance=FileInstance.objects.all()[0],
-            new_filename=file_resource.filename
         )
 
         perform_transfer_file_server_server(file_transfer=file_transfer)
@@ -256,7 +255,7 @@ class FileTransferTest(TransactionTestCase):
 
         client.close()
 
-    def test_file_transfer_server_server_FileDoesNotActuallyExist(self):
+    def test_file_transfer_server_server_FileDoesNotExist(self):
         # test specific set up for transfer from local server to remote server (rocks)
         from_storage = self.local
         to_storage = self.rocks
@@ -276,11 +275,10 @@ class FileTransferTest(TransactionTestCase):
             from_storage=from_storage,
             to_storage=to_storage,
             file_instance=FileInstance.objects.all()[0],
-            new_filename=file_resource.filename,
         )
 
         # assert exception is thrown and error message is correct
-        self.assertRaises(FileDoesNotActuallyExist, perform_transfer_file_server_server, file_transfer)
+        self.assertRaises(FileDoesNotExist, perform_transfer_file_server_server, file_transfer)
         error_message = "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
             filename=local_filepath,
             storage=from_storage.name,
@@ -355,7 +353,6 @@ class FileTransferTest(TransactionTestCase):
             from_storage=from_storage,
             to_storage=to_storage,
             file_instance=FileInstance.objects.all()[0],
-            new_filename=file_resource.filename
         )
         file_transfer.full_clean()
         file_transfer.save()
@@ -403,7 +400,6 @@ class FileTransferTest(TransactionTestCase):
             from_storage=from_storage,
             to_storage=to_storage,
             file_instance=FileInstance.objects.all()[0],
-            new_filename=file_resource.filename
         )
         file_transfer.full_clean()
         file_transfer.save()
@@ -445,7 +441,6 @@ class FileTransferTest(TransactionTestCase):
             from_storage=from_storage,
             to_storage=to_storage,
             file_instance=FileInstance.objects.all()[0],
-            new_filename=file_resource.filename,
         )
 
         perform_transfer_file_server_azure(file_transfer)
@@ -490,14 +485,10 @@ class FileTransferTest(TransactionTestCase):
         _add_file_instances_to_cloud(storage=from_storage, file_resource=file_resource)
 
         # creating file transfer object
-        # note: the new_filename parameter is just the same name as the file resource's name
-        # this is the intended behaviour for first phase of tantalus -
-        # this may change with later versions, so this test will likely break
         file_transfer = FileTransfer.objects.create(
             from_storage=from_storage,
             to_storage=to_storage,
             file_instance=FileInstance.objects.all()[0],
-            new_filename=file_resource.filename
         )
 
         # check if file exists after transfer
@@ -509,7 +500,7 @@ class FileTransferTest(TransactionTestCase):
         self.assertEqual("", file_transfer.error_messages)
 
 
-    def test_file_transfer_azure_server_FileDoesNotActuallyExist(self):
+    def test_file_transfer_azure_server_FileDoesNotExist(self):
         # test specific set up
         from_storage = self.blob_storage
         to_storage = self.local
@@ -526,11 +517,10 @@ class FileTransferTest(TransactionTestCase):
             from_storage=from_storage,
             to_storage=to_storage,
             file_instance=FileInstance.objects.all()[0],
-            new_filename=file_resource.filename
         )
 
         # check that exception is thrown - no file on cloud actually exists for the file instance
-        self.assertRaises(FileDoesNotActuallyExist, perform_transfer_file_azure_server, file_transfer)
+        self.assertRaises(FileDoesNotExist, perform_transfer_file_azure_server, file_transfer)
         error_message = "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
             filename=file_resource.filename,
             storage=from_storage.name,
@@ -586,7 +576,6 @@ class FileTransferTest(TransactionTestCase):
             from_storage=from_storage,
             to_storage=to_storage,
             file_instance=FileInstance.objects.all()[0],
-            new_filename=file_resource.filename
         )
 
         self.assertRaises(DataCorruptionError, perform_transfer_file_azure_server, file_transfer)
@@ -645,7 +634,6 @@ class FileTransferTest(TransactionTestCase):
             from_storage=from_storage,
             to_storage=to_storage,
             file_instance=FileInstance.objects.all()[0],
-            new_filename=file_resource.filename
         )
 
         # make the source file empty again:

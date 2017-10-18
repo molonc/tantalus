@@ -162,3 +162,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_BACKEND = 'rpc://'
 CELERY_TASK_SERIALIZER = 'json'
 LOGIN_URL = '/account/login'
+
+# GSC API settings
+GSC_API_USERNAME = os.environ.get('GSC_API_USERNAME')
+GSC_API_PASSWORD = os.environ.get('GSC_API_PASSWORD')

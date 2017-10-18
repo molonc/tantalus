@@ -12,7 +12,6 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, render
 from tantalus.models import FileTransfer, Deployment, FileResource
 from tantalus.utils import read_excel_sheets
-from tasks import transfer_file
 from tantalus.utils import start_deployment
 from misc.helpers import Render
 from .models import Sample
@@ -78,6 +77,7 @@ class DeploymentCreateView(CreateView):
                     start_deployment(self.object)
                     return super(ModelFormMixin, self).form_valid(form)
 
+        # TODO: Handle DeploymentUnnecessary
         except ValueError as e:
             error_message = ' '.join(e.args)
             messages.error(request, error_message)

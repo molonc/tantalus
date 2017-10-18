@@ -1,27 +1,49 @@
 from __future__ import absolute_import
+from django.db import transaction
 from tantalus.models import FileTransfer
 from tantalus.exceptions.api_exceptions import DeploymentNotCreated
-from tantalus.tasks import transfer_file, create_subdirectories
+from tantalus.exceptions.file_transfer_exceptions import DeploymentUnnecessary
+import tantalus.tasks
 from celery import chain
 import pandas as pd
 
 
-def start_file_transfers(files_to_transfer, deployment_instance):
+def start_file_transfer(file_transfer, deployment):
+    """
+    Start a single file transfer.
+    """
+
+    from_storage_type = file_transfer.from_storage.__class__.__name__
+    to_storage_type = file_transfer.to_storage.__class__.__name__
+
+    if from_storage_type == 'ServerStorage' and to_storage_type == 'AzureBlobStorage':
+        tantalus.tasks.transfer_file_server_azure_task.apply_async(args=(file_transfer.id,), queue=deployment.from_storage.get_transfer_queue_name())
+
+    elif from_storage_type == 'AzureBlobStorage' and to_storage_type == 'ServerStorage':
+        make_dirs_sig = tantalus.tasks.make_dirs_for_file_transfer_task.signature((file_transfer.id,), immutable=True)
+        make_dirs_sig.set(queue=deployment.to_storage.get_mkdir_queue_name())
+        transfer_file_sig = tantalus.tasks.transfer_file_azure_server_task.signature((file_transfer.id,), immutable=True)
+        transfer_file_sig.set(queue=deployment.to_storage.get_transfer_queue_name())
+        chain(make_dirs_sig, transfer_file_sig).apply_async()
+
+    elif from_storage_type == 'ServerStorage' and to_storage_type == 'ServerStorage':
+        make_dirs_sig = tantalus.tasks.make_dirs_for_file_transfer_task.signature((file_transfer.id,), immutable=True)
+        make_dirs_sig.set(queue=deployment.to_storage.get_mkdir_queue_name())
+        transfer_file_sig = tantalus.tasks.transfer_file_server_server_task.signature((file_transfer.id,), immutable=True)
+        transfer_file_sig.set(queue=deployment.to_storage.get_transfer_queue_name())
+        chain(make_dirs_sig, transfer_file_sig).apply_async()
+
+    else:
+        raise Exception('unsupported transfer')
+
+
+def start_file_transfers(file_transfers, deployment):
     """
     Start a set of file transfers.
     """
 
-    for file_transfer in files_to_transfer:
-        to_storage_type = file_transfer.to_storage.__class__.__name__
-        if to_storage_type == 'ServerStorage':
-            # TODO: only 1 mkdir task is allowed to run at a time?
-            chain(
-                create_subdirectories.signature((file_transfer.id,), immutable=True).set(
-                    queue=deployment_instance.to_storage.name),
-                transfer_file.signature((file_transfer.id,), immutable=True).set(queue=deployment_instance.from_storage.name)
-            ).apply_async()
-        else:
-            transfer_file.apply_async(args=(file_transfer.id,), queue=deployment_instance.from_storage.name)
+    for file_transfer in file_transfers:
+        start_file_transfer(file_transfer, deployment)
 
 
 def create_deployment_file_transfers(deployment):
@@ -38,7 +60,7 @@ def create_deployment_file_transfers(deployment):
             destination_file_instances = file_resource.fileinstance_set.filter(storage=deployment.to_storage)
 
             if len(destination_file_instances) >= 1:
-                raise DeploymentNotCreated('file instance for file resource {} already deployed on {}'.format(file_resource.filename, deployment.to_storage))
+                continue
 
             source_file_instance = file_resource.fileinstance_set.filter(storage=deployment.from_storage)
 
@@ -58,10 +80,13 @@ def create_deployment_file_transfers(deployment):
                 to_storage=deployment.to_storage)
 
             if len(existing_transfers) > 1:
-                raise DeploymentNotCreated('multiple existing transfers for {} to {} - Contact database admin'.format(file_resource.filename, deployment.to_storage))
+                raise DeploymentNotCreated('multiple existing transfers for {} to {}'.format(file_resource.filename, deployment.to_storage))
 
             elif len(existing_transfers) == 1:
                 file_transfer = existing_transfers[0]
+
+                if file_transfer.finished and not file_transfer.success:
+                    files_to_transfer.append(file_transfer)
 
             else:
                 file_transfer = FileTransfer()
@@ -69,7 +94,6 @@ def create_deployment_file_transfers(deployment):
                 file_transfer.to_storage = deployment.to_storage
                 file_transfer.file_instance = file_instance
                 #TODO: add tests for the naming and transfer starting
-                file_transfer.new_filename = file_resource.filename
                 file_transfer.save()
 
                 files_to_transfer.append(file_transfer)
@@ -92,6 +116,10 @@ def start_deployment(deployment):
 
     with transaction.atomic():
         files_to_transfer = create_deployment_file_transfers(deployment)
+
+        if len(files_to_transfer) == 0:
+            raise DeploymentUnnecessary()
+
         transaction.on_commit(lambda: start_file_transfers(files_to_transfer, deployment))
 
 
@@ -114,3 +142,4 @@ def read_excel_sheets(filename):
     for sheetname in data:
         if set(required_columns).issubset(data[sheetname].columns):
             yield data[sheetname]
+

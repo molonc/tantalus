@@ -20,6 +20,7 @@ router.register(r'file_instance', views.FileInstanceViewSet)
 router.register(r'deployment', views.DeploymentViewSet)
 router.register(r'file_transfer', views.FileTransferViewSet)
 router.register(r'gsc_query', views.GSCQueryViewSet)
+router.register(r'md5_check', views.MD5CheckViewSet)
 
 # name to specify name space, all the views can be referred to as reverse('app_name:view_name')
 # eg. reverse('api:deployment-list')

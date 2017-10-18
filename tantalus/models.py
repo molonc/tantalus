@@ -4,6 +4,7 @@ Tantalus models
 
 from __future__ import unicode_literals
 
+import os
 from django.db import models
 from django.core.urlresolvers import reverse
 import taggit.models
@@ -145,26 +146,31 @@ class SequenceLane(models.Model):
 
     lane_number = models.PositiveSmallIntegerField()
 
-    sequencing_centre = create_id_field()
+    GSC = 'GSC'
+    BRC = 'BRC'
+        
+    sequencing_centre_choices = [
+        (GSC, 'Genome Science Centre'),
+        (BRC, 'Biomedical Research Centre'),
+    ]
+
+    sequencing_centre = models.CharField(
+        max_length=50,
+        choices=sequencing_centre_choices,
+    )
 
     sequencing_library_id = create_id_field()
 
-    sequencing_instrument_choices = (
-        ('HX', 'HiSeqX'),
-        ('H2500', 'HiSeq2500'),
-        ('N550', 'NextSeq550'),
-        ('MI', 'MiSeq'),
-        ('O', 'other'),
-    )
-
     sequencing_instrument = models.CharField(
         max_length=50,
-        choices=sequencing_instrument_choices,
     )
 
+    PAIRED = 'P'
+    SINGLE = 'S'
+
     read_type_choices = (
-        ('P', 'PET'),
-        ('S', 'SET')
+        (PAIRED, 'Paired end tags'),
+        (SINGLE, 'Single end tags')
     )
 
     read_type = models.CharField(
@@ -193,6 +199,8 @@ class FileResource(models.Model):
 
     md5 = models.CharField(
         max_length=50,
+        null=True,
+        blank=True,
     )
 
     size = models.BigIntegerField()
@@ -270,7 +278,8 @@ class AbstractDataSet(PolymorphicModel):
     
     dna_sequences = models.ForeignKey(
         DNASequences,
-        on_delete=models.CASCADE,
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     def get_data_fileset(self):
@@ -333,19 +342,29 @@ class BamFile(AbstractDataSet):
 
     history = HistoricalRecords()
 
+    HG19 = 'HG19'
+    HG18 = 'HG18'
+    UNALIGNED = 'UNALIGNED'
+    UNUSABLE = 'UNUSABLE'
+
     reference_genome_choices = (
-        ('hg19','Human Genome 19'),
-        ('hg18','Human Genome 18'),
-        ('none','Unaligned'),
+        (HG19, 'Human Genome 19'),
+        (HG18, 'Human Genome 18'),
+        (UNALIGNED, 'Not aligned to a reference'),
+        (UNUSABLE, 'Alignments are not usable'),
     )
 
     reference_genome = models.CharField(
         max_length=50,
         choices=reference_genome_choices,
+        default=UNALIGNED,
     )
 
     aligner = models.CharField(
         max_length=50,
+        null=True,
+        blank=True,
+        default=None,
     )
 
     bam_file = models.ForeignKey(
@@ -408,6 +427,14 @@ class ServerStorage(Storage):
     def get_transfer_queue_name(self):
         return self.name + '.transfer'
 
+    def get_md5_queue_name(self):
+        return self.name + '.md5'
+
+    def get_filepath(self, file_resource):
+        return os.path.join(
+            str(self.storage_directory),
+            file_resource.filename.strip('/'))
+
 
 class AzureBlobStorage(Storage):
     """
@@ -428,6 +455,11 @@ class AzureBlobStorage(Storage):
         max_length=200,
     )
 
+    def get_filepath(self, file_resource):
+        # strip the slash, otherwise this creates an additional
+        # <no name> root folder
+        return file_resource.filename.strip('/')
+
 
 class FileInstance(models.Model):
     """
@@ -446,11 +478,39 @@ class FileInstance(models.Model):
         on_delete=models.CASCADE,
     )
 
+    filename_override = models.CharField(
+        max_length=500,
+        unique=True,
+        null=True,
+        blank=False,
+    )
+
+    def get_filepath(self):
+        if self.filename_override is not None:
+            return self.filename_override
+
+        return self.storage.get_filepath(self.file_resource)
+
     class Meta:
         unique_together = ('file_resource', 'storage')
 
 
-class FileTransfer(models.Model):
+class SimpleTask(models.Model):
+    """
+    Base model for task run with celery.
+    """
+
+    running = models.BooleanField(default=False)
+    finished = models.BooleanField(default=False)
+    success = models.BooleanField(default=False)
+    state = models.TextField(blank=True)
+    message = models.TextField(blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class FileTransfer(SimpleTask):
     """
     Transfer of a specific data file.
     """
@@ -469,27 +529,18 @@ class FileTransfer(models.Model):
         FileInstance,
     )
 
-    new_filename = models.CharField(
-        max_length=500,
-    )
-
     progress = models.FloatField(
         default=0.,
     )
 
-    error_messages = models.TextField(
-        blank=True,
-    )
-
-    running = models.BooleanField('Running', default=False)
-    finished = models.BooleanField('Finished', default=False)
-    success = models.BooleanField('Success', default=False)
+    def get_filepath(self):
+        return self.to_storage.get_filepath(self.file_instance.file_resource)
 
     class Meta:
         unique_together = ('from_storage', 'to_storage', 'file_instance')
 
 
-class GSCQuery(models.Model):
+class GSCQuery(SimpleTask):
     """
     Query GSC API for data paths.
     """
@@ -497,14 +548,6 @@ class GSCQuery(models.Model):
     samples = models.ManyToManyField(
         Sample,
     )
-
-    exception_message = models.CharField(
-        max_length=1000,
-    )
-
-    running = models.BooleanField('Running', default=False)
-    finished = models.BooleanField('Finished', default=False)
-    success = models.BooleanField('Success', default=False)
 
 
 class Deployment(models.Model):
@@ -534,3 +577,13 @@ class Deployment(models.Model):
     running = models.BooleanField('Running', default=False)
     finished = models.BooleanField('Finished', default=False)
     errors = models.BooleanField('Errors', default=False)
+
+
+class MD5Check(SimpleTask):
+    """
+    Check of set MD5 task.
+    """
+
+    file_instance = models.ForeignKey(
+        FileInstance,
+    )

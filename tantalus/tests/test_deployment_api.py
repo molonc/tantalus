@@ -193,7 +193,8 @@ class DeploymentAPITest(APITransactionTestCase):
             print "this is attempt " + str(i)
             for file_transfer in deployment.file_transfers.all():
                 print "progress of file transfer with pk: {} is at {}".format(file_transfer.pk, file_transfer.progress)
-                remote_path = os.path.join(to_storage.storage_directory, file_transfer.new_filename)
+                filename = file_transfer.file_instance.file_resource.filename
+                remote_path = os.path.join(to_storage.storage_directory, filename)
 
                 if file_transfer.finished:
                     num_complete_file_transfers = num_complete_file_transfers + 1

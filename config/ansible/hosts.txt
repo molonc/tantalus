@@ -1,2 +1,2 @@
 thost05 queue_prefix=gsc
-rocks2  queue_prefix=rocks
+rocks2 queue_prefix=rocks

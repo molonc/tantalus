@@ -5,12 +5,13 @@ from taggit_serializer.serializers import (
     TaggitSerializer)
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 from celery import chain
 
 import tantalus.models
 from tantalus.utils import start_deployment
-from tantalus.tasks import transfer_file, create_subdirectories
 from tantalus.exceptions.api_exceptions import *
+from tantalus.exceptions.file_transfer_exceptions import *
 
 
 class SampleSerializer(serializers.ModelSerializer):
@@ -25,7 +26,20 @@ class SampleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class FileInstanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.FileInstance
+        fields = '__all__'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=tantalus.models.FileInstance.objects.all(),
+                fields=('file_resource', 'storage')
+            )
+        ]
+
+
 class FileResourceSerializer(serializers.ModelSerializer):
+    file_instances = FileInstanceSerializer(source='fileinstance_set', many=True, read_only=True)
     md5 = serializers.CharField(
         validators=[
             UniqueValidator(queryset=tantalus.models.FileResource.objects.all())
@@ -174,19 +188,18 @@ class AzureBlobStorageSerializer(serializers.ModelSerializer):
         exclude = ['polymorphic_ctype']
 
 
-class FileInstanceSerializer(serializers.HyperlinkedModelSerializer):
+class FileTransferSerializer(serializers.ModelSerializer):
     class Meta:
-        model = tantalus.models.FileInstance
+        model = tantalus.models.FileTransfer
         fields = '__all__'
-        validators = [
-            UniqueTogetherValidator(
-                queryset=tantalus.models.FileInstance.objects.all(),
-                fields=('file_resource', 'storage')
-            )
-        ]
 
 
 class DeploymentSerializer(serializers.ModelSerializer):
+    running = serializers.BooleanField(read_only=True)
+    finished = serializers.BooleanField(read_only=True)
+    errors = serializers.BooleanField(read_only=True)
+    file_transfers = FileTransferSerializer(many=True, read_only=True)
+
     class Meta:
         model = tantalus.models.Deployment
         fields = '__all__'
@@ -194,33 +207,28 @@ class DeploymentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         try:
             with transaction.atomic():
-                # remove many2many relationships from validated_data
-                datasets = validated_data.pop('datasets', [])
-                file_transfers = validated_data.pop('file_transfers', [])
-
+                datasets = validated_data.pop('datasets')
                 instance = tantalus.models.Deployment(**validated_data)
                 instance.save()
                 instance.datasets = datasets
-                instance.file_transfers = file_transfers
-
+                instance.save()
                 start_deployment(instance)
-
             return instance
-
+        except DeploymentUnnecessary as e:
+            raise ValidationError({'unnecessary': True})
         except DeploymentNotCreated as e:
-            # TODO: construct JSON response
-            raise DeploymentNotCreated(str(e))
-
-
-class FileTransferSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = tantalus.models.FileTransfer
-        fields = '__all__'
+            raise ValidationError(str(e))
 
 
 class GSCQuerySerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.GSCQuery
+        fields = '__all__'
+
+
+class MD5CheckSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.MD5Check
         fields = '__all__'
 
 

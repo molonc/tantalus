@@ -79,8 +79,24 @@ if __name__ == '__main__':
     storage = tantalus.models.ServerStorage()
     storage.name = 'rocks'
     storage.server_ip = 'rocks3.cluster.bccrc.ca'
-    storage.storage_directory = '/share/lustre/archive'
-    storage.username = 'jngo'
+    storage.storage_directory = '/share/lustre/amcpherson/tantalus_test'
+    storage.username = 'amcpherson'
+    storage.full_clean()
+    storage.save()
+
+    storage = tantalus.models.ServerStorage()
+    storage.name = 'gsc'
+    storage.server_ip = '10.9.208.161'
+    storage.storage_directory = '/'
+    storage.username = 'amcpherson'
+    storage.full_clean()
+    storage.save()
+
+    storage = tantalus.models.ServerStorage()
+    storage.name = 'shahlab'
+    storage.server_ip = '10.9.208.161'
+    storage.storage_directory = '/shahlab/amcpherson/tantalus_test'
+    storage.username = 'amcpherson'
     storage.full_clean()
     storage.save()
 

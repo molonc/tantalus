@@ -17,6 +17,7 @@ paramiko==2.2.1
 psycopg2==2.7.3
 pytz==2017.2
 six==1.10.0
+supervisor==3.3.3
 tables==3.4.2
 vine==1.1.4
-xlrd
+xlrd==1.1.0

@@ -1,17 +1,29 @@
 ---
 - hosts: all
   remote_user: amcpherson
+  vars:
+    stashuser: amcpherson
+    stashversion: master
+    gitexecutable: git
   tasks:
     - name: Clone tantalus repo
       git:
         repo: "https://{{ stashuser | urlencode }}:{{ stashpassword }}@svn.bcgsc.ca/bitbucket/scm/sc/tantalus.git"
         dest: $HOME/production/tantalus
+        version: "{{ stashversion }}"
+        executable: "{{ gitexecutable }}"
 
     - name: Install requirements
       pip:
         requirements: $HOME/production/tantalus/requirements.txt
         virtualenv: $HOME/production/tantalus/venv
         virtualenv_python: python2
+
+    - name: Create supervisor tmp
+      file: path=$HOME/production/tantalus/tmp state=directory
+
+    - name: Create supervisor tmp/logs
+      file: path=$HOME/production/tantalus/tmp/logs state=directory
 
     - name: Stop supervisord
       shell: "if [ -f $HOME/production/tantalus/tmp/supervisord.pid ]; then kill -s SIGTERM $($HOME/production/tantalus/venv/bin/supervisorctl -c $HOME/production/tantalus/supervisord.conf pid); fi; sleep 10"

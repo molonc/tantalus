@@ -2,88 +2,93 @@ from __future__ import absolute_import
 
 from celery import shared_task, Task
 import tantalus.models
-from tantalus.file_transfer_utils import *
+import tantalus.file_transfer_utils
 import subprocess
+import traceback
 
 
-@shared_task
-def create_subdirectories(file_transfer_id):
-    file_transfer = tantalus.models.FileTransfer.objects.get(pk=file_transfer_id)
-    perform_create_subdirectories(file_transfer)
+def simple_task_wrapper(id_, model, func, name, is_last):
+    task_model = model.objects.get(pk=id_)
+    task_model.running = True
+    task_model.finished = False
+    task_model.success = False
+    task_model.state = name + ' started'
+    task_model.message = ''
+    task_model.save()
 
-
-@shared_task
-def transfer_file(file_transfer_id):
-    file_transfer = tantalus.models.FileTransfer.objects.get(pk=file_transfer_id)
-
-    from_storage_type = file_transfer.from_storage.__class__.__name__
-    to_storage_type = file_transfer.to_storage.__class__.__name__
-    file_transfer.running = True
-    file_transfer.save()
-
-    if from_storage_type == 'ServerStorage' and to_storage_type == 'AzureBlobStorage':
-        transfer_file_server_azure(file_transfer)
-        print "cloud"
-
-    elif from_storage_type == 'AzureBlobStorage' and to_storage_type == 'ServerStorage':
-        transfer_file_azure_server(file_transfer)
-        print "cloud"
-
-    elif from_storage_type == 'ServerStorage' and to_storage_type == 'ServerStorage':
-        transfer_file_server_server(file_transfer)
-        print "server"
-
-    else:
-        raise Exception('unsupported transfer')
-
-    for deployment in file_transfer.deployment_set.all():
-        _check_deployment_complete(deployment)
-
-
-@shared_task
-def transfer_file_server_azure(file_transfer):
     try:
-        perform_transfer_file_server_azure(file_transfer)
-    except:
-        print "helpful error message thrown here"
+        func(task_model)
+    except Exception as e:
+        error_message = str(e) + '\n' + traceback.format_exc()
+        task_model.running = False
+        task_model.finished = True
+        task_model.success = False
+        task_model.state = name + ' failed'
+        task_model.message = error_message
+        task_model.save()
         raise
-    # TODO: make directory, permissions, check exists
+
+    if is_last:
+        task_model.running = False
+        task_model.finished = True
+        task_model.success = True
+
+    task_model.state = name + ' finished'
+    task_model.save()
 
 
 @shared_task
-def transfer_file_azure_server(file_transfer):
-    try:
-        perform_transfer_file_azure_server(file_transfer)
-    except:
-        print "helpful error message thrown here"
-        raise
-    # TODO: make directory, permissions, check exists
+def make_dirs_for_file_transfer_task(transfer_file_id):
+    simple_task_wrapper(
+        id_=transfer_file_id,
+        model=tantalus.models.FileTransfer,
+        func=tantalus.file_transfer_utils.make_dirs_for_file_transfer,
+        name='make directories',
+        is_last=False,
+    )
 
 
 @shared_task
-def transfer_file_server_server(file_transfer):
-    try:
-        perform_transfer_file_server_server(file_transfer)
-    except RecoverableFileTransferError:
-        # TODO: add retry feature
-        print "helpful error message thrown here"
-        raise
-    except:
-        print "helpful error message thrown here"
-        raise
-    # TODO: make directory, permissions, check exists
+def transfer_file_server_azure_task(transfer_file_id):
+    simple_task_wrapper(
+        id_=transfer_file_id,
+        model=tantalus.models.FileTransfer,
+        func=tantalus.file_transfer_utils.transfer_file_server_azure,
+        name='transfer file',
+        is_last=True,
+    )
 
 
-def _check_deployment_complete(deployment):
-    for file_transfer in deployment.file_transfers.all():
-        if file_transfer.finished and not file_transfer.success:
-            deployment.errors = True
-    deployment.save()
+@shared_task
+def transfer_file_azure_server_task(transfer_file_id):
+    simple_task_wrapper(
+        id_=transfer_file_id,
+        model=tantalus.models.FileTransfer,
+        func=tantalus.file_transfer_utils.transfer_file_azure_server,
+        name='transfer file',
+        is_last=True,
+    )
 
-    for file_transfer in deployment.file_transfers.all():
-        if not file_transfer.finished:
-            return
 
-    deployment.finished = True
-    deployment.save()
+@shared_task
+def transfer_file_server_server_task(transfer_file_id):
+    simple_task_wrapper(
+        id_=transfer_file_id,
+        model=tantalus.models.FileTransfer,
+        func=tantalus.file_transfer_utils.transfer_file_server_server,
+        name='transfer file',
+        is_last=True,
+    )
+
+
+@shared_task
+def check_md5_task(md5_check_id):
+    simple_task_wrapper(
+        id_=md5_check_id,
+        model=tantalus.models.MD5Check,
+        func=tantalus.file_transfer_utils.check_or_update_md5,
+        name='check or update md5',
+        is_last=True,
+    )
+
 
