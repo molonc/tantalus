@@ -421,14 +421,18 @@ class ServerStorage(Storage):
         max_length=30
     )
 
+    queue_prefix = models.CharField(
+        max_length=50
+    )
+
     def get_mkdir_queue_name(self):
-        return self.name + '.mkdir'
+        return self.queue_prefix + '.mkdir'
 
     def get_transfer_queue_name(self):
-        return self.name + '.transfer'
+        return self.queue_prefix + '.transfer'
 
     def get_md5_queue_name(self):
-        return self.name + '.md5'
+        return self.queue_prefix + '.md5'
 
     def get_filepath(self, file_resource):
         return os.path.join(
