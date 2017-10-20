@@ -177,8 +177,8 @@ def transfer_file_server_azure(file_transfer):
     _check_deployments_complete(file_transfer)
 
 
-def transfer_file_server_server(file_transfer):
-    """ Transfer a file from a server to blob.
+def transfer_file_server_server_remote(file_transfer):
+    """ Transfer a file from a remote server to a local server.
     
     This should be called on the to server.
     """
@@ -251,6 +251,48 @@ def transfer_file_server_server(file_transfer):
     create_file_instance(file_transfer)
 
     _check_deployments_complete(file_transfer)
+
+
+def transfer_file_server_server_local(file_transfer):
+    """ Transfer a file between storages on a server.
+    """
+
+    # TODO: progress callback
+
+    from_filepath = file_transfer.file_instance.get_filepath()
+    to_filepath = file_transfer.get_filepath()
+
+    if not os.path.isfile(from_filepath):
+        error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
+            filepath=from_filepath,
+            storage=file_transfer.file_instance.storage.name,
+            pk=file_transfer.file_instance.id)
+        raise FileDoesNotExist(error_message)
+
+    if os.path.isfile(to_filepath):
+        error_message = "target file {filepath} already exists on {storage}".format(
+            filepath=to_filepath,
+            storage=file_transfer.to_storage.name)
+        raise FileAlreadyExists(error_message)
+
+    shutil.copyfile(from_filepath, to_filepath)
+
+    create_file_instance(file_transfer)
+
+    _check_deployments_complete(file_transfer)
+
+
+def transfer_file_server_server(file_transfer):
+    """ Transfer a file from a server to blob.
+    
+    This should be called on the to server.
+    """
+
+    if file_transfer.from_storage.server_ip == file_transfer.to_storage.server_ip:
+        transfer_file_server_server_local(file_transfer)
+
+    else:
+        transfer_file_server_server_remote(file_transfer)
 
 
 def _check_deployments_complete(file_transfer):
