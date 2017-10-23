@@ -151,6 +151,10 @@ def query_gsc_wgs_bams(sample_id):
                 bam_filename = bam_path[bam_path.find(library_name):]
                 bai_filename = bai_path[bai_path.find(library_name):]
 
+                # Prepend sample id to filenames
+                bam_filename = os.path.join(sample_id, bam_filename)
+                bai_filename = os.path.join(sample_id, bai_filename)
+
                 bam_file, created = tantalus.models.FileResource.objects.get_or_create(
                     size=os.path.getsize(bam_path),
                     created=pd.Timestamp(time.ctime(os.path.getmtime(bam_path)), tz='Canada/Pacific'),
