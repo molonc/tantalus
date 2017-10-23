@@ -401,6 +401,9 @@ class Storage(PolymorphicModel):
     def __unicode__(self):
         return '{}'.format(self.name)
 
+    def get_filepath(self, file_resource):
+        raise NotImplementedError()
+
 
 class ServerStorage(Storage):
     """

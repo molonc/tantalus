@@ -1,6 +1,6 @@
 from django.test import TestCase, TransactionTestCase
 
-from misc.update_tantalus_db import *
+from misc.update_tantalus_db import add_new_sequencelanes, add_new_libraries, add_new_samples
 import socket, getpass
 from tantalus.file_transfer_utils import *
 from django.utils import timezone
@@ -8,20 +8,26 @@ import shutil
 import subprocess
 
 # TODO: remember to change this user to the user running the tests
-ROCKS_USER = 'jngo'
+SSH_USER = 'jngo'
 
 ## TEST CONSTANTS ##
 
 # !!!! NOTE - NEVER PUT ANYTHING IMPORTANT IN THE TEST DIRECTORIES - THEY WILL BE WIPED AFTER EVERY TEST !!!!
-COMPUTE2_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(ROCKS_USER)
+COMPUTE2_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(SSH_USER)
 COMPUTE2_IP = "10.9.2.187"
 COMPUTE2_LIMITED_SPACE_DIRECTORY = "/mnt/test" # this directory has 10mb of space
 
-BEAST_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(ROCKS_USER)
+BEAST_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(SSH_USER)
 BEAST_IP = "10.9.4.26"
 
-ROCKS_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(ROCKS_USER)
+ROCKS_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(SSH_USER)
 ROCKS_IP = "10.9.4.27"
+
+THOST_IP = '10.9.208.161'
+THOST_TEST_DIRECTORY = "/genesis/shahlab/jngo/FAKE_DESTINATION_DIRECTORY/"
+
+SHAHLAB15_TEST_DIRECTORY = "/home/{}/tantalus-test/".format(SSH_USER)
+SHAHLAB15_IP = "10.9.215.80"
 
 AZURE_STORAGE_ACCOUNT = "singlecellstorage"
 AZURE_STORAGE_CONTAINER = "jess-testing"
@@ -30,6 +36,8 @@ AZURE_STORAGE_KEY = "okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn
 LOCAL_USER = getpass.getuser()
 LOCAL_TEST_DIRECTORY = os.path.join(os.path.realpath(os.path.dirname(__file__)),
                                     "test-file-destination-directory")
+LOCAL_OTHER_TEST_DIRECTORY = os.path.join(os.path.realpath(os.path.dirname(__file__)),
+                                    "other-test-file-destination-directory")
 
 # TODO: replace this path with a huge file
 PATH_TO_HUGE_FILE = "/Users/jngo/dummydir"
@@ -69,10 +77,18 @@ def connect_sftp_server(server_ip, username):
     return client, sftp
 
 
-def _clear_up_test_files(directory_to_clean):
+def _delete_local_test_files(directory_to_clean):
     if os.path.isdir(directory_to_clean):
         shutil.rmtree(directory_to_clean)
-    os.mkdir(LOCAL_TEST_DIRECTORY)
+    os.mkdir(directory_to_clean)
+
+
+def _delete_remote_test_files(directory_to_clean, client):
+    cmd = "rm -rf " + directory_to_clean
+    client.exec_command(cmd)
+
+    cmd = "mkdir -p " + directory_to_clean
+    client.exec_command(cmd)
 
 
 def _clear_test_cloud_storage(blob_storage):
@@ -165,11 +181,22 @@ class FileTransferTest(TransactionTestCase):
     """
 
     def add_storages(self):
+        print ServerStorage.objects.all()
+        ServerStorage.objects.all().delete()
         self.rocks = ServerStorage.objects.create(
             name='rocks',
             server_ip=ROCKS_IP,
             storage_directory=ROCKS_TEST_DIRECTORY,
-            username=ROCKS_USER,
+            username=SSH_USER,
+        )
+        # self.rocks.full_clean()
+        # TODO: add full_clean methods?
+
+        self.thost = ServerStorage.objects.create(
+            name='thost',
+            server_ip=THOST_IP,
+            storage_directory=THOST_TEST_DIRECTORY,
+            username=SSH_USER,
         )
 
         self.blob_storage = AzureBlobStorage.objects.create(
@@ -183,25 +210,33 @@ class FileTransferTest(TransactionTestCase):
             name='compute2',
             server_ip=COMPUTE2_IP,
             storage_directory=COMPUTE2_TEST_DIRECTORY,
-            username=ROCKS_USER,
+            username=SSH_USER,
         )
 
         self.beast = ServerStorage.objects.create(
             name='beast',
             server_ip=BEAST_IP,
             storage_directory=BEAST_TEST_DIRECTORY,
-            username=ROCKS_USER,
+            username=SSH_USER,
         )
 
         self.local = ServerStorage.objects.create(
             name='jngo',
             server_ip=LOCAL_IP,
             storage_directory=LOCAL_TEST_DIRECTORY,
-            username=ROCKS_USER,
+            username=SSH_USER,
+        )
+
+        self.other_local = ServerStorage.objects.create(
+            name='other_jngo',
+            server_ip=LOCAL_IP,
+            storage_directory=LOCAL_OTHER_TEST_DIRECTORY,
+            username=SSH_USER,
         )
 
     def setUp(self):
-        _clear_up_test_files(LOCAL_TEST_DIRECTORY)
+        _delete_local_test_files(LOCAL_TEST_DIRECTORY)
+        _delete_local_test_files(LOCAL_OTHER_TEST_DIRECTORY)
         add_new_samples(['SA928'])
         add_new_libraries(['A90652A'])
         add_new_sequencelanes(['CB95TANXX_6'])
@@ -212,23 +247,16 @@ class FileTransferTest(TransactionTestCase):
         self.file_resource = FileResource.objects.all()[0]
         self.dataset = _add_dataset(1, self.file_resource)
 
-    def test_file_transfer_server_server(self):
+    def test_file_transfer_server_server_local(self):
+        """ testing transfers from a server to the same server but in a different location """
         # test specific set up for transfer from local server to remote server (rocks)
         from_storage = self.local
-        to_storage = self.rocks
+        to_storage = self.other_local
         file_resource = self.file_resource
 
-        # checking that the file does not already exist on the remote server from a previous test
-        client, sftp = connect_sftp_server(to_storage.server_ip, to_storage.username)
+        # checking that the file does not already exist in the other location
         remote_filepath = os.path.join(to_storage.storage_directory, file_resource.filename)
-        self.assertRaises(IOError, sftp.stat, remote_filepath)
-
-        # removing all subdirectories in remote server if any created from a previous test
-        cmd = str("rm -rf " + to_storage.storage_directory)
-        client.exec_command(cmd)
-        cmd2 = str("mkdir -p " + to_storage.storage_directory)
-        client.exec_command(cmd2)
-        client.close()
+        self.assertRaises(OSError, os.stat, remote_filepath)
 
         # adding the file instance to the local server
         _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=True)
@@ -240,9 +268,9 @@ class FileTransferTest(TransactionTestCase):
             file_instance=FileInstance.objects.all()[0],
         )
 
-        perform_transfer_file_server_server(file_transfer=file_transfer)
+        transfer_file_server_server(file_transfer=file_transfer)
         # check that no errors were thrown for the file transfer objects
-        self.assertEqual("", file_transfer.error_messages)
+        self.assertEqual("", file_transfer.message)
 
         # assert that the file exists on the remote server
         client, sftp = connect_sftp_server(to_storage.server_ip, to_storage.username)
@@ -255,20 +283,18 @@ class FileTransferTest(TransactionTestCase):
 
         client.close()
 
-    def test_file_transfer_server_server_FileDoesNotExist(self):
-        # test specific set up for transfer from local server to remote server (rocks)
+    def test_file_transfer_server_server_local_FileDoesNotExist(self):
+        # test specific set up for transfer from local server to other local location
         from_storage = self.local
-        to_storage = self.rocks
+        to_storage = self.other_local
         file_resource = self.file_resource
 
         # add the file instance, but do NOT actually add the file - this is testing the exception is being thrown
         _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=False)
 
         # make sure that the file was not created, and does not exist on the local server
-        client, sftp = connect_sftp_server(to_storage.server_ip, to_storage.username)
         local_filepath = os.path.join(from_storage.storage_directory, file_resource.filename)
-        self.assertRaises(IOError, sftp.stat, local_filepath)
-        client.close()
+        self.assertRaises(OSError, os.stat, local_filepath)
 
         # create the file transfer object
         file_transfer = FileTransfer.objects.create(
@@ -278,15 +304,115 @@ class FileTransferTest(TransactionTestCase):
         )
 
         # assert exception is thrown and error message is correct
-        self.assertRaises(FileDoesNotExist, perform_transfer_file_server_server, file_transfer)
-        error_message = "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
-            filename=local_filepath,
-            storage=from_storage.name,
-            pk=file_transfer.file_instance_id)
-        self.assertEqual(error_message, file_transfer.error_messages)
+        self.assertRaises(FileDoesNotExist, transfer_file_server_server, file_transfer)
+
+    def test_file_transfer_server_server_local_FileAlreadyExists(self):
+        # test specific set up for transfer from local server to other local location
+        from_storage = self.local
+        to_storage = self.other_local
+        file_resource = self.file_resource
+
+        # add the file instance to both locations
+        _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=True)
+        _add_file_instances_to_server(storage=to_storage, file_resource=file_resource, create=True)
+
+        # create the file transfer object
+        file_transfer = FileTransfer.objects.create(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+        )
+
+        # assert exception is thrown and error message is correct
+        self.assertRaises(FileAlreadyExists, transfer_file_server_server, file_transfer)
+
+    def test_file_transfer_server_server_remote(self):
+        """ testing transfers from server (remote) to another server (local),
+            using SFTP get from the local server, rather than SFTP put from remote"""
+        # test specific set up for transfer from local server to remote server (rocks)
+        from_storage = self.rocks
+        to_storage = self.local
+        file_resource = self.file_resource
+
+        # checking that the file does not already exist on the server from a previous test
+        _delete_local_test_files(to_storage.storage_directory)
+        local_filepath = os.path.join(to_storage.storage_directory, file_resource.filename)
+        self.assertRaises(OSError, os.stat, local_filepath)
+
+        # adding the file instance to the remote server for test
+        # client, sftp = connect_sftp_server(from_storage.server_ip, from_storage.username)
+        _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=True)
+
+        # creating the file transfer object
+        file_transfer = FileTransfer.objects.create(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+        )
+
+        transfer_file_server_server(file_transfer=file_transfer)
+        # check that no errors were thrown for the file transfer objects
+        self.assertEqual("", file_transfer.message)
+
+        # assert that the file exists on the server after transfer
+        try:
+            os.stat(local_filepath)
+            os.remove(local_filepath)
+        except:
+            self.fail("Test for file transfer failed - {} was not found".format(local_filepath))
+
+    def test_file_transfer_server_server_remote_FileDoesNotExist(self):
+        # test specific set up for transfer from local server to remote server (rocks)
+        from_storage = self.rocks
+        to_storage = self.local
+        file_resource = self.file_resource
+
+        client, sftp = connect_sftp_server(from_storage.server_ip, from_storage.username)
+        _delete_remote_test_files(from_storage.storage_directory, client)
+
+        # add the file instance, but do NOT actually add the file - this is testing the exception is being thrown
+        _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=False)
+
+        # make sure that the file was not created, and does not exist on the remote server
+        remote_filepath = os.path.join(from_storage.storage_directory, file_resource.filename)
+        self.assertRaises(IOError, sftp.stat, remote_filepath)
+        client.close()
+
+        # create the file transfer object
+        file_transfer = FileTransfer.objects.create(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+        )
+
+        # assert exception is thrown
+        self.assertRaises(FileDoesNotExist, transfer_file_server_server, file_transfer)
+
+    def test_file_transfer_server_server_remote_FileAlreadyExists(self):
+        # test specific set up for transfer from local server to remote server (rocks)
+        from_storage = self.rocks
+        to_storage = self.local
+        file_resource = self.file_resource
+
+        client, sftp = connect_sftp_server(from_storage.server_ip, from_storage.username)
+        _delete_remote_test_files(from_storage.storage_directory, client)
+
+        # add the file instance, but do NOT actually add the file - this is testing the exception is being thrown
+        _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=True)
+        _add_file_instances_to_server(storage=to_storage, file_resource=file_resource, create=True)
+
+        # create the file transfer object
+        file_transfer = FileTransfer.objects.create(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+        )
+
+        # assert exception is thrown
+        self.assertRaises(FileAlreadyExists, transfer_file_server_server, file_transfer)
 
 
-    def test_file_transfer_server_server_EnvironmentError_broken_pipe(self):
+    def deactivated_test_file_transfer_server_server_EnvironmentError_broken_pipe(self):
         """
         THIS TEST MUST BE MANUALLY RUN WITH A LARGE FILE.
 
@@ -318,7 +444,7 @@ class FileTransferTest(TransactionTestCase):
             name='jngo_large_file',
             server_ip=LOCAL_IP,
             storage_directory=PATH_TO_HUGE_FILE,
-            username=ROCKS_USER,
+            username=SSH_USER,
         )
 
         to_storage = self.rocks
@@ -357,26 +483,26 @@ class FileTransferTest(TransactionTestCase):
         file_transfer.full_clean()
         file_transfer.save()
 
-        # self.assertRaises(EnvironmentError, perform_transfer_file_server_server, file_transfer)
-        # self.assertEqual("error message", file_transfer.error_messages) #TODO: add correct error message
+        # self.assertRaises(EnvironmentError, transfer_file_server_server, file_transfer)
         self.fail() # Please see test comments, comment this line out, and then uncomment the above 2 lines to run this test
 
-    def test_file_transfer_server_server_EnvironmentError_no_disk_space(self):
+    def deactivated_test_file_transfer_server_server_EnvironmentError_no_disk_space(self):
+        self.fail("This no longer needs to be tested in this module - test somewhere else, probably deployment?")
         # test specific set up for transfer from local server to remote server with very small storage - 10 mb(compute2_limited_space)
         local_large_file_storage = ServerStorage.objects.create(
             name='jngo_large_file',
             server_ip=LOCAL_IP,
             storage_directory=PATH_TO_HUGE_FILE,
-            username=ROCKS_USER,
+            username=SSH_USER,
         )
 
         compute2_limited_space = ServerStorage(
             name='compute2_limited_space',
             server_ip=COMPUTE2_IP,
             storage_directory=COMPUTE2_LIMITED_SPACE_DIRECTORY,
-            username=ROCKS_USER,
+            username=SSH_USER,
         )
-        compute2_limited_space.full_clean()
+        # compute2_limited_space.full_clean()
         compute2_limited_space.save()
 
         from_storage = local_large_file_storage
@@ -406,9 +532,9 @@ class FileTransferTest(TransactionTestCase):
 
         # perform_transfer_file_server_server(file_transfer)
         # check that correct error is thrown along with the updated error message
-        self.assertRaises(EnvironmentError, perform_transfer_file_server_server, file_transfer)
+        self.assertRaises(EnvironmentError, transfer_file_server_server, file_transfer)
         error_message = "Failure - No specific error code was given.\nPossible reasons include:\n- A file is being uploaded to a full filesystem - available disk space is 2 kilobytes"
-        self.assertEqual(error_message, file_transfer.error_messages)
+        self.assertEqual(error_message, file_transfer.message)
 
         # clean up test file
         client, sftp = connect_sftp_server(to_storage.server_ip, to_storage.username)
@@ -431,7 +557,7 @@ class FileTransferTest(TransactionTestCase):
             if blob.name == file_resource.filename:
                 self.fail()
 
-        # add file instance for the cloud storage file, and create the file as well
+        # add file instance for the file, and create the file as well
         _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=True)
 
         # this should reflect folder structure on cloud blob storage
@@ -443,13 +569,79 @@ class FileTransferTest(TransactionTestCase):
             file_instance=FileInstance.objects.all()[0],
         )
 
-        perform_transfer_file_server_azure(file_transfer)
+        transfer_file_server_azure(file_transfer)
 
         # remember to strip the root "/" in tests, because we stripped this when transferring to the cloud
         self.assertTrue(file_resource.filename.strip("/") in [blob.name
                                                               for blob in service.list_blobs(to_storage.storage_container)])
         # check that no errors were thrown for the file transfer objects
-        self.assertEquals("", file_transfer.error_messages)
+        self.assertEquals("", file_transfer.message)
+
+    def test_file_transfer_server_azure_FileDoesNotExist(self):
+        # test specific setup for local server transfer to cloud
+        from_storage = self.local
+        to_storage = self.blob_storage
+        service = get_block_blob_service(to_storage)
+        file_resource = self.file_resource
+
+        # clearing test cloud storage files
+        _clear_test_cloud_storage(to_storage)
+
+        # making sure cloud storage clear worked, and test file isn't already in the storage container
+        for blob in service.list_blobs(to_storage.storage_container):
+            if blob.name == file_resource.filename:
+                self.fail()
+
+        # add file instance for the file, and do NOT create the file
+        _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=False)
+
+        # this should reflect folder structure on cloud blob storage
+        # when performing the file transfer, the root "/" should be stripped, otherwise it creates a
+        # <no name> folder at the root of the cloud storage to act as the "root" folder
+        file_transfer = FileTransfer.objects.create(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+        )
+
+        # check that exception is thrown - no file on server actually exists for the file instance
+        self.assertRaises(FileDoesNotExist, transfer_file_server_azure, file_transfer)
+
+    def test_file_transfer_server_azure_FileAlreadyExists(self):
+        # test specific setup for local server transfer to cloud
+        from_storage = self.local
+        to_storage = self.blob_storage
+        service = get_block_blob_service(to_storage)
+        file_resource = self.file_resource
+
+        # clearing test cloud storage files
+        _clear_test_cloud_storage(to_storage)
+
+        # add file instance for the file, and create the file as well
+        _add_file_instances_to_server(storage=from_storage, file_resource=file_resource, create=True)
+
+        # add the file to the cloud and check that it's there
+        service.create_blob_from_path(
+            to_storage.storage_container,  # name of container
+            file_resource.filename.strip("/"),  # name of the blob
+            os.path.join(from_storage.storage_directory, file_resource.filename)
+        )
+        self.assertTrue(file_resource.filename.strip("/") in [blob.name
+                                                              for blob in
+                                                              service.list_blobs(to_storage.storage_container)])
+
+        # create the file transfer
+        file_transfer = FileTransfer.objects.create(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+        )
+
+        # check that exception is thrown - file already exists on the blob storage
+        self.assertRaises(FileAlreadyExists, transfer_file_server_azure, file_transfer)
+
+        # clean test file
+        _clear_test_cloud_storage(to_storage)
 
     def test_file_transfer_azure_server(self):
         # test specific set up for cloud transfer to local server
@@ -466,7 +658,6 @@ class FileTransferTest(TransactionTestCase):
         _clear_test_cloud_storage(from_storage)
 
         # make sure no test file from previous tests, or subdirectory structure in place already
-        _clear_up_test_files(to_storage.storage_directory)
         self.assertFalse(os.path.isfile(local_filename))
 
         # file to populate test cloud storage
@@ -492,13 +683,9 @@ class FileTransferTest(TransactionTestCase):
         )
 
         # check if file exists after transfer
-        perform_transfer_file_azure_server(file_transfer=file_transfer)
+        transfer_file_azure_server(file_transfer=file_transfer)
         self.assertTrue(os.path.isfile(
             os.path.join(to_storage.storage_directory, file_resource.filename.strip('/'))))
-
-        # check that no errors were thrown for the file transfer objects
-        self.assertEqual("", file_transfer.error_messages)
-
 
     def test_file_transfer_azure_server_FileDoesNotExist(self):
         # test specific set up
@@ -519,17 +706,56 @@ class FileTransferTest(TransactionTestCase):
             file_instance=FileInstance.objects.all()[0],
         )
 
-        # check that exception is thrown - no file on cloud actually exists for the file instance
-        self.assertRaises(FileDoesNotExist, perform_transfer_file_azure_server, file_transfer)
-        error_message = "{filename} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
-            filename=file_resource.filename,
-            storage=from_storage.name,
-            pk=file_transfer.file_instance_id)
-        # check error message for file transfer object is correct
-        self.assertEquals(error_message, file_transfer.error_messages)
+        # check that exception is thrown - no file on cloud actually exists
+        self.assertRaises(FileDoesNotExist, transfer_file_azure_server, file_transfer)
 
+    def test_file_transfer_azure_server_FileAlreadyExists(self):
+        # test specific set up for cloud transfer to local server
+        from_storage = self.blob_storage
+        to_storage = self.local
+        service = get_block_blob_service(from_storage)
+        file_resource = self.file_resource
 
-    def test_file_transfer_azure_server_data_corruption_empty_file_sent(self):
+        # file transfer location
+        local_filename = os.path.join(to_storage.storage_directory, file_resource.filename)
+
+        # Dummy file used in this test to populate the cloud
+        source_filename = os.path.join(DIR_TO_POPULATE_CLOUD, FILE_TO_POPULATE_CLOUD)
+        _clear_test_cloud_storage(from_storage)
+
+        # make sure no test file from previous tests, or subdirectory structure in place already
+        self.assertFalse(os.path.isfile(local_filename))
+
+        # file to populate test cloud storage
+        self.assertTrue(os.path.isfile(source_filename))
+
+        # uploading file to test cloud storage, remember to strip the slash! Otherwise this creates an additional
+        # <no name> root folder
+        service.create_blob_from_path(
+            from_storage.storage_container,  # name of container
+            file_resource.filename.strip("/"),  # name of the blob
+            source_filename)
+        self.assertTrue(file_resource.filename.strip("/") in [blob.name
+                                                              for blob in service.list_blobs(from_storage.storage_container)])
+
+        # creating file instance object and related file type object for the file on the test cloud storage
+        _add_file_instances_to_cloud(storage=from_storage, file_resource=file_resource)
+
+        # creating file transfer object
+        file_transfer = FileTransfer.objects.create(
+            from_storage=from_storage,
+            to_storage=to_storage,
+            file_instance=FileInstance.objects.all()[0],
+        )
+
+        # add file to local storage
+        _add_file_instances_to_server(storage=to_storage, file_resource=file_resource, create=True)
+
+        # check that exception is thrown - File already exists
+        self.assertRaises(FileAlreadyExists, transfer_file_azure_server, file_transfer)
+
+    def deactivated_test_file_transfer_azure_server_data_corruption_empty_file_sent(self):
+        self.fail("this test is no longer needed in this module - move to another test module?")
         # test specific set up
         from_storage = self.blob_storage
         to_storage = self.local
@@ -552,7 +778,6 @@ class FileTransferTest(TransactionTestCase):
         _clear_test_cloud_storage(from_storage)
 
         # make sure no test file from previous tests, or subdirectory structure in place already
-        _clear_up_test_files(to_storage.storage_directory)
         self.assertFalse(os.path.isfile(local_filename))
 
         # file to populate test cloud storage
@@ -578,12 +803,13 @@ class FileTransferTest(TransactionTestCase):
             file_instance=FileInstance.objects.all()[0],
         )
 
-        self.assertRaises(DataCorruptionError, perform_transfer_file_azure_server, file_transfer)
+        self.assertRaises(DataCorruptionError, transfer_file_azure_server, file_transfer)
         # check error message for file transfer object is correct
         error_message = "Null MD5 hash for file but file should not be size 0"
-        self.assertEquals(error_message, file_transfer.error_messages)
+        self.assertEquals(error_message, file_transfer.message)
 
-    def test_file_transfer_azure_server_data_corruption_corrupted_file_sent(self):
+    def deactivated_test_file_transfer_azure_server_data_corruption_corrupted_file_sent(self):
+        self.fail("this test is no longer needed in this module - move to another test module?")
         # test specific set up
         from_storage = self.blob_storage
         to_storage = self.local
@@ -610,7 +836,6 @@ class FileTransferTest(TransactionTestCase):
         _clear_test_cloud_storage(from_storage)
 
         # make sure no test file from previous tests, or subdirectory structure in place already
-        _clear_up_test_files(to_storage.storage_directory)
         self.assertFalse(os.path.isfile(local_filename))
 
         # file to populate test cloud storage
@@ -641,7 +866,7 @@ class FileTransferTest(TransactionTestCase):
             dummy_file.write("")
 
         # check the DataCorruptionError is thrown and error message for file transfer object is correct
-        self.assertRaises(DataCorruptionError, perform_transfer_file_azure_server, file_transfer)
+        self.assertRaises(DataCorruptionError, transfer_file_azure_server, file_transfer)
         error_message = "Data has been corrupted - file md5 is 67a995130dbea46252f46f42580eb688 while database md5 is ThisIsAnIncorrectMD5sum"
         self.assertEquals(error_message,
-                          file_transfer.error_messages)
+                          file_transfer.message)

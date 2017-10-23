@@ -6,6 +6,7 @@ import subprocess
 from tantalus.models import *
 from tantalus.exceptions.file_transfer_exceptions import *
 import errno
+import shutil
 
 
 # if available memory on the storage is less than this, include this as a possible source of error if the transfer fails
@@ -97,7 +98,7 @@ def transfer_file_azure_server(file_transfer):
     cloud_filepath = file_transfer.file_instance.get_filepath()
     local_filepath = file_transfer.get_filepath()
 
-    if not service.exists(file_transfer.file_instance.storage.storage_container, cloud_filepath):
+    if not block_blob_service.exists(file_transfer.file_instance.storage.storage_container, cloud_filepath):
         error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
             filepath=cloud_filepath,
             storage=file_transfer.file_instance.storage.name,
@@ -107,7 +108,7 @@ def transfer_file_azure_server(file_transfer):
     if os.path.isfile(local_filepath):
         error_message = "target file {filepath} already exists on {storage}".format(
             filepath=local_filepath,
-            storage=file_instance.storage.name)
+            storage=file_transfer.file_instance.storage.name)
         raise FileAlreadyExists(error_message)
 
     def progress_callback(current, total):
@@ -144,10 +145,10 @@ def transfer_file_server_azure(file_transfer):
             pk=file_transfer.file_instance.id)
         raise FileDoesNotExist(error_message)
 
-    if service.exists(file_transfer.file_instance.storage.storage_container, cloud_filepath):
+    if block_blob_service.exists(file_transfer.to_storage.storage_container, cloud_filepath):
         error_message = "target file {filepath} already exists on {storage}".format(
             filepath=cloud_filepath,
-            storage=file_instance.storage.name)
+            storage=file_transfer.to_storage.name)
         raise FileAlreadyExists(error_message)
 
     def progress_callback(current, total):
@@ -162,9 +163,16 @@ def transfer_file_server_azure(file_transfer):
         progress_callback=progress_callback)
 
     base_64_md5 = block_blob_service.get_blob_properties(
-        file_transfer.from_storage.storage_container,
+        file_transfer.to_storage.storage_container,
         cloud_filepath).properties.content_settings.content_md5
-    md5 = base_64_md5.decode("base64").encode("hex")
+
+    # the md5 for an empty file is a NoneType object
+    if base_64_md5 is None:
+        if file_transfer.file_instance.file_resource.size != 0:
+            raise DataCorruptionError("Empty file transferred instead of file content")
+        md5 = "d41d8cd98f00b204e9800998ecf8427e"
+    else:
+        md5 = base_64_md5.decode("base64").encode("hex")
 
     file_resource_md5 = file_transfer.file_instance.file_resource.md5
 
