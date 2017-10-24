@@ -53,7 +53,7 @@ class GSCAPI(object):
         return result
 
 
-bam_path_template = '{data_path}/{library_name}_{num_lanes}_lanes_dupsFlagged.bam'
+bam_path_template = '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}_dupsFlagged.bam'
 
 
 wgs_protocol_ids = (
@@ -130,18 +130,26 @@ def query_gsc_wgs_bams(sample_id):
             for merge_info in merge_infos:
                 data_path = merge_info['data_path']
                 num_lanes = len(merge_info['merge_xrefs'])
+                lane_pluralize = ('', 's')[num_lanes > 1]
+
+                if data_path is None:
+                    print 'warning: no data path for merge info {}'.format(merge_info['id'])
+                    continue
 
                 bam_path = bam_path_template.format(
                     data_path=data_path,
                     library_name=library_name,
-                    num_lanes=num_lanes)
+                    num_lanes=num_lanes,
+                    lane_pluralize=lane_pluralize)
                 bai_path = bam_path + '.bai'
 
                 if not os.path.exists(bam_path):
-                    raise MissingFileError(bam_path)
+                    print 'warning: missing file {}'.format(bam_path)
+                    continue
 
                 if not os.path.exists(bai_path):
-                    raise MissingFileError(bai_path)
+                    print 'warning: missing file {}'.format(bai_path)
+                    continue
 
                 # ASSUMPTION: GSC stored files are pathed from root 
                 bam_filename_override = bam_path
