@@ -122,6 +122,7 @@ class SampleCreate(TemplateView):
                     sample = Sample()
                     sample.sample_id = str(row['sample_id'])
                     sample.sample_id_space = str(row['sample_id_space'])
+                    sample.full_clean()
                     sample.save()
                     msg = "Successfully created the Sample."
                     messages.success(request, msg)
