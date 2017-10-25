@@ -267,15 +267,19 @@ def get_sequencing_instrument(machine):
     return raw_instrument_map[raw_instrument]
 
 
+def reverse_complement(sequence):
+    return sequence[::-1].translate(string.maketrans('ACTGactg','TGACtgac'))
+
+
 def decode_raw_index_sequence(raw_index_sequence, instrument):
     i7 = raw_index_sequence.split("-")[0]
     i5 = raw_index_sequence.split("-")[1]
 
     if instrument == 'HiSeqX':
-        i7 = rc(i7)
-        i5 = rc(i5)
+        i7 = reverse_complement(i7)
+        i5 = reverse_complement(i5)
     elif instrument == 'HiSeq2500':
-        i7 = rc(i7)
+        i7 = reverse_complement(i7)
     else:
         raise Exception('unsupported sequencing instrument {}'.format(instrument))
 
