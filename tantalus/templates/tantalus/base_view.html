@@ -13,7 +13,6 @@
     <!-- Bootstrap-select assets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/css/bootstrap-select.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/i18n/defaults-*.min.js"></script>
     <!-- end of Bootstrap-select assets -->
 
     <!-- DataTable -->
@@ -68,7 +67,21 @@
         {% endif %}
     </div>
 
+    <!-- Page title -->
+        <div class="container subheader">
+            <h2>{% block title %}{% endblock %}</h2>
+        </div>
+    <!-- end of page title -->
+
     {% block body %}{% endblock %}
 
+        <script type="text/javascript">
+        $(document).ready(function(){
+            $("#datatable").DataTable({
+                "order": []
+            } );
+        });
+
+        </script>
 </body>
 </html>

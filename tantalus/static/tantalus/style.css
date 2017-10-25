@@ -66,6 +66,10 @@ td, th {
     width: 70%;
 }
 
+.td_name {
+    font-weight: bold;
+}
+
 /*translate new lines to <br> */
 .notes {
     white-space: pre-line;

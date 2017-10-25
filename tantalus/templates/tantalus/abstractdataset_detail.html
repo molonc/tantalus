@@ -1,0 +1,51 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Dataset Detail
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+    </div>
+    <div class="container" style="background-color:#F5F5F5;">
+        <table class="table-condensed">
+            <tr>
+                <td class="td_name">File Resources: </td>
+                <td>
+                    {% for file_resource in object.get_data_fileset %}
+                        {{ file_resource.filename }}<br/>
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <td class="td_name">Library: </td>
+                <td>{{ object.dna_sequences.dna_library.library_id }}</td>
+            </tr>
+            <tr>
+                <td class="td_name">Sample: </td>
+                <td>{{ object.dna_sequences.sample.sample_id }}</td>
+            </tr>
+            <tr>
+                <td class="td_name">Available on: </td>
+                <td>
+                    {% for s in storages  %}
+                        {% if s.storage_directory %}
+                        {{ s.name }} - <i>{{ s.server_ip }}:{{ s.storage_directory }}</i>
+                        {% else %}
+                        {{ s.name }}{{ s.storage_container }}
+                        {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <td class="td_name">Tags: </td>
+                <td>
+                {{ object.tags.all|join:", <br/>" }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+
+{% endblock %}

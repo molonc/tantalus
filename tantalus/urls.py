@@ -31,5 +31,9 @@ urlpatterns = [
     url(r'^deployments/create$', tantalus.views.DeploymentCreateView.as_view(success_url='/deployments/'), name='deployment-create'),
     url(r'^samples/$', tantalus.views.sample_list, name='sample-list'),
     url(r'^samples/create$', tantalus.views.SampleCreate.as_view(), name='sample-add'),
+    url(r'^datasets/$', tantalus.views.DatasetList.as_view(), name='dataset-list'),
+    url(r'^datasets/(?P<pk>\d+)$', tantalus.views.DatasetDetail.as_view(), name='dataset-detail'),
+    url(r'^datasets/tag$', tantalus.views.DatasetTag.as_view(), name='dataset-tag'),
+    url(r'^datasets/search$', tantalus.views.DatasetSearch.as_view(), name='dataset-search'),
     url(r'^$', tantalus.views.HomeView.as_view(), name='home')
 ]

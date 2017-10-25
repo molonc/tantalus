@@ -3,12 +3,23 @@
 {% extends "tantalus/base_view.html" %}
 {% load staticfiles %}
 
+{% block title %}
+    Tantalus
+{% endblock %}
+
 {% block body %}
 	<div class="container" style="border:solid 1px #E0E0E0; border-radius: 3px;">
 	    <a style="text-decoration: none;" href="#db_collapse" data-toggle="collapse"><h4>Menu</h4></a>
 	    <div id="db_collapse" class="collapse in">
 	        <table class="table-striped" style="width:100%;">
 	            <tbody>
+                    <tr>
+	                    <td><a href="{% url 'dataset-list' %}">Datasets</a> <i class="counter">{{datasets_count}}</i></td>
+                        <td>
+                            <p style="float:right;">
+                            <a href="{% url 'dataset-tag' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Tag Datasets</a></p>
+                        </td>
+	                </tr>
 	                <tr>
 	                    <td><a href="{% url 'deployment-list' %}">Deployments</a> <i class="counter">{{deployment_count}}</i></td>
 	                    <td>

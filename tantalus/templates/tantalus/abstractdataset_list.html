@@ -1,0 +1,56 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Datasets
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">Select a dataset to view its details</h4>
+        <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'dataset-search' %}">Search/Tag Datasets</a>
+    </div>
+    <div class="container" style="background-color:#F5F5F5;">
+        {% if object_list %}
+            <div class="table-responsive">
+                <table id="datatable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Dataset</th>
+                            <th>File Resource</th>
+                            <th>Type</th>
+                            <th>Sample</th>
+                            <th>Library</th>
+                            <th>Tags</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <br/>
+                        {% for dataset in object_list %}
+                            <tr>
+                                <td><a href="{% url 'dataset-detail' pk=dataset.id %}">{{ dataset.pk }}</a></td>
+                                <td>
+                                    {% for file_resource in dataset.get_data_fileset %}
+                                    {{file_resource.filename}}<br/>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for file_resource in dataset.get_data_fileset %}
+                                    {{file_resource.get_file_type_display}}
+                                    {% endfor %}
+                                </td>
+                                <td>{{dataset.dna_sequences.sample.sample_id}}</td>
+                                <td>{{dataset.dna_sequences.dna_library.library_id}}</td>
+                                <td>{{ dataset.tags.all|join:", " }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No datasets yet.</i></h5>
+        {% endif %}
+    </div>
+
+
+{% endblock %}

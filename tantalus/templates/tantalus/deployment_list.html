@@ -1,6 +1,10 @@
 {% extends "tantalus/base_view.html" %}
 {% load staticfiles %}
 
+{% block title %}
+    Deployments
+{% endblock %}
+
 {% block body %}
     <div class="container" style="padding:0; margin-bottom:5px;">
         <h4 style="float:left;">Select a deployment to view its details</h4>
@@ -19,7 +23,6 @@
                             <th>Running</th>
                             <th>Finished</th>
                             <th>Errors</th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -39,7 +42,13 @@
                 </table>
             </div>
         {% else %}
-            <h5><i class="text-warning">No deployments yet.</i></h>
+            <h5><i class="text-warning">No deployments yet.</i></h5>
         {% endif %}
     </div>
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $("#datatable").DataTable();
+        });
+    </script>
 {% endblock %}

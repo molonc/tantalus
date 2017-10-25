@@ -1,0 +1,24 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Search Datasets
+{% endblock %}
+
+{% block body %}
+    <div class="container graybg">
+        <form action="{% url 'dataset-search' %}" method="post">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Search Filters</legend>
+                <table class="table-condensed">
+                    <thead>
+                    {{ form.as_p }}
+                    </thead>
+                </table>
+             </fieldset>
+            <input class="btn btn-primary btn-sm" type="submit" value="Start" />
+            <a class="btn btn-default btn-sm" href="{% url 'dataset-list' %}">Cancel</a>
+        </form><br>
+    </div>
+{% endblock %}
