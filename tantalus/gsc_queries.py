@@ -3,6 +3,8 @@ import os
 import requests
 import django
 import time
+import collections
+import string
 import pandas as pd
 
 if __name__ == '__main__':
@@ -268,7 +270,7 @@ def get_sequencing_instrument(machine):
 
 
 def reverse_complement(sequence):
-    return sequence[::-1].translate(string.maketrans('ACTGactg','TGACtgac'))
+    return str(sequence[::-1]).translate(string.maketrans('ACTGactg','TGACtgac'))
 
 
 def decode_raw_index_sequence(raw_index_sequence, instrument):
@@ -333,7 +335,7 @@ def query_gsc_dlp_paired_fastqs(dlp_library_id):
     elif len(library_infos) == 0:
         raise Exception('no gsc libraries for {}'.format(gsc_external_id))
 
-    gsc_library_id = library_infos['name']
+    gsc_library_id = library_infos[0]['name']
 
     # Keep track of file instances for
     new_file_instances = []
@@ -341,23 +343,20 @@ def query_gsc_dlp_paired_fastqs(dlp_library_id):
     with django.db.transaction.atomic():
         fastq_infos = gsc_api.query('fastq?parent_library={}'.format(gsc_library_id))
 
-        paired_fastqs = collections.defaultdict(dict)
+        paired_fastq_infos = collections.defaultdict(dict)
 
         for fastq_info in fastq_infos:
-            name = fastqs_info['libcore']['library']['name']
-            if name != 'PX0623_TAATCG-AGCATC':
-                continue
-
-            fastq_path = fastqs_info['data_path']
-            flowcell_code = fastqs_info['libcore']['run']['flowcell']['lims_flowcell_code']
-            lane_number = fastqs_info['libcore']['run']['lane_number']
-            sequencing_instrument = get_sequencing_instrument(fastqs_info['libcore']['run']['machine'])
-            solexa_run_type = fastqs_info['libcore']['run']['solexarun_type']
+            name = fastq_info['libcore']['library']['name']
+            fastq_path = fastq_info['data_path']
+            flowcell_code = fastq_info['libcore']['run']['flowcell']['lims_flowcell_code']
+            lane_number = fastq_info['libcore']['run']['lane_number']
+            sequencing_instrument = get_sequencing_instrument(fastq_info['libcore']['run']['machine'])
+            solexa_run_type = fastq_info['libcore']['run']['solexarun_type']
 
             raw_index_sequence = name.split('_')[1]
             index_sequence = decode_raw_index_sequence(raw_index_sequence, sequencing_instrument)
 
-            file_type = fastqs_info['file_type']['filename_pattern']
+            file_type = fastq_info['file_type']['filename_pattern']
             if file_type == '_1.fastq.gz':
                 read_end = 1
             elif file_type == '_2.fastq.gz':
@@ -373,11 +372,16 @@ def query_gsc_dlp_paired_fastqs(dlp_library_id):
 
             cell_sample_id = cell_samples[index_sequence]
 
-            sample = tantalus.models.Sample.objects.get(sample_id=cell_sample_id)
+            sample, created = tantalus.models.Sample.objects.get_or_create(
+                sample_id=cell_sample_id,
+                sample_id_space=tantalus.models.Sample.APARICIO,
+            )
+            if created:
+                sample.save()
 
             library, created = tantalus.models.DNALibrary.objects.get_or_create(
-                library_id=library_id,
-                library_type=tantalus.models.DNALibrary.SC,
+                library_id=dlp_library_id,
+                library_type=tantalus.models.DNALibrary.SINGLE_CELL_WGS,
                 index_format=tantalus.models.DNALibrary.DUAL_INDEX,
             )
             if created:
@@ -385,7 +389,7 @@ def query_gsc_dlp_paired_fastqs(dlp_library_id):
 
             dna_sequences, created = tantalus.models.DNASequences.objects.get_or_create(
                 dna_library=library,
-                sample=cell_sample_id,
+                sample=sample,
                 index_sequence=index_sequence,
             )
             if created:
@@ -412,7 +416,7 @@ def query_gsc_dlp_paired_fastqs(dlp_library_id):
                 filename=fastq_filename,
             )
             if created:
-                bam_file.save()
+                fastq_file.save()
 
             fastq_instance, created = tantalus.models.FileInstance.objects.get_or_create(
                 storage=storage,
@@ -423,28 +427,30 @@ def query_gsc_dlp_paired_fastqs(dlp_library_id):
                 fastq_instance.save()
                 new_file_instances.append(fastq_instance)
 
-            if read_end in paired_fastqs[name]:
-                raise Exception('duplicate fastq end {} for {}'.format(read_end, name))
+            fastq_id = (name, flowcell_code, lane_number)
 
-            paired_fastq_infos[name][read_end] = {
-                'reads_file':reads_file,
+            if read_end in paired_fastq_infos[fastq_id]:
+                raise Exception('duplicate fastq end {} for {}'.format(read_end, fastq_id))
+
+            paired_fastq_infos[fastq_id][read_end] = {
+                'fastq_file':fastq_file,
                 'dna_sequences':dna_sequences,
                 'lane':lane,
             }
 
-        for name, paired_fastq_info in paired_fastq_infos.iteritems():
-            if paired_fastq_info.keys() != (1, 2):
-                raise Exception('expected read end 1, 2 for {}, got {}'.format(name, paired_fastq_info.keys()))
+        for fastq_id, paired_fastq_info in paired_fastq_infos.iteritems():
+            if set(paired_fastq_info.keys()) != set([1, 2]):
+                raise Exception('expected read end 1, 2 for {}, got {}'.format(fastq_id, paired_fastq_info.keys()))
 
             if paired_fastq_info[1]['dna_sequences'].id != paired_fastq_info[2]['dna_sequences'].id:
-                raise Exception('expected same dna sequences for {}'.format(name))
+                raise Exception('expected same dna sequences for {}'.format(fastq_id))
 
             if paired_fastq_info[1]['lane'].id != paired_fastq_info[2]['lane'].id:
-                raise Exception('expected same lane for {}'.format(name))
+                raise Exception('expected same lane for {}'.format(fastq_id))
 
             fastq_dataset, created = tantalus.models.PairedEndFastqFiles.objects.get_or_create(
-                reads_1_file=paired_fastq_info[1]['reads_file'],
-                reads_2_file=paired_fastq_info[2]['reads_file'],
+                reads_1_file=paired_fastq_info[1]['fastq_file'],
+                reads_2_file=paired_fastq_info[2]['fastq_file'],
                 dna_sequences=paired_fastq_info[1]['dna_sequences'],
             )
             if created:
@@ -457,6 +463,6 @@ def query_gsc_dlp_paired_fastqs(dlp_library_id):
 
 
 if __name__ == '__main__':
-    query_gsc_wgs_bams('SA820G')
+    query_gsc_dlp_paired_fastqs('A90696ABC')
 
 
