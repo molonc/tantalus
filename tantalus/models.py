@@ -499,13 +499,12 @@ class FileInstance(models.Model):
 
     filename_override = models.CharField(
         max_length=500,
-        unique=True,
-        null=True,
-        blank=False,
+        blank=True,
+        default='',
     )
 
     def get_filepath(self):
-        if self.filename_override is not None:
+        if self.filename_override is not '':
             return self.filename_override
 
         return self.storage.get_filepath(self.file_resource)
