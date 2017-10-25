@@ -3,6 +3,9 @@ import paramiko
 import os, io
 import hashlib
 import subprocess
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 from tantalus.models import *
 from tantalus.exceptions.file_transfer_exceptions import *
 import errno
@@ -124,8 +127,6 @@ def transfer_file_azure_server(file_transfer):
 
     create_file_instance(file_transfer)
 
-    _check_deployments_complete(file_transfer)
-
 
 def transfer_file_server_azure(file_transfer):
     """ Transfer a file from a server to blob.
@@ -181,8 +182,6 @@ def transfer_file_server_azure(file_transfer):
         raise DataCorruptionError(error_message)
 
     create_file_instance(file_transfer)
-
-    _check_deployments_complete(file_transfer)
 
 
 def transfer_file_server_server_remote(file_transfer):
@@ -258,8 +257,6 @@ def transfer_file_server_server_remote(file_transfer):
 
     create_file_instance(file_transfer)
 
-    _check_deployments_complete(file_transfer)
-
 
 def transfer_file_server_server_local(file_transfer):
     """ Transfer a file between storages on a server.
@@ -286,8 +283,6 @@ def transfer_file_server_server_local(file_transfer):
     shutil.copyfile(from_filepath, to_filepath)
 
     create_file_instance(file_transfer)
-
-    _check_deployments_complete(file_transfer)
 
 
 def transfer_file_server_server(file_transfer):
@@ -322,4 +317,8 @@ def _check_deployment_complete(deployment):
     deployment.finished = True
     deployment.save()
 
+
+@receiver(post_save, sender=FileTransfer)
+def file_transfer_saved(sender, **kwargs):
+    _check_deployments_complete(sender)
 
