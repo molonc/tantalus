@@ -93,9 +93,6 @@ def query_gsc_wgs_bams(sample_id):
 
     library_infos = gsc_api.query('library?external_identifier={}'.format(sample_id))
 
-    if 'status' in library_infos and library_infos['status'] == 'error':
-        raise Exception(library_infos['errors'])
-
     # Keep track of file instances for
     new_file_instances = []
 
@@ -252,6 +249,205 @@ def query_gsc_wgs_bams(sample_id):
                     bam_dataset.aligner = ', '.join(aligners)
 
                 bam_dataset.save()
+
+        django.db.transaction.on_commit(lambda: start_md5_checks(new_file_instances))
+
+
+raw_instrument_map = {
+    'HiSeq': 'HiSeq2500',
+    'HiSeqX': 'HiSeqX',
+}
+
+def get_sequencing_instrument(machine):
+    """ Sequencing instrument decode.
+    
+    Example machines are HiSeq-27 or HiSeqX-2.
+    """
+    raw_instrument = machine.split('-')[0]
+    return raw_instrument_map[raw_instrument]
+
+
+def decode_raw_index_sequence(raw_index_sequence, instrument):
+    i7 = raw_index_sequence.split("-")[0]
+    i5 = raw_index_sequence.split("-")[1]
+
+    if instrument == 'HiSeqX':
+        i7 = rc(i7)
+        i5 = rc(i5)
+    elif instrument == 'HiSeq2500':
+        i7 = rc(i7)
+    else:
+        raise Exception('unsupported sequencing instrument {}'.format(instrument))
+
+    return i7 + '-' + i5
+
+
+LIMS_API = "http://10.9.215.82:7000/apps/api/"
+
+
+def query_colossus_dlp_cell_info(library_id):
+    # library_id = 'A90696ABC'
+    library_url = 'http://10.9.215.82:7000/apps/api/library/?pool_id={}'.format(library_id)
+
+    r = requests.get(library_url)
+
+    if r.status_code != 200:
+        raise Exception('Returned {}: {}'.format(r.status_code, r.reason))
+
+    if len(r.json()) == 0:
+        raise Exception('No entries for library {}'.format(library_id))
+
+    if len(r.json()) > 1:
+        raise Exception('Multiple entries for library {}'.format(library_id))
+
+    data = r.json()[0]
+
+    primary_sample_id = data['sample']['sample_id']
+
+    cell_samples = {}
+    for sublib in data['sublibraryinformation_set']:
+        index_sequence = sublib['primer_i7'] + '-' + sublib['primer_i5']
+        cell_samples[index_sequence] = sublib['sample_id']['sample_id']
+
+    return primary_sample_id, cell_samples
+
+
+def query_gsc_dlp_paired_fastqs(dlp_library_id):
+    storage = tantalus.models.ServerStorage.objects.get(name='gsc')
+
+    primary_sample_id, cell_samples = query_colossus_dlp_cell_info(dlp_library_id)
+    gsc_external_id = primary_sample_id + '_' + dlp_library_id
+
+    # ASSUMPTION: GSC stored files are pathed from root
+    assert storage.storage_directory == '/'
+
+    gsc_api = GSCAPI()
+
+    library_infos = gsc_api.query('library?external_identifier={}'.format(gsc_external_id))
+    if len(library_infos) > 1:
+        raise Exception('multiple gsc libraries for {}'.format(gsc_external_id))
+    elif len(library_infos) == 0:
+        raise Exception('no gsc libraries for {}'.format(gsc_external_id))
+
+    gsc_library_id = library_infos['name']
+
+    # Keep track of file instances for
+    new_file_instances = []
+
+    with django.db.transaction.atomic():
+        fastq_infos = gsc_api.query('fastq?parent_library={}'.format(gsc_library_id))
+
+        paired_fastqs = collections.defaultdict(dict)
+
+        for fastq_info in fastq_infos:
+            name = fastqs_info['libcore']['library']['name']
+            if name != 'PX0623_TAATCG-AGCATC':
+                continue
+
+            fastq_path = fastqs_info['data_path']
+            flowcell_code = fastqs_info['libcore']['run']['flowcell']['lims_flowcell_code']
+            lane_number = fastqs_info['libcore']['run']['lane_number']
+            sequencing_instrument = get_sequencing_instrument(fastqs_info['libcore']['run']['machine'])
+            solexa_run_type = fastqs_info['libcore']['run']['solexarun_type']
+
+            raw_index_sequence = name.split('_')[1]
+            index_sequence = decode_raw_index_sequence(raw_index_sequence, sequencing_instrument)
+
+            file_type = fastqs_info['file_type']['filename_pattern']
+            if file_type == '_1.fastq.gz':
+                read_end = 1
+            elif file_type == '_2.fastq.gz':
+                read_end = 2
+            else:
+                raise Exception('Unrecognized file type: {}'.format(file_type))
+
+            # ASSUMPTION: GSC stored files are pathed from root 
+            fastq_filename_override = fastq_path
+
+            # ASSUMPTION: meaningful path starts at library_name
+            fastq_filename = fastq_path[fastq_path.find(gsc_library_id):]
+
+            cell_sample_id = cell_samples[index_sequence]
+
+            sample = tantalus.models.Sample.objects.get(sample_id=cell_sample_id)
+
+            library, created = tantalus.models.DNALibrary.objects.get_or_create(
+                library_id=library_id,
+                library_type=tantalus.models.DNALibrary.SC,
+                index_format=tantalus.models.DNALibrary.DUAL_INDEX,
+            )
+            if created:
+                library.save()
+
+            dna_sequences, created = tantalus.models.DNASequences.objects.get_or_create(
+                dna_library=library,
+                sample=cell_sample_id,
+                index_sequence=index_sequence,
+            )
+            if created:
+                dna_sequences.save()
+
+            lane, created = tantalus.models.SequenceLane.objects.get_or_create(
+                flowcell_id=flowcell_code,
+                lane_number=lane_number,
+                sequencing_centre=tantalus.models.SequenceLane.GSC,
+                sequencing_library_id=gsc_library_id,
+                sequencing_instrument=sequencing_instrument,
+                read_type=solexa_run_type_map[solexa_run_type],
+                dna_library=library,
+            )
+            if created:
+                lane.save()
+
+            fastq_file, created = tantalus.models.FileResource.objects.get_or_create(
+                size=os.path.getsize(fastq_path),
+                created=pd.Timestamp(time.ctime(os.path.getmtime(fastq_path)), tz='Canada/Pacific'),
+                file_type=tantalus.models.FileResource.FQ,
+                read_end=read_end,
+                compression=tantalus.models.FileResource.GZIP,
+                filename=fastq_filename,
+            )
+            if created:
+                bam_file.save()
+
+            fastq_instance, created = tantalus.models.FileInstance.objects.get_or_create(
+                storage=storage,
+                file_resource=fastq_file,
+                filename_override=fastq_filename_override,
+            )
+            if created:
+                fastq_instance.save()
+                new_file_instances.append(fastq_instance)
+
+            if read_end in paired_fastqs[name]:
+                raise Exception('duplicate fastq end {} for {}'.format(read_end, name))
+
+            paired_fastq_infos[name][read_end] = {
+                'reads_file':reads_file,
+                'dna_sequences':dna_sequences,
+                'lane':lane,
+            }
+
+        for name, paired_fastq_info in paired_fastq_infos.iteritems():
+            if paired_fastq_info.keys() != (1, 2):
+                raise Exception('expected read end 1, 2 for {}, got {}'.format(name, paired_fastq_info.keys()))
+
+            if paired_fastq_info[1]['dna_sequences'].id != paired_fastq_info[2]['dna_sequences'].id:
+                raise Exception('expected same dna sequences for {}'.format(name))
+
+            if paired_fastq_info[1]['lane'].id != paired_fastq_info[2]['lane'].id:
+                raise Exception('expected same lane for {}'.format(name))
+
+            fastq_dataset, created = tantalus.models.PairedEndFastqFiles.objects.get_or_create(
+                reads_1_file=paired_fastq_info[1]['reads_file'],
+                reads_2_file=paired_fastq_info[2]['reads_file'],
+                dna_sequences=paired_fastq_info[1]['dna_sequences'],
+            )
+            if created:
+                fastq_dataset.save()
+
+            fastq_dataset.lanes.add(paired_fastq_info[1]['lane'])
+            fastq_dataset.save()
 
         django.db.transaction.on_commit(lambda: start_md5_checks(new_file_instances))
 
