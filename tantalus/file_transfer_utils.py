@@ -319,6 +319,6 @@ def _check_deployment_complete(deployment):
 
 
 @receiver(post_save, sender=FileTransfer)
-def file_transfer_saved(sender, **kwargs):
-    _check_deployments_complete(sender)
+def file_transfer_saved(sender, instance, **kwargs):
+    _check_deployments_complete(instance)
 
