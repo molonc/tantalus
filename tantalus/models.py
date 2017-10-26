@@ -284,7 +284,7 @@ class AbstractDataSet(PolymorphicModel):
         SequenceLane,
         verbose_name='Lanes',
     )
-    
+
     dna_sequences = models.ForeignKey(
         DNASequences,
         null=True,
@@ -569,6 +569,22 @@ class FileTransfer(SimpleTask):
 
     class Meta:
         unique_together = ('from_storage', 'to_storage', 'file_instance')
+
+
+class BRCImportFastqs(SimpleTask):
+    """
+    When given an output dir + metadata, generate fastq files.
+    """
+    output_dir = models.CharField(
+        max_length=500
+    )
+    storage = models.ForeignKey(
+        ServerStorage,
+        on_delete=models.CASCADE,
+    )
+    flowcell_id = models.CharField(
+        max_length=50
+    )
 
 
 class Deployment(models.Model):

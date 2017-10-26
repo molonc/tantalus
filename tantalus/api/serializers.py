@@ -13,6 +13,7 @@ import tantalus.models
 from tantalus.utils import start_deployment
 from tantalus.exceptions.api_exceptions import *
 from tantalus.exceptions.file_transfer_exceptions import *
+import tantalus.tasks
 
 
 class SampleSerializer(serializers.ModelSerializer):
@@ -242,6 +243,21 @@ class DeploymentSerializer(serializers.ModelSerializer):
             raise ValidationError({'unnecessary': True})
         except DeploymentNotCreated as e:
             raise ValidationError(str(e))
+
+
+class ImportBRCFastqsSeralizer(SimpleTaskSerializer):
+    def create(self, validated_data):
+        instance = tantalus.models.BRCImportFastqs(**validated_data)
+        instance.full_clean()
+        instance.save()
+        tantalus.tasks.import_brc_fastqs_task.apply_async(
+            args=(instance.id,),
+            queue=instance.storage.get_db_queue_name())
+        return instance
+
+    class Meta:
+        model = tantalus.models.BRCImportFastqs
+        fields = '__all__'
 
 
 class MD5CheckSerializer(serializers.ModelSerializer):

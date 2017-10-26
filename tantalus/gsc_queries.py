@@ -13,6 +13,7 @@ if __name__ == '__main__':
 
 import tantalus.models
 import tantalus.tasks
+import tantalus.utils
 
 from pprint import pprint
 
@@ -87,16 +88,6 @@ def get_sequencing_instrument(machine):
 
 class MissingFileError(Exception):
     pass
-
-
-def start_md5_checks(file_instances):
-    for file_instance in file_instances:
-        md5_check = tantalus.models.MD5Check(
-            file_instance=file_instance
-        )
-        md5_check.save()
-
-        tantalus.tasks.check_md5_task.apply_async(args=(md5_check.id,), queue=file_instance.storage.get_md5_queue_name())
 
 
 def query_gsc_wgs_bams(query_info):
@@ -267,7 +258,7 @@ def query_gsc_wgs_bams(query_info):
 
                 bam_dataset.save()
 
-        django.db.transaction.on_commit(lambda: start_md5_checks(new_file_instances))
+        django.db.transaction.on_commit(lambda: tantalus.utils.start_md5_checks(new_file_instances))
 
 
 def reverse_complement(sequence):
@@ -461,7 +452,7 @@ def query_gsc_dlp_paired_fastqs(query_info):
             fastq_dataset.lanes.add(paired_fastq_info[1]['lane'])
             fastq_dataset.save()
 
-        django.db.transaction.on_commit(lambda: start_md5_checks(new_file_instances))
+        django.db.transaction.on_commit(lambda: tantalus.utils.start_md5_checks(new_file_instances))
 
 
 if __name__ == '__main__':

@@ -98,6 +98,7 @@ class StorageViewSet(viewsets.ModelViewSet):
 class ServerStorageViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.ServerStorage.objects.all()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
+    filter_fields = ('name',)
 
 
 class AzureBlobStorageViewSet(viewsets.ModelViewSet):
@@ -125,6 +126,11 @@ class FileTransferViewSet(viewsets.ModelViewSet):
 class MD5CheckViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.MD5Check.objects.all()
     serializer_class = tantalus.api.serializers.MD5CheckSerializer
+
+
+class BRCImportFastqsViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.BRCImportFastqs.objects.all()
+    serializer_class = tantalus.api.serializers.ImportBRCFastqsSeralizer
 
 
 class QueryGscWgsBamsViewSet(viewsets.ModelViewSet):

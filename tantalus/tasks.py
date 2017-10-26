@@ -6,6 +6,7 @@ import tantalus.file_transfer_utils
 import tantalus.gsc_queries
 import subprocess
 import traceback
+import tantalus.import_brc_fastqs
 
 
 def simple_task_wrapper(id_, model, func, name, is_last=True):
@@ -108,3 +109,12 @@ def query_gsc_dlp_paired_fastqs_task(query_id):
         name='query GSC for WGS BAMs',
     )
 
+
+@shared_task
+def import_brc_fastqs_task(query_id):
+    simple_task_wrapper(
+        id_=query_id,
+        model=tantalus.models.BRCImportFastqs,
+        func=tantalus.import_brc_fastqs.load_brc_fastqs,
+        name="Import brc fastqs into tantalus"
+    )
