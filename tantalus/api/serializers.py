@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from taggit_serializer.serializers import (
     TagListSerializerField,
@@ -188,7 +189,15 @@ class AzureBlobStorageSerializer(serializers.ModelSerializer):
         exclude = ['polymorphic_ctype']
 
 
-class FileTransferSerializer(serializers.ModelSerializer):
+class SimpleTaskSerializer(serializers.ModelSerializer):
+    running = serializers.BooleanField(read_only=True)
+    finished = serializers.BooleanField(read_only=True)
+    success = serializers.BooleanField(read_only=True)
+    state = serializers.CharField(read_only=True)
+    message = serializers.CharField(read_only=True)
+
+
+class FileTransferSerializer(SimpleTaskSerializer):
     class Meta:
         model = tantalus.models.FileTransfer
         fields = '__all__'
@@ -220,15 +229,34 @@ class DeploymentSerializer(serializers.ModelSerializer):
             raise ValidationError(str(e))
 
 
-class GSCQuerySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = tantalus.models.GSCQuery
-        fields = '__all__'
-
-
 class MD5CheckSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.MD5Check
         fields = '__all__'
 
+
+class QueryGscSerializer(SimpleTaskSerializer):
+    def create(self, validated_data):
+        storage = get_object_or_404(tantalus.models.ServerStorage, name='gsc')
+        instance = self.Meta.model(**validated_data)
+        instance.full_clean()
+        instance.save()
+        self.celery_task.apply_async(
+            args=(instance.id,),
+            queue=storage.get_db_queue_name())
+        return instance
+
+
+class QueryGscWgsBamsSerializer(QueryGscSerializer):
+    celery_task = tantalus.tasks.query_gsc_wgs_bams_task
+    class Meta:
+        model = tantalus.models.QueryGscWgsBams
+        fields = '__all__'
+
+
+class QueryGscDlpPairedFastqsSerializer(QueryGscSerializer):
+    celery_task = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
+    class Meta:
+        model = tantalus.models.QueryGscDlpPairedFastqs
+        fields = '__all__'
 

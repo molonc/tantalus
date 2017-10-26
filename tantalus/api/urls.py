@@ -19,8 +19,10 @@ router.register(r'storage/azure_blob', views.AzureBlobStorageViewSet)
 router.register(r'file_instance', views.FileInstanceViewSet)
 router.register(r'deployment', views.DeploymentViewSet)
 router.register(r'file_transfer', views.FileTransferViewSet)
-router.register(r'gsc_query', views.GSCQueryViewSet)
 router.register(r'md5_check', views.MD5CheckViewSet)
+router.register(r'queries/gsc_wgs_bams', views.QueryGscWgsBamsViewSet)
+router.register(r'queries/gsc_dlp_paired_fastqs', views.QueryGscDlpPairedFastqsViewSet)
+
 
 # name to specify name space, all the views can be referred to as reverse('app_name:view_name')
 # eg. reverse('api:deployment-list')

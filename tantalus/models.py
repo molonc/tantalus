@@ -437,6 +437,9 @@ class ServerStorage(Storage):
     def get_md5_queue_name(self):
         return self.queue_prefix + '.md5'
 
+    def get_db_queue_name(self):
+        return self.queue_prefix + '.db'
+
     def get_filepath(self, file_resource):
         return os.path.join(
             str(self.storage_directory),
@@ -547,16 +550,6 @@ class FileTransfer(SimpleTask):
         unique_together = ('from_storage', 'to_storage', 'file_instance')
 
 
-class GSCQuery(SimpleTask):
-    """
-    Query GSC API for data paths.
-    """
-
-    samples = models.ManyToManyField(
-        Sample,
-    )
-
-
 class Deployment(models.Model):
     """
     Deployment from one storage to another.
@@ -594,3 +587,25 @@ class MD5Check(SimpleTask):
     file_instance = models.ForeignKey(
         FileInstance,
     )
+
+
+class QueryGscWgsBams(SimpleTask):
+    """
+    Query GSC API for WGS Bam data paths.
+    """
+
+    sample = models.ForeignKey(
+        Sample,
+    )
+
+
+class QueryGscDlpPairedFastqs(SimpleTask):
+    """
+    Query GSC API for DLP paired fastq data paths.
+    """
+
+    dlp_library_id = models.CharField(
+        max_length=50,
+        unique=True,
+    )
+

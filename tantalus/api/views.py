@@ -116,13 +116,17 @@ class FileTransferViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.FileTransferSerializer
 
 
-class GSCQueryViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.GSCQuery.objects.all()
-    serializer_class = tantalus.api.serializers.GSCQuerySerializer
-
-
 class MD5CheckViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.MD5Check.objects.all()
     serializer_class = tantalus.api.serializers.MD5CheckSerializer
 
+
+class QueryGscWgsBamsViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.QueryGscWgsBams.objects.all()
+    serializer_class = tantalus.api.serializers.QueryGscWgsBamsSerializer
+
+
+class QueryGscDlpPairedFastqsViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.QueryGscDlpPairedFastqs.objects.all()
+    serializer_class = tantalus.api.serializers.QueryGscDlpPairedFastqsSerializer
 
