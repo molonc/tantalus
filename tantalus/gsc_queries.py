@@ -70,6 +70,21 @@ solexa_run_type_map = {
     'Paired': tantalus.models.SequenceLane.PAIRED}
 
 
+raw_instrument_map = {
+    'HiSeq': 'HiSeq2500',
+    'HiSeqX': 'HiSeqX',
+}
+
+
+def get_sequencing_instrument(machine):
+    """ Sequencing instrument decode.
+
+    Example machines are HiSeq-27 or HiSeqX-2.
+    """
+    raw_instrument = machine.split('-')[0]
+    return raw_instrument_map[raw_instrument]
+
+
 class MissingFileError(Exception):
     pass
 
@@ -219,7 +234,7 @@ def query_gsc_wgs_bams(sample_id):
                     libcore = gsc_api.query('aligned_libcore/{}/info'.format(libcore_id))
                     flowcell_id = libcore['libcore']['run']['flowcell_id']
                     lane_number = libcore['libcore']['run']['lane_number']
-                    sequencing_instrument = libcore['libcore']['run']['machine']
+                    sequencing_instrument = get_sequencing_instrument(libcore['libcore']['run']['machine'])
                     solexa_run_type = libcore['libcore']['run']['solexarun_type']
                     reference_genome = libcore['lims_genome_reference']['path']
                     aligner = libcore['analysis_software']['name']
@@ -253,20 +268,6 @@ def query_gsc_wgs_bams(sample_id):
                 bam_dataset.save()
 
         django.db.transaction.on_commit(lambda: start_md5_checks(new_file_instances))
-
-
-raw_instrument_map = {
-    'HiSeq': 'HiSeq2500',
-    'HiSeqX': 'HiSeqX',
-}
-
-def get_sequencing_instrument(machine):
-    """ Sequencing instrument decode.
-    
-    Example machines are HiSeq-27 or HiSeqX-2.
-    """
-    raw_instrument = machine.split('-')[0]
-    return raw_instrument_map[raw_instrument]
 
 
 def reverse_complement(sequence):
