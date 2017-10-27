@@ -28,6 +28,9 @@ class SampleSerializer(serializers.ModelSerializer):
 
 
 class FileInstanceSerializer(serializers.ModelSerializer):
+    filepath = serializers.SerializerMethodField()
+    def get_filepath(self, obj):
+        return obj.get_filepath()
     class Meta:
         model = tantalus.models.FileInstance
         fields = '__all__'
@@ -65,6 +68,8 @@ class DNALibrarySerializer(serializers.ModelSerializer):
 
 
 class DNASequencesSerializer(serializers.ModelSerializer):
+    dna_library = DNALibrarySerializer()
+    sample = SampleSerializer()
     class Meta:
         model = tantalus.models.DNASequences
         fields = '__all__'
@@ -146,6 +151,8 @@ class BamFileSerializer(TaggitSerializer, serializers.ModelSerializer):
     tags = TagListSerializerField()
     lanes = SequenceLaneSerializer(many=True)
     dna_sequences = DNASequencesSerializer()
+    bam_file = FileResourceSerializer()
+    bam_index_file = FileResourceSerializer()
 
     class Meta:
         model = tantalus.models.BamFile
