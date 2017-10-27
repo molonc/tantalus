@@ -99,8 +99,8 @@ def start_md5_checks(file_instances):
         tantalus.tasks.check_md5_task.apply_async(args=(md5_check.id,), queue=file_instance.storage.get_md5_queue_name())
 
 
-def query_gsc_wgs_bams(sample_id):
-    sample = tantalus.models.Sample.objects.get(sample_id=sample_id)
+def query_gsc_wgs_bams(query_info):
+    sample = query_info.sample
     storage = tantalus.models.ServerStorage.objects.get(name='gsc')
 
     # ASSUMPTION: GSC stored files are pathed from root
@@ -319,7 +319,8 @@ def query_colossus_dlp_cell_info(library_id):
     return primary_sample_id, cell_samples
 
 
-def query_gsc_dlp_paired_fastqs(dlp_library_id):
+def query_gsc_dlp_paired_fastqs(query_info):
+    dlp_library_id = query_info.dlp_library_id
     storage = tantalus.models.ServerStorage.objects.get(name='gsc')
 
     primary_sample_id, cell_samples = query_colossus_dlp_cell_info(dlp_library_id)
