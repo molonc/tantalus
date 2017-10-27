@@ -76,9 +76,18 @@ class PairedEndFastqFilesViewSet(viewsets.ModelViewSet):
         return tantalus.api.serializers.PairedEndFastqFilesSerializer
 
 
+class BamFileFilterSet(django_filters.FilterSet):
+    library_id = django_filters.CharFilter(name='dna_sequences__dna_library__library_id')
+    sample_id = django_filters.CharFilter(name='dna_sequences__sample__sample_id')
+    class Meta:
+        model = tantalus.models.BamFile
+        fields = ['library_id', 'sample_id']
+
+
 class BamFileViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.BamFile.objects.all()
     serializer_class = tantalus.api.serializers.BamFileSerializer
+    filter_class = BamFileFilterSet
 
 
 class StorageViewSet(viewsets.ModelViewSet):
