@@ -455,6 +455,18 @@ class ServerStorage(Storage):
             file_resource.filename.strip('/'))
 
 
+class AzureBlobCredentials(models.Model):
+    """
+    Azure blob credentials.
+    """
+
+    history = HistoricalRecords()
+
+    storage_key = models.CharField(
+        max_length=200,
+    )
+
+
 class AzureBlobStorage(Storage):
     """
     Azure blob storage for sequence files.
@@ -470,8 +482,9 @@ class AzureBlobStorage(Storage):
         max_length=50,
     )
 
-    storage_key = models.CharField(
-        max_length=200,
+    credentials = models.ForeignKey(
+        AzureBlobCredentials,
+        on_delete=models.CASCADE,
     )
 
     def get_filepath(self, file_resource):
