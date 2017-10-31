@@ -144,11 +144,17 @@ class SequenceLane(models.Model):
 
     flowcell_id = create_id_field()
 
-    lane_number = models.PositiveSmallIntegerField()
+    lane_number_choices = [('', '')] + [(str(a), str(a)) for a in range(1, 10)]
+
+    lane_number = models.CharField(
+        max_length=50,
+        choices=lane_number_choices,
+        blank=True,
+    )
 
     GSC = 'GSC'
     BRC = 'BRC'
-        
+
     sequencing_centre_choices = [
         (GSC, 'Genome Science Centre'),
         (BRC, 'Biomedical Research Centre'),
@@ -184,7 +190,10 @@ class SequenceLane(models.Model):
     )
 
     def __unicode__(self):
-        return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
+        if self.lane_number == '':
+            return '{}_{}'.format(self.sequencing_centre, self.flowcell_id)
+        else:
+            return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
 
     class Meta:
         unique_together = ('flowcell_id', 'lane_number')
