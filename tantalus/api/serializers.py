@@ -21,16 +21,40 @@ class SampleSerializer(serializers.ModelSerializer):
             UniqueValidator(queryset=tantalus.models.Sample.objects.all())
         ]
     )
-
     class Meta:
         model = tantalus.models.Sample
         fields = '__all__'
+
+
+class StorageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.Storage
+        exclude = ['polymorphic_ctype']
+    def to_representation(self, obj):
+        if isinstance(obj, tantalus.models.ServerStorage):
+            return ServerStorageSerializer(obj, context=self.context).to_representation(obj)
+        elif isinstance(obj, tantalus.models.AzureBlobStorage):
+            return AzureBlobStorageSerializer(obj, context=self.context).to_representation(obj)
+        return super(StorageSerializer, self).to_representation(obj)
+
+
+class ServerStorageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.ServerStorage
+        fields = ('name', 'storage_directory')
+
+
+class AzureBlobStorageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.AzureBlobStorage
+        fields = ('name', 'storage_account', 'storage_container')
 
 
 class FileInstanceSerializer(serializers.ModelSerializer):
     filepath = serializers.SerializerMethodField()
     def get_filepath(self, obj):
         return obj.get_filepath()
+    storage = StorageSerializer(read_only=True)
     class Meta:
         model = tantalus.models.FileInstance
         fields = '__all__'
@@ -127,6 +151,8 @@ class PairedEndFastqFilesReadSerializer(TaggitSerializer, serializers.ModelSeria
     tags = TagListSerializerField()
     lanes = SequenceLaneSerializer(many=True)
     dna_sequences = DNASequencesSerializer()
+    reads_1_file = FileResourceSerializer()
+    reads_2_file = FileResourceSerializer()
 
     class Meta:
         model = tantalus.models.PairedEndFastqFiles
@@ -163,37 +189,6 @@ class BamFileSerializer(TaggitSerializer, serializers.ModelSerializer):
                 fields=('bam_file', 'bam_index_file')
             )
         ]
-
-
-class StorageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = tantalus.models.Storage
-        exclude = ['polymorphic_ctype']
-
-    def to_representation(self, obj):
-        if isinstance(obj, tantalus.models.ServerStorage):
-            return ServerStorageSerializer(obj, context=self.context).to_representation(obj)
-        elif isinstance(obj, tantalus.models.AzureBlobStorage):
-            return AzureBlobStorageSerializer(obj, context=self.context).to_representation(obj)
-        return super(StorageSerializer, self).to_representation(obj)
-
-
-class ServerStorageSerializer(serializers.ModelSerializer):
-    # generic_url = serializers.SerializerMethodField(method_name='_get_generic_url')
-
-    class Meta:
-        model = tantalus.models.ServerStorage
-        exclude = ['polymorphic_ctype']
-
-    def to_representation(self, obj):
-        res = super(ServerStorageSerializer, self).to_representation(obj)
-        return res
-
-
-class AzureBlobStorageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = tantalus.models.AzureBlobStorage
-        exclude = ['polymorphic_ctype']
 
 
 class SimpleTaskSerializer(serializers.ModelSerializer):
