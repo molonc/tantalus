@@ -35,9 +35,10 @@ class DatasetSearchForm(forms.Form):
         help_text="Library id. Eg. A90652A"
     )
     sample = forms.CharField(
-        label="Sample",
+        label="Sample(s)",
         required=False,
-        help_text="Sample id. Eg. SA928"
+        help_text="A white space separated list of sample IDs. Eg. SA928",
+        widget=forms.widgets.Textarea
     )
 
     def clean_tagged_with(self):
@@ -49,17 +50,22 @@ class DatasetSearchForm(forms.Form):
                 results = results.filter(tags__name=tag)
                 if results.count() == 0:
                     raise forms.ValidationError("Filter for the following tags together resulted in 0 results: {}".format(
-                        ",".join(tags_list)
+                        ", ".join(tags_list)
                     ))
         return tags
 
     def clean_sample(self):
         sample = self.cleaned_data['sample']
-        if sample != "":
-            results = AbstractDataSet.objects.filter(dna_sequences__sample__sample_id__iexact=sample)
-            if results.count() == 0:
+        if sample:
+            sample_list = sample.split()
+            no_match_samples = []
+            for samp in sample_list:
+                results = AbstractDataSet.objects.filter(dna_sequences__sample__sample_id__iexact=samp)
+                if results.count() == 0:
+                    no_match_samples.append(samp)
+            if no_match_samples != []:
                 raise forms.ValidationError("Filter for the following sample resulted in 0 results: {}".format(
-                    sample
+                    ", ".join(no_match_samples)
                 ))
         return sample
 
@@ -111,8 +117,9 @@ class DatasetSearchForm(forms.Form):
             for tag in tags_list:
                 results = results.filter(tags__name=tag)
 
-        if sample != "":
-            results = results.filter(dna_sequences__sample__sample_id__iexact=sample)
+        if sample:
+            sample_list = sample.split()
+            results = AbstractDataSet.objects.filter(dna_sequences__sample__sample_id__in=sample_list)
 
         if library != "":
             results = results.filter(dna_sequences__dna_library__library_id__iexact=library)

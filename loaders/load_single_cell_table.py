@@ -45,11 +45,11 @@ def create_reads_file(data, in_storage, directory_to_strip=DIRECTORY_TO_STRIP):
 
             reads_files[read_end] = file_resource
 
-            serverfile = tantalus.models.FileInstance()
-            serverfile.storage = in_storage
-            serverfile.file_resource = file_resource
-            serverfile.full_clean()
-            serverfile.save()
+            file_instance = tantalus.models.FileInstance()
+            file_instance.storage = in_storage
+            file_instance.file_resource = file_resource
+            file_instance.full_clean()
+            file_instance.save()
 
         fastq_dna_sequences = tantalus.models.DNASequences.objects.filter(index_sequence=reverse_complement(data.loc[idx, 'code1']) + '-' + data.loc[idx, 'code2'])
         assert len(fastq_dna_sequences) == 1
@@ -81,6 +81,7 @@ if __name__ == '__main__':
     storage.server_ip = 'rocks3.cluster.bccrc.ca'
     storage.storage_directory = '/share/lustre/amcpherson/tantalus_test'
     storage.username = 'amcpherson'
+    storage.queue_prefix = 'rocks'
     storage.full_clean()
     storage.save()
 
@@ -89,6 +90,7 @@ if __name__ == '__main__':
     storage.server_ip = '10.9.208.161'
     storage.storage_directory = '/'
     storage.username = 'amcpherson'
+    storage.queue_prefix = 'gsc'
     storage.full_clean()
     storage.save()
 
@@ -97,14 +99,21 @@ if __name__ == '__main__':
     storage.server_ip = '10.9.208.161'
     storage.storage_directory = '/shahlab/amcpherson/tantalus_test'
     storage.username = 'amcpherson'
+    storage.queue_prefix = 'shahlab'
     storage.full_clean()
     storage.save()
+
+    credentials = tantalus.models.AzureBlobCredentials(
+        storage_key='okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn4G3YMEKebnCnsRwVu9fRhh2RiMQ=='
+    )
+    credentials.full_clean()
+    credentials.save()
 
     blob_storage = tantalus.models.AzureBlobStorage()
     blob_storage.name = 'azure_sc_fastqs'
     blob_storage.storage_account = 'singlecellstorage'
     blob_storage.storage_container = 'fastqs'
-    blob_storage.storage_key = 'okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn4G3YMEKebnCnsRwVu9fRhh2RiMQ=='
+    blob_storage.credentials = credentials
     blob_storage.full_clean()
     blob_storage.save()
 

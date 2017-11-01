@@ -13,7 +13,19 @@
                 <legend>Search Filters</legend>
                 <table class="table-condensed">
                     <thead>
-                    {{ form.as_p }}
+                    {{ form.non_field_errors }}
+                    {% for field in form %}
+                        <tr>
+                            <th>{{ field.label_tag }}</th>
+                            <td>
+                                {{ field }}
+                                {% if field.help_text %}
+                                <p class="helptext">{{ field.help_text }}</p>
+                                {% endif %}
+                                {{ field.errors }}
+                            </td>
+                        </tr>
+                    {% endfor %}
                     </thead>
                 </table>
              </fieldset>
