@@ -16,7 +16,7 @@ from tantalus.models import FileTransfer, Deployment, FileResource, Sample, Abst
 from tantalus.utils import read_excel_sheets
 from tantalus.utils import start_deployment
 from misc.helpers import Render
-from .forms import SampleForm, ExcelForm, DatasetSearchForm, DatasetTagForm
+from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm
 
 
 def search_view(request):
@@ -94,43 +94,39 @@ class SampleCreate(TemplateView):
 
     template_name="tantalus/sample_create.html"
 
-    def get_context_and_render(self, request, form, excel_form, pk=None):
+    def get_context_and_render(self, request, form, multi_form, pk=None):
         context = {
             'pk':pk,
             'form': form,
-            'excel_form': excel_form
+            'multi_form': multi_form
         }
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
         form = SampleForm()
-        excel_form = ExcelForm()
-        return self.get_context_and_render(request, form, excel_form)
+        multi_form = MultipleSamplesForm()
+        return self.get_context_and_render(request, form, multi_form)
 
     def post(self, request, *args, **kwargs):
         form = SampleForm(request.POST)
-        excel_form = ExcelForm(request.POST, request.FILES)
+        multi_form = MultipleSamplesForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
             msg = "Successfully created the Sample."
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
-        elif excel_form.is_valid():
-            samples = read_excel_sheets(request.FILES.get('excel_file'))
-            for sheet in samples:
-                for index, row in sheet.iterrows():
-                    sample = Sample()
-                    sample.sample_id = str(row['sample_id'])
-                    sample.full_clean()
+        elif multi_form.is_valid():
+            sample_ids = multi_form.get_sample_ids()
+            for sample_id in sample_ids:
+                sample, created = Sample.objects.get_or_create(sample_id=sample_id)
+                if created:
                     sample.save()
-                    msg = "Successfully created the Sample."
-                    messages.success(request, msg)
-                return HttpResponseRedirect(sample.get_absolute_url())
+            return HttpResponseRedirect(sample.get_absolute_url())
         else:
             msg = "Failed to create the sample. Please fix the errors below."
             messages.error(request, msg)
-            return self.get_context_and_render(request, form, excel_form)
+            return self.get_context_and_render(request, form, multi_form)
 
 
 class DatasetList(ListView):

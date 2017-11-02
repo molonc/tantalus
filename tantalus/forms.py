@@ -19,8 +19,23 @@ class SampleForm(forms.ModelForm):
         fields = "__all__"
 
 
-class ExcelForm(forms.Form):
-    excel_file = forms.FileField()
+class MultipleSamplesForm(forms.Form):
+    samples = forms.CharField(
+        label="Sample(s)",
+        required=False,
+        help_text="A white space separated list of sample IDs. Eg. SA928",
+        widget=forms.widgets.Textarea
+    )
+
+    def clean(self):
+        samples = self.get_sample_ids()
+        if len(samples) == 0:
+            raise forms.ValidationError('no samples')
+
+    def get_sample_ids(self):
+        if 'samples' not in self.cleaned_data:
+            return []
+        return self.cleaned_data['samples'].split()
 
 
 class DatasetSearchForm(forms.Form):

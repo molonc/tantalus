@@ -22,10 +22,10 @@
         <form action="{% url 'sample-add' %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <fieldset>
-            <legend>Or, add multiple samples from an Excel file</legend>
+            <legend>Or, add multiple samples from whitespace separated ids</legend>
 	            <table class="table-condensed">
 	                <thead>
-	                {{excel_form}}
+	                {{multi_form}}
 	                </thead>
 	            </table>
 	            <input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">	
