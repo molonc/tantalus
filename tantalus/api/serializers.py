@@ -230,6 +230,19 @@ class DeploymentSerializer(serializers.ModelSerializer):
         except DeploymentNotCreated as e:
             raise ValidationError(str(e))
 
+    def update(self, instance, validated_data):
+        new_dataset_ids = set([d.id for d in validated_data.pop('datasets')])
+        current_dataset_ids = set(instance.datasets.all().values_list('id', flat=True))
+        if new_dataset_ids != current_dataset_ids:
+            raise ValidationError('cannot modify datasets after creation')
+        try:
+            start_deployment(instance, restart=True)
+            return instance
+        except DeploymentUnnecessary as e:
+            raise ValidationError({'unnecessary': True})
+        except DeploymentNotCreated as e:
+            raise ValidationError(str(e))
+
 
 class MD5CheckSerializer(serializers.ModelSerializer):
     class Meta:

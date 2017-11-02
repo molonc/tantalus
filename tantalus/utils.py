@@ -46,7 +46,7 @@ def start_file_transfers(file_transfers, deployment):
         start_file_transfer(file_transfer, deployment)
 
 
-def create_deployment_file_transfers(deployment):
+def create_deployment_file_transfers(deployment, restart=False):
     """ 
     Create a set of transfers for a deployment.
     """
@@ -87,6 +87,8 @@ def create_deployment_file_transfers(deployment):
 
                 if file_transfer.finished and not file_transfer.success:
                     files_to_transfer.append(file_transfer)
+                elif restart and not file_transfer.success:
+                    files_to_transfer.append(file_transfer)
 
             else:
                 file_transfer = FileTransfer()
@@ -109,13 +111,13 @@ def create_deployment_file_transfers(deployment):
     return files_to_transfer
 
 
-def start_deployment(deployment):
+def start_deployment(deployment, restart=False):
     """ 
     Start a set of transfers for a deployment.
     """
 
     with transaction.atomic():
-        files_to_transfer = create_deployment_file_transfers(deployment)
+        files_to_transfer = create_deployment_file_transfers(deployment, restart=restart)
 
         if len(files_to_transfer) == 0:
             raise DeploymentUnnecessary()
