@@ -5,7 +5,7 @@ import tantalus.models
 import tantalus.api.serializers
 
 
-class SampleViewSet(viewsets.ModelViewSet):
+class SampleViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_fields = ('sample_id',)
@@ -18,31 +18,31 @@ class FileResourceFilterSet(django_filters.FilterSet):
         fields = ['library_id']
 
 
-class FileResourceViewSet(viewsets.ModelViewSet):
+class FileResourceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class = tantalus.api.serializers.FileResourceSerializer
     filter_class = FileResourceFilterSet
 
 
-class DNALibraryViewSet(viewsets.ModelViewSet):
+class DNALibraryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.DNALibrary.objects.all()
     serializer_class = tantalus.api.serializers.DNALibrarySerializer
     filter_fields = ('library_id',)
 
 
-class DNASequencesViewSet(viewsets.ModelViewSet):
+class DNASequencesViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.DNASequences.objects.all()
     serializer_class = tantalus.api.serializers.DNASequencesSerializer
     filter_fields = ('dna_library__library_id', 'dna_library', 'index_sequence')
 
 
-class SequenceLaneViewSet(viewsets.ModelViewSet):
+class SequenceLaneViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.SequenceLane.objects.all()
     serializer_class = tantalus.api.serializers.SequenceLaneSerializer
     filter_fields = ('flowcell_id', 'lane_number', 'dna_library__library_id')
 
 
-class AbstractDataSetViewSet(viewsets.ModelViewSet):
+class AbstractDataSetViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.AbstractDataSet.objects.all()
     serializer_class = tantalus.api.serializers.AbstractDataSetSerializer
     filter_fields = (
@@ -55,7 +55,7 @@ class AbstractDataSetViewSet(viewsets.ModelViewSet):
                      )
 
 
-class SingleEndFastqFileViewSet(viewsets.ModelViewSet):
+class SingleEndFastqFileViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.SingleEndFastqFile.objects.all()
     serializer_class = tantalus.api.serializers.SingleEndFastqFileSerializer
 
@@ -67,7 +67,7 @@ class PairedEndFastqFilesFilterSet(django_filters.FilterSet):
         fields = ['library_id']
 
 
-class PairedEndFastqFilesViewSet(viewsets.ModelViewSet):
+class PairedEndFastqFilesViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.PairedEndFastqFiles.objects.all()
     filter_class = PairedEndFastqFilesFilterSet
     def get_serializer_class(self):
@@ -84,29 +84,29 @@ class BamFileFilterSet(django_filters.FilterSet):
         fields = ['library_id', 'sample_id']
 
 
-class BamFileViewSet(viewsets.ModelViewSet):
+class BamFileViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.BamFile.objects.all()
     serializer_class = tantalus.api.serializers.BamFileSerializer
     filter_class = BamFileFilterSet
 
 
-class StorageViewSet(viewsets.ModelViewSet):
+class StorageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.Storage.objects.all()
     serializer_class = tantalus.api.serializers.StorageSerializer
 
 
-class ServerStorageViewSet(viewsets.ModelViewSet):
+class ServerStorageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.ServerStorage.objects.all()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
     filter_fields = ('name',)
 
 
-class AzureBlobStorageViewSet(viewsets.ModelViewSet):
+class AzureBlobStorageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.AzureBlobStorage.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
 
 
-class FileInstanceViewSet(viewsets.ModelViewSet):
+class FileInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.FileInstance.objects.all()
     serializer_class = tantalus.api.serializers.FileInstanceSerializer
     filter_fields = ('file_resource__md5', 'file_resource',

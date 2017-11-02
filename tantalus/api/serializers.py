@@ -4,10 +4,7 @@ from rest_framework import serializers
 from taggit_serializer.serializers import (
     TagListSerializerField,
     TaggitSerializer)
-from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
-from celery import chain
 
 import tantalus.models
 from tantalus.utils import start_deployment
@@ -17,11 +14,6 @@ import tantalus.tasks
 
 
 class SampleSerializer(serializers.ModelSerializer):
-    sample_id = serializers.CharField(
-        validators=[
-            UniqueValidator(queryset=tantalus.models.Sample.objects.all())
-        ]
-    )
     class Meta:
         model = tantalus.models.Sample
         fields = '__all__'
@@ -59,34 +51,16 @@ class FileInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.FileInstance
         fields = '__all__'
-        validators = [
-            UniqueTogetherValidator(
-                queryset=tantalus.models.FileInstance.objects.all(),
-                fields=('file_resource', 'storage')
-            )
-        ]
 
 
 class FileResourceSerializer(serializers.ModelSerializer):
     file_instances = FileInstanceSerializer(source='fileinstance_set', many=True, read_only=True)
-    md5 = serializers.CharField(
-        validators=[
-            UniqueValidator(queryset=tantalus.models.FileResource.objects.all())
-        ]
-    )
-
     class Meta:
         model = tantalus.models.FileResource
         fields = '__all__'
 
 
 class DNALibrarySerializer(serializers.ModelSerializer):
-    library_id = serializers.CharField(
-        validators=[
-            UniqueValidator(queryset=tantalus.models.DNALibrary.objects.all())
-        ]
-    )
-
     class Meta:
         model = tantalus.models.DNALibrary
         fields = '__all__'
@@ -98,24 +72,12 @@ class DNASequencesSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.DNASequences
         fields = '__all__'
-        validators = [
-            UniqueTogetherValidator(
-                queryset=tantalus.models.DNASequences.objects.all(),
-                fields=('dna_library', 'index_sequence')
-            )
-        ]
 
 
 class SequenceLaneSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.SequenceLane
         fields = '__all__'
-        validators = [
-            UniqueTogetherValidator(
-                queryset=tantalus.models.SequenceLane.objects.all(),
-                fields=('flowcell_id', 'lane_number')
-            )
-        ]
 
 
 class AbstractDataSetSerializer(TaggitSerializer, serializers.ModelSerializer):
@@ -145,7 +107,6 @@ class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer
     class Meta:
         model = tantalus.models.SingleEndFastqFile
         exclude = ['polymorphic_ctype']
-        #TODO: add validator
 
 
 class PairedEndFastqFilesReadSerializer(TaggitSerializer, serializers.ModelSerializer):
@@ -166,12 +127,6 @@ class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.ModelSerialize
     class Meta:
         model = tantalus.models.PairedEndFastqFiles
         exclude = ['polymorphic_ctype']
-        validators = [
-            UniqueTogetherValidator(
-                queryset=tantalus.models.PairedEndFastqFiles.objects.all(),
-                fields=('reads_1_file', 'reads_2_file')
-            )
-        ]
 
 
 class BamFileSerializer(TaggitSerializer, serializers.ModelSerializer):
@@ -184,12 +139,6 @@ class BamFileSerializer(TaggitSerializer, serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.BamFile
         exclude = ['polymorphic_ctype']
-        validators = [
-            UniqueTogetherValidator(
-                queryset=tantalus.models.BamFile.objects.all(),
-                fields=('bam_file', 'bam_index_file')
-            )
-        ]
 
 
 class SimpleTaskSerializer(serializers.ModelSerializer):
