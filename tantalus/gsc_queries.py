@@ -61,6 +61,7 @@ bam_path_template = '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}
 
 wgs_protocol_ids = (
     12,
+    73,
     136,
     140,
     123,
