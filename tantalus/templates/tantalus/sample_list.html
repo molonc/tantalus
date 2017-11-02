@@ -17,7 +17,6 @@
                     <thead>
                         <tr>
                             <th>Primary Sample ID</th>
-                            <th>Sample ID Space</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -25,7 +24,6 @@
                         {% for sample in samples %}
                             <tr>
                                 <td>{{sample.sample_id}}</td>
-                                <td>{{sample.sample_id_space}}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

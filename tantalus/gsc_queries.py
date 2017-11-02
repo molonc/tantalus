@@ -367,7 +367,6 @@ def query_gsc_dlp_paired_fastqs(query_info):
 
             sample, created = tantalus.models.Sample.objects.get_or_create(
                 sample_id=cell_sample_id,
-                sample_id_space=tantalus.models.Sample.APARICIO,
             )
             if created:
                 sample.save()

@@ -23,20 +23,6 @@ DEFAULT_LIBRARY_TYPE=DNALibrary.SINGLE_CELL_WGS
 INDEX_FORMAT=DNALibrary.DUAL_INDEX #Data coming from colossus should all be dual indexed
 
 
-def parse_sample_id(colossus_sample_id):
-    """
-    Parses the sample ID from Colossus database into a sample ID namespace and sample ID number.
-    Eg. SA928 in the colossus database gets turned into "SA", and "928".
-    """
-
-    if colossus_sample_id.startswith('SA'):
-        sample_namespace = Sample.APARICIO
-    else:
-        raise Exception('unrecognized sample namespace')
-
-    return sample_namespace, colossus_sample_id
-
-
 def get_json(resource_name):
     r = requests.get('{hostname}{resource}{format}'.format(
         hostname=HOSTNAME, resource=resource_name, format=JSON_FORMAT)
@@ -98,16 +84,14 @@ def add_new_samples(samples):
         s = Sample()
         sample_namespace, sample_id_number = parse_sample_id(sample)
         if (sample_namespace != None):
-            s.sample_id_space = sample_namespace
             s.sample_id = sample_id_number
             s.save()
 
 
 def delete_samples(samples):
-    for sample in samples:
-        print "DELETING this sample: {}".format(sample)
-        sample_id_space, sample_id = parse_sample_id(sample)
-        s = Sample.objects.filter(sample_id_space=sample_id_space, sample_id=sample_id)
+    for sample_id in samples:
+        print "DELETING this sample: {}".format(sample_id)
+        s = Sample.objects.filter(sample_id=sample_id)
         s.delete()
 
 
@@ -172,8 +156,8 @@ def delete_sequencelanes(seqs, seq_lib_map):
 def add_new_sublibs(sublibs, library_id):
     for sublib in sublibs:
         # the foreign key name is sample_id, and the name of the field inside sample is also sample_id, which is why this key is accessed twice
-        sample_id_space, sample_id = parse_sample_id(sublib['sample_id']['sample_id'])
-        sample = Sample.objects.get(sample_id_space = sample_id_space, sample_id = sample_id)
+        sample_id = sublib['sample_id']['sample_id']
+        sample = Sample.objects.get(sample_id=sample_id)
         library = DNALibrary.objects.get(library_id=library_id)
 
         s = DNASequences(
@@ -194,9 +178,7 @@ def add_new_sublibs(sublibs, library_id):
 
 def update_tantalus_samples():
 
-    tantalus_samples = Sample.objects.values_list('sample_id_space', 'sample_id')
-    ## parsing sample namespace and ID together into one
-    tantalus_samples = [(s[0]+s[1]) for s in tantalus_samples]
+    tantalus_samples = Sample.objects.values_list('sample_id')
     json_colossus_samples = get_json('sample')
     colossus_samples = [j['sample_id'] for j in json_colossus_samples]
 

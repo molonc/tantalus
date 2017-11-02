@@ -31,25 +31,10 @@ class Sample(models.Model):
 
     history = HistoricalRecords()
 
-    APARICIO = 'SA'
-    HUNTSMAN = 'DG'
-    OTHER = 'O'
-
-    sample_id_space_choices = (
-        (APARICIO, 'Aparicio'),
-        (HUNTSMAN, 'Huntsman'),
-        (OTHER, 'Other'),
-    )
-
-    sample_id_space = models.CharField(
-        max_length=50,
-        choices=sample_id_space_choices,
-    )
-
     sample_id = create_id_field(unique=True)
 
     def __unicode__(self):
-        return '{}_{}'.format(self.sample_id_space, self.sample_id)
+        return self.sample_id
 
     def get_absolute_url(self):
         return reverse("sample-list")

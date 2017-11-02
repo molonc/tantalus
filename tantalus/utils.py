@@ -130,7 +130,7 @@ def read_excel_sheets(filename):
     Load and read an excel file, extracting specific columns.
     """
     
-    required_columns = ['sample_id', 'sample_id_space']
+    required_columns = ['sample_id']
 
     try:
         data = pd.read_excel(filename, sheetname=None)

@@ -28,10 +28,9 @@ BRC_READ_TYPE = tantalus.models.SequenceLane.PAIRED
 BRC_SEQ_CENTRE = tantalus.models.SequenceLane.BRC
 
 
-def create_Sample(sample_id, sample_id_space="SA"):
+def create_Sample(sample_id):
     sample, created = tantalus.models.Sample.objects.get_or_create(
         sample_id=sample_id,
-        sample_id_space=sample_id_space,
     )
     if created:
         sample.save()
