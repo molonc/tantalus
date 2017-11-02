@@ -92,6 +92,7 @@ class MissingFileError(Exception):
 
 def query_gsc_wgs_bams(query_info):
     sample = query_info.sample
+    sample_id = sample.sample_id
     storage = tantalus.models.ServerStorage.objects.get(name='gsc')
 
     # ASSUMPTION: GSC stored files are pathed from root
