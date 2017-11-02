@@ -76,7 +76,7 @@ def create_file_instance(file_transfer):
 def get_block_blob_service(storage):
     block_blob_service = BlockBlobService(
         account_name=storage.storage_account,
-        account_key=storage.storage_key)
+        account_key=storage.credentials.storage_key)
     return block_blob_service
 
 
@@ -126,6 +126,7 @@ def transfer_file_azure_server(file_transfer):
         progress_callback=progress_callback)
 
     create_file_instance(file_transfer)
+    os.chmod(local_filepath, 0444)
 
 
 def transfer_file_server_azure(file_transfer):
@@ -256,6 +257,7 @@ def transfer_file_server_server_remote(file_transfer):
     client.close()
 
     create_file_instance(file_transfer)
+    os.chmod(local_filepath, 0444)
 
 
 def transfer_file_server_server_local(file_transfer):
@@ -283,6 +285,7 @@ def transfer_file_server_server_local(file_transfer):
     shutil.copyfile(from_filepath, to_filepath)
 
     create_file_instance(file_transfer)
+    os.chmod(to_filepath, 0444)
 
 
 def transfer_file_server_server(file_transfer):

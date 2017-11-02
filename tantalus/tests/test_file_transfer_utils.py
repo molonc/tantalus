@@ -199,11 +199,17 @@ class FileTransferTest(TransactionTestCase):
             username=SSH_USER,
         )
 
+        self.azure_credentials = AzureBlobCredentials.objects.create(
+            storage_key=AZURE_STORAGE_KEY
+        )
+        self.azure_credentials.full_clean()
+        self.azure_credentials.save()
+
         self.blob_storage = AzureBlobStorage.objects.create(
             name='azure_sc_fastqs',
             storage_account=AZURE_STORAGE_ACCOUNT,
             storage_container=AZURE_STORAGE_CONTAINER,
-            storage_key=AZURE_STORAGE_KEY,
+            credentials=self.azure_credentials,
         )
 
         self.compute2 = ServerStorage.objects.create(
