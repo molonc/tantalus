@@ -17,7 +17,8 @@ django.setup()
 
 from tantalus.models import *
 
-HOSTNAME='http://10.9.215.82:7000/apps/api/'
+# HOSTNAME='http://127.0.0.1:8000/api/'
+HOSTNAME='http://colossus.bcgsc.ca/apps/api/'
 JSON_FORMAT='?format=json'
 DEFAULT_LIBRARY_TYPE=DNALibrary.SINGLE_CELL_WGS
 INDEX_FORMAT=DNALibrary.DUAL_INDEX #Data coming from colossus should all be dual indexed
@@ -82,10 +83,8 @@ def add_new_samples(samples):
     for sample in samples:
         print "ADDING this sample: {}".format(sample)
         s = Sample()
-        sample_namespace, sample_id_number = parse_sample_id(sample)
-        if (sample_namespace != None):
-            s.sample_id = sample_id_number
-            s.save()
+        s.sample_id = sample
+        s.save()
 
 
 def delete_samples(samples):
