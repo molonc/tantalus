@@ -24,7 +24,7 @@ def _samefile(src, dst):
             os.path.normcase(os.path.abspath(dst)))
 
 
-def copyfile(src, dst, progress_callback, follow_symlinks=True):
+def copyfile(src, dst, progress_callback, follow_symlinks=True, length=16*1024):
     """Copy data from src to dst.
     If follow_symlinks is not set and src is a symbolic link, a new
     symlink will be created instead of copying the file it points to.
@@ -49,7 +49,7 @@ def copyfile(src, dst, progress_callback, follow_symlinks=True):
         with open(src, 'rb') as fsrc:
             total = os.stat(fsrc.name).st_size
             with open(dst, 'wb') as fdst:
-                copyfileobj(fsrc, fdst, progress_callback, total)
+                copyfileobj(fsrc, fdst, progress_callback, total, length=length)
     return dst
 
 

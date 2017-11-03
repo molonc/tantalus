@@ -286,7 +286,9 @@ def transfer_file_server_server_local(file_transfer):
             file_transfer.progress = float(bytes_copied) / float(total)
             file_transfer.save()
 
-    tantalus.custom_shutils.copyfile(from_filepath, to_filepath, progress_callback)
+    tantalus.custom_shutils.copyfile(
+        from_filepath, to_filepath, progress_callback,
+        length=32*1024*1024)
 
     create_file_instance(file_transfer)
     os.chmod(to_filepath, 0444)
