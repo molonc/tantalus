@@ -11,5 +11,5 @@ import tantalus.wsgi
 print 'password for stash:'
 p = getpass.getpass()
 
-os.system('ansible-playbook playbook.yml -e "stashuser=amcpherson" -e "stashpassword={}" -i hosts.txt'.format(p))
+os.system('ansible-playbook playbook.yml -e "mode=production" -e "stashuser=amcpherson" -e "stashpassword={}" -i hosts.txt'.format(p))
 

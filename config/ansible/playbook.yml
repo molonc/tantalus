@@ -2,6 +2,7 @@
 - hosts: all
   remote_user: amcpherson
   vars:
+    mode: development
     stashuser: amcpherson
     stashversion: master
     gitexecutable: git
@@ -9,27 +10,27 @@
     - name: Clone tantalus repo
       git:
         repo: "https://{{ stashuser | urlencode }}:{{ stashpassword }}@svn.bcgsc.ca/bitbucket/scm/sc/tantalus.git"
-        dest: $HOME/production/tantalus
+        dest: $HOME/{{ mode }}/tantalus
         version: "{{ stashversion }}"
         executable: "{{ gitexecutable }}"
 
     - name: Install requirements
       pip:
-        requirements: $HOME/production/tantalus/requirements.txt
-        virtualenv: $HOME/production/tantalus/venv
+        requirements: $HOME/{{ mode }}/tantalus/requirements.txt
+        virtualenv: $HOME/{{ mode }}/tantalus/venv
         virtualenv_python: python2
 
     - name: Create supervisor tmp
-      file: path=$HOME/production/tantalus/tmp state=directory
+      file: path=$HOME/{{ mode }}/tantalus/tmp state=directory
 
     - name: Create supervisor tmp/logs
-      file: path=$HOME/production/tantalus/tmp/logs state=directory
+      file: path=$HOME/{{ mode }}/tantalus/tmp/logs state=directory
 
     - name: Stop supervisord
-      shell: "if [ -f $HOME/production/tantalus/tmp/supervisord.pid ]; then kill -s SIGTERM $($HOME/production/tantalus/venv/bin/supervisorctl -c $HOME/production/tantalus/supervisord.conf pid); fi; sleep 10"
+      shell: "if [ -f $HOME/{{ mode }}/tantalus/tmp/supervisord.pid ]; then kill -s SIGTERM $($HOME/{{ mode }}/tantalus/venv/bin/supervisorctl -c $HOME/{{ mode }}/tantalus/supervisord.conf pid); fi; sleep 10"
 
     - name: Start supervisord
-      shell: "$HOME/production/tantalus/venv/bin/supervisord -c $HOME/production/tantalus/supervisord.conf"
+      shell: "$HOME/{{ mode }}/tantalus/venv/bin/supervisord -c $HOME/{{ mode }}/tantalus/supervisord.conf"
       environment:
         TANTALUS_QUEUE_PREFIX: "{{ queue_prefix }}"
         TANTALUS_SECRET_KEY: "{{ lookup('env', 'TANTALUS_SECRET_KEY') }}"
