@@ -26,6 +26,9 @@
     - name: Create supervisor tmp/logs
       file: path=$HOME/{{ mode }}/tantalus/tmp/logs state=directory
 
+    - name: Stop celery
+      shell: "$HOME/{{ mode }}/tantalus/venv/bin/supervisorctl -c $HOME/{{ mode }}/tantalus/supervisord.conf stop all"
+
     - name: Stop supervisord
       shell: "if [ -f $HOME/{{ mode }}/tantalus/tmp/supervisord.pid ]; then kill -s SIGTERM $($HOME/{{ mode }}/tantalus/venv/bin/supervisorctl -c $HOME/{{ mode }}/tantalus/supervisord.conf pid); fi; sleep 10"
 
