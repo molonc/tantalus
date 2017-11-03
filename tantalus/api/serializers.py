@@ -42,13 +42,13 @@ class StorageSerializer(serializers.ModelSerializer):
 class ServerStorageSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.ServerStorage
-        fields = ('name', 'storage_directory')
+        fields = ('id', 'name', 'storage_directory')
 
 
 class AzureBlobStorageSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.AzureBlobStorage
-        fields = ('name', 'storage_account', 'storage_container')
+        fields = ('id', 'name', 'storage_account', 'storage_container')
 
 
 class FileInstanceSerializer(serializers.ModelSerializer):
