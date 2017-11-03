@@ -28,9 +28,11 @@
 
     - name: Stop celery
       shell: "$HOME/{{ mode }}/tantalus/venv/bin/supervisorctl -c $HOME/{{ mode }}/tantalus/supervisord.conf stop all"
+      tags: shutdown
 
     - name: Stop supervisord
-      shell: "if [ -f $HOME/{{ mode }}/tantalus/tmp/supervisord.pid ]; then kill -s SIGTERM $($HOME/{{ mode }}/tantalus/venv/bin/supervisorctl -c $HOME/{{ mode }}/tantalus/supervisord.conf pid); fi; sleep 10"
+      shell: "if [ -f $HOME/{{ mode }}/tantalus/tmp/supervisord.pid ]; then kill -15 $($HOME/{{ mode }}/tantalus/venv/bin/supervisorctl -c $HOME/{{ mode }}/tantalus/supervisord.conf pid); fi; sleep 10"
+      tags: shutdown
 
     - name: Start supervisord
       shell: "$HOME/{{ mode }}/tantalus/venv/bin/supervisord -c $HOME/{{ mode }}/tantalus/supervisord.conf"
