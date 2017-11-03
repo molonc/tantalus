@@ -1,5 +1,6 @@
 from azure.storage.blob import BlockBlobService
 import paramiko
+import custom_paramiko
 import os, io
 import hashlib
 import subprocess
@@ -199,7 +200,8 @@ def transfer_file_server_server_remote(file_transfer):
         file_transfer.from_storage.server_ip,
         username=file_transfer.from_storage.username)
 
-    sftp = paramiko.SFTPClient.from_transport(client.get_transport())
+    sftp = custom_paramiko.SFTPClient.from_transport(
+        client.get_transport(), buffer_read_length=32*1024*1024)
 
     local_filepath = file_transfer.get_filepath()
     remote_filepath = file_transfer.file_instance.get_filepath()
