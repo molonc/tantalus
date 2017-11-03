@@ -5,6 +5,7 @@ Tantalus models
 from __future__ import unicode_literals
 
 import os
+import django
 from django.db import models
 from django.core.urlresolvers import reverse
 import taggit.models
@@ -422,6 +423,12 @@ class ServerStorage(Storage):
         max_length=50
     )
 
+    def get_storage_directory(self):
+        # TODO: For read only storages ie gsc, this isnt necessary
+        if not django.conf.settings.IS_PRODUCTION:
+            return self.storage_directory.rstrip('/') + '_test'
+        return self.storage_directory
+
     def get_mkdir_queue_name(self):
         return self.queue_prefix + '.mkdir'
 
@@ -471,6 +478,11 @@ class AzureBlobStorage(Storage):
         AzureBlobCredentials,
         on_delete=models.CASCADE,
     )
+
+    def get_storage_container(self):
+        if not django.conf.settings.IS_PRODUCTION:
+            return self.storage_container + '_test'
+        return self.storage_container
 
     def get_filepath(self, file_resource):
         # strip the slash, otherwise this creates an additional

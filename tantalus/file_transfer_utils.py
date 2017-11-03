@@ -103,7 +103,7 @@ def transfer_file_azure_server(file_transfer):
     cloud_filepath = file_transfer.file_instance.get_filepath()
     local_filepath = file_transfer.get_filepath()
 
-    if not block_blob_service.exists(file_transfer.file_instance.storage.storage_container, cloud_filepath):
+    if not block_blob_service.exists(file_transfer.file_instance.storage.get_storage_container(), cloud_filepath):
         error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
             filepath=cloud_filepath,
             storage=file_transfer.file_instance.storage.name,
@@ -122,7 +122,7 @@ def transfer_file_azure_server(file_transfer):
             file_transfer.save()
 
     block_blob_service.get_blob_to_path(
-        file_transfer.file_instance.storage.storage_container,
+        file_transfer.file_instance.storage.get_storage_container(),
         cloud_filepath,
         local_filepath,
         progress_callback=progress_callback)
@@ -149,7 +149,7 @@ def transfer_file_server_azure(file_transfer):
             pk=file_transfer.file_instance.id)
         raise FileDoesNotExist(error_message)
 
-    if block_blob_service.exists(file_transfer.to_storage.storage_container, cloud_filepath):
+    if block_blob_service.exists(file_transfer.to_storage.get_storage_container(), cloud_filepath):
         error_message = "target file {filepath} already exists on {storage}".format(
             filepath=cloud_filepath,
             storage=file_transfer.to_storage.name)
@@ -161,13 +161,13 @@ def transfer_file_server_azure(file_transfer):
             file_transfer.save()
 
     block_blob_service.create_blob_from_path(
-        file_transfer.to_storage.storage_container,
+        file_transfer.to_storage.get_storage_container(),
         cloud_filepath,
         local_filepath,
         progress_callback=progress_callback)
 
     base_64_md5 = block_blob_service.get_blob_properties(
-        file_transfer.to_storage.storage_container,
+        file_transfer.to_storage.get_storage_container(),
         cloud_filepath).properties.content_settings.content_md5
 
     # the md5 for an empty file is a NoneType object
@@ -247,7 +247,7 @@ def transfer_file_server_server_remote(file_transfer):
             e.message = e.message + " - No specific error code was given.\nPossible reasons include:"
 
             # check uploading a file to a full filesystem
-            # cmd = "df " + file_transfer.to_storage.storage_directory
+            # cmd = "df " + file_transfer.to_storage.get_storage_directory()
             # stdin, stdout, stderr = client.exec_command(cmd)
             # stdout.channel.recv_exit_status() # This is a blocking call to wait for output
             # available_space = stdout.readlines()[1].split()[3] # parse out available space from output

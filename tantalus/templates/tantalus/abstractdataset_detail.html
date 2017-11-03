@@ -30,10 +30,10 @@
                 <td class="td_name">Available on: </td>
                 <td>
                     {% for s in storages  %}
-                        {% if s.storage_directory %}
-                        {{ s.name }} - <i>{{ s.server_ip }}:{{ s.storage_directory }}</i>
+                        {% if s.get_storage_directory %}
+                        {{ s.name }} - <i>{{ s.server_ip }}:{{ s.get_storage_directory }}</i>
                         {% else %}
-                        {{ s.name }}{{ s.storage_container }}
+                        {{ s.name }}{{ s.get_storage_container }}
                         {% endif %}
                     {% endfor %}
                 </td>

@@ -152,7 +152,7 @@ def put_into_tantalus(file_df, output_dir, storage):
         new_files = []
         paired_files = collections.defaultdict(dict)
         storage = tantalus.models.ServerStorage.objects.get(name=storage)
-        storage_path = storage.storage_directory
+        storage_path = storage.get_storage_directory()
         for index, fastq_file in file_df.iterrows():
             sample_id = fastq_file["sample_id"]
             chip_id = fastq_file["chip_id"]
