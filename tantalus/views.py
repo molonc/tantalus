@@ -56,6 +56,16 @@ class FileTransferView(TemplateView):
         return context
 
 
+class DeploymentDetailView(TemplateView):
+    template_name = 'tantalus/filetransfer_list.html'
+    
+    def get_context_data(self, **kwargs):
+        deployment = get_object_or_404(Deployment, id=kwargs['pk'])
+        transfers = deployment.file_transfers.all()
+        context = {'transfers': transfers}
+        return context
+
+
 class DeploymentView(TemplateView):
     template_name = 'tantalus/deployment_list.html'
     

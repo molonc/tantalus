@@ -11,11 +11,12 @@
         <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'deployment-create' %}">Add Deployment</a>
     </div>
     <div class="container" style="background-color:#F5F5F5;">
-        {% if deployments %}    
+        {% if deployments %}
             <div class="table-responsive">
                 <table id="datatable" class="table table-striped">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>From</th>
                             <th>To</th>
                             <th>Datasets</th>
@@ -29,6 +30,7 @@
                         <br/>
                         {% for deployment in deployments %}
                             <tr>
+                                <th><a href="{% url 'deployment-detail' pk=deployment.id %}">{{deployment.id}}</a></th>
                                 <td>{{deployment.from_storage}}</td>
                                 <td>{{deployment.to_storage}}</td>
                                 <td>{{deployment.datasets}}</td>
@@ -45,10 +47,4 @@
             <h5><i class="text-warning">No deployments yet.</i></h5>
         {% endif %}
     </div>
-
-    <script type="text/javascript">
-        $(document).ready(function(){
-            $("#datatable").DataTable();
-        });
-    </script>
 {% endblock %}
