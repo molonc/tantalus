@@ -8,6 +8,7 @@ from django.dispatch import receiver
 
 from tantalus.models import *
 from tantalus.exceptions.file_transfer_exceptions import *
+import tantalus.custom_shutils
 import errno
 import shutil
 
@@ -264,8 +265,6 @@ def transfer_file_server_server_local(file_transfer):
     """ Transfer a file between storages on a server.
     """
 
-    # TODO: progress callback
-
     from_filepath = file_transfer.file_instance.get_filepath()
     to_filepath = file_transfer.get_filepath()
 
@@ -282,7 +281,12 @@ def transfer_file_server_server_local(file_transfer):
             storage=file_transfer.to_storage.name)
         raise FileAlreadyExists(error_message)
 
-    shutil.copyfile(from_filepath, to_filepath)
+    def progress_callback(bytes_copied, total):
+        if (total != 0):
+            file_transfer.progress = float(bytes_copied) / float(total)
+            file_transfer.save()
+
+    tantalus.custom_shutils.copyfile(from_filepath, to_filepath, progress_callback)
 
     create_file_instance(file_transfer)
     os.chmod(to_filepath, 0444)
