@@ -8,7 +8,7 @@ from django import forms
 #===========================
 # App imports
 #---------------------------
-from .models import Sample, AbstractDataSet
+from .models import Sample, AbstractDataSet, Deployment
 
 #===========================
 # Sample forms
@@ -169,7 +169,22 @@ class DatasetTagForm(forms.Form):
             dataset.tags.add(tag_name)
 
 
+class DeploymentCreateForm(forms.ModelForm):
+    tag_name = forms.CharField(max_length=500)
 
+    class Meta:
+        model = Deployment
+        fields = ('from_storage', 'to_storage')
 
+    def clean(self):
+        tag_name = self.cleaned_data['tag_name']
+        if tag_name is None or tag_name.strip() == '':
+            raise forms.ValidationError('tag required')
+        datasets = AbstractDataSet.objects.filter(tags__name=tag_name)
+        if len(datasets) == 0:
+            raise forms.ValidationError('no datasets with tag {}'.format(tag_name))
 
+    def get_tag_datasets(self):
+        tag_name = self.cleaned_data['tag_name'].strip()
+        return AbstractDataSet.objects.filter(tags__name=tag_name)
 

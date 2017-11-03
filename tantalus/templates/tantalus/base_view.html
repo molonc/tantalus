@@ -55,6 +55,23 @@
     </nav><br>
     <!-- end of Header -->
 
+    <!-- Display messages -->
+    <ul class="messages" style="list-style: none;">
+    {% for message in messages %}
+    <li class="{{ message.tags }}">
+        {% if "success" in message.tags %}
+        <i class="fa fa-check" aria-hidden="true"></i>
+        {% elif "warning" in message.tags %}
+        <i class="fa fa-exclamation" aria-hidden="true"></i>
+        {% elif "error" in message.tags %}
+        <i class="fa fa-times" aria-hidden="true"></i>
+        {% endif %}
+        {{message}}
+    </li>
+    {% endfor %}
+    </ul>
+    <!-- End of Display messages -->
+
     <div class="container" id="welcome">
         {% if user.is_authenticated %}
         <span>Welcome, <b>{{user.username}}</b></span>

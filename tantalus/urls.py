@@ -28,7 +28,7 @@ urlpatterns = [
     url(r'^search/', tantalus.views.search_view, name='search'),
     url(r'^transfers/$', tantalus.views.FileTransferView.as_view(), name='transfer-list'),
     url(r'^deployments/$', tantalus.views.DeploymentView.as_view(), name='deployment-list'),
-    url(r'^deployments/create$', tantalus.views.DeploymentCreateView.as_view(success_url='/deployments/'), name='deployment-create'),
+    url(r'^deployments/create$', tantalus.views.DeploymentCreateView.as_view(), name='deployment-create'),
     url(r'^samples/$', tantalus.views.sample_list, name='sample-list'),
     url(r'^samples/create$', tantalus.views.SampleCreate.as_view(), name='sample-add'),
     url(r'^datasets/$', tantalus.views.DatasetList.as_view(), name='dataset-list'),

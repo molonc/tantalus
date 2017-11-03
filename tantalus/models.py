@@ -600,6 +600,9 @@ class Deployment(models.Model):
     finished = models.BooleanField('Finished', default=False)
     errors = models.BooleanField('Errors', default=False)
 
+    def get_absolute_url(self):
+        return reverse("deployment-list")
+
 
 class MD5Check(SimpleTask):
     """

@@ -11,12 +11,15 @@ from django.views.generic.edit import ModelFormMixin, View
 from django.views.generic.base import TemplateView
 from django.db import transaction
 from django.shortcuts import get_object_or_404, render
+import django.forms
 
 from tantalus.models import FileTransfer, Deployment, FileResource, Sample, AbstractDataSet, Storage
 from tantalus.utils import read_excel_sheets
 from tantalus.utils import start_deployment
+from tantalus.exceptions.api_exceptions import DeploymentNotCreated
+from tantalus.exceptions.file_transfer_exceptions import DeploymentUnnecessary
 from misc.helpers import Render
-from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm
+from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, DeploymentCreateForm
 
 
 def search_view(request):
@@ -61,29 +64,38 @@ class DeploymentView(TemplateView):
         context = {'deployments': deployments}
         return context
 
+
 @method_decorator(login_required, name='get')
-class DeploymentCreateView(CreateView):
-    model = Deployment
-    fields = ['from_storage', 'to_storage', 'datasets']
+class DeploymentCreateView(TemplateView):
+    template_name = 'tantalus/deployment_form.html'
+
+    def get_context_and_render(self, request, form):
+        context = {'form': form}
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        form = DeploymentCreateForm()
+        return self.get_context_and_render(request, form)
 
     def post(self, request, *args, **kwargs):
-        try:
-            self.object = None
-            with transaction.atomic():
-                form = self.get_form()
-                if form.is_valid():
-                    self.object = form.save()
-                    self.object.state = 'Started'
-                    self.object.save()
-                    start_deployment(self.object)
-                    return super(ModelFormMixin, self).form_valid(form)
+        form = DeploymentCreateForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    instance = form.save()
+                    instance.datasets = form.get_tag_datasets()
+                    instance.save()
+                    start_deployment(instance)
+                return HttpResponseRedirect(instance.get_absolute_url())
+            except DeploymentUnnecessary as e:
+                messages.error(request, 'deployment unecessary')
+            except DeploymentNotCreated as e:
+                messages.error(request, str(e))
+        else:
+            msg = "Failed to create the deployment. Please fix the errors below."
+            messages.error(request, msg)
+        return self.get_context_and_render(request, form)
 
-        # TODO: Handle DeploymentUnnecessary
-        except ValueError as e:
-            error_message = ' '.join(e.args)
-            messages.error(request, error_message)
-            #TODO: override methods + update template so that error message is passed through and is useful
-        return self.form_invalid(form)
 
 @method_decorator(login_required, name='dispatch')
 class SampleCreate(TemplateView):
