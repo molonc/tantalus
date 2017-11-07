@@ -1,7 +1,5 @@
 from __future__ import absolute_import
-from django.db import transaction
 from tantalus.models import FileTransfer
-from tantalus.exceptions.api_exceptions import DeploymentNotCreated
 import tantalus.tasks
 from celery import chain
 import pandas as pd
@@ -36,97 +34,19 @@ def start_file_transfer(file_transfer, deployment):
         raise Exception('unsupported transfer')
 
 
-def start_file_transfers(file_transfers, deployment):
+def start_file_transfers(deployment):
     """
     Start a set of file transfers.
     """
-
-    for file_transfer in file_transfers:
+    if deployment.file_transfers.all().count() == 0:
+        deployment.errors = False
+        deployment.finished = True
+        deployment.running = False
+    else:
+        deployment.running = True
+    deployment.save()
+    for file_transfer in get_file_transfers_to_start(deployment):
         start_file_transfer(file_transfer, deployment)
-
-
-def create_deployment_file_transfers(deployment, restart=False):
-    """ 
-    Create a set of transfers for a deployment.
-    """
-
-    files_to_transfer = []
-    # get all AbstractDataSets related to this deployment
-    for dataset in deployment.datasets.all():
-        file_resources = dataset.get_data_fileset()
-
-        for file_resource in file_resources:
-            destination_file_instances = file_resource.fileinstance_set.filter(storage=deployment.to_storage)
-
-            if len(destination_file_instances) >= 1:
-                continue
-
-            source_file_instance = file_resource.fileinstance_set.filter(storage=deployment.from_storage)
-
-            if len(source_file_instance) == 0:
-                raise DeploymentNotCreated('file instance for file resource {} not deployed on source storage {}'.format(file_resource.filename, deployment.from_storage))
-
-            # paranoia check - this if statement should never be able to run
-            elif len(source_file_instance) > 1:
-                raise DeploymentNotCreated('multiple file instances for file resource {} instances on {}'.format(file_resource.filename, deployment.from_storage))
-
-            # TODO: pick an ideal file instance to transfer from, rather than arbitrarily?
-            file_instance = source_file_instance[0]
-
-            # filter for any existing transfers involving any 1 of the file_instances for this file resource
-            existing_transfers = FileTransfer.objects.filter(
-                file_instance__in=file_resource.fileinstance_set.all(),
-                to_storage=deployment.to_storage)
-
-            if len(existing_transfers) > 1:
-                raise DeploymentNotCreated('multiple existing transfers for {} to {}'.format(file_resource.filename, deployment.to_storage))
-
-            elif len(existing_transfers) == 1:
-                file_transfer = existing_transfers[0]
-
-                if file_transfer.finished and not file_transfer.success:
-                    files_to_transfer.append(file_transfer)
-                elif restart and not file_transfer.success:
-                    files_to_transfer.append(file_transfer)
-
-            else:
-                file_transfer = FileTransfer()
-                file_transfer.from_storage = deployment.from_storage
-                file_transfer.to_storage = deployment.to_storage
-                file_transfer.file_instance = file_instance
-                #TODO: add tests for the naming and transfer starting
-                file_transfer.save()
-
-                files_to_transfer.append(file_transfer)
-
-            # except: #ADD EXCEPTION THROWN FROM SIGNAL
-            #     pass
-
-            # add exception handling for when ???
-
-            deployment.file_transfers.add(file_transfer)
-
-    return files_to_transfer
-
-
-def start_deployment(deployment, restart=False):
-    """ 
-    Start a set of transfers for a deployment.
-    """
-
-    with transaction.atomic():
-        files_to_transfer = create_deployment_file_transfers(deployment, restart=restart)
-
-        if len(deployment.file_transfers.all()) == 0:
-            deployment.errors = False
-            deployment.finished = True
-            deployment.running = False
-        else:
-            deployment.running = True
-
-        deployment.save()
-
-        transaction.on_commit(lambda: start_file_transfers(files_to_transfer, deployment))
 
 
 def read_excel_sheets(filename):
@@ -164,3 +84,105 @@ def start_md5_checks(file_instances):
         tantalus.tasks.check_md5_task.apply_async(args=(md5_check.id,), queue=file_instance.storage.get_md5_queue_name())
 
 
+def file_instance_already_exists(file_resource, to_storage):
+    """
+    validate file instance on DESTINATION storage does not already exist
+    """
+    destination_file_instances = file_resource.fileinstance_set.filter(storage=to_storage)
+
+    return len(destination_file_instances) >= 1
+
+
+def validate_file_instance(file_resource, from_storage, error_type):
+    """
+    Validates the following:
+    - if a file instance for the file resource exists on the SOURCE storage
+            (ValidationError, do NOT proceed)
+    - if there are multiple file instances for the file resource on the SOURCE storage
+            (ValidationError, do NOT proceed)
+    """
+    source_file_instance = file_resource.fileinstance_set.filter(storage=from_storage)
+    if len(source_file_instance) == 0:
+        raise error_type(
+            'file instance for file resource {} not deployed on source storage {}'.format(
+                file_resource.filename, from_storage.name))
+
+    # paranoia check - this if statement should never be able to run
+    elif len(source_file_instance) > 1:
+        raise error_type(
+            'multiple file instances for file resource {} instances on {}'.format(file_resource.filename, from_storage))
+
+
+def get_file_resources_from_datasets(datasets):
+    """ generator function for getting file resources from datasets"""
+    for dataset in datasets:
+        file_resources = dataset.get_data_fileset()
+
+        for file_resource in file_resources:
+            yield file_resource
+
+
+def validate_deployment(datasets, from_storage, to_storage, error_type):
+    for file_resource in get_file_resources_from_datasets(datasets):
+        validate_file_instance(file_resource, from_storage, error_type)
+
+        existing_transfers = FileTransfer.objects.filter(
+            file_instance__in=file_resource.fileinstance_set.all(),
+            to_storage=to_storage)
+
+        if len(existing_transfers) >= 1:
+            if len(existing_transfers) > 1:
+                raise error_type('multiple existing transfers for {} to {}'.format(file_resource.filename,
+                                                                                   to_storage))
+
+
+def count_num_transfers(datasets, to_storage):
+    num_transfers = 0
+    for file_resource in get_file_resources_from_datasets(datasets):
+        destination_file_instances = file_resource.fileinstance_set.all().filter(storage=to_storage).count()
+        if destination_file_instances == 0:
+            num_transfers += 1
+    return num_transfers
+
+
+def add_file_transfers(deployment):
+    """ creates the associated file transfer objects if necessary (ie. no existing file transfer), and returns the
+        file transfer objects that should be started up again. """
+    datasets = deployment.datasets.all()
+    from_storage = deployment.from_storage
+    to_storage = deployment.to_storage
+
+    for file_resource in get_file_resources_from_datasets(datasets):
+        destination_file_instances = file_resource.fileinstance_set.filter(storage=to_storage)
+        if len(destination_file_instances) >= 1:
+            continue
+
+        file_instance = file_resource.fileinstance_set.filter(storage=from_storage)[0]
+
+        existing_transfers = FileTransfer.objects.filter(
+            file_instance__in=file_resource.fileinstance_set.all(),
+            to_storage=to_storage)
+
+        if existing_transfers:
+            file_transfer = existing_transfers[0]
+        else:
+            file_transfer = FileTransfer(
+                from_storage=from_storage,
+                to_storage=to_storage,
+                file_instance=file_instance,
+            )
+            # TODO: add tests for the naming and transfer starting
+            file_transfer.full_clean()
+            file_transfer.save()
+
+        deployment.file_transfers.add(file_transfer)
+
+
+def get_file_transfers_to_start(deployment):
+    for file_transfer in deployment.file_transfers.all():
+        if not file_transfer.success:
+            if file_transfer.finished: # existing file transfer that should be restarted
+                yield file_transfer
+            elif not(file_transfer.finished or file_transfer.running or file_transfer.success): # new file transfer
+                yield file_transfer
+            # TODO: see KRONOS-405

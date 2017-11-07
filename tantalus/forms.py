@@ -8,7 +8,11 @@ from django import forms
 #===========================
 # App imports
 #---------------------------
+from django.db import transaction
+
 from .models import Sample, AbstractDataSet, Deployment
+from tantalus.utils import validate_deployment, add_file_transfers, count_num_transfers
+
 
 #===========================
 # Sample forms
@@ -176,18 +180,64 @@ class DatasetTagForm(forms.Form):
 
 class DeploymentCreateForm(forms.ModelForm):
     tag_name = forms.CharField(max_length=500)
+    name = forms.CharField(
+        label="Name of deployment",
+        max_length=200,
+    )
 
     class Meta:
         model = Deployment
-        fields = ('from_storage', 'to_storage')
+        fields = ('name', 'from_storage', 'to_storage')
 
-    def clean(self):
-        tag_name = self.cleaned_data['tag_name']
-        if tag_name is None or tag_name.strip() == '':
-            raise forms.ValidationError('tag required')
+    def clean_tag_name(self):
+        tag_name = self.cleaned_data['tag_name'].strip()
         datasets = AbstractDataSet.objects.filter(tags__name=tag_name)
         if len(datasets) == 0:
             raise forms.ValidationError('no datasets with tag {}'.format(tag_name))
+        return tag_name
+
+    def clean(self):
+        """
+        For all the datasets that are related to the given tag, check all the FileResource objects related to that particular
+        dataset for the following:
+
+        - validate file instance on DESTINATION storage does not already exist, skip if it does
+        - validate file instance on SOURCE storage
+        - validate existing file transfers
+        - point to existing file transfer if exists already
+
+        - if there is an existing file transfer in process for the file resource
+                (ignore, point to the existing file transfer object)
+
+        After all these checks are passed, assigns self a list of FileTransfer objects, for which file transfers should be started
+        with a celery task
+
+        :return
+        """
+
+        # call to super clean method to preserve modelform unique fields validation
+        super(DeploymentCreateForm, self).clean()
+
+        # return errors if any errors were found while cleaning specific fields
+        if any(self.errors):
+            return self.errors
+
+        from_storage = self.cleaned_data['from_storage']
+        to_storage = self.cleaned_data['to_storage']
+        tag_name = self.cleaned_data['tag_name']
+        datasets = AbstractDataSet.objects.filter(tags__name=tag_name)
+
+        validate_deployment(datasets, from_storage, to_storage, forms.ValidationError)
+
+        if count_num_transfers(datasets, to_storage) == 0:
+            raise forms.ValidationError("Deployment unnecessary")
+
+    def save(self):
+        with transaction.atomic():
+            super(DeploymentCreateForm, self).save(commit=True)
+            add_file_transfers(self.instance)
+            self.instance.save()
+        return self.instance
 
     def get_tag_datasets(self):
         tag_name = self.cleaned_data['tag_name'].strip()

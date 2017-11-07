@@ -4,12 +4,9 @@ from rest_framework import serializers
 from taggit_serializer.serializers import (
     TagListSerializerField,
     TaggitSerializer)
-from rest_framework.exceptions import ValidationError
 
 import tantalus.models
-from tantalus.utils import start_deployment
-from tantalus.exceptions.api_exceptions import *
-from tantalus.exceptions.file_transfer_exceptions import *
+from tantalus.utils import start_file_transfers, validate_deployment, add_file_transfers
 import tantalus.tasks
 
 
@@ -23,6 +20,7 @@ class StorageSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.Storage
         exclude = ['polymorphic_ctype']
+
     def to_representation(self, obj):
         if isinstance(obj, tantalus.models.ServerStorage):
             return ServerStorageSerializer(obj, context=self.context).to_representation(obj)
@@ -33,8 +31,10 @@ class StorageSerializer(serializers.ModelSerializer):
 
 class ServerStorageSerializer(serializers.ModelSerializer):
     storage_directory = serializers.SerializerMethodField()
+
     def get_storage_directory(self, obj):
         return obj.get_storage_directory()
+
     class Meta:
         model = tantalus.models.ServerStorage
         fields = ('id', 'name', 'storage_directory')
@@ -42,8 +42,10 @@ class ServerStorageSerializer(serializers.ModelSerializer):
 
 class AzureBlobStorageSerializer(serializers.ModelSerializer):
     storage_container = serializers.SerializerMethodField()
+
     def get_storage_container(self, obj):
         return obj.get_storage_container()
+
     class Meta:
         model = tantalus.models.AzureBlobStorage
         fields = ('id', 'name', 'storage_account', 'storage_container')
@@ -51,9 +53,11 @@ class AzureBlobStorageSerializer(serializers.ModelSerializer):
 
 class FileInstanceSerializer(serializers.ModelSerializer):
     filepath = serializers.SerializerMethodField()
+    storage = StorageSerializer(read_only=True)
+
     def get_filepath(self, obj):
         return obj.get_filepath()
-    storage = StorageSerializer(read_only=True)
+
     class Meta:
         model = tantalus.models.FileInstance
         fields = '__all__'
@@ -61,6 +65,7 @@ class FileInstanceSerializer(serializers.ModelSerializer):
 
 class FileResourceSerializer(serializers.ModelSerializer):
     file_instances = FileInstanceSerializer(source='fileinstance_set', many=True, read_only=True)
+
     class Meta:
         model = tantalus.models.FileResource
         fields = '__all__'
@@ -75,12 +80,14 @@ class DNALibrarySerializer(serializers.ModelSerializer):
 class DNASequencesSerializer(serializers.ModelSerializer):
     dna_library = DNALibrarySerializer()
     sample = SampleSerializer()
+
     class Meta:
         model = tantalus.models.DNASequences
         fields = '__all__'
 
 
 class SequenceLaneSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = tantalus.models.SequenceLane
         fields = '__all__'
@@ -110,6 +117,7 @@ class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer
     tags = TagListSerializerField()
     lanes = SequenceLaneSerializer(many=True)
     dna_sequences = DNASequencesSerializer()
+
     class Meta:
         model = tantalus.models.SingleEndFastqFile
         exclude = ['polymorphic_ctype']
@@ -162,29 +170,30 @@ class DeploymentSerializer(serializers.ModelSerializer):
         model = tantalus.models.Deployment
         fields = '__all__'
 
-    def create(self, validated_data):
-        try:
-            with transaction.atomic():
-                datasets = validated_data.pop('datasets')
-                instance = tantalus.models.Deployment(**validated_data)
-                instance.save()
-                instance.datasets = datasets
-                instance.save()
-                start_deployment(instance)
-            return instance
-        except DeploymentNotCreated as e:
-            raise ValidationError(str(e))
+    def validate(self, data):
+        from_storage = data['from_storage']
+        to_storage = data['to_storage']
+        datasets = data['datasets']
 
-    def update(self, instance, validated_data):
-        new_dataset_ids = set([d.id for d in validated_data.pop('datasets')])
-        current_dataset_ids = set(instance.datasets.all().values_list('id', flat=True))
-        if new_dataset_ids != current_dataset_ids:
-            raise ValidationError('cannot modify datasets after creation')
-        try:
-            start_deployment(instance, restart=True)
-            return instance
-        except DeploymentNotCreated as e:
-            raise ValidationError(str(e))
+        validate_deployment(datasets, from_storage, to_storage, serializers.ValidationError)
+
+        return data
+
+    def create(self, validated_data):
+        with transaction.atomic():
+            datasets = validated_data.pop('datasets')
+            instance = tantalus.models.Deployment(**validated_data)
+            instance.save()
+            instance.datasets = datasets
+            instance.save()
+            transaction.on_commit(lambda: start_file_transfers(deployment=instance))
+        return instance
+
+    def save(self, **kwargs):
+        with transaction.atomic():
+            super(DeploymentSerializer, self).save(**kwargs)
+            add_file_transfers(self.instance)
+            self.instance.save()
 
 
 class ImportBRCFastqsSeralizer(SimpleTaskSerializer):

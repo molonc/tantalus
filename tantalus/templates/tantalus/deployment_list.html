@@ -17,6 +17,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Name</th>
                             <th>From</th>
                             <th>To</th>
                             <th>Datasets</th>
@@ -31,6 +32,7 @@
                         {% for deployment in deployments %}
                             <tr>
                                 <th><a href="{% url 'deployment-detail' pk=deployment.id %}">{{deployment.id}}</a></th>
+                                <th>{{deployment.name}}</th>
                                 <td>{{deployment.from_storage}}</td>
                                 <td>{{deployment.to_storage}}</td>
                                 <td>{{deployment.datasets}}</td>

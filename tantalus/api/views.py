@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAdminUser
 import django_filters
 import tantalus.models
@@ -112,7 +112,11 @@ class FileInstanceViewSet(viewsets.ReadOnlyModelViewSet):
                      'storage__name',)
 
 
-class DeploymentViewSet(viewsets.ModelViewSet):
+class DeploymentViewSet(mixins.CreateModelMixin,
+                        mixins.RetrieveModelMixin,
+                        mixins.DestroyModelMixin,
+                        mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
     queryset = tantalus.models.Deployment.objects.all()
     serializer_class = tantalus.api.serializers.DeploymentSerializer
     filter_fields = ('name',)

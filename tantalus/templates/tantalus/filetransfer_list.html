@@ -15,8 +15,10 @@
                 <table id="datatable" class="table table-striped">
                     <thead>
                         <tr>
+                            <th>File Transfer ID</th>
                             <th>From</th>
                             <th>To</th>
+                            <th>File Instance ID</th>
                             <th>Type</th>
                             <th>Name</th>
                             <th>Progress</th>
@@ -31,9 +33,11 @@
                         <br/>
                         {% for transfer in transfers %}
                             <tr>
+                                <td>{{transfer.id}}</td>
                                 <td>{{transfer.from_storage}}</td>
                                 <td>{{transfer.to_storage}}</td>
-                                <td>{{transfer.file_instance}}</td>
+                                <td>{{transfer.file_instance.pk}}</td>
+                                <td>{{transfer.file_instance.file_resource.get_file_type_display}}</td>
                                 <td>{{transfer.file_instance.file_resource.filename}}</td>
                                 <td>{{transfer.progress}}</td>
                                 <td>{{transfer.running}}</td>

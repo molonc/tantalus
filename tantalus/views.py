@@ -14,8 +14,7 @@ from django.shortcuts import get_object_or_404, render
 import django.forms
 
 from tantalus.models import FileTransfer, Deployment, FileResource, Sample, AbstractDataSet, Storage
-from tantalus.utils import read_excel_sheets
-from tantalus.utils import start_deployment
+from tantalus.utils import read_excel_sheets, start_file_transfers
 from tantalus.exceptions.api_exceptions import DeploymentNotCreated
 from misc.helpers import Render
 from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, DeploymentCreateForm
@@ -89,15 +88,15 @@ class DeploymentCreateView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = DeploymentCreateForm(request.POST)
         if form.is_valid():
-            try:
-                with transaction.atomic():
-                    instance = form.save()
-                    instance.datasets = form.get_tag_datasets()
-                    instance.save()
-                    start_deployment(instance)
-                return HttpResponseRedirect(instance.get_absolute_url())
-            except DeploymentNotCreated as e:
-                messages.error(request, str(e))
+            with transaction.atomic():
+                instance = form.save()
+                instance.datasets = form.get_tag_datasets()
+
+                # this MUST be the form.save() method that is called here -
+                # the save method is overridden to create file transfers for the datasets set above
+                form.save()
+                transaction.on_commit(lambda: start_file_transfers(deployment=instance))
+            return HttpResponseRedirect(instance.get_absolute_url())
         else:
             msg = "Failed to create the deployment. Please fix the errors below."
             messages.error(request, msg)
@@ -111,7 +110,7 @@ class SampleCreate(TemplateView):
     Sample create page.
     """
 
-    template_name="tantalus/sample_create.html"
+    template_name = "tantalus/sample_create.html"
 
     def get_context_and_render(self, request, form, multi_form, pk=None):
         context = {
