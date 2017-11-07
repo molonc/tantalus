@@ -4,7 +4,6 @@ import collections
 import django
 import time
 import os
-from stat import S_ISDIR
 
 import re
 
@@ -17,8 +16,6 @@ import requests
 
 import tantalus.models
 import tantalus.tasks
-
-LIMS_API = "http://10.9.215.82:7000/apps/api/"
 
 # Hard coded BRC details
 BRC_INSTRUMENT = "NextSeq550"
@@ -118,7 +115,9 @@ def get_files_in_output(output_dir):
 
 
 def query_colossus_dlp_cell_info(library_id):
-    library_url = LIMS_API + '/library/?pool_id={}'.format(library_id)
+    library_url = '{}library/?pool_id={}'.format(
+        django.conf.settings.COLOSSUS_API_URL,
+        library_id)
 
     r = requests.get(library_url)
 

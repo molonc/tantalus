@@ -19,7 +19,6 @@ from pprint import pprint
 
 
 GSC_API_URL = "http://sbs:8100/"
-LIMS_API = "http://colossus.bcgsc.ca/apps/api/"
 
 
 class GSCAPI(object):
@@ -285,8 +284,9 @@ def decode_raw_index_sequence(raw_index_sequence, instrument):
 
 
 def query_colossus_dlp_cell_info(library_id):
-    # library_id = 'A90696ABC'
-    library_url = 'http://10.9.215.82:7000/apps/api/library/?pool_id={}'.format(library_id)
+    library_url = '{}library/?pool_id={}'.format(
+        django.conf.settings.COLOSSUS_API_URL,
+        library_id)
 
     r = requests.get(library_url)
 
