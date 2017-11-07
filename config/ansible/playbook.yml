@@ -1,6 +1,5 @@
 ---
 - hosts: all
-  remote_user: amcpherson
   vars:
     mode: development
     stashuser: amcpherson
