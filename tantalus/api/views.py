@@ -141,4 +141,5 @@ class QueryGscWgsBamsViewSet(viewsets.ModelViewSet):
 class QueryGscDlpPairedFastqsViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.QueryGscDlpPairedFastqs.objects.all()
     serializer_class = tantalus.api.serializers.QueryGscDlpPairedFastqsSerializer
+    filter_fields = ('dlp_library_id',)
 
