@@ -4,16 +4,20 @@ import getpass
 
 GSC_API_URL = "http://sbs:8100/"
 
+print 'username:'
+username = raw_input()
+password = getpass.getpass()
+
 request_handle = requests.Session()
 
 headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'}
 
-create_session_url = os.path.join(GSC_API_URL, 'session')
+create_session_url = GSC_API_URL + 'session'
 auth_json = {
-    'username': input(),
-    'password': getpass.getpass()}
+    'username': username,
+    'password': password}
 
 response = request_handle.post(create_session_url, json=auth_json, headers=headers)
 
