@@ -19,6 +19,8 @@ from pprint import pprint
 
 
 GSC_API_URL = "http://sbs:8100/"
+LIMS_API = "http://colossus.bcgsc.ca/apps/api/"
+
 
 class GSCAPI(object):
     def __init__(self):
@@ -280,9 +282,6 @@ def decode_raw_index_sequence(raw_index_sequence, instrument):
         raise Exception('unsupported sequencing instrument {}'.format(instrument))
 
     return i7 + '-' + i5
-
-
-LIMS_API = "http://10.9.215.82:7000/apps/api/"
 
 
 def query_colossus_dlp_cell_info(library_id):
