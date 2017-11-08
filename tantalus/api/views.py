@@ -93,6 +93,7 @@ class BamFileViewSet(viewsets.ReadOnlyModelViewSet):
 class StorageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.Storage.objects.all()
     serializer_class = tantalus.api.serializers.StorageSerializer
+    filter_fields = ('name',)
 
 
 class ServerStorageViewSet(viewsets.ReadOnlyModelViewSet):
