@@ -443,7 +443,7 @@ class ServerStorage(Storage):
 
     def get_filepath(self, file_resource):
         return os.path.join(
-            str(self.storage_directory),
+            str(self.get_storage_directory()),
             file_resource.filename.strip('/'))
 
 
