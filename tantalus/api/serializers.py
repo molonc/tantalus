@@ -165,7 +165,6 @@ class DeploymentSerializer(serializers.ModelSerializer):
     running = serializers.BooleanField(read_only=True)
     finished = serializers.BooleanField(read_only=True)
     errors = serializers.BooleanField(read_only=True)
-    file_transfers = FileTransferSerializer(many=True, read_only=True)
 
     class Meta:
         model = tantalus.models.Deployment

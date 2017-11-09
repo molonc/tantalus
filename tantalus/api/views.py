@@ -117,6 +117,7 @@ class FileInstanceViewSet(viewsets.ReadOnlyModelViewSet):
 class DeploymentViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.Deployment.objects.all()
     serializer_class = tantalus.api.serializers.DeploymentSerializer
+    filter_fields = ('name',)
 
 
 class FileTransferViewSet(viewsets.ModelViewSet):

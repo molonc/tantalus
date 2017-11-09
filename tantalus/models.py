@@ -589,6 +589,11 @@ class Deployment(models.Model):
     Deployment from one storage to another.
     """
 
+    name = models.CharField(
+        max_length=50,
+        unique=True,
+    )
+
     from_storage = models.ForeignKey(
         Storage,
         related_name='deployment_from_storage',
