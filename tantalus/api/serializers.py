@@ -180,8 +180,6 @@ class DeploymentSerializer(serializers.ModelSerializer):
                 instance.save()
                 start_deployment(instance)
             return instance
-        except DeploymentUnnecessary as e:
-            raise ValidationError({'unnecessary': True})
         except DeploymentNotCreated as e:
             raise ValidationError(str(e))
 
@@ -193,8 +191,6 @@ class DeploymentSerializer(serializers.ModelSerializer):
         try:
             start_deployment(instance, restart=True)
             return instance
-        except DeploymentUnnecessary as e:
-            raise ValidationError({'unnecessary': True})
         except DeploymentNotCreated as e:
             raise ValidationError(str(e))
 

@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from django.db import transaction
 from tantalus.models import FileTransfer
 from tantalus.exceptions.api_exceptions import DeploymentNotCreated
-from tantalus.exceptions.file_transfer_exceptions import DeploymentUnnecessary
 import tantalus.tasks
 from celery import chain
 import pandas as pd
@@ -118,9 +117,6 @@ def start_deployment(deployment, restart=False):
 
     with transaction.atomic():
         files_to_transfer = create_deployment_file_transfers(deployment, restart=restart)
-
-        if len(files_to_transfer) == 0:
-            raise DeploymentUnnecessary()
 
         transaction.on_commit(lambda: start_file_transfers(files_to_transfer, deployment))
 

@@ -17,7 +17,6 @@ from tantalus.models import FileTransfer, Deployment, FileResource, Sample, Abst
 from tantalus.utils import read_excel_sheets
 from tantalus.utils import start_deployment
 from tantalus.exceptions.api_exceptions import DeploymentNotCreated
-from tantalus.exceptions.file_transfer_exceptions import DeploymentUnnecessary
 from misc.helpers import Render
 from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, DeploymentCreateForm
 
@@ -97,8 +96,6 @@ class DeploymentCreateView(TemplateView):
                     instance.save()
                     start_deployment(instance)
                 return HttpResponseRedirect(instance.get_absolute_url())
-            except DeploymentUnnecessary as e:
-                messages.error(request, 'deployment unecessary')
             except DeploymentNotCreated as e:
                 messages.error(request, str(e))
         else:

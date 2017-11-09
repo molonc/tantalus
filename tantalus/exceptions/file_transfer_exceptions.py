@@ -18,7 +18,3 @@ class RecoverableFileTransferError(Exception):
     but should be given another chance to complete """
 
 
-class DeploymentUnnecessary(Exception):
-    """ Raised when a deployment does not require any transfers. """
-
-
