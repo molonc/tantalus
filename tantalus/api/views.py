@@ -62,18 +62,16 @@ class SingleEndFastqFileViewSet(viewsets.ReadOnlyModelViewSet):
 
 class PairedEndFastqFilesFilterSet(django_filters.FilterSet):
     library_id = django_filters.CharFilter(name='dna_sequences__dna_library__library_id')
+    index_sequence = django_filters.CharFilter(name='dna_sequences__index_sequence')
     class Meta:
         model = tantalus.models.PairedEndFastqFiles
-        fields = ['library_id']
+        fields = ['library_id', 'index_sequence']
 
 
 class PairedEndFastqFilesViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.PairedEndFastqFiles.objects.all()
     filter_class = PairedEndFastqFilesFilterSet
-    def get_serializer_class(self):
-        if self.request.method in ('GET',):
-            return tantalus.api.serializers.PairedEndFastqFilesReadSerializer
-        return tantalus.api.serializers.PairedEndFastqFilesSerializer
+    serializer_class = tantalus.api.serializers.PairedEndFastqFilesSerializer
 
 
 class BamFileFilterSet(django_filters.FilterSet):
