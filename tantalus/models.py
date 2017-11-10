@@ -481,13 +481,15 @@ class AzureBlobStorage(Storage):
 
     def get_storage_container(self):
         if not django.conf.settings.IS_PRODUCTION:
-            return self.storage_container + '_test'
+            return self.storage_container + '-test'
         return self.storage_container
 
     def get_filepath(self, file_resource):
         # strip the slash, otherwise this creates an additional
         # <no name> root folder
-        return file_resource.filename.strip('/')
+        blobname = file_resource.filename.strip('/')
+        blobpath = '/'.join([self.storage_container, blobname])
+        return blobpath
 
 
 class FileInstance(models.Model):
