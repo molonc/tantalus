@@ -106,7 +106,7 @@ def query_gsc_dlp_paired_fastqs_task(query_id):
         id_=query_id,
         model=tantalus.models.QueryGscDlpPairedFastqs,
         func=tantalus.gsc_queries.query_gsc_dlp_paired_fastqs,
-        name='query GSC for WGS BAMs',
+        name='query GSC for DLP fastqs',
     )
 
 
