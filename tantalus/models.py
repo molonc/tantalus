@@ -488,7 +488,7 @@ class AzureBlobStorage(Storage):
         # strip the slash, otherwise this creates an additional
         # <no name> root folder
         blobname = file_resource.filename.strip('/')
-        blobpath = '/'.join([self.storage_container, blobname])
+        blobpath = '/'.join([self.get_storage_container(), blobname])
         return blobpath
 
 

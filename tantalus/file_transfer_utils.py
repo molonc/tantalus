@@ -101,9 +101,11 @@ def transfer_file_azure_server(file_transfer):
     block_blob_service = get_block_blob_service(storage=file_transfer.file_instance.storage)
 
     cloud_filepath = file_transfer.file_instance.get_filepath()
+    cloud_container, cloud_blobname = cloud_filepath.split('/', 1)
+    assert cloud_container == file_transfer.file_instance.storage.get_storage_container()
     local_filepath = file_transfer.get_filepath()
 
-    if not block_blob_service.exists(file_transfer.file_instance.storage.get_storage_container(), cloud_filepath):
+    if not block_blob_service.exists(cloud_container, cloud_blobname):
         error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
             filepath=cloud_filepath,
             storage=file_transfer.file_instance.storage.name,
@@ -122,8 +124,8 @@ def transfer_file_azure_server(file_transfer):
             file_transfer.save()
 
     block_blob_service.get_blob_to_path(
-        file_transfer.file_instance.storage.get_storage_container(),
-        cloud_filepath,
+        cloud_container,
+        cloud_blobname,
         local_filepath,
         progress_callback=progress_callback)
 
@@ -141,6 +143,8 @@ def transfer_file_server_azure(file_transfer):
 
     local_filepath = file_transfer.file_instance.get_filepath()
     cloud_filepath = file_transfer.get_filepath()
+    cloud_container, cloud_blobname = cloud_filepath.split('/', 1)
+    assert cloud_container == file_transfer.to_storage.get_storage_container()
 
     if not os.path.isfile(local_filepath):
         error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
@@ -149,7 +153,7 @@ def transfer_file_server_azure(file_transfer):
             pk=file_transfer.file_instance.id)
         raise FileDoesNotExist(error_message)
 
-    if block_blob_service.exists(file_transfer.to_storage.get_storage_container(), cloud_filepath):
+    if block_blob_service.exists(cloud_container, cloud_blobname):
         error_message = "target file {filepath} already exists on {storage}".format(
             filepath=cloud_filepath,
             storage=file_transfer.to_storage.name)
@@ -161,14 +165,14 @@ def transfer_file_server_azure(file_transfer):
             file_transfer.save()
 
     block_blob_service.create_blob_from_path(
-        file_transfer.to_storage.get_storage_container(),
-        cloud_filepath,
+        cloud_container,
+        cloud_blobname,
         local_filepath,
         progress_callback=progress_callback)
 
     base_64_md5 = block_blob_service.get_blob_properties(
-        file_transfer.to_storage.get_storage_container(),
-        cloud_filepath).properties.content_settings.content_md5
+        cloud_container,
+        cloud_blobname).properties.content_settings.content_md5
 
     # the md5 for an empty file is a NoneType object
     if base_64_md5 is None:
