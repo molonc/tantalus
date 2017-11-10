@@ -134,7 +134,7 @@ class DatasetSearchForm(forms.Form):
 
         if sample:
             sample_list = sample.split()
-            results = AbstractDataSet.objects.filter(dna_sequences__sample__sample_id__in=sample_list)
+            results = results.filter(dna_sequences__sample__sample_id__in=sample_list)
 
         if library != "":
             results = results.filter(dna_sequences__dna_library__library_id__iexact=library)
@@ -142,8 +142,11 @@ class DatasetSearchForm(forms.Form):
         return list(results.values_list('id', flat=True))
 
 
-
 class DatasetTagForm(forms.Form):
+    tag_all = forms.BooleanField(
+        required=False,
+        initial=True,
+        help_text="If this is selected, all datasets returned by the search will be tagged, regardless of selection below.")
     tag_name = forms.CharField(max_length=500)
     models_to_tag = forms.ModelMultipleChoiceField(
         label="Datasets to tag",
@@ -162,9 +165,11 @@ class DatasetTagForm(forms.Form):
             self.fields['models_to_tag'].queryset = AbstractDataSet.objects.all()
 
     def add_dataset_tags(self):
-        models_to_tag = self.cleaned_data['models_to_tag']
+        if self.cleaned_data['tag_all']:
+            models_to_tag = self.fields['models_to_tag'].queryset
+        else:
+            models_to_tag = self.cleaned_data['models_to_tag']
         tag_name = self.cleaned_data['tag_name']
-
         for dataset in models_to_tag:
             dataset.tags.add(tag_name)
 
