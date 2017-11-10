@@ -104,7 +104,6 @@ def create_deployment_file_transfers(deployment, restart=False):
 
             # add exception handling for when ???
 
-
             deployment.file_transfers.add(file_transfer)
 
     return files_to_transfer
@@ -117,6 +116,15 @@ def start_deployment(deployment, restart=False):
 
     with transaction.atomic():
         files_to_transfer = create_deployment_file_transfers(deployment, restart=restart)
+
+        if len(deployment.file_transfers.all()) == 0:
+            deployment.errors = False
+            deployment.finished = True
+            deployment.running = False
+        else:
+            deployment.running = True
+
+        deployment.save()
 
         transaction.on_commit(lambda: start_file_transfers(files_to_transfer, deployment))
 
