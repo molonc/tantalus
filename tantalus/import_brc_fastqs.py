@@ -72,9 +72,10 @@ def create_DNASequences(dna_library, sample, index_sequence):
 
 
 def create_FileResource_and_FileInstance(output_dir, filepath, read_end, new_files, storage):
+    abspath = os.path.join(storage.get_storage_directory(), filepath)
     file_resource, created = tantalus.models.FileResource.objects.get_or_create(
-        size=os.path.getsize(filepath),
-        created=pd.Timestamp(time.ctime(os.path.getmtime(filepath)), tz='Canada/Pacific'),
+        size=os.path.getsize(abspath),
+        created=pd.Timestamp(time.ctime(os.path.getmtime(abspath)), tz='Canada/Pacific'),
         file_type=tantalus.models.FileResource.FQ,
         read_end=read_end,
         compression=tantalus.models.FileResource.GZIP,
@@ -161,7 +162,7 @@ def put_into_tantalus(file_df, output_dir, storage):
             filename = fastq_file["filename"]
             filepath = os.path.join(output_dir, filename)
             # Get the relative filepath
-            filepath = filepath.replace(storage_path, '')
+            filepath = filepath.replace(storage_path + '/', '')
             read_end = int(fastq_file["read_end"][1])
             row = fastq_file["row"]
             col = fastq_file["column"]
@@ -268,7 +269,7 @@ def check_output_dir_and_get_files(import_brc_fastqs):
     if ".." in import_brc_fastqs.output_dir:
         raise Exception("Invalid path for output_dir. \'..\' detected")
     # Check that output_dir is actually in storage
-    if not import_brc_fastqs.output_dir.startswith(import_brc_fastqs.storage.storage_directory):
+    if not import_brc_fastqs.output_dir.startswith(import_brc_fastqs.storage.get_storage_directory()):
         raise Exception("Invalid path for output_dir. {} doesn't seem to be in the specified storage".format(import_brc_fastqs.output_dir))
     # Check that path is valid.
     if not os.path.isdir(import_brc_fastqs.output_dir):
