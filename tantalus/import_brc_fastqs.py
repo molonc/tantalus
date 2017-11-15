@@ -268,8 +268,8 @@ def check_output_dir_and_get_files(import_brc_fastqs):
     if ".." in import_brc_fastqs.output_dir:
         raise Exception("Invalid path for output_dir. \'..\' detected")
     # Check that output_dir is actually in storage
-    if not import_brc_fastqs.output_dir.startswith(import_brc_fastqs.storage):
-        raise Exception("Invalid path for output_dir. output_dir doesn't seem to be in the specified storage")
+    if not import_brc_fastqs.output_dir.startswith(import_brc_fastqs.storage.storage_directory):
+        raise Exception("Invalid path for output_dir. {} doesn't seem to be in the specified storage".format(import_brc_fastqs.output_dir))
     # Check that path is valid.
     if not os.path.isdir(import_brc_fastqs.output_dir):
         raise Exception("output directory {} not a directory".format(import_brc_fastqs.output_dir))
