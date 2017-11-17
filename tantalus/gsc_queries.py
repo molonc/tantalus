@@ -59,6 +59,8 @@ class GSCAPI(object):
 
 bam_path_template = '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}_dupsFlagged.bam'
 
+lane_bam_path_template = '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}.bam'
+
 
 wgs_protocol_ids = (
     12,
@@ -91,6 +93,110 @@ def get_sequencing_instrument(machine):
 
 class MissingFileError(Exception):
     pass
+
+
+def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences, lane_infos):
+    library_name = library.library_id
+
+    bai_path = bam_path + '.bai'
+
+    new_file_instances = []
+
+    # ASSUMPTION: GSC stored files are pathed from root 
+    bam_filename_override = bam_path
+    bai_filename_override = bai_path
+
+    # ASSUMPTION: meaningful path starts at library_name
+    bam_filename = bam_path[bam_path.find(library_name):]
+    bai_filename = bai_path[bai_path.find(library_name):]
+
+    # Prepend sample id to filenames
+    bam_filename = os.path.join(sample_id, bam_filename)
+    bai_filename = os.path.join(sample_id, bai_filename)
+
+    bam_file, created = tantalus.models.FileResource.objects.get_or_create(
+        size=os.path.getsize(bam_path),
+        created=pd.Timestamp(time.ctime(os.path.getmtime(bam_path)), tz='Canada/Pacific'),
+        file_type=tantalus.models.FileResource.BAM,
+        read_end=None,
+        compression=tantalus.models.FileResource.UNCOMPRESSED,
+        filename=bam_filename,
+    )
+    if created:
+        bam_file.save()
+
+    bam_instance, created = tantalus.models.FileInstance.objects.get_or_create(
+        storage=storage,
+        file_resource=bam_file,
+        filename_override=bam_filename_override,
+    )
+    if created:
+        bam_instance.save()
+        new_file_instances.append(bam_instance)
+
+    if os.path.exists(bai_path):
+        bai_file, created = tantalus.models.FileResource.objects.get_or_create(
+            size=os.path.getsize(bai_path),
+            created=pd.Timestamp(time.ctime(os.path.getmtime(bai_path)), tz='Canada/Pacific'),
+            file_type=tantalus.models.FileResource.BAM,
+            read_end=None,
+            compression=tantalus.models.FileResource.UNCOMPRESSED,
+            filename=bai_filename,
+        )
+        if created:
+            bai_file.save()
+
+        bai_instance, created = tantalus.models.FileInstance.objects.get_or_create(
+            storage=storage,
+            file_resource=bai_file,
+            filename_override=bai_filename_override,
+        )
+        if created:
+            bai_instance.save()
+            new_file_instances.append(bai_instance)
+
+    else:
+        bai_file = None
+        bai_instance = None
+
+    bam_dataset, created = tantalus.models.BamFile.objects.get_or_create(
+        bam_file=bam_file,
+        bam_index_file=bai_file,
+        dna_sequences=dna_sequences,
+    )
+    if created:
+        bam_dataset.save()
+
+    reference_genomes = set()
+    aligners = set()
+
+    for lane_info in lane_infos:
+        lane, created = tantalus.models.SequenceLane.objects.get_or_create(
+            flowcell_id=lane_info['flowcell_code'],
+            lane_number=lane_info['lane_number'],
+            sequencing_centre=tantalus.models.SequenceLane.GSC,
+            sequencing_library_id=library.library_id,
+            sequencing_instrument=lane_info['sequencing_instrument'],
+            read_type=lane_info['read_type'],
+            dna_library=library,
+        )
+        if created:
+            lane.save()
+
+        reference_genomes.add(lane_info['reference_genome'])
+        aligners.add(lane_info['aligner'])
+
+        bam_dataset.lanes.add(lane)
+
+    if len(reference_genomes) > 1:
+        bam_dataset.reference_genome = tantalus.models.BamFile.UNUSABLE
+    elif len(reference_genomes) == 1:
+        bam_dataset.reference_genome = list(reference_genomes)[0]
+        bam_dataset.aligner = ', '.join(aligners)
+
+    bam_dataset.save()
+
+    return new_file_instances
 
 
 def query_gsc_wgs_bams(query_info):
@@ -136,92 +242,29 @@ def query_gsc_wgs_bams(query_info):
 
             merge_infos = gsc_api.query('merge?library={}'.format(library_name))
 
+            # Keep track of lanes that are in merged BAMs so that we
+            # can exclude them from the lane specific BAMs we add to
+            # the database
+            merged_lanes = set()
+
             for merge_info in merge_infos:
                 data_path = merge_info['data_path']
                 num_lanes = len(merge_info['merge_xrefs'])
                 lane_pluralize = ('', 's')[num_lanes > 1]
 
                 if data_path is None:
-                    print 'warning: no data path for merge info {}'.format(merge_info['id'])
-                    continue
+                    raise Exception('no data path for merge info {}'.format(merge_info['id']))
 
                 bam_path = bam_path_template.format(
                     data_path=data_path,
                     library_name=library_name,
                     num_lanes=num_lanes,
                     lane_pluralize=lane_pluralize)
-                bai_path = bam_path + '.bai'
 
                 if not os.path.exists(bam_path):
-                    print 'warning: missing file {}'.format(bam_path)
-                    continue
+                    raise Exception('missing merged bam file {}'.format(bam_path))
 
-                if not os.path.exists(bai_path):
-                    print 'warning: missing file {}'.format(bai_path)
-                    continue
-
-                # ASSUMPTION: GSC stored files are pathed from root 
-                bam_filename_override = bam_path
-                bai_filename_override = bai_path
-
-                # ASSUMPTION: meaningful path starts at library_name
-                bam_filename = bam_path[bam_path.find(library_name):]
-                bai_filename = bai_path[bai_path.find(library_name):]
-
-                # Prepend sample id to filenames
-                bam_filename = os.path.join(sample_id, bam_filename)
-                bai_filename = os.path.join(sample_id, bai_filename)
-
-                bam_file, created = tantalus.models.FileResource.objects.get_or_create(
-                    size=os.path.getsize(bam_path),
-                    created=pd.Timestamp(time.ctime(os.path.getmtime(bam_path)), tz='Canada/Pacific'),
-                    file_type=tantalus.models.FileResource.BAM,
-                    read_end=None,
-                    compression=tantalus.models.FileResource.UNCOMPRESSED,
-                    filename=bam_filename,
-                )
-                if created:
-                    bam_file.save()
-
-                bai_file, created = tantalus.models.FileResource.objects.get_or_create(
-                    size=os.path.getsize(bai_path),
-                    created=pd.Timestamp(time.ctime(os.path.getmtime(bai_path)), tz='Canada/Pacific'),
-                    file_type=tantalus.models.FileResource.BAM,
-                    read_end=None,
-                    compression=tantalus.models.FileResource.UNCOMPRESSED,
-                    filename=bai_filename,
-                )
-                if created:
-                    bai_file.save()
-
-                bam_instance, created = tantalus.models.FileInstance.objects.get_or_create(
-                    storage=storage,
-                    file_resource=bam_file,
-                    filename_override=bam_filename_override,
-                )
-                if created:
-                    bam_instance.save()
-                    new_file_instances.append(bam_instance)
-
-                bai_instance, created = tantalus.models.FileInstance.objects.get_or_create(
-                    storage=storage,
-                    file_resource=bai_file,
-                    filename_override=bai_filename_override,
-                )
-                if created:
-                    bai_instance.save()
-                    new_file_instances.append(bai_instance)
-
-                bam_dataset, created = tantalus.models.BamFile.objects.get_or_create(
-                    bam_file=bam_file,
-                    bam_index_file=bai_file,
-                    dna_sequences=dna_sequences,
-                )
-                if created:
-                    bam_dataset.save()
-
-                reference_genomes = set()
-                aligners = set()
+                lane_infos = []
 
                 for merge_xref in merge_info['merge_xrefs']:
                     libcore_id = merge_xref['object_id']
@@ -233,34 +276,62 @@ def query_gsc_wgs_bams(query_info):
                     solexa_run_type = libcore['libcore']['run']['solexarun_type']
                     reference_genome = libcore['lims_genome_reference']['path']
                     aligner = libcore['analysis_software']['name']
-
-                    reference_genomes.add(reference_genome)
-                    aligners.add(aligner)
-
                     flowcell_info = gsc_api.query('flowcell/{}'.format(flowcell_id))
                     flowcell_code = flowcell_info['lims_flowcell_code']
 
-                    lane, created = tantalus.models.SequenceLane.objects.get_or_create(
-                        flowcell_id=flowcell_code,
+                    merged_lanes.add((flowcell_code, lane_number))
+
+                    lane_info = dict(
+                        flowcell_code=flowcell_code,
                         lane_number=lane_number,
-                        sequencing_centre=tantalus.models.SequenceLane.GSC,
-                        sequencing_library_id=library_name,
                         sequencing_instrument=sequencing_instrument,
                         read_type=solexa_run_type_map[solexa_run_type],
-                        dna_library=library,
+                        reference_genome=reference_genome,
+                        aligner=aligner,
                     )
-                    if created:
-                        lane.save()
 
-                    bam_dataset.lanes.add(lane)
+                    lane_infos.append(lane_info)
 
-                if len(reference_genomes) > 1:
-                    bam_dataset.reference_genome = tantalus.models.BamFile.UNUSABLE
-                elif len(reference_genomes) == 1:
-                    bam_dataset.reference_genome = list(reference_genomes)[0]
-                    bam_dataset.aligner = ', '.join(aligners)
+                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences, lane_infos)
 
-                bam_dataset.save()
+            libcores = gsc_api.query('aligned_libcore/info?library={}'.format(library_name))
+
+            for libcore in libcores:
+                flowcell_id = libcore['libcore']['run']['flowcell_id']
+                lane_number = libcore['libcore']['run']['lane_number']
+                sequencing_instrument = get_sequencing_instrument(libcore['libcore']['run']['machine'])
+                solexa_run_type = libcore['libcore']['run']['solexarun_type']
+                reference_genome = libcore['lims_genome_reference']['path']
+                aligner = libcore['analysis_software']['name']
+                adapter_index_sequence = libcore['libcore']['primer']['adapter_index_sequence']
+                data_path = libcore['data_path']
+
+                flowcell_info = gsc_api.query('flowcell/{}'.format(flowcell_id))
+                flowcell_code = flowcell_info['lims_flowcell_code']
+
+                # Skip lanes that are part of merged BAMs
+                if (flowcell_code, lane_number) in merged_lanes:
+                    continue
+
+                bam_path = lane_bam_path_template.format(
+                    data_path=data_path,
+                    flowcell_code=flowcell_code,
+                    lane_number=lane_number,
+                    adapter_index_sequence=adapter_index_sequence)
+
+                if not os.path.exists(bam_path):
+                    raise Exception('missing lane bam file {}'.format(bam_path))
+
+                lane_infos = [dict(
+                    flowcell_code=flowcell_code,
+                    lane_number=lane_number,
+                    sequencing_instrument=sequencing_instrument,
+                    read_type=solexa_run_type_map[solexa_run_type],
+                    reference_genome=reference_genome,
+                    aligner=aligner,
+                )]
+
+                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences, lane_infos)
 
         django.db.transaction.on_commit(lambda: tantalus.utils.start_md5_checks(new_file_instances))
 
