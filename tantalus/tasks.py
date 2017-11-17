@@ -94,7 +94,7 @@ def check_md5_task(md5_check_id):
 def query_gsc_wgs_bams_task(query_id):
     simple_task_wrapper(
         id_=query_id,
-        model=tantalus.models.QueryGscWgsBams,
+        model=tantalus.models.GscWgsBamQuery,
         func=tantalus.gsc_queries.query_gsc_wgs_bams,
         name='query GSC for WGS BAMs',
     )
@@ -104,7 +104,7 @@ def query_gsc_wgs_bams_task(query_id):
 def query_gsc_dlp_paired_fastqs_task(query_id):
     simple_task_wrapper(
         id_=query_id,
-        model=tantalus.models.QueryGscDlpPairedFastqs,
+        model=tantalus.models.GscDlpPairedFastqQuery,
         func=tantalus.gsc_queries.query_gsc_dlp_paired_fastqs,
         name='query GSC for DLP fastqs',
     )
@@ -114,7 +114,7 @@ def query_gsc_dlp_paired_fastqs_task(query_id):
 def import_brc_fastqs_task(query_id):
     simple_task_wrapper(
         id_=query_id,
-        model=tantalus.models.BRCImportFastqs,
+        model=tantalus.models.BRCFastqImport,
         func=tantalus.import_brc_fastqs.load_brc_fastqs,
         name="Import brc fastqs into tantalus"
     )

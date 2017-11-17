@@ -300,7 +300,7 @@ if __name__ == "__main__":
     if created:
         storage.save()
 
-    import_brc_fastqs, created  = tantalus.models.BRCImportFastqs.objects.get_or_create(
+    import_brc_fastqs, created  = tantalus.models.BRCFastqImport.objects.get_or_create(
         output_dir='/Users/amcphers/Scratch/tantalus_test/output',
         storage=tantalus.models.ServerStorage.objects.get(name='test'),
         flowcell_id='AHKNYTAFXX',

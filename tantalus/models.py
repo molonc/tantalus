@@ -570,7 +570,7 @@ class FileTransfer(SimpleTask):
         unique_together = ('from_storage', 'to_storage', 'file_instance')
 
 
-class BRCImportFastqs(SimpleTask):
+class BRCFastqImport(SimpleTask):
     """
     When given an output dir + metadata, generate fastq files.
     """
@@ -633,7 +633,7 @@ class MD5Check(SimpleTask):
     )
 
 
-class QueryGscWgsBams(SimpleTask):
+class GscWgsBamQuery(SimpleTask):
     """
     Query GSC API for WGS Bam data paths.
     """
@@ -643,7 +643,7 @@ class QueryGscWgsBams(SimpleTask):
     )
 
 
-class QueryGscDlpPairedFastqs(SimpleTask):
+class GscDlpPairedFastqQuery(SimpleTask):
     """
     Query GSC API for DLP paired fastq data paths.
     """

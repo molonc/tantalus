@@ -198,7 +198,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
 
 class ImportBRCFastqsSeralizer(SimpleTaskSerializer):
     def create(self, validated_data):
-        instance = tantalus.models.BRCImportFastqs(**validated_data)
+        instance = tantalus.models.BRCFastqImport(**validated_data)
         instance.full_clean()
         instance.save()
         tantalus.tasks.import_brc_fastqs_task.apply_async(
@@ -207,7 +207,7 @@ class ImportBRCFastqsSeralizer(SimpleTaskSerializer):
         return instance
 
     class Meta:
-        model = tantalus.models.BRCImportFastqs
+        model = tantalus.models.BRCFastqImport
         fields = '__all__'
 
 
@@ -232,13 +232,13 @@ class QueryGscSerializer(SimpleTaskSerializer):
 class QueryGscWgsBamsSerializer(QueryGscSerializer):
     celery_task = tantalus.tasks.query_gsc_wgs_bams_task
     class Meta:
-        model = tantalus.models.QueryGscWgsBams
+        model = tantalus.models.GscWgsBamQuery
         fields = '__all__'
 
 
 class QueryGscDlpPairedFastqsSerializer(QueryGscSerializer):
     celery_task = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
     class Meta:
-        model = tantalus.models.QueryGscDlpPairedFastqs
+        model = tantalus.models.GscDlpPairedFastqQuery
         fields = '__all__'
 
