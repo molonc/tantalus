@@ -39,6 +39,7 @@
         TANTALUS_QUEUE_PREFIX: "{{ queue_prefix }}"
         TANTALUS_SECRET_KEY: "{{ lookup('env', 'TANTALUS_SECRET_KEY') }}"
         TANTALUS_DEBUG: "{{ lookup('env', 'TANTALUS_DEBUG') }}"
+        TANTALUS_IS_PRODUCTION: "{{ lookup('env', 'TANTALUS_IS_PRODUCTION') }}"
         TANTALUS_POSTGRESQL_NAME: "{{ lookup('env', 'TANTALUS_POSTGRESQL_NAME') }}"
         TANTALUS_POSTGRESQL_USER: "{{ lookup('env', 'TANTALUS_POSTGRESQL_USER') }}"
         TANTALUS_POSTGRESQL_PASSWORD: "{{ lookup('env', 'TANTALUS_POSTGRESQL_PASSWORD') }}"
