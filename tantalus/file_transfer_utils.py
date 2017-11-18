@@ -18,31 +18,16 @@ import shutil
 __MINIMUM_FREE_DISK_SPACE = 50e10
 
 
-def get_md5(f, chunk_size=134217728):
-    """
-    get the md5 string of a given file OBJECT, not path
-
-    :param f: file OBJECT, not path this is to work with the SFTPFile object
-    :param chunk_size: size of the buffer
-    :return: md5 string (32 chars)
-    """
-    hash_md5 = hashlib.md5()
-    for chunk in iter(lambda: f.read(chunk_size), b""):
-        hash_md5.update(chunk)
-    md5 =  hash_md5.hexdigest()
-    return md5
-
-
-def check_md5(md5, file_transfer):
-    database_saved_md5 = file_transfer.file_instance.file_resource.md5
-    if (md5 != database_saved_md5):
-        error_message = "Data has been corrupted - file md5 is {} while database md5 is {}".format(md5, database_saved_md5)
-        print error_message
-        raise DataCorruptionError(error_message)
-
-
 class MD5CheckError(Exception):
     pass
+
+
+def get_md5(filepath):
+    try:
+        md5 = subprocess.check_output(['md5sum', filepath]).split()[0]
+    except Exception as e:
+        raise MD5CheckError('Unable to run md5sum on {}\n{}'.format(filepath, str(e)))
+    return md5
 
 
 def check_or_update_md5(md5_check):
@@ -51,11 +36,7 @@ def check_or_update_md5(md5_check):
 
     filepath = md5_check.file_instance.get_filepath()
 
-    try:
-        md5 = subprocess.check_output(['md5sum', filepath]).split()[0]
-    except Exception as e:
-        raise MD5CheckError('Unable to run md5sum on {}\n{}'.format(filepath, str(e)))
-
+    md5 = get_md5(filepath)
     existing_md5 = md5_check.file_instance.file_resource.md5
 
     if existing_md5 is None or existing_md5 == '':
@@ -211,9 +192,23 @@ def transfer_file_server_server_remote(file_transfer):
     remote_filepath = file_transfer.file_instance.get_filepath()
 
     if os.path.isfile(local_filepath):
-        error_message = "target file {filepath} already exists on {storage}".format(
+        md5 = file_transfer.file_instance.file_resource.md5
+
+        if md5 is None:
+            additional_message = 'no md5 available to check'
+
+        elif md5 != get_md5(local_filepath):
+            additional_message = 'md5 does not match'
+
+        else:
+            create_file_instance(file_transfer)
+            os.chmod(local_filepath, 0444)
+            return
+
+        error_message = "target file {filepath} already exists on {storage}, {additional_message}".format(
             filepath=local_filepath,
-            storage=file_transfer.to_storage.name)
+            storage=file_transfer.to_storage.name,
+            additional_message=additional_message)
         raise FileAlreadyExists(error_message)
 
     try:
