@@ -363,6 +363,8 @@ def query_gsc_dlp_paired_fastqs(query_info):
 
             # ASSUMPTION: meaningful path starts at library_name
             fastq_filename = fastq_path[fastq_path.find(gsc_library_id):]
+            # Prepend single_cell_indexing/<gsc_lib_id>/ so it follows our file structure
+            fastq_filename = 'single_cell_indexing/HiSeq/' + fastq_filename
 
             cell_sample_id = cell_samples[index_sequence]
 
