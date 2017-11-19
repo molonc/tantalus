@@ -1,7 +1,9 @@
 from azure.storage.blob import BlockBlobService
 import paramiko
 import custom_paramiko
-import os, io
+import os
+import io
+import time
 import hashlib
 import subprocess
 from django.db.models.signals import post_save
@@ -22,11 +24,32 @@ class MD5CheckError(Exception):
     pass
 
 
-def get_md5(filepath):
+def get_file_md5(filepath):
     try:
         md5 = subprocess.check_output(['md5sum', filepath]).split()[0]
     except Exception as e:
         raise MD5CheckError('Unable to run md5sum on {}\n{}'.format(filepath, str(e)))
+    return md5
+
+
+def get_blob_md5(block_blob_service, container, blobname):
+    # Try 3 times to deal with null md5 on new blobs 
+    for i in range(3):
+        base_64_md5 = block_blob_service.get_blob_properties(
+            container,
+            blobname).properties.content_settings.content_md5
+
+        if base_64_md5 is not None:
+            break
+
+        time.sleep(10)
+
+    # the md5 for an empty file is a NoneType object
+    if base_64_md5 is None:
+        md5 = "d41d8cd98f00b204e9800998ecf8427e"
+    else:
+        md5 = base_64_md5.decode("base64").encode("hex")
+
     return md5
 
 
@@ -36,7 +59,7 @@ def check_or_update_md5(md5_check):
 
     filepath = md5_check.file_instance.get_filepath()
 
-    md5 = get_md5(filepath)
+    md5 = get_file_md5(filepath)
     existing_md5 = md5_check.file_instance.file_resource.md5
 
     if existing_md5 is None or existing_md5 == '':
@@ -135,9 +158,22 @@ def transfer_file_server_azure(file_transfer):
         raise FileDoesNotExist(error_message)
 
     if block_blob_service.exists(cloud_container, cloud_blobname):
-        error_message = "target file {filepath} already exists on {storage}".format(
+        md5 = file_transfer.file_instance.file_resource.md5
+
+        if md5 is None:
+            additional_message = 'no md5 available to check'
+
+        elif md5 != get_blob_md5(block_blob_service, cloud_container, cloud_blobname):
+            additional_message = 'md5 does not match'
+
+        else:
+            create_file_instance(file_transfer)
+            return
+
+        error_message = "target file {filepath} already exists on {storage}, {additional_message}".format(
             filepath=cloud_filepath,
-            storage=file_transfer.to_storage.name)
+            storage=file_transfer.to_storage.name,
+            additional_message=additional_message)
         raise FileAlreadyExists(error_message)
 
     def progress_callback(current, total):
@@ -151,22 +187,15 @@ def transfer_file_server_azure(file_transfer):
         local_filepath,
         progress_callback=progress_callback)
 
-    base_64_md5 = block_blob_service.get_blob_properties(
-        cloud_container,
-        cloud_blobname).properties.content_settings.content_md5
+    blob_md5 = get_blob_md5(block_blob_service, cloud_container, cloud_blobname)
+    file_md5 = file_transfer.file_instance.file_resource.md5
 
-    # the md5 for an empty file is a NoneType object
-    if base_64_md5 is None:
-        if file_transfer.file_instance.file_resource.size != 0:
-            raise DataCorruptionError("Empty file transferred instead of file content")
-        md5 = "d41d8cd98f00b204e9800998ecf8427e"
-    else:
-        md5 = base_64_md5.decode("base64").encode("hex")
-
-    file_resource_md5 = file_transfer.file_instance.file_resource.md5
-
-    if file_resource_md5 is not None and file_resource_md5 != md5:
-        error_message = "Data corruption: cloud md5 {}, file md5 {}".format(md5, file_resource_md5)
+    if file_md5 is not None and file_md5 != blob_md5:
+        error_message = "md5 mismatch for {blobname} on {storage} blob md5 {blobmd5}, file md5 {filemd5}".format(
+            blobname=cloud_blobname,
+            storage=file_transfer.to_storage.name,
+            blobmd5=blob_md5,
+            filemd5=file_md5)
         raise DataCorruptionError(error_message)
 
     create_file_instance(file_transfer)
@@ -197,7 +226,7 @@ def transfer_file_server_server_remote(file_transfer):
         if md5 is None:
             additional_message = 'no md5 available to check'
 
-        elif md5 != get_md5(local_filepath):
+        elif md5 != get_file_md5(local_filepath):
             additional_message = 'md5 does not match'
 
         else:
