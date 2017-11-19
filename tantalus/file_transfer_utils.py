@@ -190,13 +190,13 @@ def transfer_file_server_azure(file_transfer):
     blob_md5 = get_blob_md5(block_blob_service, cloud_container, cloud_blobname)
     file_md5 = file_transfer.file_instance.file_resource.md5
 
-    if file_md5 is not None and file_md5 != blob_md5:
-        error_message = "md5 mismatch for {blobname} on {storage} blob md5 {blobmd5}, file md5 {filemd5}".format(
-            blobname=cloud_blobname,
-            storage=file_transfer.to_storage.name,
-            blobmd5=blob_md5,
-            filemd5=file_md5)
-        raise DataCorruptionError(error_message)
+    #if file_md5 is not None and file_md5 != blob_md5:
+    #    error_message = "md5 mismatch for {blobname} on {storage} blob md5 {blobmd5}, file md5 {filemd5}".format(
+    #        blobname=cloud_blobname,
+    #        storage=file_transfer.to_storage.name,
+    #        blobmd5=blob_md5,
+    #        filemd5=file_md5)
+    #    raise DataCorruptionError(error_message)
 
     create_file_instance(file_transfer)
 
