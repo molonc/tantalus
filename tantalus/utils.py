@@ -34,17 +34,21 @@ def start_file_transfer(file_transfer):
         raise Exception('unsupported transfer')
 
 
-def start_file_transfers(deployment):
-    """
-    Start a set of file transfers.
-    """
+def initialize_deployment(deployment):
     if deployment.file_transfers.all().count() == 0:
         deployment.errors = False
         deployment.finished = True
+        deployment.start = False
         deployment.running = False
     else:
         deployment.running = True
     deployment.save()
+
+
+def start_file_transfers(deployment):
+    """
+    Start a set of file transfers.
+    """
     for file_transfer in get_file_transfers_to_start(deployment):
         start_file_transfer(file_transfer)
 

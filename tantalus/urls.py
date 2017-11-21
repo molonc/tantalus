@@ -30,6 +30,7 @@ urlpatterns = [
     url(r'^deployments/$', tantalus.views.DeploymentView.as_view(), name='deployment-list'),
     url(r'^deployments/create$', tantalus.views.DeploymentCreateView.as_view(), name='deployment-create'),
     url(r'^deployments/(?P<pk>\d+)$', tantalus.views.DeploymentDetailView.as_view(), name='deployment-detail'),
+    url(r'^deployments/start/(?P<pk>\d+)$', tantalus.views.start_deployment, name='deployment-start'),
     url(r'^samples/$', tantalus.views.sample_list, name='sample-list'),
     url(r'^samples/create$', tantalus.views.SampleCreate.as_view(), name='sample-add'),
     url(r'^datasets/$', tantalus.views.DatasetList.as_view(), name='dataset-list'),

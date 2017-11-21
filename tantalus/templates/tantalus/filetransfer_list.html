@@ -16,9 +16,11 @@
                 <tr><th id="thid">From</th><td id="tdid">{{ deployment.from_storage }}</td></tr>
                 <tr><th id="thid">To</th><td id="tdid">{{ deployment.to_storage }}</td></tr>
                 <tr><th id="thid">Running</th><td id="tdid">{{ deployment.running }}</td></tr>
+                <tr><th id="thid">Started</th><td id="tdid">{{ deployment.start }}</td></tr>
                 <tr><th id="thid">Percent complete</th><td id="tdid">{{ deployment.get_percentage_completed }}</td></tr>
             </tbody>
         </table>
+        <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href={% url 'deployment-start' pk=deployment.pk %}>Start Deployment</a>
     </div>
     <div class="container" style="padding:0; margin-bottom:5px;">
         <h4 style="float:left;">Select a transfer to view its details</h4>

@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import DetailView, FormView
 from django.views.generic.edit import ModelFormMixin, View
 from django.views.generic.base import TemplateView
@@ -95,13 +95,22 @@ class DeploymentCreateView(TemplateView):
 
                 # this MUST be the form.save() method that is called here -
                 # the save method is overridden to create file transfers for the datasets set above
+                instance.start = True
                 form.save()
-                transaction.on_commit(lambda: start_file_transfers(deployment=instance))
             return HttpResponseRedirect(instance.get_absolute_url())
         else:
             msg = "Failed to create the deployment. Please fix the errors below."
             messages.error(request, msg)
         return self.get_context_and_render(request, form)
+
+@login_required()
+def start_deployment(request, pk):
+    deployment = get_object_or_404(Deployment, pk=pk)
+    deployment.start = True
+    deployment.save()
+    if not deployment.running:
+        start_file_transfers(deployment=deployment)
+    return HttpResponseRedirect(deployment.get_absolute_url())
 
 
 @method_decorator(login_required, name='dispatch')

@@ -112,11 +112,7 @@ class FileInstanceViewSet(viewsets.ReadOnlyModelViewSet):
                      'storage__name',)
 
 
-class DeploymentViewSet(mixins.CreateModelMixin,
-                        mixins.RetrieveModelMixin,
-                        mixins.DestroyModelMixin,
-                        mixins.ListModelMixin,
-                        viewsets.GenericViewSet):
+class DeploymentViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.Deployment.objects.all()
     serializer_class = tantalus.api.serializers.DeploymentSerializer
     filter_fields = ('name',)
@@ -134,7 +130,7 @@ class MD5CheckViewSet(viewsets.ModelViewSet):
 
 class BRCImportFastqsViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.BRCFastqImport.objects.all()
-    serializer_class = tantalus.api.serializers.ImportBRCFastqsSeralizer
+    serializer_class = tantalus.api.serializers.ImportBRCFastqsSerializer
 
 
 class QueryGscWgsBamsViewSet(viewsets.ModelViewSet):

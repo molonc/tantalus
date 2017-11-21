@@ -6,7 +6,7 @@ from taggit_serializer.serializers import (
     TaggitSerializer)
 
 import tantalus.models
-from tantalus.utils import start_file_transfers, validate_deployment, add_file_transfers
+from tantalus.utils import start_file_transfers, validate_deployment, add_file_transfers, initialize_deployment
 import tantalus.tasks
 
 
@@ -162,13 +162,10 @@ class FileTransferSerializer(SimpleTaskSerializer):
 
 
 class DeploymentSerializer(serializers.ModelSerializer):
-    running = serializers.BooleanField(read_only=True)
-    finished = serializers.BooleanField(read_only=True)
-    errors = serializers.BooleanField(read_only=True)
-
     class Meta:
         model = tantalus.models.Deployment
         fields = '__all__'
+        read_only_fields = ('running', 'finished', 'errors', 'file_transfers')
 
     def validate(self, data):
         from_storage = data['from_storage']
@@ -179,24 +176,19 @@ class DeploymentSerializer(serializers.ModelSerializer):
 
         return data
 
-    def create(self, validated_data):
-        with transaction.atomic():
-            datasets = validated_data.pop('datasets')
-            instance = tantalus.models.Deployment(**validated_data)
-            instance.save()
-            instance.datasets = datasets
-            instance.save()
-            transaction.on_commit(lambda: start_file_transfers(deployment=instance))
-        return instance
-
     def save(self, **kwargs):
         with transaction.atomic():
             super(DeploymentSerializer, self).save(**kwargs)
             add_file_transfers(self.instance)
+            if self.instance.start and not self.instance.running:
+                initialize_deployment(deployment=self.instance)
+                # Wrapped in an on_commit so that celery tasks do not get started before changes are saved to the database
+                transaction.on_commit(lambda: start_file_transfers(deployment=self.instance))
             self.instance.save()
+        return self.instance
 
 
-class ImportBRCFastqsSeralizer(SimpleTaskSerializer):
+class ImportBRCFastqsSerializer(SimpleTaskSerializer):
     def create(self, validated_data):
         instance = tantalus.models.BRCFastqImport(**validated_data)
         instance.full_clean()

@@ -1,10 +1,7 @@
 from azure.storage.blob import BlockBlobService
 import paramiko
 import custom_paramiko
-import os
-import io
 import time
-import hashlib
 import subprocess
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -13,7 +10,6 @@ from tantalus.models import *
 from tantalus.exceptions.file_transfer_exceptions import *
 import tantalus.custom_shutils
 import errno
-import shutil
 
 
 # if available memory on the storage is less than this, include this as a possible source of error if the transfer fails
@@ -331,6 +327,8 @@ def _check_deployment_complete(deployment):
             return
 
     deployment.finished = True
+    deployment.start = False
+    deployment.running = False
     deployment.save()
 
 

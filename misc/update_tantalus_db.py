@@ -18,7 +18,7 @@ django.setup()
 from tantalus.models import *
 
 # HOSTNAME='http://127.0.0.1:8000/api/'
-HOSTNAME='http://colossus.bcgsc.ca/apps/api/'
+HOSTNAME='http://colossus.bcgsc.ca/api/'
 JSON_FORMAT='?format=json'
 DEFAULT_LIBRARY_TYPE=DNALibrary.SINGLE_CELL_WGS
 INDEX_FORMAT=DNALibrary.DUAL_INDEX #Data coming from colossus should all be dual indexed
