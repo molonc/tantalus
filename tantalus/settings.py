@@ -172,4 +172,4 @@ GSC_API_USERNAME = os.environ.get('GSC_API_USERNAME')
 GSC_API_PASSWORD = os.environ.get('GSC_API_PASSWORD')
 
 # Colossus settings
-COLOSSUS_API_URL = os.environ.get('COLOSSUS_API_URL', 'http://colossus.bcgsc.ca/apps/api/')
+COLOSSUS_API_URL = os.environ.get('COLOSSUS_API_URL', 'http://colossus.bcgsc.ca/api/')
