@@ -20,11 +20,10 @@
                             <th>Name</th>
                             <th>From</th>
                             <th>To</th>
-                            <th>Datasets</th>
-                            <th>File Transfers</th>
                             <th>Running</th>
                             <th>Finished</th>
                             <th>Errors</th>
+                            <th>Percent Complete</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -35,11 +34,10 @@
                                 <th>{{deployment.name}}</th>
                                 <td>{{deployment.from_storage}}</td>
                                 <td>{{deployment.to_storage}}</td>
-                                <td>{{deployment.datasets}}</td>
-                                <td>{{deployment.file_transfers}}</td>
                                 <td>{{deployment.running}}</td>
                                 <td>{{deployment.finished}}</td>
                                 <td>{{deployment.errors}}</td>
+                                <td>{{deployment.get_percentage_completed}}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

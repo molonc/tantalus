@@ -622,6 +622,11 @@ class Deployment(models.Model):
     def get_absolute_url(self):
         return reverse("deployment-list")
 
+    def get_percentage_completed(self):
+        completed = self.file_transfers.filter(progress=1).count()
+        total = self.file_transfers.all().count()
+        return float(completed)/total * 100
+
 
 class MD5Check(SimpleTask):
     """

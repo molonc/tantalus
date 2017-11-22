@@ -60,7 +60,8 @@ class DeploymentDetailView(TemplateView):
     def get_context_data(self, **kwargs):
         deployment = get_object_or_404(Deployment, id=kwargs['pk'])
         transfers = deployment.file_transfers.all()
-        context = {'transfers': transfers}
+        context = {'deployment': deployment,
+                   'transfers': transfers}
         return context
 
 
