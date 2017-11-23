@@ -25,7 +25,8 @@ SECRET_KEY = os.environ.get('TANTALUS_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get('TANTALUS_DEBUG', False))
 
-IS_PRODUCTION = bool(os.environ.get('TANTALUS_IS_PRODUCTION', False))
+# Safeguard to ensure production code is not run during development
+IS_PRODUCTION = (os.environ.get('TANTALUS_IS_PRODUCTION', '') == 'thisismostdefinitelyproduction')
 
 ALLOWED_HOSTS = [os.environ.get('TANTALUS_ALLOWED_HOSTS', '127.0.0.1')]
 

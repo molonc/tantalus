@@ -11,6 +11,7 @@ print 'password for the gsc:'
 password = getpass.getpass()
 
 os.environ['GSC_API_PASSWORD'] = password
+os.environ['TANTALUS_IS_PRODUCTION'] = "nope"
 
 os.system('ansible-playbook playbook.yml -e "stashuser={}" -e "stashpassword={}" -i hosts.txt'.format(username, password))
 
