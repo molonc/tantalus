@@ -623,7 +623,7 @@ class Deployment(models.Model):
         return reverse("deployment-list")
 
     def get_percentage_completed(self):
-        completed = self.file_transfers.filter(progress=1).count()
+        completed = self.file_transfers.filter(finished=True).count()
         total = self.file_transfers.all().count()
         return float(completed)/total * 100
 
