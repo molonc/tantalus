@@ -28,4 +28,9 @@ if response.status_code == 200:
 else:
     raise Exception('unable to authenticate GSC API')
 
+get_library_url = GSC_API_URL + 'library/124782'
+
+response = request_handle.get(get_library_url, headers=headers)
+
+print 'ok'
 
