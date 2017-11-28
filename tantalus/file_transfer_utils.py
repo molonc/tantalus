@@ -257,33 +257,10 @@ def transfer_file_server_server_remote(file_transfer):
             file_transfer.progress = float(current) / float(total)
             file_transfer.save()
 
-    try:
-        sftp.get(
-            remote_filepath,
-            local_filepath,
-            callback=progress_callback)
-
-    except EnvironmentError as e: # IOError and OSError exceptions are caught here
-        # TODO: add other errors where we would simply pop off file transfer again
-        if e.errno == errno.EPIPE: # Error code 32 - broken pipe
-            raise RecoverableFileTransferError(e.strerror)
-            # TODO: make the celery work try the file transfer again
-
-        elif e.message == 'Failure': # SFTP code 4 failure - An error occurred, but no specific error code exists to describe the failure
-            #  warning: ensure that any failures with checks don't overwrite actual exceptions
-
-            e.message = e.message + " - No specific error code was given.\nPossible reasons include:"
-
-            # check uploading a file to a full filesystem
-            # cmd = "df " + file_transfer.to_storage.get_storage_directory()
-            # stdin, stdout, stderr = client.exec_command(cmd)
-            # stdout.channel.recv_exit_status() # This is a blocking call to wait for output
-            # available_space = stdout.readlines()[1].split()[3] # parse out available space from output
-            # 
-            # if float(available_space) < __MINIMUM_FREE_DISK_SPACE:
-            #     e.message = e.message + "\n- A file is being uploaded to a full filesystem - available disk space is {} kilobytes".format(available_space)
-
-            raise
+    sftp.get(
+        remote_filepath,
+        local_filepath,
+        callback=progress_callback)
 
     client.close()
 
