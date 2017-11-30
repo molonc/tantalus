@@ -14,7 +14,7 @@ from django.shortcuts import get_object_or_404, render
 import django.forms
 
 from tantalus.models import FileTransfer, Deployment, FileResource, Sample, AbstractDataSet, Storage
-from tantalus.utils import read_excel_sheets, start_file_transfers
+from tantalus.utils import read_excel_sheets, add_file_transfers, start_file_transfers
 from tantalus.exceptions.api_exceptions import DeploymentNotCreated
 from misc.helpers import Render
 from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, DeploymentCreateForm
@@ -103,13 +103,17 @@ class DeploymentCreateView(TemplateView):
             messages.error(request, msg)
         return self.get_context_and_render(request, form)
 
+
 @login_required()
 def start_deployment(request, pk):
     deployment = get_object_or_404(Deployment, pk=pk)
-    deployment.start = True
-    deployment.save()
-    if not deployment.running:
-        start_file_transfers(deployment=deployment)
+    # TODO: error for starting deployment that is running
+    if deployment.running:
+        return
+    with transaction.atomic():
+        deployment.start = True
+        deployment.save()
+        transaction.on_commit(lambda: start_file_transfers(deployment=deployment))
     return HttpResponseRedirect(deployment.get_absolute_url())
 
 

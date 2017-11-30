@@ -50,6 +50,8 @@ def start_file_transfers(deployment):
     Start a set of file transfers.
     """
     for file_transfer in get_file_transfers_to_start(deployment):
+        file_transfer.finished = False
+        file_transfer.save()
         start_file_transfer(file_transfer)
 
 
@@ -155,6 +157,9 @@ def add_file_transfers(deployment):
     datasets = deployment.datasets.all()
     from_storage = deployment.from_storage
     to_storage = deployment.to_storage
+
+    # Clear previous transfers, some of which may have completed successfully
+    deployment.file_transfers.clear()
 
     for file_resource in get_file_resources_from_datasets(datasets):
         destination_file_instances = file_resource.fileinstance_set.filter(storage=to_storage)
