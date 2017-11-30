@@ -35,6 +35,9 @@ def start_file_transfer(file_transfer):
 
 
 def initialize_deployment(deployment):
+    """
+    Initialize a deployment.
+    """
     if deployment.file_transfers.all().count() == 0:
         deployment.errors = False
         deployment.finished = True
@@ -51,6 +54,9 @@ def start_file_transfers(deployment):
     """
     for file_transfer in get_file_transfers_to_start(deployment):
         file_transfer.finished = False
+        file_transfer.success = False
+        file_transfer.state = ''
+        file_transfer.message = ''
         file_transfer.save()
         start_file_transfer(file_transfer)
 
