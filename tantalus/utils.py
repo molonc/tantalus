@@ -5,7 +5,7 @@ from celery import chain
 import pandas as pd
 
 
-def start_file_transfer(file_transfer, deployment):
+def start_file_transfer(file_transfer):
     """
     Start a single file transfer.
     """
@@ -14,20 +14,20 @@ def start_file_transfer(file_transfer, deployment):
     to_storage_type = file_transfer.to_storage.__class__.__name__
 
     if from_storage_type == 'ServerStorage' and to_storage_type == 'AzureBlobStorage':
-        tantalus.tasks.transfer_file_server_azure_task.apply_async(args=(file_transfer.id,), queue=deployment.from_storage.get_transfer_queue_name())
+        tantalus.tasks.transfer_file_server_azure_task.apply_async(args=(file_transfer.id,), queue=file_transfer.from_storage.get_transfer_queue_name())
 
     elif from_storage_type == 'AzureBlobStorage' and to_storage_type == 'ServerStorage':
         make_dirs_sig = tantalus.tasks.make_dirs_for_file_transfer_task.signature((file_transfer.id,), immutable=True)
-        make_dirs_sig.set(queue=deployment.to_storage.get_mkdir_queue_name())
+        make_dirs_sig.set(queue=file_transfer.to_storage.get_mkdir_queue_name())
         transfer_file_sig = tantalus.tasks.transfer_file_azure_server_task.signature((file_transfer.id,), immutable=True)
-        transfer_file_sig.set(queue=deployment.to_storage.get_transfer_queue_name())
+        transfer_file_sig.set(queue=file_transfer.to_storage.get_transfer_queue_name())
         chain(make_dirs_sig, transfer_file_sig).apply_async()
 
     elif from_storage_type == 'ServerStorage' and to_storage_type == 'ServerStorage':
         make_dirs_sig = tantalus.tasks.make_dirs_for_file_transfer_task.signature((file_transfer.id,), immutable=True)
-        make_dirs_sig.set(queue=deployment.to_storage.get_mkdir_queue_name())
+        make_dirs_sig.set(queue=file_transfer.to_storage.get_mkdir_queue_name())
         transfer_file_sig = tantalus.tasks.transfer_file_server_server_task.signature((file_transfer.id,), immutable=True)
-        transfer_file_sig.set(queue=deployment.to_storage.get_transfer_queue_name())
+        transfer_file_sig.set(queue=file_transfer.to_storage.get_transfer_queue_name())
         chain(make_dirs_sig, transfer_file_sig).apply_async()
 
     else:
@@ -46,7 +46,7 @@ def start_file_transfers(deployment):
         deployment.running = True
     deployment.save()
     for file_transfer in get_file_transfers_to_start(deployment):
-        start_file_transfer(file_transfer, deployment)
+        start_file_transfer(file_transfer)
 
 
 def read_excel_sheets(filename):
