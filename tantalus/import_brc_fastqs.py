@@ -25,7 +25,7 @@ BRC_READ_TYPE = tantalus.models.SequenceLane.PAIRED
 BRC_SEQ_CENTRE = tantalus.models.SequenceLane.BRC
 
 
-def create_Sample(sample_id):
+def create_sample(sample_id):
     sample, created = tantalus.models.Sample.objects.get_or_create(
         sample_id=sample_id,
     )
@@ -34,7 +34,7 @@ def create_Sample(sample_id):
     return sample
 
 
-def create_DNALibrary(library_id):
+def create_dna_library(library_id):
     dna_library, created = tantalus.models.DNALibrary.objects.get_or_create(
         library_id=library_id,
         index_format=BRC_INDEX_FORMAT,
@@ -45,7 +45,7 @@ def create_DNALibrary(library_id):
     return dna_library
 
 
-def create_SequenceLane(dna_library, flowcell_id, lane_number, sequencing_library_id):
+def create_sequence_lane(dna_library, flowcell_id, lane_number, sequencing_library_id):
     sequence_lane, created = tantalus.models.SequenceLane.objects.get_or_create(
         dna_library=dna_library,
         flowcell_id=flowcell_id,
@@ -60,7 +60,7 @@ def create_SequenceLane(dna_library, flowcell_id, lane_number, sequencing_librar
     return sequence_lane
 
 
-def create_DNASequences(dna_library, sample, index_sequence):
+def create_dna_sequences(dna_library, sample, index_sequence):
     dna_sequence, created = tantalus.models.DNASequences.objects.get_or_create(
         dna_library=dna_library,
         sample=sample,
@@ -71,53 +71,46 @@ def create_DNASequences(dna_library, sample, index_sequence):
     return dna_sequence
 
 
-def create_FileResource_and_FileInstance(output_dir, filepath, read_end, new_files, storage):
-    abspath = os.path.join(storage.get_storage_directory(), filepath)
+def create_file_resource(filename, filepath, read_end):
     file_resource, created = tantalus.models.FileResource.objects.get_or_create(
-        size=os.path.getsize(abspath),
-        created=pd.Timestamp(time.ctime(os.path.getmtime(abspath)), tz='Canada/Pacific'),
+        size=os.path.getsize(filepath),
+        created=pd.Timestamp(time.ctime(os.path.getmtime(filepath)), tz='Canada/Pacific'),
         file_type=tantalus.models.FileResource.FQ,
         read_end=read_end,
         compression=tantalus.models.FileResource.GZIP,
-        filename=filepath
+        filename=filename,
     )
     if created:
         file_resource.save()
+    return file_resource
 
+
+def create_file_instance(storage, file_resource):
     file_instance, created = tantalus.models.FileInstance.objects.get_or_create(
         storage=storage,
         file_resource=file_resource,
-        filename_override=""
+        filename_override='',
     )
     if created:
         file_instance.save()
-        new_files.append(file_instance)
-
-    return file_resource, file_instance
+    return file_instance, created
 
 
-def create_PairedEndFastqFiles(reads_1_file, reads_2_file, dna_sequence, lane):
+def create_paired_end_fastq_files(reads_1_file, reads_2_file, dna_sequence, lane):
     Paired_End_Fastq_Files, created = tantalus.models.PairedEndFastqFiles.objects.get_or_create(
         reads_1_file=reads_1_file,
         reads_2_file=reads_2_file,
-        dna_sequences=dna_sequence
+        dna_sequences=dna_sequence,
     )
     if created:
         Paired_End_Fastq_Files.save()
-
     Paired_End_Fastq_Files.lanes.add(lane)
     Paired_End_Fastq_Files.save()
 
 
-def get_files_in_output(output_dir):
-    fastqs = list(filter(lambda x: ".fastq.gz" in x, os.listdir(output_dir)))
-    determined = list(filter(lambda x: "Undetermined" not in x, fastqs))
-    return determined
-
-
 def query_colossus_dlp_cell_info(library_id):
     library_url = '{}library/?pool_id={}'.format(
-        django.conf.settings.COLOSSUS_API_URL,
+        'http://colossus.bcgsc.ca/api/',#django.conf.settings.COLOSSUS_API_URL,
         library_id)
 
     r = requests.get(library_url)
@@ -144,147 +137,163 @@ def query_colossus_dlp_cell_info(library_id):
     return row_column_map
 
 
-def put_into_tantalus(file_df, output_dir, storage):
-    """Create the rows in the table for the fastq files
+#### output_dir = '/genesis/shahlab/archive/single_cell_indexing/NextSeq/fastq/171031_NS500668_0271_AHLNK5AFXX/'
 
-    """
-    with django.db.transaction.atomic():
-        new_files = []
-        paired_files = collections.defaultdict(dict)
-        storage = tantalus.models.ServerStorage.objects.get(name=storage)
-        storage_path = storage.get_storage_directory()
-        for index, fastq_file in file_df.iterrows():
-            sample_id = fastq_file["sample_id"]
-            chip_id = fastq_file["chip_id"]
-            flowcell_id = fastq_file["flowcell_id"]
-            lane_number = '' # null is no empty string for this field
-            index_sequence = fastq_file["index_sequence"]
-            filename = fastq_file["filename"]
-            filepath = os.path.join(output_dir, filename)
-            # Get the relative filepath
-            filepath = filepath.replace(storage_path + '/', '')
-            read_end = int(fastq_file["read_end"][1])
-            row = fastq_file["row"]
-            col = fastq_file["column"]
-            lane = fastq_file["lane"]
-
-            Sample = create_Sample(sample_id=sample_id)
-
-            DNA_Library = create_DNALibrary(library_id=chip_id)
-
-            SequenceLane = create_SequenceLane(
-                dna_library=DNA_Library,
-                flowcell_id=flowcell_id,
-                lane_number=lane_number,
-                sequencing_library_id=chip_id,
-            )
-
-            DNA_Sequence = create_DNASequences(
-                dna_library=DNA_Library,
-                sample=Sample,
-                index_sequence=index_sequence,
-            )
-
-            File_Resource, File_Instance = create_FileResource_and_FileInstance(
-                output_dir,
-                filepath=filepath,
-                read_end=read_end,
-                new_files=new_files,
-                storage=storage,
-            )
-
-            fastq_id = (row, col, lane)
-
-            if read_end in paired_files[fastq_id]:
-                raise Exception("Duplicate fastq end {} for {}".format(read_end, fastq_id))
-            else:
-                paired_files[fastq_id][read_end] = {
-                    "fastq_file":File_Resource,
-                    "dna_sequences":DNA_Sequence,
-                    "sequence_lane": SequenceLane
-                }
-
-        for fastq_id, paired_file in paired_files.iteritems():
-            if set(paired_file.keys()) != set([1, 2]):
-                raise Exception('expected read end 1, 2 for {}, got {}'.format(fastq_id, paired_file.keys()))
-
-            if paired_file[1]['dna_sequences'].id != paired_file[2]['dna_sequences'].id:
-                raise Exception('expected same dna sequences for {}'.format(fastq_id))
-
-            if paired_file[1]['sequence_lane'].id != paired_file[2]['sequence_lane'].id:
-                raise Exception('expected same lane for {}'.format(fastq_id))
-
-            create_PairedEndFastqFiles(reads_1_file=paired_file[1]["fastq_file"],
-                                       reads_2_file=paired_file[2]["fastq_file"],
-                                       dna_sequence=paired_file[1]["dna_sequences"],
-                                       lane=paired_file[1]["sequence_lane"])
-
-        django.db.transaction.on_commit(lambda: tantalus.utils.start_md5_checks(new_files))
-
-
-def check_lane_demultiplexing(file):
-    return re.match("^[a-zA-Z0-9]+-A\\d+[a-zA-Z0-9]+-R\\d\\d?-C\\d\\d?_S\\d+_L00\\d_R[12]_001.fastq.gz$", file)
-
-
-def get_file_info(fastq_files, flowcell_id):
-    # ASSUMPTION: only 1 chip_id
-    chip_id = list(set(map(lambda x: x.split('-')[1], fastq_files)))[0]
-    cell_info = query_colossus_dlp_cell_info(chip_id)
-
-    # Checks only once if lane is demultiplexed, if they are mixed, then an error will be thrown later
-    demuliplex = check_lane_demultiplexing(fastq_files[0])
-
-    info = []
-    for filename in fastq_files:
-        if demuliplex:
-            ignored_sample, chip, row, rest = filename.split('-')
-            col, ignore, lane, read, ignored, = rest.split('_')
-        else:
-            ignored_sample, chip, row, rest = filename.split('-')
-            col, ignore, read, ignored, = rest.split('_')
-            lane = 0
-
-        row_number = int(row[1:])
-        col_number = int(col[1:])
-
-        index_sequence = cell_info[row_number, col_number]["index_sequence"]
-        sample = cell_info[row_number, col_number]["sample_id"]
-
-        info.append([filename, sample, chip, row, col, read, index_sequence, lane])
-
-    file_df = pd.DataFrame(info, columns=("filename", "sample_id", "chip_id", "row", "column", "read_end", "index_sequence", "lane"))
-
-    chip_id = file_df["chip_id"].unique()
-    if len(chip_id) > 1:
-        raise Exception("More than 1 chip_id: ".format(chip_id))
-    chip_id = chip_id[0]
-
-    file_df["flowcell_id"] = flowcell_id
-
-    return file_df
-
-
-def check_output_dir_and_get_files(import_brc_fastqs):
+def load_brc_fastqs(import_brc_fastqs):
     # Check for .. in file path
     if ".." in import_brc_fastqs.output_dir:
         raise Exception("Invalid path for output_dir. \'..\' detected")
+
     # Check that output_dir is actually in storage
     if not import_brc_fastqs.output_dir.startswith(import_brc_fastqs.storage.get_storage_directory()):
         raise Exception("Invalid path for output_dir. {} doesn't seem to be in the specified storage".format(import_brc_fastqs.output_dir))
+
     # Check that path is valid.
     if not os.path.isdir(import_brc_fastqs.output_dir):
         raise Exception("output directory {} not a directory".format(import_brc_fastqs.output_dir))
+
+    fastq_info = get_fastq_info(import_brc_fastqs.output_dir)
+
+    create_models(fastq_info, import_brc_fastqs.flowcell_id, import_brc_fastqs.storage)
+
+
+def _update_info(info, key, value):
+    if key in info:
+        if info[key] != value:
+            raise ValueError('{} different from {}'.format(info[key], value))
+    else:
+        info[key] = value
+
+
+def get_fastq_info(output_dir):
+    """ Retrieve fastq filenames and metadata from output directory.
+    """
+    fastq_filenames = os.listdir(output_dir)
+
+    # Filter for gzipped fastq files
+    fastq_filenames = filter(lambda x: ".fastq.gz" in x, fastq_filenames)
+
+    # Remove undetermined fastqs
+    fastq_filenames = filter(lambda x: "Undetermined" not in x, fastq_filenames)
+
     # Check that the path actually has fastq files
-    files = get_files_in_output(import_brc_fastqs.output_dir)
-    if len(files) == 0:
+    if len(fastq_filenames) == 0:
         raise Exception("no fastq files in output directory {}".format(import_brc_fastqs.output_dir))
-    return files
+
+    # Cell info keyed by dlp library id
+    cell_info = {}
+
+    # Fastq filenames and info keyed by fastq id, read end
+    fastq_info = {}
+
+    for filename in fastq_filenames:
+        match = re.match("^([a-zA-Z0-9]+)-(A[a-zA-Z0-9]+)-R(\\d+)-C(\\d+)_S(\\d+)(_L(\\d+))?_R([12])_001.fastq.gz$", filename)
+
+        if match is None:
+            raise Exception('unrecognized fastq filename structure for {}'.format(filename))
+
+        filename_fields = match.groups()
+
+        primary_sample_id = filename_fields[0]
+        library_id = filename_fields[1]
+        row = int(filename_fields[2])
+        column = int(filename_fields[3])
+        lane_number = filename_fields[6]
+        if lane_number is not None:
+            lane_number = int(lane_number)
+        read_end = int(filename_fields[7])
+
+        if library_id not in cell_info:
+            cell_info[library_id] = query_colossus_dlp_cell_info(library_id)
+
+        index_sequence = cell_info[library_id][row, column]['index_sequence']
+        sample_id = cell_info[library_id][row, column]['sample_id']
+
+        fastq_id = (primary_sample_id, library_id, row, column, lane_number)
+
+        if fastq_id not in fastq_info:
+            fastq_info[fastq_id] = {}
+            fastq_info[fastq_id]['filepaths'] = {}
+
+        if read_end in fastq_info[fastq_id]['filepaths']:
+            raise Exception('found duplicate for filename {}'.format(filename))
+
+        fastq_info[fastq_id]['filepaths'][read_end] = os.path.join(output_dir, filename)
+
+        try:
+            _update_info(fastq_info[fastq_id], 'library_id', library_id)
+            _update_info(fastq_info[fastq_id], 'lane_number', lane_number)
+            _update_info(fastq_info[fastq_id], 'index_sequence', index_sequence)
+            _update_info(fastq_info[fastq_id], 'sample_id', sample_id)
+        except ValueError as e:
+            raise Exception('file {} has different metadata from matching pair: ' + str(e))
+
+    return fastq_info
 
 
-def load_brc_fastqs(import_brc_fastqs):
-    fastq_files = check_output_dir_and_get_files(import_brc_fastqs)
-    file_df = get_file_info(fastq_files, import_brc_fastqs.flowcell_id)
-    put_into_tantalus(file_df, import_brc_fastqs.output_dir, import_brc_fastqs.storage)
+def create_models(fastq_info, flowcell_id, storage):
+    """ Create models for paired fastqs.
+    """
+
+    storage_directory = storage.get_storage_directory()
+
+    if not storage_directory.endswith('/'):
+        storage_directory = storage_directory + '/'
+
+    with django.db.transaction.atomic():
+        new_file_instances = []
+
+        for fastq_id, info in fastq_info.iteritems():
+            sample = create_sample(
+                sample_id=info['sample_id'])
+
+            dna_library = create_dna_library(
+                library_id=info['library_id'])
+
+            sequence_lane = create_sequence_lane(
+                dna_library=dna_library,
+                flowcell_id=flowcell_id,
+                lane_number=info['lane_number'],
+                sequencing_library_id=info['library_id'],
+            )
+
+            dna_sequences = create_dna_sequences(
+                dna_library=dna_library,
+                sample=sample,
+                index_sequence=info['index_sequence'],
+            )
+
+            read_end_file_resources = {}
+
+            for read_end, filepath in info['filepaths'].iteritems():
+                if not filepath.startswith(storage_directory):
+                    raise Exception('file {} expected in directory {}'.format(
+                        filepath, storage_directory))
+                filename = filepath.replace(storage_directory, '')
+
+                file_resource = create_file_resource(
+                    filename=filename,
+                    filepath=filepath,
+                    read_end=read_end,
+                )
+
+                file_instance, created = create_file_instance(
+                    storage=storage,
+                    file_resource=file_resource,
+                )
+                if created:
+                    new_file_instances.append(file_instance)
+
+                read_end_file_resources[read_end] = file_resource
+
+            create_paired_end_fastq_files(
+                reads_1_file=read_end_file_resources[1],
+                reads_2_file=read_end_file_resources[2],
+                dna_sequence=dna_sequences,
+                lane=sequence_lane,
+            )
+
+        django.db.transaction.on_commit(lambda: tantalus.utils.start_md5_checks(new_file_instances))
 
 
 # Testing code, remove later
