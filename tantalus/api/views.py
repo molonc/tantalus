@@ -1,8 +1,11 @@
 from rest_framework import viewsets, mixins
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 import django_filters
 import tantalus.models
 import tantalus.api.serializers
+from tantalus.utils import initialize_deployment, start_file_transfers
 
 
 class SampleViewSet(viewsets.ReadOnlyModelViewSet):
@@ -142,4 +145,23 @@ class QueryGscDlpPairedFastqsViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.GscDlpPairedFastqQuery.objects.all()
     serializer_class = tantalus.api.serializers.QueryGscDlpPairedFastqsSerializer
     filter_fields = ('dlp_library_id',)
+
+
+class DeploymentRestart(APIView):
+    def get(self, request, pk, format=None):
+        """
+        return failed deployment
+        """
+        deployment = tantalus.models.Deployment.objects.get(pk=pk)
+        serializer = tantalus.api.serializers.DeploymentSerializer(deployment)
+        return Response(serializer.data)
+
+    def post(self, request, pk, format=None):
+        deployment = tantalus.models.Deployment.objects.get(pk=pk)
+        if not deployment.running:
+            initialize_deployment(deployment=deployment)
+            start_file_transfers(deployment=deployment)
+        serializer = tantalus.api.serializers.DeploymentSerializer(deployment)
+        return Response(serializer.data)
+
 

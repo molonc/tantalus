@@ -325,7 +325,6 @@ def _check_deployment_complete(deployment):
             return
 
     deployment.finished = True
-    deployment.start = False
     deployment.running = False
     deployment.save()
 

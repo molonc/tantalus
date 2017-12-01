@@ -238,7 +238,6 @@ class DeploymentCreateForm(forms.ModelForm):
             super(DeploymentCreateForm, self).save()
             self.instance.datasets = self.get_tag_datasets()
             add_file_transfers(self.instance)
-            deployment.start = True
             initialize_deployment(deployment=self.instance)
             transaction.on_commit(lambda: start_file_transfers(deployment=self.instance))
         return self.instance

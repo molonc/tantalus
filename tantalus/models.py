@@ -615,7 +615,6 @@ class Deployment(models.Model):
         blank=True,
     )
 
-    start = models.BooleanField('', default=False)
     running = models.BooleanField('Running', default=False)
     finished = models.BooleanField('Finished', default=False)
     errors = models.BooleanField('Errors', default=False)

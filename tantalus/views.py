@@ -104,8 +104,6 @@ def start_deployment(request, pk):
     if deployment.running:
         return
     with transaction.atomic():
-        deployment.start = True
-        deployment.save()
         initialize_deployment(deployment)
         transaction.on_commit(lambda: start_file_transfers(deployment=deployment))
     return HttpResponseRedirect(deployment.get_absolute_url())

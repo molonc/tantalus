@@ -41,7 +41,6 @@ def initialize_deployment(deployment):
     if deployment.file_transfers.all().count() == 0:
         deployment.errors = False
         deployment.finished = True
-        deployment.start = False
         deployment.running = False
     else:
         deployment.errors = False
@@ -197,9 +196,9 @@ def add_file_transfers(deployment):
 
 def get_file_transfers_to_start(deployment):
     for file_transfer in deployment.file_transfers.all():
-        if not file_transfer.success:
-            if file_transfer.finished: # existing file transfer that should be restarted
-                yield file_transfer
-            elif not(file_transfer.finished or file_transfer.running or file_transfer.success): # new file transfer
-                yield file_transfer
-            # TODO: see KRONOS-405
+        # File transfer failed and needs to be restarted
+        if not file_transfer.success and file_transfer.finished:
+            yield file_transfer
+        # File transfer has never been run
+        elif not file_transfer.finished and not file_transfer.running and not file_transfer.success:
+            yield file_transfer

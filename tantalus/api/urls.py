@@ -29,4 +29,5 @@ router.register(r'brc_import_fastqs', views.BRCImportFastqsViewSet)
 app_name='api'
 urlpatterns = [
     url(r'^', include(router.urls)),
+    url(r'^deployment/restart/(?P<pk>\d+)$', views.DeploymentRestart.as_view(), name='deployment-restart'),
 ]
