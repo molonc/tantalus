@@ -44,6 +44,8 @@ def initialize_deployment(deployment):
         deployment.start = False
         deployment.running = False
     else:
+        deployment.errors = False
+        deployment.finished = False
         deployment.running = True
     deployment.save()
 
