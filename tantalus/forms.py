@@ -235,13 +235,12 @@ class DeploymentCreateForm(forms.ModelForm):
 
     def save(self):
         with transaction.atomic():
-            super(DeploymentCreateForm, self).save(commit=True)
+            super(DeploymentCreateForm, self).save()
+            self.instance.datasets = self.get_tag_datasets()
             add_file_transfers(self.instance)
-            if self.instance.start and not self.instance.running:
-                initialize_deployment(deployment=self.instance)
-                # Wrapped in an on_commit so that celery tasks do not get started before changes are saved to the database
-                transaction.on_commit(lambda: start_file_transfers(deployment=self.instance))
-            self.instance.save()
+            deployment.start = True
+            initialize_deployment(deployment=self.instance)
+            transaction.on_commit(lambda: start_file_transfers(deployment=self.instance))
         return self.instance
 
     def get_tag_datasets(self):

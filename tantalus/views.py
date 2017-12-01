@@ -89,14 +89,7 @@ class DeploymentCreateView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = DeploymentCreateForm(request.POST)
         if form.is_valid():
-            with transaction.atomic():
-                instance = form.save()
-                instance.datasets = form.get_tag_datasets()
-
-                # this MUST be the form.save() method that is called here -
-                # the save method is overridden to create file transfers for the datasets set above
-                instance.start = True
-                form.save()
+            instance = form.save()
             return HttpResponseRedirect(instance.get_absolute_url())
         else:
             msg = "Failed to create the deployment. Please fix the errors below."
@@ -113,6 +106,7 @@ def start_deployment(request, pk):
     with transaction.atomic():
         deployment.start = True
         deployment.save()
+        initialize_deployment(deployment)
         transaction.on_commit(lambda: start_file_transfers(deployment=deployment))
     return HttpResponseRedirect(deployment.get_absolute_url())
 
