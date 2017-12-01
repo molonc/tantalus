@@ -23,7 +23,8 @@
                             <th>Running</th>
                             <th>Finished</th>
                             <th>Errors</th>
-                            <th>Percent Complete</th>
+                            <th>Percent Finished</th>
+                            <th>Percent Succeeded</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -37,7 +38,8 @@
                                 <td>{{deployment.running}}</td>
                                 <td>{{deployment.finished}}</td>
                                 <td>{{deployment.errors}}</td>
-                                <td>{{deployment.get_percentage_completed}}</td>
+                                <td>{{deployment.get_percent_finished}}</td>
+                                <td>{{deployment.get_percent_succeeded}}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

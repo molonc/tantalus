@@ -19,7 +19,8 @@
                 <tr><th id="thid">Started</th><td id="tdid">{{ deployment.start }}</td></tr>
                 <tr><th id="thid">Finished</th><td id="tdid">{{ deployment.finished }}</td></tr>
                 <tr><th id="thid">Errors</th><td id="tdid">{{ deployment.errors }}</td></tr>
-                <tr><th id="thid">Percent complete</th><td id="tdid">{{ deployment.get_percentage_completed }}</td></tr>
+                <tr><th id="thid">Percent finished</th><td id="tdid">{{ deployment.get_percent_finished }}</td></tr>
+                <tr><th id="thid">Percent succeeded</th><td id="tdid">{{ deployment.get_percent_succeeded }}</td></tr>
             </tbody>
         </table>
         <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href={% url 'deployment-start' pk=deployment.pk %}>Start Deployment</a>

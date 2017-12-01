@@ -162,10 +162,15 @@ class FileTransferSerializer(SimpleTaskSerializer):
 
 
 class DeploymentSerializer(serializers.ModelSerializer):
-    percentage_completed = serializers.SerializerMethodField()
+    percent_finished = serializers.SerializerMethodField()
 
-    def get_percentage_completed(self, obj):
-        return obj.get_percentage_completed()
+    def get_percent_finished(self, obj):
+        return obj.get_percent_finished()
+
+    percent_succeeded = serializers.SerializerMethodField()
+
+    def get_percent_succeeded(self, obj):
+        return obj.get_percent_succeeded()
 
     class Meta:
         model = tantalus.models.Deployment
