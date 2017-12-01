@@ -14,7 +14,7 @@ from django.shortcuts import get_object_or_404, render
 import django.forms
 
 from tantalus.models import FileTransfer, Deployment, FileResource, Sample, AbstractDataSet, Storage
-from tantalus.utils import read_excel_sheets, add_file_transfers, start_file_transfers
+from tantalus.utils import read_excel_sheets, add_file_transfers, start_file_transfers, initialize_deployment
 from tantalus.exceptions.api_exceptions import DeploymentNotCreated
 from misc.helpers import Render
 from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, DeploymentCreateForm
