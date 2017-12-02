@@ -197,6 +197,12 @@ def transfer_file_server_azure(file_transfer):
     create_file_instance(file_transfer)
 
 
+def check_file_same_local(file_resource, filepath):
+    if file_resource.size != os.path.getsize(filepath):
+        return False
+    return True
+
+
 def transfer_file_server_server_remote(file_transfer):
     """ Transfer a file from a remote server to a local server.
     
@@ -207,20 +213,12 @@ def transfer_file_server_server_remote(file_transfer):
     remote_filepath = file_transfer.file_instance.get_filepath()
 
     if os.path.isfile(local_filepath):
-        md5 = file_transfer.file_instance.file_resource.md5
-
-        if md5 is None:
-            additional_message = 'no md5 available to check'
-
-        elif md5 != get_file_md5(local_filepath):
-            additional_message = 'md5 does not match'
-
-        else:
+        if check_file_same_local(file_transfer.file_instance.file_resource, local_filepath):
             create_file_instance(file_transfer)
             os.chmod(local_filepath, 0444)
             return
 
-        error_message = "target file {filepath} already exists on {storage}, {additional_message}".format(
+        error_message = "target file {filepath} already exists on {storage}, {additional_message} with different size".format(
             filepath=local_filepath,
             storage=file_transfer.to_storage.name,
             additional_message=additional_message)
@@ -277,6 +275,11 @@ def transfer_file_server_server_local(file_transfer):
         raise FileDoesNotExist(error_message)
 
     if os.path.isfile(to_filepath):
+        if check_file_same_local(file_transfer.file_instance.file_resource, to_filepath):
+            create_file_instance(file_transfer)
+            os.chmod(local_filepath, 0444)
+            return
+
         error_message = "target file {filepath} already exists on {storage}".format(
             filepath=to_filepath,
             storage=file_transfer.to_storage.name)
