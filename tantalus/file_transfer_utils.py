@@ -224,37 +224,43 @@ def transfer_file_server_server_remote(file_transfer):
             additional_message=additional_message)
         raise FileAlreadyExists(error_message)
 
-    with paramiko.SSHClient() as client:
-        client.load_system_host_keys()
+    subprocess.check_call([
+        'rsync', '-rauv',
+        file_transfer.from_storage.username + '@' + file_transfer.from_storage.server_ip + ':' + remote_filepath,
+        local_filepath,
+    ])
 
-        client.connect(
-            file_transfer.from_storage.server_ip,
-            username=file_transfer.from_storage.username)
-
-        sftp = custom_paramiko.SFTPClient.from_transport(
-            client.get_transport(), buffer_read_length=32*1024*1024)
-
-        try:
-            sftp.stat(remote_filepath)
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                error_message = "{filepath} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
-                    filepath=remote_filepath,
-                    storage=file_transfer.file_instance.storage.name,
-                    pk=file_transfer.file_instance.id)
-                raise FileDoesNotExist(error_message)
-            else:
-                raise
-
-        def progress_callback(current, total):
-            if(total != 0):
-                file_transfer.progress = float(current) / float(total)
-                file_transfer.save()
-
-        sftp.get(
-            remote_filepath,
-            local_filepath,
-            callback=progress_callback)
+    # with paramiko.SSHClient() as client:
+    #     client.load_system_host_keys()
+    # 
+    #     client.connect(
+    #         file_transfer.from_storage.server_ip,
+    #         username=file_transfer.from_storage.username)
+    # 
+    #     sftp = custom_paramiko.SFTPClient.from_transport(
+    #         client.get_transport(), buffer_read_length=32*1024*1024)
+    # 
+    #     try:
+    #         sftp.stat(remote_filepath)
+    #     except IOError as e:
+    #         if e.errno == errno.ENOENT:
+    #             error_message = "{filepath} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
+    #                 filepath=remote_filepath,
+    #                 storage=file_transfer.file_instance.storage.name,
+    #                 pk=file_transfer.file_instance.id)
+    #             raise FileDoesNotExist(error_message)
+    #         else:
+    #             raise
+    # 
+    #     def progress_callback(current, total):
+    #         if(total != 0):
+    #             file_transfer.progress = float(current) / float(total)
+    #             file_transfer.save()
+    # 
+    #     sftp.get(
+    #         remote_filepath,
+    #         local_filepath,
+    #         callback=progress_callback)
 
     create_file_instance(file_transfer)
     os.chmod(local_filepath, 0444)
