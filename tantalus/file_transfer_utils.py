@@ -133,6 +133,14 @@ def transfer_file_azure_server(file_transfer):
     os.chmod(local_filepath, 0444)
 
 
+def check_file_same_blob(file_resource, filepath):
+    properties = block_blob_service.get_blob_properties(container, blobname)
+    blobsize = properties.properties.content_length
+    if file_resource.size != blobsize:
+        return False
+    return True
+
+
 def transfer_file_server_azure(file_transfer):
     """ Transfer a file from a server to blob.
     
@@ -154,22 +162,13 @@ def transfer_file_server_azure(file_transfer):
         raise FileDoesNotExist(error_message)
 
     if block_blob_service.exists(cloud_container, cloud_blobname):
-        md5 = file_transfer.file_instance.file_resource.md5
-
-        if md5 is None:
-            additional_message = 'no md5 available to check'
-
-        elif md5 != get_blob_md5(block_blob_service, cloud_container, cloud_blobname):
-            additional_message = 'md5 does not match'
-
-        else:
+        if check_file_same_blob(file_transfer.file_instance.file_resource, block_blob_service, cloud_container, cloud_blobname):
             create_file_instance(file_transfer)
             return
 
-        error_message = "target file {filepath} already exists on {storage}, {additional_message}".format(
+        error_message = "target file {filepath} already exists on {storage}".format(
             filepath=cloud_filepath,
-            storage=file_transfer.to_storage.name,
-            additional_message=additional_message)
+            storage=file_transfer.to_storage.name)
         raise FileAlreadyExists(error_message)
 
     def progress_callback(current, total):
@@ -218,10 +217,9 @@ def transfer_file_server_server_remote(file_transfer):
             os.chmod(local_filepath, 0444)
             return
 
-        error_message = "target file {filepath} already exists on {storage}, {additional_message} with different size".format(
+        error_message = "target file {filepath} already exists on {storage} with different size".format(
             filepath=local_filepath,
-            storage=file_transfer.to_storage.name,
-            additional_message=additional_message)
+            storage=file_transfer.to_storage.name)
         raise FileAlreadyExists(error_message)
 
     subprocess.check_call([
