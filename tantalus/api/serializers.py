@@ -190,9 +190,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             super(DeploymentSerializer, self).save(**kwargs)
             add_file_transfers(self.instance)
-            if self.instance.start and not self.instance.running:
+            if not self.instance.running:
                 initialize_deployment(deployment=self.instance)
-                # Wrapped in an on_commit so that celery tasks do not get started before changes are saved to the database
                 transaction.on_commit(lambda: start_file_transfers(deployment=self.instance))
             self.instance.save()
         return self.instance
