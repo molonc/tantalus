@@ -72,15 +72,16 @@ def create_dna_sequences(dna_library, sample, index_sequence):
 
 
 def create_file_resource(filename, filepath, read_end):
+    created_time = pd.Timestamp(time.ctime(os.path.getmtime(filepath)), tz='Canada/Pacific')
     file_resource, created = tantalus.models.FileResource.objects.get_or_create(
         size=os.path.getsize(filepath),
-        created=pd.Timestamp(time.ctime(os.path.getmtime(filepath)), tz='Canada/Pacific'),
         file_type=tantalus.models.FileResource.FQ,
         read_end=read_end,
         compression=tantalus.models.FileResource.GZIP,
         filename=filename,
     )
-    if created:
+    if created or file_resource.created != created_time:
+        file_resource.created = created_time
         file_resource.save()
     return file_resource
 
