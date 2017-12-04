@@ -278,6 +278,9 @@ def decode_raw_index_sequence(raw_index_sequence, instrument):
         i5 = reverse_complement(i5)
     elif instrument == 'HiSeq2500':
         i7 = reverse_complement(i7)
+    elif instrument == 'NextSeq':
+        i7 = reverse_complement(i7)
+        i5 = reverse_complement(i5)
     else:
         raise Exception('unsupported sequencing instrument {}'.format(instrument))
 
