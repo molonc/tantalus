@@ -76,6 +76,7 @@ solexa_run_type_map = {
 raw_instrument_map = {
     'HiSeq': 'HiSeq2500',
     'HiSeqX': 'HiSeqX',
+    'NextSeq': 'NextSeq550',
 }
 
 
