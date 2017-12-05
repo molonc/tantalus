@@ -38,12 +38,12 @@
         $(document).ready(function() {
             $('.dataset_datatable').DataTable({
                 columnDefs:[
-                    {"name": "id",              "targets": "dataset_id"},
-                    {"name": "file_resource",   "targets": "dataset_file_resource"},
-                    {"name": "file_type",       "targets": "dataset_file_type"},
-                    {"name": "sample_id",       "targets": "dataset_sample_id"},
-                    {"name": "library_id",      "targets": "dataset_library_id"},
-                    {"name": "tags",            "targets": "dataset_tags"}
+                    {"name": "id",                                  "targets": "dataset_id"},
+                    {"name": "file_resource",   "orderable": false, "targets": "dataset_file_resource"},
+                    {"name": "file_type",       "orderable": false, "targets": "dataset_file_type"},
+                    {"name": "sample_id",                           "targets": "dataset_sample_id"},
+                    {"name": "library_id",                          "targets": "dataset_library_id"},
+                    {"name": "tags",                                "targets": "dataset_tags"}
                 ],
                 processing: true,
                 serverSide: true,
