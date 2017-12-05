@@ -1,17 +1,15 @@
-import xlrd
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic import DetailView, FormView
-from django.views.generic.edit import ModelFormMixin, View
 from django.views.generic.base import TemplateView
 from django.db import transaction
 from django.shortcuts import get_object_or_404, render
-import django.forms
+from django_datatables_view.base_datatable_view import BaseDatatableView
+from django.db.models import Q
 
 from tantalus.models import FileTransfer, Deployment, FileResource, Sample, AbstractDataSet, Storage
 from tantalus.utils import read_excel_sheets, add_file_transfers, start_file_transfers, initialize_deployment
@@ -151,9 +149,77 @@ class SampleCreate(TemplateView):
             return self.get_context_and_render(request, form, multi_form)
 
 
+class DatasetListJSON(BaseDatatableView):
+    """
+    Class used as AJAX data source through the ajax option in the abstractdataset_list template.
+    This enables server-side processing of the data used in the javascript DataTables.
+    """
+    model = AbstractDataSet
+
+    columns = ['id', 'file_resource', 'file_type', 'dna_sequences.sample.sample_id', 'dna_sequences.dna_library.library_id', 'tags', ]
+
+    # MUST be in the order of the columns
+    order_columns = ['id', 'file_resource', 'file_type', 'dna_sequences.sample.sample_id', 'dna_sequences.dna_library.library_id', 'tags', ]
+    max_display_length = 100
+
+    def get_initial_queryset(self):
+        return AbstractDataSet.objects.all()
+
+    def render_column(self, row, column):
+        if column == 'file_type':
+            file_resource_string = ""
+            for file_resource in row.get_data_fileset():
+                file_resource_string = file_resource_string + file_resource.get_file_type_display() + "\n"
+            return file_resource_string
+
+        elif column == 'file_resource':
+            file_resource_string = ""
+            for file_resource in row.get_data_fileset():
+                file_resource_string = file_resource_string + file_resource.filename + "\n"
+            return file_resource_string
+
+        if column == 'tags':
+            tags_string =  map(str, row.tags.all().values_list('name', flat=True))
+            return tags_string
+
+        else:
+            return super(DatasetListJSON, self).render_column(row, column)
+
+    def filter_queryset(self, qs):
+        """ If search['value'] is provided then filter all searchable columns using istartswith
+        """
+        if not self.pre_camel_case_notation:
+            # get global search value
+            search = self._querydict.get('search[value]', None)
+            col_data = self.extract_datatables_column_data()
+            q = Q()
+            for col_no, col in enumerate(col_data):
+                if search and col['searchable']:
+                    # modified search queries for tags across related field manager
+                    if col['name'] == 'tags':
+                        q |= Q(tags__name__startswith=search)
+                    elif col['name'] == 'file_type':
+                        q = q | Q(bamfile__bam_file__file_type__iexact=search) | Q(singleendfastqfile__reads_file__file_type__iexact=search) | Q(pairedendfastqfiles__reads_1_file__file_type__iexact=search)
+                    elif col['name'] == 'file_resource':
+                        q = q | Q(bamfile__bam_file__filename__startswith=search) | Q(singleendfastqfile__reads_file__filename__startswith=search) | Q(pairedendfastqfiles__reads_1_file__filename__startswith=search)
+                        q = q | Q(bamfile__bam_index_file__filename__startswith=search) | Q(pairedendfastqfiles__reads_2_file__filename__startswith=search)
+
+                    # standard search for simple . lookups across models
+                    else:
+                        # apply global search to all searchable columns
+                        q |= Q(**{'{0}__startswith'.format(self.columns[col_no].replace('.', '__')): search})
+                        # column specific filter
+                        if col['search.value']:
+                            qs = qs.filter(**{'{0}__startswith'.format(self.columns[col_no].replace('.', '__')): col['search.value']})
+
+            qs = qs.filter(q)
+        return qs
+
+
 class DatasetList(ListView):
 
     model = AbstractDataSet
+    template_name = "tantalus/abstractdataset_list.html"
 
     class Meta:
         ordering = ["id"]

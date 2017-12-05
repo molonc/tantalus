@@ -50,6 +50,7 @@ cffi==1.10.0
 chardet==3.0.4
 cryptography==2.0.3
 Django==1.11.4
+django-datatables-view==1.14.0
 django-extensions==1.8.1
 django-filter==1.0.4
 django-filters==0.2.1
