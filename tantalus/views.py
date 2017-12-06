@@ -11,11 +11,11 @@ from django.shortcuts import get_object_or_404, render
 from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.db.models import Q
 
-from tantalus.models import FileTransfer, Deployment, FileResource, Sample, AbstractDataSet, Storage
-from tantalus.utils import read_excel_sheets, add_file_transfers, start_file_transfers, initialize_deployment
-from tantalus.exceptions.api_exceptions import DeploymentNotCreated
+from tantalus.models import FileTransfer, FileResource, Sample, AbstractDataSet, Storage
+from tantalus.utils import read_excel_sheets
 from misc.helpers import Render
-from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, DeploymentCreateForm
+from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, FileTransferCreateForm
+import tantalus.tasks
 
 
 def search_view(request):
@@ -43,7 +43,7 @@ def sample_list(request):
 #============================
 # Classes
 #----------------------------
-class FileTransferView(TemplateView):
+class FileTransferListView(TemplateView):
     template_name = 'tantalus/filetransfer_list.html'
     
     def get_context_data(self, **kwargs):
@@ -52,57 +52,48 @@ class FileTransferView(TemplateView):
         return context
 
 
-class DeploymentDetailView(TemplateView):
-    template_name = 'tantalus/deployment_detail.html'
+class FileTransferDetailView(TemplateView):
+    template_name = 'tantalus/filetransfer_detail.html'
     
     def get_context_data(self, **kwargs):
-        deployment = get_object_or_404(Deployment, id=kwargs['pk'])
-        context = {'deployment': deployment}
-        return context
-
-
-class DeploymentView(TemplateView):
-    template_name = 'tantalus/deployment_list.html'
-    
-    def get_context_data(self, **kwargs):
-        deployments = Deployment.objects.all()
-        context = {'deployments': deployments}
+        transfer = get_object_or_404(FileTransfer, id=kwargs['pk'])
+        context = {'transfer': transfer}
         return context
 
 
 @method_decorator(login_required, name='get')
-class DeploymentCreateView(TemplateView):
-    template_name = 'tantalus/deployment_form.html'
+class FileTransferCreateView(TemplateView):
+    template_name = 'tantalus/filetransfer_form.html'
 
     def get_context_and_render(self, request, form):
         context = {'form': form}
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
-        form = DeploymentCreateForm()
+        form = FileTransferCreateForm()
         return self.get_context_and_render(request, form)
 
     def post(self, request, *args, **kwargs):
-        form = DeploymentCreateForm(request.POST)
+        form = FileTransferCreateForm(request.POST)
         if form.is_valid():
             instance = form.save()
             return HttpResponseRedirect(instance.get_absolute_url())
         else:
-            msg = "Failed to create the deployment. Please fix the errors below."
+            msg = "Failed to create the transfer. Please fix the errors below."
             messages.error(request, msg)
         return self.get_context_and_render(request, form)
 
 
 @login_required()
-def start_deployment(request, pk):
-    deployment = get_object_or_404(Deployment, pk=pk)
-    # TODO: error for starting deployment that is running
-    if deployment.running:
+def start_filetransfer(request, pk):
+    transfer = get_object_or_404(FileTransfer, pk=pk)
+    # TODO: error for starting filetransfer that is running
+    if transfer.running:
         return
-    with transaction.atomic():
-        initialize_deployment(deployment)
-        transaction.on_commit(lambda: start_file_transfers(deployment=deployment))
-    return HttpResponseRedirect(deployment.get_absolute_url())
+    tantalus.tasks.transfer_files_task.apply_async(
+        args=(transfer.id,),
+        queue=transfer.get_transfer_queue_name())
+    return HttpResponseRedirect(transfer.get_absolute_url())
 
 
 @method_decorator(login_required, name='dispatch')
@@ -315,7 +306,7 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = {
             'datasets_count': AbstractDataSet.objects.count(),
-            'deployment_count': Deployment.objects.all().count(),
+            'filetransfer_count': FileTransfer.objects.all().count(),
             'sample_count': Sample.objects.all().count(),
             'transfer_count': FileTransfer.objects.all().count()
         }

@@ -49,6 +49,14 @@ def get_blob_md5(block_blob_service, container, blobname):
     return md5
 
 
+def make_dirs(dirname):
+    try:
+        os.makedirs(dirname)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+
 def check_or_update_md5(md5_check):
     """ Check or update an md5 for a file instance in an md5 check object.
     """
@@ -68,132 +76,81 @@ def check_or_update_md5(md5_check):
                 md5, existing_md5, filepath))
 
 
-def create_file_instance(file_transfer):
-    file_instance = FileInstance(
-        storage=file_transfer.to_storage,
-        file_resource=file_transfer.file_instance.file_resource,)
-    file_instance.save()
+class AzureTransfer(object):
+    def __init__(self, storage):
+        self.block_blob_service = BlockBlobService(
+            account_name=storage.storage_account,
+            account_key=storage.credentials.storage_key)
 
+    def download_from_blob(self, file_instance, to_storage):
+        """ Transfer a file from blob to a server.
+        
+        This should be called on the from server.
+        """
 
-def get_block_blob_service(storage):
-    block_blob_service = BlockBlobService(
-        account_name=storage.storage_account,
-        account_key=storage.credentials.storage_key)
-    return block_blob_service
+        cloud_filepath = file_instance.get_filepath()
+        cloud_container, cloud_blobname = cloud_filepath.split('/', 1)
+        assert cloud_container == file_instance.storage.get_storage_container()
+        local_filepath = to_storage.get_filepath(file_instance.file_resource)
 
+        if not self.block_blob_service.exists(cloud_container, cloud_blobname):
+            error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
+                filepath=cloud_filepath,
+                storage=file_instance.storage.name,
+                pk=file_instance.id)
+            raise FileDoesNotExist(error_message)
 
-def make_dirs_for_file_transfer(file_transfer):
-    filepath = file_transfer.get_filepath()
-    dirname = os.path.dirname(filepath)
-    try:
-        os.makedirs(dirname)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
+        if os.path.isfile(local_filepath):
+            error_message = "target file {filepath} already exists on {storage}".format(
+                filepath=local_filepath,
+                storage=to_storage.name)
+            raise FileAlreadyExists(error_message)
 
+        self.block_blob_service.get_blob_to_path(
+            cloud_container,
+            cloud_blobname,
+            local_filepath)
 
-def transfer_file_azure_server(file_transfer):
-    """ Transfer a file from a server to blob.
-    
-    This should be called on the to server.
-    """
+        os.chmod(local_filepath, 0444)
 
-    block_blob_service = get_block_blob_service(storage=file_transfer.file_instance.storage)
+    def _check_file_same_blob(file_resource, container, blobname):
+        properties = self.block_blob_service.get_blob_properties(container, blobname)
+        blobsize = properties.properties.content_length
+        if file_resource.size != blobsize:
+            return False
+        return True
 
-    cloud_filepath = file_transfer.file_instance.get_filepath()
-    cloud_container, cloud_blobname = cloud_filepath.split('/', 1)
-    assert cloud_container == file_transfer.file_instance.storage.get_storage_container()
-    local_filepath = file_transfer.get_filepath()
+    def upload_to_blob(self, file_instance, to_storage):
+        """ Transfer a file from a server to blob.
+        
+        This should be called on the from server.
+        """
 
-    if not block_blob_service.exists(cloud_container, cloud_blobname):
-        error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
-            filepath=cloud_filepath,
-            storage=file_transfer.file_instance.storage.name,
-            pk=file_transfer.file_instance.id)
-        raise FileDoesNotExist(error_message)
+        local_filepath = file_instance.get_filepath()
+        cloud_filepath = to_storage.get_filepath(file_instance.file_resource)
+        cloud_container, cloud_blobname = cloud_filepath.split('/', 1)
+        assert cloud_container == to_storage.get_storage_container()
 
-    if os.path.isfile(local_filepath):
-        error_message = "target file {filepath} already exists on {storage}".format(
-            filepath=local_filepath,
-            storage=file_transfer.file_instance.storage.name)
-        raise FileAlreadyExists(error_message)
+        if not os.path.isfile(local_filepath):
+            error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
+                filepath=local_filepath,
+                storage=file_instance.storage.name,
+                pk=file_instance.id)
+            raise FileDoesNotExist(error_message)
 
-    def progress_callback(current, total):
-        if total != 0:
-            file_transfer.progress = float(current) / float(total)
-            file_transfer.save()
+        if self.block_blob_service.exists(cloud_container, cloud_blobname):
+            if self._check_file_same_blob(file_instance.file_resource, cloud_container, cloud_blobname):
+                return
 
-    block_blob_service.get_blob_to_path(
-        cloud_container,
-        cloud_blobname,
-        local_filepath,
-        progress_callback=progress_callback)
+            error_message = "target file {filepath} already exists on {storage}".format(
+                filepath=cloud_filepath,
+                storage=file_transfer.to_storage.name)
+            raise FileAlreadyExists(error_message)
 
-    create_file_instance(file_transfer)
-    os.chmod(local_filepath, 0444)
-
-
-def check_file_same_blob(file_resource, filepath):
-    properties = block_blob_service.get_blob_properties(container, blobname)
-    blobsize = properties.properties.content_length
-    if file_resource.size != blobsize:
-        return False
-    return True
-
-
-def transfer_file_server_azure(file_transfer):
-    """ Transfer a file from a server to blob.
-    
-    This should be called on the from server.
-    """
-
-    block_blob_service = get_block_blob_service(storage=file_transfer.to_storage)
-
-    local_filepath = file_transfer.file_instance.get_filepath()
-    cloud_filepath = file_transfer.get_filepath()
-    cloud_container, cloud_blobname = cloud_filepath.split('/', 1)
-    assert cloud_container == file_transfer.to_storage.get_storage_container()
-
-    if not os.path.isfile(local_filepath):
-        error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
-            filepath=local_filepath,
-            storage=file_transfer.file_instance.storage.name,
-            pk=file_transfer.file_instance.id)
-        raise FileDoesNotExist(error_message)
-
-    if block_blob_service.exists(cloud_container, cloud_blobname):
-        if check_file_same_blob(file_transfer.file_instance.file_resource, block_blob_service, cloud_container, cloud_blobname):
-            create_file_instance(file_transfer)
-            return
-
-        error_message = "target file {filepath} already exists on {storage}".format(
-            filepath=cloud_filepath,
-            storage=file_transfer.to_storage.name)
-        raise FileAlreadyExists(error_message)
-
-    def progress_callback(current, total):
-        if (total != 0):
-            file_transfer.progress = float(current) / float(total)
-            file_transfer.save()
-
-    block_blob_service.create_blob_from_path(
-        cloud_container,
-        cloud_blobname,
-        local_filepath,
-        progress_callback=progress_callback)
-
-    blob_md5 = get_blob_md5(block_blob_service, cloud_container, cloud_blobname)
-    file_md5 = file_transfer.file_instance.file_resource.md5
-
-    #if file_md5 is not None and file_md5 != blob_md5:
-    #    error_message = "md5 mismatch for {blobname} on {storage} blob md5 {blobmd5}, file md5 {filemd5}".format(
-    #        blobname=cloud_blobname,
-    #        storage=file_transfer.to_storage.name,
-    #        blobmd5=blob_md5,
-    #        filemd5=file_md5)
-    #    raise DataCorruptionError(error_message)
-
-    create_file_instance(file_transfer)
+        self.block_blob_service.create_blob_from_path(
+            cloud_container,
+            cloud_blobname,
+            local_filepath)
 
 
 def check_file_same_local(file_resource, filepath):
@@ -202,141 +159,100 @@ def check_file_same_local(file_resource, filepath):
     return True
 
 
-def transfer_file_server_server_remote(file_transfer):
-    """ Transfer a file from a remote server to a local server.
-    
-    This should be called on the to server.
+def rsync_file(file_instance, to_storage):
+    """ Rsync a single file from one storage to another
     """
 
-    local_filepath = file_transfer.get_filepath()
-    remote_filepath = file_transfer.file_instance.get_filepath()
+    local_filepath = to_storage.get_filepath(file_instance.file_resource)
+    remote_filepath = file_instance.get_filepath()
 
     if os.path.isfile(local_filepath):
-        if check_file_same_local(file_transfer.file_instance.file_resource, local_filepath):
-            create_file_instance(file_transfer)
-            os.chmod(local_filepath, 0444)
+        if check_file_same_local(file_resource, local_filepath):
             return
-
         error_message = "target file {filepath} already exists on {storage} with different size".format(
             filepath=local_filepath,
             storage=file_transfer.to_storage.name)
         raise FileAlreadyExists(error_message)
 
-    subprocess.check_call([
-        'rsync', '-rauv',
-        file_transfer.from_storage.username + '@' + file_transfer.from_storage.server_ip + ':' + remote_filepath,
-        local_filepath,
-    ])
-
-    # with paramiko.SSHClient() as client:
-    #     client.load_system_host_keys()
-    # 
-    #     client.connect(
-    #         file_transfer.from_storage.server_ip,
-    #         username=file_transfer.from_storage.username)
-    # 
-    #     sftp = custom_paramiko.SFTPClient.from_transport(
-    #         client.get_transport(), buffer_read_length=32*1024*1024)
-    # 
-    #     try:
-    #         sftp.stat(remote_filepath)
-    #     except IOError as e:
-    #         if e.errno == errno.ENOENT:
-    #             error_message = "{filepath} does not actually exist on {storage} even though a file instance with pk : {pk} exists.".format(
-    #                 filepath=remote_filepath,
-    #                 storage=file_transfer.file_instance.storage.name,
-    #                 pk=file_transfer.file_instance.id)
-    #             raise FileDoesNotExist(error_message)
-    #         else:
-    #             raise
-    # 
-    #     def progress_callback(current, total):
-    #         if(total != 0):
-    #             file_transfer.progress = float(current) / float(total)
-    #             file_transfer.save()
-    # 
-    #     sftp.get(
-    #         remote_filepath,
-    #         local_filepath,
-    #         callback=progress_callback)
-
-    create_file_instance(file_transfer)
-    os.chmod(local_filepath, 0444)
-
-
-def transfer_file_server_server_local(file_transfer):
-    """ Transfer a file between storages on a server.
-    """
-
-    from_filepath = file_transfer.file_instance.get_filepath()
-    to_filepath = file_transfer.get_filepath()
-
-    if not os.path.isfile(from_filepath):
-        error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
-            filepath=from_filepath,
-            storage=file_transfer.file_instance.storage.name,
-            pk=file_transfer.file_instance.id)
-        raise FileDoesNotExist(error_message)
-
-    if os.path.isfile(to_filepath):
-        if check_file_same_local(file_transfer.file_instance.file_resource, to_filepath):
-            create_file_instance(file_transfer)
-            os.chmod(local_filepath, 0444)
-            return
-
-        error_message = "target file {filepath} already exists on {storage}".format(
-            filepath=to_filepath,
-            storage=file_transfer.to_storage.name)
-        raise FileAlreadyExists(error_message)
-
-    def progress_callback(bytes_copied, total):
-        if (total != 0):
-            file_transfer.progress = float(bytes_copied) / float(total)
-            file_transfer.save()
-
-    tantalus.custom_shutils.copyfile(
-        from_filepath, to_filepath, progress_callback,
-        length=32*1024*1024)
-
-    create_file_instance(file_transfer)
-    os.chmod(to_filepath, 0444)
-
-
-def transfer_file_server_server(file_transfer):
-    """ Transfer a file from a server to blob.
-    
-    This should be called on the to server.
-    """
-
-    if file_transfer.from_storage.server_ip == file_transfer.to_storage.server_ip:
-        transfer_file_server_server_local(file_transfer)
-
+    if file_instance.storage.server_ip == to_storage.server_ip:
+        remote_location = remote_filepath
     else:
-        transfer_file_server_server_remote(file_transfer)
+        remote_location = file_instance.storage.username + '@' + file_instance.storage.server_ip + ':' + remote_filepath
+
+    make_dirs(os.path.dirname(local_filepath))
+
+    subprocess_cmd = [
+        'rsync',
+        '--progress',
+        # '--info=progress2',
+        '--chmod=D555',
+        '--chmod=F444',
+        '--times',
+        remote_location,
+        local_filepath,
+    ]
+
+    subprocess.check_call(subprocess_cmd)
 
 
-def _check_deployments_complete(file_transfer):
-    # TODO: could use celery chaining here
-    for deployment in file_transfer.deployment_set.all():
-        _check_deployment_complete(deployment)
+def get_file_transfer_function(from_storage, to_storage):
+    from_storage_type = from_storage.__class__.__name__
+    to_storage_type = to_storage.__class__.__name__
+
+    if from_storage_type == 'ServerStorage' and to_storage_type == 'AzureBlobStorage':
+        return AzureTransfer(to_storage).upload_to_blob
+
+    elif from_storage_type == 'AzureBlobStorage' and to_storage_type == 'ServerStorage':
+        return AzureTransfer(from_storage).download_from_blob
+
+    elif from_storage_type == 'ServerStorage' and to_storage_type == 'ServerStorage':
+        return rsync_file
 
 
-def _check_deployment_complete(deployment):
-    for file_transfer in deployment.file_transfers.all():
-        if file_transfer.finished and not file_transfer.success:
-            deployment.errors = True
-    deployment.save()
+def transfer_files(file_transfer):
+    """ Transfer a set of files
+    """
 
-    for file_transfer in deployment.file_transfers.all():
-        if not file_transfer.finished:
-            return
+    tag_name = file_transfer.tag_name
+    from_storage = file_transfer.from_storage
+    to_storage = file_transfer.to_storage
 
-    deployment.finished = True
-    deployment.running = False
-    deployment.save()
+    # Generate a list of files requiring transfer
+    # Lock transfer to specific storage by creating
+    # reserved file instances
+    file_instances = []
+    for dataset in AbstractDataSet.objects.filter(tags__name=tag_name):
+        file_resources = dataset.get_data_fileset()
 
+        for file_resource in file_resources:
+            # Check for an existing file instance at destination
+            # continue without error if one exists
+            destination_file_instances = file_resource.fileinstance_set.filter(storage=to_storage)
+            if len(destination_file_instances) >= 1:
+                continue
 
-@receiver(post_save, sender=FileTransfer)
-def file_transfer_saved(sender, instance, **kwargs):
-    _check_deployments_complete(instance)
+            # Check that the file exists on the from server
+            # fail if no file exists
+            source_file_instance = file_resource.fileinstance_set.filter(storage=from_storage)
+            if len(source_file_instance) == 0:
+                raise FileDoesNotExist(
+                    'file instance for file resource {} not deployed on source storage {}'.format(
+                        file_resource.filename, from_storage.name))
 
+            file_instance = source_file_instance[0]
+
+            ReservedFileInstance.objects.get_or_create(
+                to_storage=to_storage,
+                file_resource=file_resource,
+                file_transfer=file_transfer,
+            )
+
+            file_instances.append(file_instance)
+
+    f_transfer = get_file_transfer_function(from_storage, to_storage)
+
+    # Transfer all files that have reserved file instances
+    # Create each file on success
+    for file_instance in file_instances:
+        f_transfer(file_instance, to_storage)
+        FileInstance.objects.create(file_resource=file_instance.file_resource, storage=to_storage)

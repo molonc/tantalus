@@ -2,14 +2,14 @@
 {% load staticfiles %}
 
 {% block title %}
-    Deployment Creation
+    File Transfer Creation
 {% endblock %}
 {% block body %}
     <div class="container graybg">
-        <form action="{% url 'deployment-create' %}" method="post">
+        <form action="{% url 'filetransfer-create' %}" method="post">
             {% csrf_token %}
             <fieldset>
-                <legend>Deployment Information</legend>
+                <legend>File Transfer Information</legend>
                 <table class="table-condensed">
                     <thead>
                     {{ form.as_p }}
@@ -17,7 +17,7 @@
                 </table>
              </fieldset>
             <input class="btn btn-primary btn-sm" type="submit" value="Start" />
-            <a class="btn btn-default btn-sm" href="{% url 'deployment-list' %}">Cancel</a>
+            <a class="btn btn-default btn-sm" href="{% url 'filetransfer-list' %}">Cancel</a>
         </form><br>
     </div>
 {% endblock %}

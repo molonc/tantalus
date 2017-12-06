@@ -5,7 +5,6 @@ from rest_framework.response import Response
 import django_filters
 import tantalus.models
 import tantalus.api.serializers
-from tantalus.utils import initialize_deployment, start_file_transfers
 
 
 class SampleViewSet(viewsets.ReadOnlyModelViewSet):
@@ -115,12 +114,6 @@ class FileInstanceViewSet(viewsets.ReadOnlyModelViewSet):
                      'storage__name',)
 
 
-class DeploymentViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.Deployment.objects.all()
-    serializer_class = tantalus.api.serializers.DeploymentSerializer
-    filter_fields = ('name',)
-
-
 class FileTransferViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.FileTransfer.objects.all()
     serializer_class = tantalus.api.serializers.FileTransferSerializer
@@ -149,9 +142,6 @@ class QueryGscDlpPairedFastqsViewSet(viewsets.ModelViewSet):
 
 class DeploymentRestart(APIView):
     def get(self, request, pk, format=None):
-        """
-        return failed deployment
-        """
         deployment = tantalus.models.Deployment.objects.get(pk=pk)
         serializer = tantalus.api.serializers.DeploymentSerializer(deployment)
         return Response(serializer.data)

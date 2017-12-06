@@ -2,30 +2,13 @@
 {% load staticfiles %}
 
 {% block title %}
-    Deployment: {{ deployment.name }}
+    File Transfers
 {% endblock %}
 
 {% block body %}
     <div class="container" style="padding:0; margin-bottom:5px;">
-            <h4 style="float:left;">Deployment Details</h4>
-    </div>
-    <div class="container" style="background-color:#F5F5F5;">
-        <table class="table-condensed">
-            <tbody>
-                <tr><th id="thid">Deployment name</th><td id="tdid">{{ deployment.name }}</td></tr>
-                <tr><th id="thid">From</th><td id="tdid">{{ deployment.from_storage }}</td></tr>
-                <tr><th id="thid">To</th><td id="tdid">{{ deployment.to_storage }}</td></tr>
-                <tr><th id="thid">Running</th><td id="tdid">{{ deployment.running }}</td></tr>
-                <tr><th id="thid">Finished</th><td id="tdid">{{ deployment.finished }}</td></tr>
-                <tr><th id="thid">Errors</th><td id="tdid">{{ deployment.errors }}</td></tr>
-                <tr><th id="thid">Percent finished</th><td id="tdid">{{ deployment.get_percent_finished }}</td></tr>
-                <tr><th id="thid">Percent succeeded</th><td id="tdid">{{ deployment.get_percent_succeeded }}</td></tr>
-            </tbody>
-        </table>
-        <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href={% url 'deployment-start' pk=deployment.pk %}>Start Deployment</a>
-    </div>
-    <div class="container" style="padding:0; margin-bottom:5px;">
-        <h4 style="float:left;">Select a transfer to view its details</h4>
+        <h4 style="float:left;">Select a file transfer to view its details</h4>
+        <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'filetransfer-create' %}">Add File Transfer</a>
     </div>
     <div class="container" style="background-color:#F5F5F5;">
         {% if transfers %}
@@ -33,43 +16,35 @@
                 <table id="datatable" class="table table-striped">
                     <thead>
                         <tr>
-                            <th>File Transfer ID</th>
+                            <th>ID</th>
+                            <th>Name</th>
                             <th>From</th>
                             <th>To</th>
-                            <th>File Instance ID</th>
-                            <th>Type</th>
-                            <th>Name</th>
-                            <th>Progress</th>
                             <th>Running</th>
                             <th>Finished</th>
                             <th>Success</th>
                             <th>State</th>
-                            <th>Error message</th>
                         </tr>
                     </thead>
                     <tbody>
                         <br/>
                         {% for transfer in transfers %}
                             <tr>
-                                <td>{{transfer.id}}</td>
+                                <th><a href="{% url 'filetransfer-detail' pk=transfer.id %}">{{transfer.id}}</a></th>
+                                <th>{{transfer.name}}</th>
                                 <td>{{transfer.from_storage}}</td>
                                 <td>{{transfer.to_storage}}</td>
-                                <td>{{transfer.file_instance.pk}}</td>
-                                <td>{{transfer.file_instance.file_resource.get_file_type_display}}</td>
-                                <td>{{transfer.file_instance.file_resource.filename}}</td>
-                                <td>{{transfer.progress}}</td>
                                 <td>{{transfer.running}}</td>
                                 <td>{{transfer.finished}}</td>
                                 <td>{{transfer.success}}</td>
                                 <td>{{transfer.state}}</td>
-                                <td>{{transfer.error_messages}}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         {% else %}
-            <h5><i class="text-warning">No transfers yet.</i></h5>
+            <h5><i class="text-warning">No file transfers yet.</i></h5>
         {% endif %}
     </div>
 {% endblock %}

@@ -29,6 +29,9 @@ class Tag(models.Model):
 
     name = create_id_field(unique=True)
 
+    def __unicode__(self):
+        return self.name
+
 
 class Sample(models.Model):
     """
@@ -435,9 +438,6 @@ class ServerStorage(Storage):
             return self.storage_directory.rstrip('/') + '_test'
         return self.storage_directory
 
-    def get_mkdir_queue_name(self):
-        return self.queue_prefix + '.mkdir'
-
     def get_transfer_queue_name(self):
         return self.queue_prefix + '.transfer'
 
@@ -451,6 +451,8 @@ class ServerStorage(Storage):
         return os.path.join(
             str(self.get_storage_directory()),
             file_resource.filename.strip('/'))
+
+    has_transfer_queue = True
 
 
 class AzureBlobCredentials(models.Model):
@@ -496,6 +498,8 @@ class AzureBlobStorage(Storage):
         blobname = file_resource.filename.strip('/')
         blobpath = '/'.join([self.get_storage_container(), blobname])
         return blobpath
+
+    has_transfer_queue = False
 
 
 class FileInstance(models.Model):
@@ -546,36 +550,6 @@ class SimpleTask(models.Model):
         abstract = True
 
 
-class FileTransfer(SimpleTask):
-    """
-    Transfer of a specific data file.
-    """
-
-    from_storage = models.ForeignKey(
-        Storage,
-        related_name='file_transfer_from_storage',
-    )
-
-    to_storage = models.ForeignKey(
-        Storage,
-        related_name='file_transfer_to_storage',
-    )
-
-    file_instance = models.ForeignKey(
-        FileInstance,
-    )
-
-    progress = models.FloatField(
-        default=0.,
-    )
-
-    def get_filepath(self):
-        return self.to_storage.get_filepath(self.file_instance.file_resource)
-
-    class Meta:
-        unique_together = ('from_storage', 'to_storage', 'file_instance')
-
-
 class BRCFastqImport(SimpleTask):
     """
     When given an output dir + metadata, generate fastq files.
@@ -592,9 +566,9 @@ class BRCFastqImport(SimpleTask):
     )
 
 
-class Deployment(models.Model):
+class FileTransfer(SimpleTask):
     """
-    Deployment from one storage to another.
+    File transfer from one storage to another.
     """
 
     name = models.CharField(
@@ -602,45 +576,54 @@ class Deployment(models.Model):
         unique=True,
     )
 
+    tag_name = models.CharField(
+        max_length=50,
+    )
+
     from_storage = models.ForeignKey(
         Storage,
-        related_name='deployment_from_storage',
+        related_name='filetransfer_from_storage',
     )
 
     to_storage = models.ForeignKey(
         Storage,
-        related_name='deployment_to_storage',
+        related_name='filetransfer_to_storage',
     )
 
-    datasets = models.ManyToManyField(
-        AbstractDataSet,
-    )
-
-    file_transfers = models.ManyToManyField(
-        FileTransfer,
-        blank=True,
-    )
-
-    running = models.BooleanField('Running', default=False)
-    finished = models.BooleanField('Finished', default=False)
-    errors = models.BooleanField('Errors', default=False)
+    def get_transfer_queue_name(self):
+        if self.to_storage.has_transfer_queue:
+            return self.to_storage.get_transfer_queue_name()
+        elif self.from_storage.has_transfer_queue:
+            return self.from_storage.get_transfer_queue_name()
+        else:
+            raise Exception('no transfer queue for transfer')
 
     def get_absolute_url(self):
-        return reverse("deployment-list")
+        return reverse("filetransfer-list")
 
-    def get_percent_finished(self):
-        completed = self.file_transfers.filter(finished=True).count()
-        total = self.file_transfers.all().count()
-        if total == 0:
-            return 'nan'
-        return float(completed)/total * 100
 
-    def get_percent_succeeded(self):
-        succeeded = self.file_transfers.filter(success=True).count()
-        total = self.file_transfers.all().count()
-        if total == 0:
-            return 'nan'
-        return float(succeeded)/total * 100
+class ReservedFileInstance(models.Model):
+    """
+    Lock on specific file instance being transferred to.
+    """
+
+    file_resource = models.ForeignKey(
+        FileResource,
+        on_delete=models.CASCADE,
+    )
+
+    to_storage = models.ForeignKey(
+        Storage,
+        on_delete=models.CASCADE,
+    )
+
+    file_transfer = models.ForeignKey(
+        FileTransfer,
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        unique_together = ('file_resource', 'to_storage')
 
 
 class MD5Check(SimpleTask):

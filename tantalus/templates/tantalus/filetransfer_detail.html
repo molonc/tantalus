@@ -1,0 +1,28 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    File Transfer: {{ transfer.name }}
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+            <h4 style="float:left;">FileTransfer Details</h4>
+    </div>
+    <div class="container" style="background-color:#F5F5F5;">
+        <table class="table-condensed">
+            <tbody>
+                <tr><th id="thid">Name:</th><td id="tdid">{{ transfer.name }}</td></tr>
+                <tr><th id="thid">Tag:</th><td id="tdid">{{ transfer.tag_name }}</td></tr>
+                <tr><th id="thid">From:</th><td id="tdid">{{ transfer.from_storage }}</td></tr>
+                <tr><th id="thid">To:</th><td id="tdid">{{ transfer.to_storage }}</td></tr>
+                <tr><th id="thid">Running:</th><td id="tdid">{{ transfer.running }}</td></tr>
+                <tr><th id="thid">Finished:</th><td id="tdid">{{ transfer.finished }}</td></tr>
+                <tr><th id="thid">Success:</th><td id="tdid">{{ transfer.success }}</td></tr>
+                <tr><th id="thid">State:</th><td id="tdid">{{ transfer.state }}</td></tr>
+                <tr><th id="thid" valign="top">Message:</th><td id="tdid"><pre>{{ transfer.message }}</pre></td></tr>
+            </tbody>
+        </table>
+        <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href={% url 'filetransfer-start' pk=transfer.pk %}>Start File Transfer</a>
+    </div>
+{% endblock %}

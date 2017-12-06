@@ -14,15 +14,3 @@ from rest_framework.exceptions import APIException
 #
 #     return response
 
-
-class DeploymentNotCreated(APIException):
-    """
-    Exception thrown for one of the following reasons:
-    1. File Instance already deployed on the destination storage
-    2. File instance not deployed on the source storage
-    3. Multiple File Instances on the source storage
-    4. Multiple existing transfers for file resource to destination storage
-    """
-
-    status_code = 400
-    default_detail = "Deployment not created - please contact admin for help"

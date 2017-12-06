@@ -18,7 +18,6 @@ router.register(r'storage/generic', views.StorageViewSet)
 router.register(r'storage/server', views.ServerStorageViewSet)
 router.register(r'storage/azure_blob', views.AzureBlobStorageViewSet)
 router.register(r'file_instance', views.FileInstanceViewSet)
-router.register(r'deployment', views.DeploymentViewSet)
 router.register(r'file_transfer', views.FileTransferViewSet)
 router.register(r'md5_check', views.MD5CheckViewSet)
 router.register(r'queries/gsc_wgs_bams', views.QueryGscWgsBamsViewSet)
@@ -26,9 +25,8 @@ router.register(r'queries/gsc_dlp_paired_fastqs', views.QueryGscDlpPairedFastqsV
 router.register(r'brc_import_fastqs', views.BRCImportFastqsViewSet)
 
 # name to specify name space, all the views can be referred to as reverse('app_name:view_name')
-# eg. reverse('api:deployment-list')
+# eg. reverse('api:filetransfer-list')
 app_name='api'
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r'^deployment/restart/(?P<pk>\d+)$', views.DeploymentRestart.as_view(), name='deployment-restart'),
 ]

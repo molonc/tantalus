@@ -21,10 +21,10 @@
                         </td>
 	                </tr>
 	                <tr>
-	                    <td><a href="{% url 'deployment-list' %}">Deployments</a> <i class="counter">{{deployment_count}}</i></td>
+	                    <td><a href="{% url 'filetransfer-list' %}">File Transfers</a> <i class="counter">{{filetransfer_count}}</i></td>
 	                    <td>
 	                        <p style="float:right;">
-	                        <a href="{% url 'deployment-create' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
+	                        <a href="{% url 'filetransfer-create' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
 	                    </td>
 	                </tr>
                     <tr>
@@ -34,10 +34,6 @@
                             <a href="{% url 'sample-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
                         </td>
                     </tr>
-	                <tr>
-	                    <td><a href="{% url 'transfer-list' %}">Transfers</a> <i class="counter">{{transfer_count}}</i></td>
-	                    <td></td>
-	                </tr>
 	                <tr>
 	                    <td><a href="/api">API</a></td><td></td>
 	                </tr>

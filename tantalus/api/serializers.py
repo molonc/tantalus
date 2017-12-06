@@ -3,7 +3,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 import tantalus.models
-from tantalus.utils import start_file_transfers, validate_deployment, add_file_transfers, initialize_deployment
 import tantalus.tasks
 
 
@@ -151,45 +150,20 @@ class FileTransferSerializer(SimpleTaskSerializer):
     class Meta:
         model = tantalus.models.FileTransfer
         fields = '__all__'
-
-
-class DeploymentSerializer(serializers.ModelSerializer):
-    percent_finished = serializers.SerializerMethodField()
-
-    def get_percent_finished(self, obj):
-        return obj.get_percent_finished()
-
-    percent_succeeded = serializers.SerializerMethodField()
-
-    def get_percent_succeeded(self, obj):
-        return obj.get_percent_succeeded()
-
-    class Meta:
-        model = tantalus.models.Deployment
-        fields = '__all__'
-        read_only_fields = ('running', 'finished', 'errors', 'file_transfers')
-
-    def validate(self, data):
-        from_storage = data['from_storage']
-        to_storage = data['to_storage']
-        datasets = data['datasets']
-
-        validate_deployment(datasets, from_storage, to_storage, serializers.ValidationError)
-
-        return data
-
-    def save(self, **kwargs):
-        with transaction.atomic():
-            super(DeploymentSerializer, self).save(**kwargs)
-            add_file_transfers(self.instance)
-            if not self.instance.running:
-                initialize_deployment(deployment=self.instance)
-                transaction.on_commit(lambda: start_file_transfers(deployment=self.instance))
-            self.instance.save()
-        return self.instance
+    def create(self, validated_data):
+        instance = self.Meta.model(**validated_data)
+        instance.full_clean()
+        instance.save()
+        tantalus.tasks.transfer_files_task.apply_async(
+            args=(instance.id,),
+            queue=instance.get_transfer_queue_name())
+        return instance
 
 
 class ImportBRCFastqsSerializer(SimpleTaskSerializer):
+    class Meta:
+        model = tantalus.models.BRCFastqImport
+        fields = '__all__'
     def create(self, validated_data):
         instance = tantalus.models.BRCFastqImport(**validated_data)
         instance.full_clean()
@@ -198,10 +172,6 @@ class ImportBRCFastqsSerializer(SimpleTaskSerializer):
             args=(instance.id,),
             queue=instance.storage.get_db_queue_name())
         return instance
-
-    class Meta:
-        model = tantalus.models.BRCFastqImport
-        fields = '__all__'
 
 
 class MD5CheckSerializer(serializers.ModelSerializer):
