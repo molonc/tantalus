@@ -11,8 +11,11 @@ from django.shortcuts import get_object_or_404, render
 from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.db.models import Q
 
+import os
+
 from tantalus.models import FileTransfer, FileResource, Sample, AbstractDataSet, Storage
 from tantalus.utils import read_excel_sheets
+from tantalus.settings import STATIC_ROOT
 from misc.helpers import Render
 from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, FileTransferCreateForm
 import tantalus.tasks
@@ -52,12 +55,39 @@ class FileTransferListView(TemplateView):
         return context
 
 
+def get_file_transfer_log(transfer, stderr=False, preview_size=1000):
+    if stderr:
+        kind = 'stderr'
+    else:
+        kind = 'stdout'
+
+    transfer_log_file_path = os.path.join(
+        STATIC_ROOT,
+        "logs/tasks/transfer_files/{pk}/{kind}.txt".format(
+            pk=transfer.pk, kind=kind))
+
+    if not os.path.exists(transfer_log_file_path):
+        return None
+
+    log = []
+    with open(transfer_log_file_path, 'r') as log_file:
+        for i, line in enumerate(log_file):
+            log.append(line)
+            if preview_size is not None and len(log) >= preview_size:
+                break
+
+    return log
+
+
 class FileTransferDetailView(TemplateView):
     template_name = 'tantalus/filetransfer_detail.html'
-    
+
     def get_context_data(self, **kwargs):
         transfer = get_object_or_404(FileTransfer, id=kwargs['pk'])
-        context = {'transfer': transfer}
+        context = {'transfer': transfer,
+                   'transfer_stdout': get_file_transfer_log(transfer),
+                   'transfer_stderr': get_file_transfer_log(transfer, stderr=True)}
+        print context
         return context
 
 

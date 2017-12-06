@@ -25,4 +25,32 @@
         </table>
         <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href={% url 'filetransfer-start' pk=transfer.pk %}>Start File Transfer</a>
     </div>
+
+    <br />
+
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <table>
+            <tr>
+                <td><h4>Task Standard Output</h4></td>
+                <td><a class="btn btn-primary btn-sm" type="button" style="float:left" href="{% url 'filetransfer-log' pk=transfer.pk %}">View whole log</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="log_file_output" class="container" style="padding:0; margin-bottom:5px; height:300px; overflow:scroll; resize: both">
+        <pre><code>{% for line in transfer_stdout %}{{ line }}{% endfor %}</code></pre>
+    </div>
+
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <table>
+            <tr>
+                <td><h4>Task Standard Error</h4></td>
+                <td><a class="btn btn-primary btn-sm" type="button" style="float:left" href="{% url 'filetransfer-log' pk=transfer.pk %}">View whole log</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="log_file_output" class="container" style="padding:0; margin-bottom:5px; height:300px; overflow:scroll; resize: both">
+        <pre><code>{% for line in transfer_stderr %}{{ line }}{% endfor %}</code></pre>
+    </div>
 {% endblock %}
