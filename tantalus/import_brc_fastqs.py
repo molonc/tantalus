@@ -72,18 +72,27 @@ def create_dna_sequences(dna_library, sample, index_sequence):
 
 
 def create_file_resource(filename, filepath, read_end):
+    file_resource_fields = {
+        'size': os.path.getsize(filepath),
+        'file_type': tantalus.models.FileResource.FQ,
+        'read_end': read_end,
+        'compression': tantalus.models.FileResource.GZIP,
+        'filename': filename,
+    }
     created_time = pd.Timestamp(time.ctime(os.path.getmtime(filepath)), tz='Canada/Pacific')
-    file_resource, created = tantalus.models.FileResource.objects.get_or_create(
-        size=os.path.getsize(filepath),
-        file_type=tantalus.models.FileResource.FQ,
-        read_end=read_end,
-        compression=tantalus.models.FileResource.GZIP,
-        filename=filename,
-    )
-    if created or file_resource.created != created_time:
+    # Get existing file resource and update created time or
+    # create a new file resource
+    try:
+        file_resource = tantalus.models.FileResource.objects.get(
+            **file_resource_fields)
         file_resource.created = created_time
         file_resource.save()
-    return file_resource
+        return file_resource
+    except tantalus.models.FileResource.DoesNotExist:
+        file_resource = tantalus.models.FileResource.objects.create(
+            created=created_time,
+            **file_resource_fields)
+        return file_resource
 
 
 def create_file_instance(storage, file_resource):
