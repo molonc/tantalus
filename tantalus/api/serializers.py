@@ -243,3 +243,14 @@ class QueryGscDlpPairedFastqsSerializer(QueryGscSerializer):
         model = tantalus.models.GscDlpPairedFastqQuery
         fields = '__all__'
 
+
+class TagSerializer(serializers.Serializer):
+    tag = serializers.CharField()
+    datasets = serializers.PrimaryKeyRelatedField(many=True, queryset=tantalus.models.AbstractDataSet.objects.all())
+
+    def create(self, validated_data):
+        tag = validated_data['tag']
+        datasets = validated_data['datasets']
+        for dataset in datasets:
+            dataset.tags.add(tag)
+        return validated_data

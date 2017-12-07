@@ -165,3 +165,21 @@ class DeploymentRestart(APIView):
         return Response(serializer.data)
 
 
+class DatasetsTag(viewsets.ViewSet):
+    """
+    To tag datasets in this endpoint, use the following JSON format to POST:
+        { "tag": "test_api_tag", "datasets": [1, 2, 3, 4] }
+    """
+    def list(self, request, format=None):
+        tags = tantalus.models.AbstractDataSet.objects.all().values_list('tags__name', flat=True).distinct()
+        tags = map(str, tags)
+        data = {'tags': tags}
+        return Response(data)
+
+    def create(self, request, format=None):
+        serializer = tantalus.api.serializers.TagSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=201)
+
+
