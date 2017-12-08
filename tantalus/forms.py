@@ -174,8 +174,9 @@ class DatasetTagForm(forms.Form):
         else:
             models_to_tag = self.cleaned_data['models_to_tag']
         tag_name = self.cleaned_data['tag_name']
-        for dataset in models_to_tag:
-            dataset.tags.add(tag_name)
+        tantalus.models.Tag.objects.filter(name=tag_name).delete()
+        tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
+        tag.abstractdataset_set.add(*models_to_tag)
 
 
 class FileTransferCreateForm(forms.ModelForm):
