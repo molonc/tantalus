@@ -21,6 +21,15 @@ def create_id_field(*args, **kwargs):
     )
 
 
+class Tag(models.Model):
+    """
+    Simple text tag associated with datasets.
+    """
+    history = HistoricalRecords()
+
+    name = create_id_field(unique=True)
+
+
 class Sample(models.Model):
     """
     Physical tumour or other tissue sample.
@@ -260,6 +269,8 @@ class AbstractDataSet(PolymorphicModel):
     """
 
     history = HistoricalRecords()
+
+    tags = models.ManyToManyField(Tag)
 
     lanes = models.ManyToManyField(
         SequenceLane,
