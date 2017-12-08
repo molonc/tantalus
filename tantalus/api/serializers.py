@@ -1,9 +1,6 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from taggit_serializer.serializers import (
-    TagListSerializerField,
-    TaggitSerializer)
 
 import tantalus.models
 from tantalus.utils import start_file_transfers, validate_deployment, add_file_transfers, initialize_deployment
@@ -93,9 +90,7 @@ class SequenceLaneSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AbstractDataSetSerializer(TaggitSerializer, serializers.ModelSerializer):
-    tags = TagListSerializerField()
-
+class AbstractDataSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.AbstractDataSet
         fields = '__all__'
@@ -113,8 +108,7 @@ class AbstractDataSetSerializer(TaggitSerializer, serializers.ModelSerializer):
         return super(AbstractDataSetSerializer, self).to_representation(obj)
 
 
-class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer):
-    tags = TagListSerializerField()
+class SingleEndFastqFileSerializer(serializers.ModelSerializer):
     lanes = SequenceLaneSerializer(many=True)
     dna_sequences = DNASequencesSerializer()
 
@@ -123,8 +117,7 @@ class SingleEndFastqFileSerializer(TaggitSerializer, serializers.ModelSerializer
         exclude = ['polymorphic_ctype']
 
 
-class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.ModelSerializer):
-    tags = TagListSerializerField()
+class PairedEndFastqFilesSerializer(serializers.ModelSerializer):
     lanes = SequenceLaneSerializer(many=True)
     dna_sequences = DNASequencesSerializer()
     reads_1_file = FileResourceSerializer()
@@ -135,8 +128,7 @@ class PairedEndFastqFilesSerializer(TaggitSerializer, serializers.ModelSerialize
         exclude = ['polymorphic_ctype']
 
 
-class BamFileSerializer(TaggitSerializer, serializers.ModelSerializer):
-    tags = TagListSerializerField()
+class BamFileSerializer(serializers.ModelSerializer):
     lanes = SequenceLaneSerializer(many=True)
     dna_sequences = DNASequencesSerializer()
     bam_file = FileResourceSerializer()
@@ -251,6 +243,7 @@ class TagSerializer(serializers.Serializer):
     def create(self, validated_data):
         tag = validated_data['tag']
         datasets = validated_data['datasets']
-        for dataset in datasets:
-            dataset.tags.add(tag)
+        Tag.objects.all().delete()
+        # for dataset in datasets:
+        #     dataset.tags.add(tag)
         return validated_data

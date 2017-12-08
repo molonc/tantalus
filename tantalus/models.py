@@ -8,13 +8,9 @@ import os
 import django
 from django.db import models
 from django.core.urlresolvers import reverse
-import taggit.models
 import simple_history
 from simple_history.models import HistoricalRecords
-from taggit.managers import TaggableManager
 from polymorphic.models import PolymorphicModel
-
-simple_history.register(taggit.models.Tag)
 
 
 def create_id_field(*args, **kwargs):
@@ -263,7 +259,6 @@ class AbstractDataSet(PolymorphicModel):
     General Sequence Dataset.
     """
 
-    tags = TaggableManager()
     history = HistoricalRecords()
 
     lanes = models.ManyToManyField(
