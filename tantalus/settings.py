@@ -174,3 +174,5 @@ GSC_API_PASSWORD = os.environ.get('GSC_API_PASSWORD')
 
 # Colossus settings
 COLOSSUS_API_URL = os.environ.get('COLOSSUS_API_URL', 'http://colossus.bcgsc.ca/api/')
+
+TASK_LOG_DIRECTORY = os.environ.get('TASK_LOG_DIRECTORY', '/tmp/')
