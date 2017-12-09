@@ -5,6 +5,7 @@ from rest_framework.response import Response
 import django_filters
 import tantalus.models
 import tantalus.api.serializers
+import tantalus.tasks
 
 
 class SampleViewSet(viewsets.ReadOnlyModelViewSet):
@@ -117,6 +118,7 @@ class FileInstanceViewSet(viewsets.ReadOnlyModelViewSet):
 class FileTransferViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.FileTransfer.objects.all()
     serializer_class = tantalus.api.serializers.FileTransferSerializer
+    filter_fields = ('name',)
 
 
 class MD5CheckViewSet(viewsets.ModelViewSet):
@@ -140,18 +142,21 @@ class QueryGscDlpPairedFastqsViewSet(viewsets.ModelViewSet):
     filter_fields = ('dlp_library_id',)
 
 
-class DeploymentRestart(APIView):
+class FileTransferRestart(APIView):
     def get(self, request, pk, format=None):
-        deployment = tantalus.models.Deployment.objects.get(pk=pk)
-        serializer = tantalus.api.serializers.DeploymentSerializer(deployment)
+        transfer = tantalus.models.FileTransfer.objects.get(pk=pk)
+        serializer = tantalus.api.serializers.FileTransferSerializer(transfer)
         return Response(serializer.data)
 
     def post(self, request, pk, format=None):
-        deployment = tantalus.models.Deployment.objects.get(pk=pk)
-        if not deployment.running:
-            initialize_deployment(deployment=deployment)
-            start_file_transfers(deployment=deployment)
-        serializer = tantalus.api.serializers.DeploymentSerializer(deployment)
+        transfer = tantalus.models.FileTransfer.objects.get(pk=pk)
+        if not transfer.running:
+            transfer.finished = False
+            transfer.save()
+            tantalus.tasks.transfer_files_task.apply_async(
+                args=(transfer.id,),
+                queue=transfer.get_transfer_queue_name())
+        serializer = tantalus.api.serializers.FileTransferSerializer(transfer)
         return Response(serializer.data)
 
 
