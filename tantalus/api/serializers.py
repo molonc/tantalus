@@ -213,8 +213,8 @@ class DatasetTagSerializer(serializers.Serializer):
     def create(self, validated_data):
         tag_name = validated_data['tag']
         datasets = validated_data['datasets']
-        tantalus.models.Tag.objects.filter(name=tag_name).delete()
         tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
+        tag.abstractdataset_set.clear()
         tag.abstractdataset_set.add(*datasets)
         return validated_data
 
