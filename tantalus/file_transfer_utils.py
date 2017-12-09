@@ -167,7 +167,7 @@ def rsync_file(file_instance, to_storage):
     remote_filepath = file_instance.get_filepath()
 
     if os.path.isfile(local_filepath):
-        if check_file_same_local(file_resource, local_filepath):
+        if check_file_same_local(file_instance.file_resource, local_filepath):
             return
         error_message = "target file {filepath} already exists on {storage} with different size".format(
             filepath=local_filepath,
