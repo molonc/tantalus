@@ -192,7 +192,9 @@ def rsync_file(file_instance, to_storage):
         local_filepath,
     ]
 
-    subprocess.check_call(subprocess_cmd)
+    sys.stdout.flush()
+    sys.stderr.flush()
+    subprocess.check_call(subprocess_cmd, stdout=sys.stdout, stderr=sys.stderr)
 
 
 def get_file_transfer_function(from_storage, to_storage):
