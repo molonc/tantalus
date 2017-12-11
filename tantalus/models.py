@@ -656,3 +656,8 @@ class GscDlpPairedFastqQuery(SimpleTask):
         unique=True,
     )
 
+    gsc_library_id = models.CharField(
+        max_length=50,
+        unique=True,
+    )
+

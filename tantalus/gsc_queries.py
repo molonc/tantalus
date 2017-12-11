@@ -305,37 +305,40 @@ def query_colossus_dlp_cell_info(library_id):
 
     data = r.json()[0]
 
-    primary_sample_id = data['sample']['sample_id']
-
     cell_samples = {}
     for sublib in data['sublibraryinformation_set']:
         index_sequence = sublib['primer_i7'] + '-' + sublib['primer_i5']
         cell_samples[index_sequence] = sublib['sample_id']['sample_id']
 
-    return primary_sample_id, cell_samples
+    return cell_samples
+
+
+# Mapping from filename pattern to read end, pass/fail
+filename_pattern_map = {
+    '_1.fastq.gz': (1, True),
+    '_1_*.concat_chastity_passed.fastq.gz': (1, True),
+    '_1_chastity_passed.fastq.gz': (1, True),
+    '_1_chastity_failed.fastq.gz': (1, False),
+    '_2.fastq.gz': (2, True),
+    '_2_*.concat_chastity_passed.fastq.gz': (2, True),
+    '_2_chastity_passed.fastq.gz': (2, True),
+    '_2_chastity_failed.fastq.gz': (2, False),
+}
 
 
 def query_gsc_dlp_paired_fastqs(query_info):
     dlp_library_id = query_info.dlp_library_id
+    gsc_library_id = query_info.gsc_library_id
     storage = tantalus.models.ServerStorage.objects.get(name='gsc')
 
-    primary_sample_id, cell_samples = query_colossus_dlp_cell_info(dlp_library_id)
-    gsc_external_id = primary_sample_id + '_' + dlp_library_id
+    cell_samples = query_colossus_dlp_cell_info(dlp_library_id)
 
     # ASSUMPTION: GSC stored files are pathed from root
     assert storage.storage_directory == '/'
 
     gsc_api = GSCAPI()
 
-    library_infos = gsc_api.query('library?external_identifier={}'.format(gsc_external_id))
-    if len(library_infos) > 1:
-        raise Exception('multiple gsc libraries for {}'.format(gsc_external_id))
-    elif len(library_infos) == 0:
-        raise Exception('no gsc libraries for {}'.format(gsc_external_id))
-
-    gsc_library_id = library_infos[0]['name']
-
-    # Keep track of file instances for
+    # Keep track of file instances for md5 check
     new_file_instances = []
 
     with django.db.transaction.atomic():
@@ -344,23 +347,29 @@ def query_gsc_dlp_paired_fastqs(query_info):
         paired_fastq_infos = collections.defaultdict(dict)
 
         for fastq_info in fastq_infos:
-            name = fastq_info['libcore']['library']['name']
+            if fastq_info['status'] != 'production':
+                continue
+
             fastq_path = fastq_info['data_path']
             flowcell_code = fastq_info['libcore']['run']['flowcell']['lims_flowcell_code']
             lane_number = fastq_info['libcore']['run']['lane_number']
             sequencing_instrument = get_sequencing_instrument(fastq_info['libcore']['run']['machine'])
             solexa_run_type = fastq_info['libcore']['run']['solexarun_type']
 
-            raw_index_sequence = name.split('_')[1]
+            primer_id = fastq_info['libcore']['primer_id']
+            primer_info = gsc_api.query('primer/{}'.format(primer_id))
+            raw_index_sequence = primer_info['adapter_index_sequence']
+
             index_sequence = decode_raw_index_sequence(raw_index_sequence, sequencing_instrument)
 
-            file_type = fastq_info['file_type']['filename_pattern']
-            if file_type == '_1.fastq.gz':
-                read_end = 1
-            elif file_type == '_2.fastq.gz':
-                read_end = 2
-            else:
-                raise Exception('Unrecognized file type: {}'.format(file_type))
+            filename_pattern = fastq_info['file_type']['filename_pattern']
+            read_end, passed = filename_pattern_map.get(filename_pattern, (None, None))
+
+            if read_end is None:
+                raise Exception('Unrecognized file type: {}'.format(filename_pattern))
+
+            if not passed:
+                continue
 
             # ASSUMPTION: GSC stored files are pathed from root 
             fastq_filename_override = fastq_path
@@ -426,7 +435,7 @@ def query_gsc_dlp_paired_fastqs(query_info):
                 fastq_instance.save()
                 new_file_instances.append(fastq_instance)
 
-            fastq_id = (name, flowcell_code, lane_number)
+            fastq_id = (index_sequence, flowcell_code, lane_number)
 
             if read_end in paired_fastq_infos[fastq_id]:
                 raise Exception('duplicate fastq end {} for {}'.format(read_end, fastq_id))
