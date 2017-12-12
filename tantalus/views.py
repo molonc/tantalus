@@ -183,7 +183,17 @@ class DatasetListJSON(BaseDatatableView):
     order_columns = ['id', 'file_resource', 'file_type', 'dna_sequences.sample.sample_id', 'dna_sequences.dna_library.library_id', 'tags', ]
     max_display_length = 100
 
+    def get_context_data(self, *args, **kwargs):
+        dataset_pks = self.request.session.get('dataset_search_results', None)
+        if dataset_pks:
+            kwargs['datasets'] = dataset_pks
+
+        self.kwargs = kwargs
+        return super(DatasetListJSON, self).get_context_data(*args, **kwargs)
+
     def get_initial_queryset(self):
+        if 'datasets' in self.kwargs.keys():
+            return AbstractDataSet.objects.filter(pk__in=self.kwargs['datasets'])
         return AbstractDataSet.objects.all()
 
     def render_column(self, row, column):

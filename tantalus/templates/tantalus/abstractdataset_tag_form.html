@@ -11,83 +11,59 @@
             {% csrf_token %}
             <fieldset>
                 <legend>Search Filters</legend>
-                <table class="table-condensed">
-                    <thead>
-                    {% for field in form %}
-                    <tr>
-                    <th>{{ field.label_tag }}</th>
-                    <td>
-                        {% if field.name == 'models_to_tag' %}
-                            <table id="datatable" class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Selected</th>
-                                        <th>Dataset ID</th>
-                                        <th>File Resource</th>
-                                        <th>Type</th>
-                                        <th>Sample</th>
-                                        <th>Library</th>
-                                        <th>Tags</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% if select_none_default %}
-                                        {% for dataset in datasets %}
-                                            <tr>
-                                                <td><input type="checkbox" name='models_to_tag' value="{{ dataset.pk }}"></td>
-                                                <td>{{ dataset.pk }}</td>
-                                                <td>
-                                                    {% for file_resource in dataset.get_data_fileset %}
-                                                    {{file_resource.filename}}<br/>
-                                                    {% endfor %}
-                                                </td>
-                                                <td>
-                                                    {% for file_resource in dataset.get_data_fileset %}
-                                                    {{file_resource.get_file_type_display}}
-                                                    {% endfor %}
-                                                </td>
-                                                <td>{{dataset.dna_sequences.sample.sample_id}}</td>
-                                                <td>{{dataset.dna_sequences.dna_library.library_id}}</td>
-                                                <td>{{ dataset.tags.all|join:", " }}</td>
-                                            </tr>
-                                        {% endfor %}
-                                    {% else %}
-                                        {% for dataset in datasets %}
-                                            <tr>
-                                                <td><input type="checkbox" name='models_to_tag' value="{{ dataset.pk }}" checked></td>
-                                                <td>{{ dataset.pk }}</td>
-                                                <td>
-                                                    {% for file_resource in dataset.get_data_fileset %}
-                                                    {{file_resource.filename}}<br/>
-                                                    {% endfor %}
-                                                </td>
-                                                <td>
-                                                    {% for file_resource in dataset.get_data_fileset %}
-                                                    {{file_resource.get_file_type_display}}
-                                                    {% endfor %}
-                                                </td>
-                                                <td>{{dataset.dna_sequences.sample.sample_id}}</td>
-                                                <td>{{dataset.dna_sequences.dna_library.library_id}}</td>
-                                                <td>{{ dataset.tags.all|join:", " }}</td>
-                                            </tr>
-                                        {% endfor %}
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        {% else %}
-                            {{ field }}
-                        {% endif %}
-                        {% if field.help_text %}
-                        <p class="helptext">{{ field.help_text }}</p>
-                        {% endif %}
-                    </td>
-                    {% endfor %}
-                    </thead>
-                </table>
+                {% for field in form %}
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}
+                    <p class="helptext">{{ field.help_text }}</p>
+                    {% endif %}
+                {% endfor %}
             </fieldset>
+
+            <div class="container" style="background-color:#F5F5F5;">
+                {% if datasets %}
+                    <div class="table-responsive">
+                        <table class="dataset_datatable table table-striped">
+                            <thead>
+                                <tr>
+                                    <th class="dataset_id">Dataset</th>
+                                    <th class="dataset_file_resource">File Resource</th>
+                                    <th class="dataset_file_type">File Type</th>
+                                    <th class="dataset_sample_id">Sample</th>
+                                    <th class="dataset_library_id">Library</th>
+                                    <th class="dataset_tags">Tags</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <h5><i class="text-warning">No datasets yet.</i></h5>
+                {% endif %}
+            </div>
             <input class="btn btn-primary btn-sm" type="submit" value="Tag!" />
             <a class="btn btn-default btn-sm" href="{% url 'dataset-list' %}">Cancel</a>
         </form><br>
     </div>
 
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.dataset_datatable').DataTable({
+            columnDefs:[
+                {"name": "id",                                  "targets": "dataset_id"},
+                {"name": "file_resource",   "orderable": false, "targets": "dataset_file_resource"},
+                {"name": "file_type",       "orderable": false, "targets": "dataset_file_type"},
+                {"name": "sample_id",                           "targets": "dataset_sample_id"},
+                {"name": "library_id",                          "targets": "dataset_library_id"},
+                {"name": "tags",                                "targets": "dataset_tags"}
+            ],
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{% url 'dataset-list-json' %}'
+            }
+        } );
+    } );
+</script>
 {% endblock %}

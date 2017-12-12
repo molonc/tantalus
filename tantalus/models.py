@@ -64,13 +64,13 @@ class DNALibrary(models.Model):
     SINGLE_CELL_WGS = 'SC_WGS'
     SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
         
-    library_type_choices = [
+    library_type_choices = (
         (EXOME, 'Bulk Whole Exome Sequence'),
         (WGS, 'Bulk Whole Genome Sequence'),
         (RNASEQ, 'Bulk RNA-Seq'),
         (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
         (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
-    ]
+    )
 
     library_type = models.CharField(
         max_length=50,
@@ -149,10 +149,10 @@ class SequenceLane(models.Model):
     GSC = 'GSC'
     BRC = 'BRC'
 
-    sequencing_centre_choices = [
+    sequencing_centre_choices = (
         (GSC, 'Genome Science Centre'),
         (BRC, 'Biomedical Research Centre'),
-    ]
+    )
 
     sequencing_centre = models.CharField(
         max_length=50,
@@ -385,6 +385,9 @@ class BamFile(AbstractDataSet):
 
     def get_data_fileset(self):
         return [self.bam_file, self.bam_index_file]
+
+    def __str__(self):
+        return "BamFile ID: {}".format(self.id)
 
     class Meta:
         unique_together = ('bam_file', 'bam_index_file')
