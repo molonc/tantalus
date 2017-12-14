@@ -67,7 +67,7 @@ def get_file_transfer_log(transfer, stderr=False, preview_size=1000):
             pk=transfer.pk, kind=kind))
 
     if not os.path.exists(transfer_log_file_path):
-        return None
+        return ['unable to open ' + transfer_log_file_path]
 
     log = []
     with open(transfer_log_file_path, 'r') as log_file:
