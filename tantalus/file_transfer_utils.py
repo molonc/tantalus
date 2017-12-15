@@ -198,6 +198,12 @@ def rsync_file(file_instance, to_storage):
     sys.stderr.flush()
     subprocess.check_call(subprocess_cmd, stdout=sys.stdout, stderr=sys.stderr)
 
+    if not check_file_same_local(file_instance.file_resource, local_filepath):
+        error_message = "transfer to {filepath} on {storage} failed".format(
+            filepath=local_filepath,
+            storage=file_transfer.to_storage.name)
+        raise Exception(error_message)
+
 
 def get_file_transfer_function(from_storage, to_storage):
     from_storage_type = from_storage.__class__.__name__
