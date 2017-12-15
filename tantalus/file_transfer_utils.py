@@ -189,6 +189,7 @@ def rsync_file(file_instance, to_storage):
         '--chmod=D555',
         '--chmod=F444',
         '--times',
+        '--copy-links',
         remote_location,
         local_filepath,
     ]
