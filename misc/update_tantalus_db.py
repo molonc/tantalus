@@ -96,13 +96,14 @@ def delete_samples(samples):
 
 def add_new_libraries(libs):
     for lib in libs:
-        l = DNALibrary(
+        l, created = DNALibrary.objects.get_or_create(
             library_id=lib,
             library_type=DEFAULT_LIBRARY_TYPE,
             index_format=INDEX_FORMAT)
-        l.save()
         print "ADDING this library: {}".format(lib)
-        update_tantalus_dnasequences(lib)
+
+        if created:
+            update_tantalus_dnasequences(lib)
 
 
 def delete_libraries(libs):
@@ -159,15 +160,17 @@ def add_new_sublibs(sublibs, library_id):
         sample = Sample.objects.get(sample_id=sample_id)
         library = DNALibrary.objects.get(library_id=library_id)
 
-        s = DNASequences(
+        s, created = DNASequences.objects.get_or_create(
             sample = sample,
             dna_library = DNALibrary.objects.get(library_id=library_id)
         )
 
-        if (library.index_format == DNALibrary.DUAL_INDEX):
+        # TODO: ask andrew whether reverse complement is needed or not
+        if library.index_format == DNALibrary.DUAL_INDEX:
             s.index_sequence = "{i7}-{i5}".format(
                 i7=sublib['primer_i7'],
-                i5=sublib['primer_i5'])
+                i5=sublib['primer_i5']
+            )
             s.save()
 
         else:

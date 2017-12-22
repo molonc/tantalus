@@ -8,12 +8,18 @@ import django
 sys.path.append('./')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tantalus.settings')
 django.setup()
-DIRECTORY_TO_STRIP = "/share/lustre/archive/single_cell_indexing/HiSeq/"
 
 import tantalus.models
 
+#TODO: need to test for bugs still
+
 def reverse_complement(sequence):
     return sequence[::-1].translate(string.maketrans('ACTGactg','TGACtgac'))
+
+
+def get_libraries_in_data():
+    libraries = pd.HDFStore('loaders/single_cell_hiseq_fastq_metadata.h5', 'r')['/metadata']['id']
+    return libraries
 
 
 def load_library_and_get_data(gsc_library_id):
@@ -22,101 +28,48 @@ def load_library_and_get_data(gsc_library_id):
     return data
 
 
-def create_reads_file(data, in_storage, directory_to_strip=DIRECTORY_TO_STRIP):
+def create_reads_file(data, in_storage, directory_to_strip):
     for idx in data.index:
         reads_files = {}
 
         for read_end in ('1', '2'):
             fastq_filename = data.loc[idx, 'read' + read_end]
-
-            file_resource = tantalus.models.FileResource()
-            file_resource.md5 = data.loc[idx, 'md5' + read_end]
-            file_resource.size = data.loc[idx, 'size' + read_end]
-            file_resource.created = pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific')
-            file_resource.file_type = tantalus.models.FileResource.FQ
-            file_resource.read_end = int(read_end)
-            file_resource.compression = tantalus.models.FileResource.GZIP
-
             relative_filename = fastq_filename.replace(directory_to_strip, "")
-            file_resource.filename = relative_filename
-            # print file_resource.filename
 
-            file_resource.save()
+            file_resource = tantalus.models.FileResource.objects.get_or_create(
+                md5=data.loc[idx, 'md5' + read_end],
+                size=data.loc[idx, 'size' + read_end],
+                created=pd.Timestamp(data.loc[idx, 'create' + read_end], tz='Canada/Pacific'),
+                file_type=tantalus.models.FileResource.FQ,
+                read_end=int(read_end),
+                compression=tantalus.models.FileResource.GZIP,
+                filename=relative_filename
+            )[0]
 
             reads_files[read_end] = file_resource
 
-            file_instance = tantalus.models.FileInstance()
-            file_instance.storage = in_storage
-            file_instance.file_resource = file_resource
-            file_instance.full_clean()
-            file_instance.save()
+            tantalus.models.FileInstance.objects.get_or_create(
+                storage=in_storage,
+                file_resource=file_resource
+            )
 
         fastq_dna_sequences = tantalus.models.DNASequences.objects.filter(index_sequence=reverse_complement(data.loc[idx, 'code1']) + '-' + data.loc[idx, 'code2'])
         assert len(fastq_dna_sequences) == 1
 
-        fastq_files = tantalus.models.PairedEndFastqFiles()
-        fastq_files.reads_1_file = reads_files['1']
-        fastq_files.reads_2_file = reads_files['2']
-        fastq_files.dna_sequences = fastq_dna_sequences[0]
-        fastq_files.save()
-        fastq_files.lanes = tantalus.models.SequenceLane.objects.filter(flowcell_id=data.loc[idx, 'flowcell'], lane_number=data.loc[idx, 'lane'])
-        fastq_files.full_clean()
-        fastq_files.save()
+        paired_end_fastq, pefq_created = tantalus.models.PairedEndFastqFiles.objects.get_or_create(
+            reads_1_file=reads_files['1'],
+            reads_2_file=reads_files['2'],
+            dna_sequences=fastq_dna_sequences[0],
+        )
+        if pefq_created:
+            paired_end_fastq[0].lanes = tantalus.models.SequenceLane.objects.filter(flowcell_id=data.loc[idx, 'flowcell'],
+                                                                            lane_number=data.loc[idx, 'lane'])
 
-        reads_files['1'].full_clean()
-        reads_files['2'].full_clean()
-        reads_files['1'].save()
-        reads_files['2'].save()
 
 if __name__ == '__main__':
-
-    tantalus.models.ServerStorage.objects.all().delete()
-    tantalus.models.AzureBlobStorage.objects.all().delete()
-    tantalus.models.FileResource.objects.all().delete()
-    tantalus.models.FileInstance.objects.all().delete()
-    tantalus.models.PairedEndFastqFiles.objects.all().delete()
-
-    storage = tantalus.models.ServerStorage()
-    storage.name = 'rocks'
-    storage.server_ip = 'rocks3.cluster.bccrc.ca'
-    storage.storage_directory = '/share/lustre/amcpherson/tantalus_test'
-    storage.username = 'amcpherson'
-    storage.queue_prefix = 'rocks'
-    storage.full_clean()
-    storage.save()
-
-    storage = tantalus.models.ServerStorage()
-    storage.name = 'gsc'
-    storage.server_ip = '10.9.208.161'
-    storage.storage_directory = '/'
-    storage.username = 'amcpherson'
-    storage.queue_prefix = 'gsc'
-    storage.full_clean()
-    storage.save()
-
-    storage = tantalus.models.ServerStorage()
-    storage.name = 'shahlab'
-    storage.server_ip = '10.9.208.161'
-    storage.storage_directory = '/shahlab/amcpherson/tantalus_test'
-    storage.username = 'amcpherson'
-    storage.queue_prefix = 'shahlab'
-    storage.full_clean()
-    storage.save()
-
-    credentials = tantalus.models.AzureBlobCredentials(
-        storage_key='okQAsp72BagVWpGLEaUNO30jH9XGLuVj3EDmbtg7oV6nmH7+9E+4csF+AXn4G3YMEKebnCnsRwVu9fRhh2RiMQ=='
-    )
-    credentials.full_clean()
-    credentials.save()
-
-    blob_storage = tantalus.models.AzureBlobStorage()
-    blob_storage.name = 'azure_sc_fastqs'
-    blob_storage.storage_account = 'singlecellstorage'
-    blob_storage.storage_container = 'fastqs'
-    blob_storage.credentials = credentials
-    blob_storage.full_clean()
-    blob_storage.save()
-
-    data = load_library_and_get_data('PX0593')
-
-    create_reads_file(data, storage)
+    sequencing_library_ids = tantalus.models.SequenceLane.objects.all().values_list('sequencing_library_id', flat=True)
+    gsc_library_ids = get_libraries_in_data()
+    storage = tantalus.models.Storage.objects.get(name="rocks")
+    for lib_id in gsc_library_ids:
+        data = load_library_and_get_data(lib_id)
+        create_reads_file(data, storage, storage.storage_directory)
