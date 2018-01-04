@@ -379,8 +379,9 @@ class BamFile(AbstractDataSet):
 
     bam_index_file = models.ForeignKey(
         FileResource,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='bam_index_file',
+        null=True,
     )
 
     def get_data_fileset(self):
