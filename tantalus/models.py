@@ -371,7 +371,7 @@ class BamFile(AbstractDataSet):
         default=None,
     )
 
-    bam_file = models.ForeignKey(
+    bam_file = models.OneToOneField(
         FileResource,
         on_delete=models.CASCADE,
         related_name='bam_file',
@@ -388,9 +388,6 @@ class BamFile(AbstractDataSet):
 
     def __str__(self):
         return "BamFile ID: {}".format(self.id)
-
-    class Meta:
-        unique_together = ('bam_file', 'bam_index_file')
 
 
 class Storage(PolymorphicModel):
