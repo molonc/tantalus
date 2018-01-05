@@ -177,10 +177,10 @@ class DatasetListJSON(BaseDatatableView):
     """
     model = AbstractDataSet
 
-    columns = ['id', 'file_resource', 'file_type', 'dna_sequences.sample.sample_id', 'dna_sequences.dna_library.library_id', 'tags', ]
+    columns = ['id', 'dataset_type', 'dna_sequences.sample.sample_id', 'dna_sequences.dna_library.library_id', 'num_lanes', 'tags', ]
 
     # MUST be in the order of the columns
-    order_columns = ['id', 'file_resource', 'file_type', 'dna_sequences.sample.sample_id', 'dna_sequences.dna_library.library_id', 'tags', ]
+    order_columns = ['id', 'dataset_type', 'dna_sequences.sample.sample_id', 'dna_sequences.dna_library.library_id', 'num_lanes', 'tags', ]
     max_display_length = 100
 
     def get_context_data(self, *args, **kwargs):
@@ -197,17 +197,11 @@ class DatasetListJSON(BaseDatatableView):
         return AbstractDataSet.objects.all()
 
     def render_column(self, row, column):
-        if column == 'file_type':
-            file_resource_string = ""
-            for file_resource in row.get_data_fileset():
-                file_resource_string = file_resource_string + file_resource.get_file_type_display() + "\n"
-            return file_resource_string
+        if column == 'dataset_type':
+            return row.dataset_type_name
 
-        elif column == 'file_resource':
-            file_resource_string = ""
-            for file_resource in row.get_data_fileset():
-                file_resource_string = file_resource_string + file_resource.filename + "\n"
-            return file_resource_string
+        if column == 'num_lanes':
+            return row.lanes.count()
 
         if column == 'tags':
             tags_string =  map(str, row.tags.all().values_list('name', flat=True))
@@ -229,11 +223,6 @@ class DatasetListJSON(BaseDatatableView):
                     # modified search queries for tags across related field manager
                     if col['name'] == 'tags':
                         q |= Q(tags__name__startswith=search)
-                    elif col['name'] == 'file_type':
-                        q = q | Q(bamfile__bam_file__file_type__iexact=search) | Q(singleendfastqfile__reads_file__file_type__iexact=search) | Q(pairedendfastqfiles__reads_1_file__file_type__iexact=search)
-                    elif col['name'] == 'file_resource':
-                        q = q | Q(bamfile__bam_file__filename__startswith=search) | Q(singleendfastqfile__reads_file__filename__startswith=search) | Q(pairedendfastqfiles__reads_1_file__filename__startswith=search)
-                        q = q | Q(bamfile__bam_index_file__filename__startswith=search) | Q(pairedendfastqfiles__reads_2_file__filename__startswith=search)
 
                     # standard search for simple . lookups across models
                     else:

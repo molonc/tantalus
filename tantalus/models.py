@@ -303,6 +303,8 @@ class SingleEndFastqFile(AbstractDataSet):
         related_name='reads_file',
     )
 
+    dataset_type_name = 'Single End FASTQ'
+
     def __str__(self):
         return "SingleEndFastQ {}".format(self.id)
 
@@ -328,6 +330,8 @@ class PairedEndFastqFiles(AbstractDataSet):
         on_delete=models.CASCADE,
         related_name='reads_2_file',
     )
+
+    dataset_type_name = 'Paired End FASTQ'
 
     def __str__(self):
         return "PairedEndFastq {}".format(self.id)
@@ -383,6 +387,8 @@ class BamFile(AbstractDataSet):
         related_name='bam_index_file',
         null=True,
     )
+
+    dataset_type_name = 'BAM'
 
     def get_data_fileset(self):
         return [self.bam_file, self.bam_index_file]
