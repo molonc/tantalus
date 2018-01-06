@@ -9,7 +9,7 @@ from django import forms
 # App imports
 #---------------------------
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from .models import Sample, AbstractDataSet, FileTransfer, FileResource, SequenceLane, DNALibrary
 
@@ -110,6 +110,11 @@ class DatasetSearchForm(forms.Form):
         required=False,
     )
 
+    num_lanes = forms.IntegerField(
+        label="Number of lanes",
+        required=False,
+    )
+
     def clean_tagged_with(self):
         tags = self.cleaned_data['tagged_with']
         if tags:
@@ -195,7 +200,7 @@ class DatasetSearchForm(forms.Form):
     def get_dataset_search_results(self, clean=True, tagged_with=None, library=None, sample=None, dataset_type=None,
                                    flowcell_id_and_lane=None, sequencing_center=None,
                                    sequencing_instrument=None, sequencing_library_id=None, library_type=None,
-                                   index_format=None):
+                                   index_format=None, num_lanes=None):
         """
         Performs the filter search with the given fields. The "clean" flag is used to indicate whether the cleaned data
         should be used or not.
@@ -220,6 +225,7 @@ class DatasetSearchForm(forms.Form):
             sequencing_library_id = self.cleaned_data['sequencing_library_id']
             library_type = self.cleaned_data['library_type']
             index_format = self.cleaned_data['index_format']
+            num_lanes = self.cleaned_data['num_lanes']
 
 
         results = AbstractDataSet.objects.all()
@@ -258,6 +264,9 @@ class DatasetSearchForm(forms.Form):
 
         if index_format:
             results = results.filter(dna_sequences__dna_library__index_format=index_format)
+ 
+        if num_lanes is not None:
+            results = results.annotate(num_lanes=Count('lanes')).filter(num_lanes=num_lanes)
 
         if flowcell_id_and_lane:
             query = Q()
