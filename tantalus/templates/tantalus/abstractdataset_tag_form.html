@@ -27,10 +27,10 @@
                             <thead>
                                 <tr>
                                     <th class="dataset_id">Dataset</th>
-                                    <th class="dataset_file_resource">File Resource</th>
-                                    <th class="dataset_file_type">File Type</th>
+                                    <th class="dataset_type">Type</th>
                                     <th class="dataset_sample_id">Sample</th>
                                     <th class="dataset_library_id">Library</th>
+                                    <th class="dataset_num_lanes">Num. Lanes</th>
                                     <th class="dataset_tags">Tags</th>
                                 </tr>
                             </thead>
@@ -51,12 +51,12 @@
     $(document).ready(function() {
         $('.dataset_datatable').DataTable({
             columnDefs:[
-                {"name": "id",                                  "targets": "dataset_id"},
-                {"name": "file_resource",   "orderable": false, "targets": "dataset_file_resource"},
-                {"name": "file_type",       "orderable": false, "targets": "dataset_file_type"},
-                {"name": "sample_id",                           "targets": "dataset_sample_id"},
-                {"name": "library_id",                          "targets": "dataset_library_id"},
-                {"name": "tags",                                "targets": "dataset_tags"}
+                {"name": "id", "targets": "dataset_id"},
+                {"name": "dataset_type", "targets": "dataset_type", "orderable": false, "searchable": false},
+                {"name": "sample_id", "targets": "dataset_sample_id"},
+                {"name": "library_id", "targets": "dataset_library_id"},
+                {"name": "num_lanes", "targets": "dataset_num_lanes", "orderable": false, "searchable": false},
+                {"name": "tags", "targets": "dataset_tags"}
             ],
             processing: true,
             serverSide: true,
