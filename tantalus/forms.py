@@ -11,7 +11,8 @@ from django import forms
 from django.db import transaction
 from django.db.models import Q, Count
 
-from .models import Sample, AbstractDataSet, FileTransfer, FileResource, SequenceLane, DNALibrary
+from .models import Sample, AbstractDataSet, FileTransfer, FileResource, SequenceLane, DNALibrary, Tag
+import tantalus.tasks
 
 
 #===========================
@@ -311,7 +312,7 @@ class DatasetTagForm(forms.Form):
         else:
             models_to_tag = self.cleaned_data['models_to_tag']
         tag_name = self.cleaned_data['tag_name']
-        tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
+        tag, created = Tag.objects.get_or_create(name=tag_name)
         tag.abstractdataset_set.clear()
         tag.abstractdataset_set.add(*models_to_tag)
 
