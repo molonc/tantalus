@@ -391,7 +391,10 @@ class BamFile(AbstractDataSet):
     dataset_type_name = 'BAM'
 
     def get_data_fileset(self):
-        return [self.bam_file, self.bam_index_file]
+        if self.bam_index_file is None:
+            return [self.bam_file]
+        else:
+            return [self.bam_file, self.bam_index_file]
 
     def __str__(self):
         return "BamFile ID: {}".format(self.id)
