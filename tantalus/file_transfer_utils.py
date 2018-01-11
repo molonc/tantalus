@@ -145,7 +145,7 @@ class AzureTransfer(object):
 
             error_message = "target file {filepath} already exists on {storage}".format(
                 filepath=cloud_filepath,
-                storage=file_transfer.to_storage.name)
+                storage=to_storage.name)
             raise FileAlreadyExists(error_message)
 
         self.block_blob_service.create_blob_from_path(
@@ -155,8 +155,13 @@ class AzureTransfer(object):
 
 
 def check_file_same_local(file_resource, filepath):
+    #TODO: define 'size' for folder
+    if file_resource.is_folder:
+        return True
+
     if file_resource.size != os.path.getsize(filepath):
         return False
+    
     return True
 
 
@@ -167,12 +172,16 @@ def rsync_file(file_instance, to_storage):
     local_filepath = to_storage.get_filepath(file_instance.file_resource)
     remote_filepath = file_instance.get_filepath()
 
+    if file_instance.file_resource.is_folder:
+        local_filepath = local_filepath + '/'
+        remote_filepath = remote_filepath + '/'
+
     if os.path.isfile(local_filepath):
         if check_file_same_local(file_instance.file_resource, local_filepath):
             return
         error_message = "target file {filepath} already exists on {storage} with different size".format(
             filepath=local_filepath,
-            storage=file_transfer.to_storage.name)
+            storage=to_storage.name)
         raise FileAlreadyExists(error_message)
 
     if file_instance.storage.server_ip == to_storage.server_ip:
@@ -194,6 +203,9 @@ def rsync_file(file_instance, to_storage):
         local_filepath,
     ]
 
+    if file_instance.file_resource.is_folder:
+        subprocess_cmd.insert(1, '-r')
+
     sys.stdout.flush()
     sys.stderr.flush()
     subprocess.check_call(subprocess_cmd, stdout=sys.stdout, stderr=sys.stderr)
@@ -201,7 +213,7 @@ def rsync_file(file_instance, to_storage):
     if not check_file_same_local(file_instance.file_resource, local_filepath):
         error_message = "transfer to {filepath} on {storage} failed".format(
             filepath=local_filepath,
-            storage=file_transfer.to_storage.name)
+            storage=to_storage.name)
         raise Exception(error_message)
 
 

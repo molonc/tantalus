@@ -58,6 +58,11 @@ class AbstractDataSetViewSet(viewsets.ReadOnlyModelViewSet):
                      )
 
 
+class BCLFolderViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = tantalus.models.BCLFolder.objects.all()
+    serializer_class = tantalus.api.serializers.BCLFolderSerializer
+
+
 class SingleEndFastqFileViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.SingleEndFastqFile.objects.all()
     serializer_class = tantalus.api.serializers.SingleEndFastqFileSerializer

@@ -107,6 +107,12 @@ class AbstractDataSetSerializer(serializers.ModelSerializer):
         return super(AbstractDataSetSerializer, self).to_representation(obj)
 
 
+class BCLFolderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.BCLFolder
+        exclude = ['polymorphic_ctype']
+
+
 class SingleEndFastqFileSerializer(serializers.ModelSerializer):
     lanes = SequenceLaneSerializer(many=True)
     dna_sequences = DNASequencesSerializer()
@@ -151,12 +157,13 @@ class FileTransferSerializer(SimpleTaskSerializer):
         model = tantalus.models.FileTransfer
         fields = '__all__'
     def create(self, validated_data):
-        instance = self.Meta.model(**validated_data)
-        instance.full_clean()
-        instance.save()
-        tantalus.tasks.transfer_files_task.apply_async(
-            args=(instance.id,),
-            queue=instance.get_transfer_queue_name())
+        with transaction.atomic():
+            instance = self.Meta.model(**validated_data)
+            instance.full_clean()
+            instance.save()
+            transaction.on_commit(lambda: tantalus.tasks.transfer_files_task.apply_async(
+                args=(instance.id,),
+                queue=instance.get_transfer_queue_name()))
         return instance
 
 

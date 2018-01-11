@@ -14,6 +14,7 @@ router.register(r'dataset/single_end_fastq_file', views.SingleEndFastqFileViewSe
 router.register(r'dataset/paired_end_fastq_files', views.PairedEndFastqFilesViewSet)
 router.register(r'dataset/bam_file', views.BamFileViewSet)
 router.register(r'dataset/tag', views.DatasetsTag, base_name='tag')
+router.register(r'dataset/bcl_folder', views.BCLFolderViewSet)
 router.register(r'storage/generic', views.StorageViewSet)
 router.register(r'storage/server', views.ServerStorageViewSet)
 router.register(r'storage/azure_blob', views.AzureBlobStorageViewSet)

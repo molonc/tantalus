@@ -250,6 +250,10 @@ class FileResource(models.Model):
         unique=True,
     )
 
+    is_folder = models.BooleanField(
+        default=False,
+    )
+
     def __unicode__(self):
         return '{}'.format(self.md5)
 
@@ -289,6 +293,23 @@ class AbstractDataSet(PolymorphicModel):
 
     def get_data_fileset(self):
         raise NotImplementedError()
+
+
+class BCLFolder(AbstractDataSet):
+    """
+    BCL folder.
+    """
+
+    history = HistoricalRecords()
+
+    folder = models.OneToOneField(
+        FileResource,
+        on_delete=models.CASCADE,
+        related_name='bcl_folder',
+    )
+
+    def get_data_fileset(self):
+        return [self.folder]
 
 
 class SingleEndFastqFile(AbstractDataSet):
