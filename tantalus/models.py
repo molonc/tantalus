@@ -435,21 +435,27 @@ class ServerStorage(Storage):
     )
 
     username = models.CharField(
-        max_length=30
+        max_length=30,
     )
 
     queue_prefix = models.CharField(
-        max_length=50
+        max_length=50,
+    )
+
+    read_only = models.BooleanField(
+        default=True,
     )
 
     def get_storage_directory(self):
-        # TODO: For read only storages ie gsc, this isnt necessary
-        if not django.conf.settings.IS_PRODUCTION:
+        if not django.conf.settings.IS_PRODUCTION and not self.read_only:
             return self.storage_directory.rstrip('/') + '_test'
         return self.storage_directory
 
     def get_transfer_queue_name(self):
-        return self.queue_prefix + '.transfer'
+        if self.read_only:
+            raise Exception('{name} is read only!'.format(name=repr(self.name)))
+        else:
+            return self.queue_prefix + '.transfer'
 
     def get_md5_queue_name(self):
         return self.queue_prefix + '.md5'
