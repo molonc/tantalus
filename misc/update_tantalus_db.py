@@ -240,7 +240,7 @@ def update_tantalus():
 
 
 if __name__ == '__main__':
-    DNALibrary.objects.all().delete()
+    # DNALibrary.objects.all().delete()
 
 
     delete_samples(['SA928'])

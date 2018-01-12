@@ -63,13 +63,19 @@ class DNALibrary(models.Model):
     RNASEQ = 'RNASEQ'
     SINGLE_CELL_WGS = 'SC_WGS'
     SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
-        
+    AMPLICON = 'AMPLICON'
+    CHIP = 'CHIP'
+    BISULFITE = 'BISULFITE'
+
     library_type_choices = (
         (EXOME, 'Bulk Whole Exome Sequence'),
         (WGS, 'Bulk Whole Genome Sequence'),
         (RNASEQ, 'Bulk RNA-Seq'),
         (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
         (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
+        (AMPLICON, 'Amplicon Sequencing'),
+        (CHIP, 'Chromatin Immunoprecipitation'),
+        (BISULFITE, 'Bisulphite sequenecing')
     )
 
     library_type = models.CharField(
@@ -148,10 +154,12 @@ class SequenceLane(models.Model):
 
     GSC = 'GSC'
     BRC = 'BRC'
+    Unknown = 'Unknown'
 
     sequencing_centre_choices = (
         (GSC, 'Genome Science Centre'),
         (BRC, 'Biomedical Research Centre'),
+        (Unknown, 'Centre Unknown'),
     )
 
     sequencing_centre = models.CharField(
@@ -352,12 +360,16 @@ class BamFile(AbstractDataSet):
 
     HG19 = 'HG19'
     HG18 = 'HG18'
+    MM9 = 'MM9'
+    MM10 = 'MM10'
     UNALIGNED = 'UNALIGNED'
     UNUSABLE = 'UNUSABLE'
 
     reference_genome_choices = (
         (HG19, 'Human Genome 19'),
         (HG18, 'Human Genome 18'),
+        (MM9, 'Mouse Genome 9'),
+        (MM10, 'Mouse Genome 10'),
         (UNALIGNED, 'Not aligned to a reference'),
         (UNUSABLE, 'Alignments are not usable'),
     )

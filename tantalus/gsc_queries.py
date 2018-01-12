@@ -199,139 +199,155 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences
     return new_file_instances
 
 
-def query_gsc_wgs_bams(query_info):
-    sample = query_info.sample
-    sample_id = sample.sample_id
+def query_gsc_wgs_bams(sample_id):
+    request_handle = requests.Session()
+    headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+    response = request_handle.post("http://sbs:8100/session", json={'username': django.conf.settings.GSC_API_USERNAME, 'password': django.conf.settings.GSC_API_PASSWORD}, headers=headers)
+    token = response.json().get('token')
+    headers.update({'X-Token': token})
+
     storage = tantalus.models.ServerStorage.objects.get(name='gsc')
 
     # ASSUMPTION: GSC stored files are pathed from root
     assert storage.storage_directory == '/'
 
-    gsc_api = GSCAPI()
 
-    library_infos = gsc_api.query('library?external_identifier={}'.format(sample_id))
+    library_infos = request_handle.get('library?external_identifier={}'.format(sample_id), headers=headers).json()
 
-    # Keep track of file instances for
-    new_file_instances = []
 
     with django.db.transaction.atomic():
         for library_info in library_infos:
-            protocol_info = gsc_api.query('protocol/{}'.format(library_info['protocol_id']))
+            protocol_info = request_handle.get('protocol/{}'.format(library_info['protocol_id']), headers=headers)
 
             if library_info['protocol_id'] not in wgs_protocol_ids:
                 print 'warning, protocol {}:{} not supported'.format(library_info['protocol_id'], protocol_info['extended_name'])
                 continue
+            query_gsc_wgs_bam_library(library_info['name'], sample_id)
 
-            library_name = library_info['name']
 
-            library, created = tantalus.models.DNALibrary.objects.get_or_create(
-                library_id=library_name,
-                library_type=tantalus.models.DNALibrary.WGS,
-                index_format=tantalus.models.DNALibrary.NO_INDEXING,
-            )
-            if created:
-                library.save()
+def query_gsc_wgs_bam_library(library_name, sample_id):
+    request_handle = requests.Session()
+    headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+    response = request_handle.post("http://sbs:8100/session",
+                                   json={'username': django.conf.settings.GSC_API_USERNAME,
+                                         'password': django.conf.settings.GSC_API_PASSWORD}, headers=headers).json()
+    token = response.json().get('token')
+    headers.update({'X-Token': token})
 
-            dna_sequences, created = tantalus.models.DNASequences.objects.get_or_create(
-                dna_library=library,
-                sample=sample,
-                index_sequence=None,
-            )
-            if created:
-                dna_sequences.save()
+    storage = tantalus.models.ServerStorage.objects.get(name='gsc')
 
-            merge_infos = gsc_api.query('merge?library={}'.format(library_name))
+    new_file_instances=[]
 
-            # Keep track of lanes that are in merged BAMs so that we
-            # can exclude them from the lane specific BAMs we add to
-            # the database
-            merged_lanes = set()
+    with django.db.transaction.atomic():
+        library, created = tantalus.models.DNALibrary.objects.get_or_create(
+            library_id=library_name,
+            library_type=tantalus.models.DNALibrary.WGS,
+            index_format=tantalus.models.DNALibrary.NO_INDEXING,
+        )
+        if created:
+            library.save()
 
-            for merge_info in merge_infos:
-                data_path = merge_info['data_path']
-                num_lanes = len(merge_info['merge_xrefs'])
-                lane_pluralize = ('', 's')[num_lanes > 1]
+        dna_sequences, created = tantalus.models.DNASequences.objects.get_or_create(
+            dna_library=library,
+            sample=sample_id,
+            index_sequence=None,
+        )
+        if created:
+            dna_sequences.save()
 
-                if data_path is None:
-                    raise Exception('no data path for merge info {}'.format(merge_info['id']))
+        merge_infos = request_handle.get('merge?library={}'.format(library_name), headers=headers).json()
 
-                bam_path = bam_path_template.format(
-                    data_path=data_path,
-                    library_name=library_name,
-                    num_lanes=num_lanes,
-                    lane_pluralize=lane_pluralize)
+        # Keep track of lanes that are in merged BAMs so that we
+        # can exclude them from the lane specific BAMs we add to
+        # the database
+        merged_lanes = set()
 
-                if not os.path.exists(bam_path):
-                    raise Exception('missing merged bam file {}'.format(bam_path))
+        for merge_info in merge_infos:
+            data_path = merge_info['data_path']
+            num_lanes = len(merge_info['merge_xrefs'])
+            lane_pluralize = ('', 's')[num_lanes > 1]
 
-                lane_infos = []
+            if data_path is None:
+                raise Exception('no data path for merge info {}'.format(merge_info['id']))
 
-                for merge_xref in merge_info['merge_xrefs']:
-                    libcore_id = merge_xref['object_id']
+            bam_path = bam_path_template.format(
+                data_path=data_path,
+                library_name=library_name,
+                num_lanes=num_lanes,
+                lane_pluralize=lane_pluralize)
 
-                    libcore = gsc_api.query('aligned_libcore/{}/info'.format(libcore_id))
-                    flowcell_id = libcore['libcore']['run']['flowcell_id']
-                    lane_number = libcore['libcore']['run']['lane_number']
-                    sequencing_instrument = get_sequencing_instrument(libcore['libcore']['run']['machine'])
-                    solexa_run_type = libcore['libcore']['run']['solexarun_type']
-                    reference_genome = libcore['lims_genome_reference']['path']
-                    aligner = libcore['analysis_software']['name']
-                    flowcell_info = gsc_api.query('flowcell/{}'.format(flowcell_id))
-                    flowcell_code = flowcell_info['lims_flowcell_code']
+            if not os.path.exists(bam_path):
+                raise Exception('missing merged bam file {}'.format(bam_path))
 
-                    merged_lanes.add((flowcell_code, lane_number))
+            lane_infos = []
 
-                    lane_info = dict(
-                        flowcell_code=flowcell_code,
-                        lane_number=lane_number,
-                        sequencing_instrument=sequencing_instrument,
-                        read_type=solexa_run_type_map[solexa_run_type],
-                        reference_genome=reference_genome,
-                        aligner=aligner,
-                    )
+            for merge_xref in merge_info['merge_xrefs']:
+                libcore_id = merge_xref['object_id']
 
-                    lane_infos.append(lane_info)
-
-                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences, lane_infos)
-
-            libcores = gsc_api.query('aligned_libcore/info?library={}'.format(library_name))
-
-            for libcore in libcores:
+                libcore = request_handle.get(('aligned_libcore/{}/info'.format(libcore_id)), headers=headers).json()
                 flowcell_id = libcore['libcore']['run']['flowcell_id']
                 lane_number = libcore['libcore']['run']['lane_number']
                 sequencing_instrument = get_sequencing_instrument(libcore['libcore']['run']['machine'])
                 solexa_run_type = libcore['libcore']['run']['solexarun_type']
                 reference_genome = libcore['lims_genome_reference']['path']
                 aligner = libcore['analysis_software']['name']
-                adapter_index_sequence = libcore['libcore']['primer']['adapter_index_sequence']
-                data_path = libcore['data_path']
-
-                flowcell_info = gsc_api.query('flowcell/{}'.format(flowcell_id))
+                flowcell_info = request_handle.get('flowcell/{}'.format(flowcell_id), headers=headers).json()
+                # flowcell_info = gsc_api.query('flowcell/{}'.format(flowcell_id))
                 flowcell_code = flowcell_info['lims_flowcell_code']
 
-                # Skip lanes that are part of merged BAMs
-                if (flowcell_code, lane_number) in merged_lanes:
-                    continue
+                merged_lanes.add((flowcell_code, lane_number))
 
-                bam_path = lane_bam_path_template.format(
-                    data_path=data_path,
-                    flowcell_code=flowcell_code,
-                    lane_number=lane_number,
-                    adapter_index_sequence=adapter_index_sequence)
-
-                if not os.path.exists(bam_path):
-                    raise Exception('missing lane bam file {}'.format(bam_path))
-
-                lane_infos = [dict(
+                lane_info = dict(
                     flowcell_code=flowcell_code,
                     lane_number=lane_number,
                     sequencing_instrument=sequencing_instrument,
                     read_type=solexa_run_type_map[solexa_run_type],
                     reference_genome=reference_genome,
                     aligner=aligner,
-                )]
+                )
 
-                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences, lane_infos)
+                lane_infos.append(lane_info)
+
+            new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences, lane_infos)
+
+        libcores = request_handle.get('aligned_libcore/info?library={}'.format(library_name), headers=headers).json()
+
+        for libcore in libcores:
+            flowcell_id = libcore['libcore']['run']['flowcell_id']
+            lane_number = libcore['libcore']['run']['lane_number']
+            sequencing_instrument = get_sequencing_instrument(libcore['libcore']['run']['machine'])
+            solexa_run_type = libcore['libcore']['run']['solexarun_type']
+            reference_genome = libcore['lims_genome_reference']['path']
+            aligner = libcore['analysis_software']['name']
+            adapter_index_sequence = libcore['libcore']['primer']['adapter_index_sequence']
+            data_path = libcore['data_path']
+
+            flowcell_info = request_handle.get('flowcell/{}'.format(flowcell_id), headers=headers).json()
+            flowcell_code = flowcell_info['lims_flowcell_code']
+
+            # Skip lanes that are part of merged BAMs
+            if (flowcell_code, lane_number) in merged_lanes:
+                continue
+
+            bam_path = lane_bam_path_template.format(
+                data_path=data_path,
+                flowcell_code=flowcell_code,
+                lane_number=lane_number,
+                adapter_index_sequence=adapter_index_sequence)
+
+            if not os.path.exists(bam_path):
+                raise Exception('missing lane bam file {}'.format(bam_path))
+
+            lane_infos = [dict(
+                flowcell_code=flowcell_code,
+                lane_number=lane_number,
+                sequencing_instrument=sequencing_instrument,
+                read_type=solexa_run_type_map[solexa_run_type],
+                reference_genome=reference_genome,
+                aligner=aligner,
+            )]
+
+            new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences, lane_infos)
 
         django.db.transaction.on_commit(lambda: tantalus.utils.start_md5_checks(new_file_instances))
 
