@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'polymorphic',
     'simple_history',
-    'taggit',
     'django_extensions',
     'django_filters',
 ]

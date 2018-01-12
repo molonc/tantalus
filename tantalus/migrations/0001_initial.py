@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import taggit.managers
 
 
 class Migration(migrations.Migration):
@@ -13,7 +12,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('taggit', '0001_initial'),
         ('contenttypes', '0002_remove_content_type_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -622,11 +620,6 @@ class Migration(migrations.Migration):
             model_name='abstractdataset',
             name='polymorphic_ctype',
             field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_tantalus.abstractdataset_set+', to='contenttypes.ContentType'),
-        ),
-        migrations.AddField(
-            model_name='abstractdataset',
-            name='tags',
-            field=taggit.managers.TaggableManager(help_text='A comma-separated list of tags.', through='taggit.TaggedItem', to='taggit.Tag', verbose_name='Tags'),
         ),
         migrations.AlterUniqueTogether(
             name='sequencelane',
