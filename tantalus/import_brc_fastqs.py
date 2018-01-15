@@ -128,10 +128,10 @@ def query_colossus_dlp_cell_info(library_id):
     if r.status_code != 200:
         raise Exception('Returned {}: {}'.format(r.status_code, r.reason))
 
-    if len(r.json()) == 0:
+    if len(r.json()['results']) == 0:
         raise Exception('No entries for library {}'.format(library_id))
 
-    if len(r.json()) > 1:
+    if len(r.json()['results']) > 1:
         raise Exception('Multiple entries for library {}'.format(library_id))
 
     data = r.json()[0]
