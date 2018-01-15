@@ -48,4 +48,7 @@
         TANTALUS_RABBIT_VHOST: "{{ lookup('env', 'TANTALUS_RABBIT_VHOST') }}"
         GSC_API_USERNAME: "{{ lookup('env', 'GSC_API_USERNAME') }}"
         GSC_API_PASSWORD: "'{{ lookup('env', 'GSC_API_PASSWORD') }}'"
+        TASK_LOG_USERNAME: "'{{ lookup('env', 'TASK_LOG_USERNAME') }}'"
+        TASK_LOG_HOSTNAME: "'{{ lookup('env', 'TASK_LOG_HOSTNAME') }}'"
+        TASK_LOG_DIRECTORY: "'{{ lookup('env', 'TASK_LOG_DIRECTORY') }}'"
 

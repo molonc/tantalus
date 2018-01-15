@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+import socket
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -174,4 +175,6 @@ GSC_API_PASSWORD = os.environ.get('GSC_API_PASSWORD')
 # Colossus settings
 COLOSSUS_API_URL = os.environ.get('COLOSSUS_API_URL', 'http://colossus.bcgsc.ca/api/')
 
+# Task logs
 TASK_LOG_DIRECTORY = os.environ.get('TASK_LOG_DIRECTORY', '/tmp/')
+
