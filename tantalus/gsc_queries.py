@@ -376,8 +376,10 @@ def query_colossus_dlp_cell_info(library_id):
 
     data = r.json()[0]
 
+    sublibraries = tantalus.utils.get_colossus_sublibraries_from_library_id(library_id)
+
     cell_samples = {}
-    for sublib in data['sublibraryinformation_set']:
+    for sublib in sublibraries:
         index_sequence = sublib['primer_i7'] + '-' + sublib['primer_i5']
         cell_samples[index_sequence] = sublib['sample_id']['sample_id']
 

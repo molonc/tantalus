@@ -7,6 +7,8 @@ import os
 
 import re
 
+from tantalus.utils import get_colossus_sublibraries_from_library_id
+
 if __name__ == '__main__':
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tantalus.settings')
     django.setup()
@@ -140,23 +142,7 @@ def query_colossus_dlp_cell_info(library_id):
         django.conf.settings.COLOSSUS_API_URL,
         library_id)
 
-    sublibraries = []
-
-    while sublibrary_url is not None:
-        r = requests.get(sublibrary_url)
-
-        if r.status_code != 200:
-            raise Exception('Returned {}: {}'.format(r.status_code, r.reason))
-
-        if len(r.json()['results']) == 0:
-            raise Exception('No sublibrary results for {}'.format(sublibrary_url))
-
-        sublibraries.extend(r.json()['results'])
-
-        if 'next' in r.json():
-            sublibrary_url = r.json()['next']
-        else:
-            sublibrary_url = None
+    sublibraries = get_colossus_sublibraries_from_library_id(library_id)
 
     row_column_map = {}
     for sublib in sublibraries:
