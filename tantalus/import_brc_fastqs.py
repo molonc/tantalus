@@ -134,7 +134,7 @@ def query_colossus_dlp_cell_info(library_id):
     if len(r.json()['results']) > 1:
         raise Exception('Multiple entries for library {}'.format(library_id))
 
-    data = r.json()[0]
+    data = r.json()['results'][0]
 
     row_column_map = {}
     for sublib in data['sublibraryinformation_set']:
