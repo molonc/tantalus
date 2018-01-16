@@ -7,7 +7,7 @@ import os
 
 import re
 
-from tantalus.utils import get_colossus_sublibraries_from_library_id
+from tantalus.colossus import *
 
 if __name__ == '__main__':
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tantalus.settings')

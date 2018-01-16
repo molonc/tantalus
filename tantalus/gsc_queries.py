@@ -14,6 +14,7 @@ if __name__ == '__main__':
 import tantalus.models
 import tantalus.tasks
 import tantalus.utils
+from tantalus.colossus import *
 
 from pprint import pprint
 
