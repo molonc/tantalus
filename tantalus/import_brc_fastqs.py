@@ -120,7 +120,7 @@ def create_paired_end_fastq_files(reads_1_file, reads_2_file, dna_sequence, lane
 
 def query_colossus_dlp_cell_info(library_id):
     library_url = '{}library/?pool_id={}'.format(
-        'http://colossus.bcgsc.ca/api/',#django.conf.settings.COLOSSUS_API_URL,
+        django.conf.settings.COLOSSUS_API_URL,
         library_id)
 
     r = requests.get(library_url)
@@ -136,8 +136,30 @@ def query_colossus_dlp_cell_info(library_id):
 
     data = r.json()['results'][0]
 
+    sublibrary_url = '{}sublibraries/?library__pool_id={}'.format(
+        django.conf.settings.COLOSSUS_API_URL,
+        library_id)
+
+    sublibraries = []
+
+    while sublibrary_url is not None:
+        r = requests.get(sublibrary_url)
+
+        if r.status_code != 200:
+            raise Exception('Returned {}: {}'.format(r.status_code, r.reason))
+
+        if len(r.json()['results']) == 0:
+            raise Exception('No sublibrary results for {}'.format(sublibrary_url))
+
+        sublibraries.extend(r.json()['results'])
+
+        if 'next' in r.json():
+            sublibrary_url = r.json()['next']
+        else:
+            sublibrary_url = None
+
     row_column_map = {}
-    for sublib in data['sublibraryinformation_set']:
+    for sublib in sublibraries:
         index_sequence = sublib['primer_i7'] + '-' + sublib['primer_i5']
         row_column_map[(sublib['row'], sublib['column'])] = {
             'index_sequence': index_sequence,
