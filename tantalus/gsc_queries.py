@@ -201,27 +201,38 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences
 
 
 def query_gsc_wgs_bams(query_info):
-    sample = query_info.sample
-    sample_id = sample.sample_id
+    gsc_api = GSCAPI()
+
+    for library_id in query_info.library_ids:
+        query_gsc_library(gsc_api, library_id)
+
+
+def query_gsc_library(gsc_api, library_name):
     storage = tantalus.models.ServerStorage.objects.get(name='gsc')
 
     # ASSUMPTION: GSC stored files are pathed from root
     assert storage.storage_directory == '/'
 
-    gsc_api = GSCAPI()
-
-    library_infos = gsc_api.query('library?external_identifier={}'.format(sample_id))
-
-    # Keep track of file instances for
+    # Keep track of file instances for md5 check
     new_file_instances = []
 
     with django.db.transaction.atomic():
+        library_infos = gsc_api.query('library?name={}'.format(library_name))
+
         for library_info in library_infos:
             protocol_info = gsc_api.query('protocol/{}'.format(library_info['protocol_id']))
 
             if library_info['protocol_id'] not in wgs_protocol_ids:
                 print 'warning, protocol {}:{} not supported'.format(library_info['protocol_id'], protocol_info['extended_name'])
                 continue
+
+            sample_id = library_info['external_identifier']
+
+            sample, created = tantalus.models.Sample.objects.get_or_create(
+                sample_id=sample_id,
+            )
+            if created:
+                sample.save()
 
             library_name = library_info['name']
 

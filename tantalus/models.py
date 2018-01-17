@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import os
 import django
+import django.contrib.postgres.fields
 from django.db import models
 from django.core.urlresolvers import reverse
 import simple_history
@@ -657,8 +658,8 @@ class GscWgsBamQuery(SimpleTask):
     Query GSC API for WGS Bam data paths.
     """
 
-    sample = models.ForeignKey(
-        Sample,
+    library_ids = django.contrib.postgres.fields.ArrayField(
+        models.CharField(max_length=50),
     )
 
 
