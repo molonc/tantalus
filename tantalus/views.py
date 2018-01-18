@@ -240,6 +240,7 @@ class DatasetList(ListView):
 
     model = AbstractDataSet
     template_name = "tantalus/abstractdataset_list.html"
+    paginate_by = 100
 
     class Meta:
         ordering = ["id"]
