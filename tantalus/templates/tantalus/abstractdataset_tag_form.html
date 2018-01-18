@@ -19,29 +19,26 @@
                     {% endif %}
                 {% endfor %}
             </fieldset>
-
-            <div class="container" style="background-color:#F5F5F5;">
-                {% if datasets %}
-                    <div class="table-responsive">
-                        <table class="dataset_datatable table table-striped">
-                            <thead>
-                                <tr>
-                                    <th class="dataset_id">Dataset</th>
-                                    <th class="dataset_type">Type</th>
-                                    <th class="dataset_sample_id">Sample</th>
-                                    <th class="dataset_library_id">Library</th>
-                                    <th class="dataset_num_lanes">Num. Lanes</th>
-                                    <th class="dataset_tags">Tags</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <h5><i class="text-warning">No datasets yet.</i></h5>
-                {% endif %}
-            </div>
+            {% if datasets %}
+                <div class="table-responsive">
+                    <table class="dataset_datatable table table-striped">
+                        <thead>
+                            <tr>
+                                <th class="dataset_id">Dataset</th>
+                                <th class="dataset_type">Type</th>
+                                <th class="dataset_sample_id">Sample</th>
+                                <th class="dataset_library_id">Library</th>
+                                <th class="dataset_num_lanes">Num. Lanes</th>
+                                <th class="dataset_tags">Tags</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <h5><i class="text-warning">No datasets yet.</i></h5>
+            {% endif %}
             <input class="btn btn-primary btn-sm" type="submit" value="Tag!" />
             <a class="btn btn-default btn-sm" href="{% url 'dataset-list' %}">Cancel</a>
         </form><br>

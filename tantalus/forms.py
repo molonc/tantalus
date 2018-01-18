@@ -285,16 +285,8 @@ class DatasetSearchForm(forms.Form):
 
 
 class DatasetTagForm(forms.Form):
-    tag_all = forms.BooleanField(
-        required=False,
-        initial=True,
-        help_text="If this is selected, all datasets returned by the search will be tagged, regardless of selection below.")
     tag_name = forms.CharField(max_length=500)
-    models_to_tag = forms.ModelMultipleChoiceField(
-        label="Datasets to tag",
-        queryset=None,
-        help_text="All datasets returned by search will be tagged by default. Use the search in the dropdown and unselect those you want to exclude."
-    )
+    models_to_tag = None
 
     # use __init__ to populate models to tag field
     def __init__(self, *args, **kwargs):
@@ -302,19 +294,15 @@ class DatasetTagForm(forms.Form):
         super(DatasetTagForm, self).__init__(*args, **kwargs)
 
         if datasets:
-            self.fields['models_to_tag'].queryset = AbstractDataSet.objects.filter(pk__in=datasets)
+            self.models_to_tag = AbstractDataSet.objects.filter(pk__in=datasets)
         else:
-            self.fields['models_to_tag'].queryset = AbstractDataSet.objects.all()
+            self.models_to_tag = AbstractDataSet.objects.all()
 
     def add_dataset_tags(self):
-        if self.cleaned_data['tag_all']:
-            models_to_tag = self.fields['models_to_tag'].queryset
-        else:
-            models_to_tag = self.cleaned_data['models_to_tag']
         tag_name = self.cleaned_data['tag_name']
         tag, created = Tag.objects.get_or_create(name=tag_name)
         tag.abstractdataset_set.clear()
-        tag.abstractdataset_set.add(*models_to_tag)
+        tag.abstractdataset_set.add(*self.models_to_tag)
 
 
 class FileTransferCreateForm(forms.ModelForm):

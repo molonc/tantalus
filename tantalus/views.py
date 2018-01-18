@@ -21,21 +21,6 @@ from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTa
 import tantalus.tasks
 
 
-def search_view(request):
-    query_str = request.GET.get('query_str')
-    instance = None
-
-    # search for samples
-    if Sample.objects.filter(sample_id=query_str):
-        instance = Sample.objects.filter(sample_id=query_str)[0]
-
-    if instance:
-        return HttpResponseRedirect(instance.get_absolute_url())
-    else:
-        msg = "Sorry, no match found."
-        messages.warning(request, msg)
-        return HttpResponseRedirect(reverse('home'))
-
 @Render("tantalus/sample_list.html")
 def sample_list(request):
     """list of samples."""
@@ -43,9 +28,7 @@ def sample_list(request):
     context = {'samples': samples}
     return context
 
-#============================
-# Classes
-#----------------------------
+
 class FileTransferListView(TemplateView):
     template_name = 'tantalus/filetransfer_list.html'
     
