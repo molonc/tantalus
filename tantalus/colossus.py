@@ -26,3 +26,21 @@ def get_colossus_sublibraries_from_library_id(library_id):
             sublibrary_url = None
 
     return sublibraries
+
+def query_libraries_by_library_id(library_id):
+    library_url = '{}library/?pool_id={}'.format(django.conf.settings.COLOSSUS_API_URL, library_id)
+
+    r = requests.get(library_url)
+
+    if r.status_code != 200:
+        raise Exception('Returned {}: {}'.format(r.status_code, r.reason))
+
+    results = r.json()['results']
+
+    if len(results) == 0:
+        raise Exception('No entries for library {}'.format(library_id))
+
+    if len(results) > 1:
+        raise Exception('Multiple entries for library {}'.format(library_id))
+
+    return results

@@ -371,24 +371,8 @@ def decode_raw_index_sequence(raw_index_sequence, instrument):
 
 
 def query_colossus_dlp_cell_info(library_id):
-    library_url = '{}library/?pool_id={}'.format(
-        django.conf.settings.COLOSSUS_API_URL,
-        library_id)
 
-    r = requests.get(library_url)
-
-    if r.status_code != 200:
-        raise Exception('Returned {}: {}'.format(r.status_code, r.reason))
-
-    if len(r.json()) == 0:
-        raise Exception('No entries for library {}'.format(library_id))
-
-    if len(r.json()) > 1:
-        raise Exception('Multiple entries for library {}'.format(library_id))
-
-    data = r.json()[0]
-
-    sublibraries = tantalus.utils.get_colossus_sublibraries_from_library_id(library_id)
+    sublibraries = get_colossus_sublibraries_from_library_id(library_id)
 
     cell_samples = {}
     for sublib in sublibraries:
