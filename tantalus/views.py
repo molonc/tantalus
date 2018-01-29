@@ -10,6 +10,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, render
 from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 import os
 
@@ -19,6 +20,7 @@ from tantalus.settings import STATIC_ROOT
 from misc.helpers import Render
 from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, FileTransferCreateForm
 import tantalus.tasks
+from tantalus.settings import PROJECT_ROOT
 
 
 @Render("tantalus/sample_list.html")
@@ -38,7 +40,7 @@ class FileTransferListView(TemplateView):
         return context
 
 
-def get_file_transfer_log(transfer, stderr=False, preview_size=1000):
+def get_file_transfer_log(transfer, stderr=False, raw=False, preview_size=1000):
     if stderr:
         kind = 'stderr'
     else:
@@ -51,6 +53,10 @@ def get_file_transfer_log(transfer, stderr=False, preview_size=1000):
 
     if not os.path.exists(transfer_log_file_path):
         return ['unable to open ' + transfer_log_file_path]
+
+    if raw:
+        with open(transfer_log_file_path, 'r') as log_file:
+            return log_file.read()
 
     log = []
     with open(transfer_log_file_path, 'r') as log_file:
@@ -67,14 +73,61 @@ class FileTransferDetailView(TemplateView):
 
     def get_context_data(self, **kwargs):
         transfer = get_object_or_404(FileTransfer, id=kwargs['pk'])
+        try:
+            stdout_page, stderr_page = self.request.GET.get('page', '1,1').split(',')
+        except ValueError as e:
+            stdout_page, stderr_page = 1, 1
+
+        paginator_stdout = Paginator(get_file_transfer_log(transfer), 100)
+        try:
+            std = paginator_stdout.page(stdout_page)
+        except PageNotAnInteger:
+            std = paginator_stdout.page(1)
+        except EmptyPage:
+            std = paginator_stdout.page(paginator_stdout.num_pages)
+
+        paginator_stderr = Paginator(get_file_transfer_log(transfer, stderr=True), 100)
+        try:
+            err = paginator_stderr.page(stderr_page)
+        except PageNotAnInteger:
+            err = paginator_stderr.page(1)
+        except EmptyPage:
+            err = paginator_stderr.page(paginator_stderr.num_pages)
+
         context = {'transfer': transfer,
-                   'transfer_stdout': get_file_transfer_log(transfer),
-                   'transfer_stderr': get_file_transfer_log(transfer, stderr=True)}
-        print context
+                   'std':std,
+                   'err':err,
+                   'pk':kwargs['pk'],
+                   }
+
         return context
 
 
+class FileTransferStdoutView(TemplateView):
+    template_name = 'tantalus/filetransfer_stdout.html'
+
+    def get_context_data(self, **kwargs):
+        transfer = get_object_or_404(FileTransfer, id=kwargs['pk'])
+        context = {'transfer': transfer,
+                   'pk': kwargs['pk'],
+                   'transfer_stdout': get_file_transfer_log(transfer, raw=True),
+                   }
+        return context
+
+
+class FileTransferStderr(TemplateView):
+    template_name = 'tantalus/filetransfer_stderr.html'
+
+    def get_context_data(self, **kwargs):
+        transfer = get_object_or_404(FileTransfer, id=kwargs['pk'])
+        context = {'transfer': transfer,
+                   'pk': kwargs['pk'],
+                   'transfer_stderr': get_file_transfer_log(transfer, stderr=True, raw=True),
+                   }
+        return context
 @method_decorator(login_required, name='get')
+
+
 class FileTransferCreateView(TemplateView):
     template_name = 'tantalus/filetransfer_form.html'
 

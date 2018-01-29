@@ -23,10 +23,10 @@
                 <tr><th id="thid" valign="top">Message:</th><td id="tdid"><pre>{{ transfer.message }}</pre></td></tr>
             </tbody>
         </table>
-        <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href={% url 'filetransfer-start' pk=transfer.pk %}>Start File Transfer</a>
-    </div>
+        <a class="btn btn-primary btn-sm" style=" margin: auto;margin-top:5px; margin-bottom: 10px;" href={% url 'filetransfer-start' pk=transfer.pk %}>Start File Transfer</a>
 
     <br />
+    {% if std %}
 
     <div class="container" style="padding:0; margin-bottom:5px;">
         <table>
@@ -36,9 +36,28 @@
         </table>
     </div>
 
-    <div id="log_file_output" class="container" style="padding:0; margin-bottom:5px; height:300px; overflow:scroll; resize: both">
-        <pre><code>{% for line in transfer_stdout %}{{ line }}{% endfor %}</code></pre>
+    <div class="col-md-12 well" style=" padding:0; margin-bottom:5px; height:300px; overflow:scroll; resize: both;">
+        <pre><code>{% for line in std %}{{line}}{% endfor %}</code></pre>
     </div>
+
+    <span class="step-links pagination">
+        {% if std.has_previous %}
+        <a class="btn btn-primary btn-sm" href="?page={{ std.previous_page_number }},{{ err.number }}"> previous </a>
+        {% endif %}
+        <span class="current">
+            Page {{ std.number }} of {{ std.paginator.num_pages }}
+        </span>
+        {% if std.has_next %}
+        <a class="btn btn-primary btn-sm" href="?page={{ std.next_page_number }},{{ err.number }}"> next </a>
+        {% endif %}
+    </span>
+    {% endif %}
+
+    {% if std.has_next %}
+    <a class="btn btn-primary btn-sm" href="{{ pk }}/detail">Detail</a>
+    {% endif %}
+
+    {% if err %}
 
     <div class="container" style="padding:0; margin-bottom:5px;">
         <table>
@@ -48,7 +67,30 @@
         </table>
     </div>
 
-    <div id="log_file_output" class="container" style="padding:0; margin-bottom:5px; height:300px; overflow:scroll; resize: both">
-        <pre><code>{% for line in transfer_stderr %}{{ line }}{% endfor %}</code></pre>
+    <div class="col-md-12 well" style=" padding:0; margin-bottom:5px; height:300px; overflow:scroll; resize: both;">
+        <pre><code>{% for line in err %}{{line}}{% endfor %}</code></pre>
     </div>
+
+    <span class="step-links pagination">
+        {% if err.has_previous %}
+        <a a class="btn btn-primary btn-sm" href="?page={{ std.number }},{{ err.previous_page_number }}"> previous </a>
+        {% endif %}
+        <span class="current">
+            Page {{ err.number }} of {{ err.paginator.num_pages }}
+        </span>
+        {% if err.has_next %}
+        <a class="btn btn-primary btn-sm" href="?page={{ std.number }},{{ err.next_page_number }}"> next </a>
+        {% endif %}
+    </span>
+
+    {% if err.has_next %}
+    <a class="btn btn-primary btn-sm" href="{{ pk }}/detail">Detail</a>
+    {% endif %}
+
+    {% endif %}
+
+    </div>
+
+
 {% endblock %}
+
