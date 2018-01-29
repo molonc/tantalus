@@ -639,6 +639,9 @@ class FileTransfer(SimpleTask):
     def get_absolute_url(self):
         return reverse("filetransfer-list")
 
+    def __unicode__(self):
+        return self.name
+
 
 class ReservedFileInstance(models.Model):
     """
