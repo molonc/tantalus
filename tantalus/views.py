@@ -20,7 +20,6 @@ from tantalus.settings import STATIC_ROOT
 from misc.helpers import Render
 from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, FileTransferCreateForm
 import tantalus.tasks
-from tantalus.settings import PROJECT_ROOT
 
 
 @Render("tantalus/sample_list.html")

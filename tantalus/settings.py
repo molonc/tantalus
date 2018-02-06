@@ -178,5 +178,3 @@ COLOSSUS_API_URL = os.environ.get('COLOSSUS_API_URL', 'http://colossus.bcgsc.ca/
 # Task logs
 TASK_LOG_DIRECTORY = os.environ.get('TASK_LOG_DIRECTORY', '/tmp/')
 
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
-
