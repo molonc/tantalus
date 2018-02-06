@@ -97,39 +97,6 @@ class DNALibrary(models.Model):
         return '{}_{}'.format(self.library_type, self.library_id)
 
 
-class DNASequences(models.Model):
-    """
-    Sequences of a DNA Library, possibly a subset of a multiplexed library.
-    """
-
-    history = HistoricalRecords()
-
-    dna_library = models.ForeignKey(
-        DNALibrary,
-        on_delete=models.CASCADE,
-    )
-
-    index_sequence = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-    )
-
-    sample = models.ForeignKey(
-        Sample,
-        on_delete=models.CASCADE,
-    )
-
-    def get_filename_index_sequence(self):
-        if self.index_sequence == '':
-            return 'N'
-        else:
-            return self.index_sequence
-
-    class Meta:
-        unique_together = ('dna_library', 'index_sequence')
-
-
 class SequenceLane(models.Model):
     """
     Lane of Illumina Sequencing.
@@ -307,20 +274,15 @@ class AbstractDataSet(PolymorphicModel):
 
     tags = models.ManyToManyField(Tag)
 
-    lanes = models.ManyToManyField(
-        SequenceLane,
-        verbose_name='Lanes',
-    )
-
-    dna_sequences = models.ForeignKey(
-        DNASequences,
-        null=True,
-        on_delete=models.SET_NULL,
-    )
-
     read_groups = models.ManyToManyField(
         ReadGroup,
     )
+
+    def get_library_id(self):
+        return ','.join(set([r.dna_library.library_id for r in self.read_groups.all()]))
+
+    def get_sample_id(self):
+        return ','.join(set([r.sample.sample_id for r in self.read_groups.all()]))
 
     def get_data_fileset(self):
         raise NotImplementedError()

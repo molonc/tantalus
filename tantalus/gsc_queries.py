@@ -96,7 +96,7 @@ class MissingFileError(Exception):
     pass
 
 
-def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences, lane_infos):
+def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, lane_infos):
     library_name = library.library_id
 
     bai_path = bam_path + '.bai'
@@ -163,7 +163,6 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences
     bam_dataset, created = tantalus.models.BamFile.objects.get_or_create(
         bam_file=bam_file,
         bam_index_file=bai_file,
-        dna_sequences=dna_sequences,
     )
     if created:
         bam_dataset.save()
@@ -184,10 +183,19 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences
         if created:
             lane.save()
 
+        read_group, created = tantalus.models.ReadGroup.objects.get_or_create(
+            sample=sample,
+            dna_library=library,
+            index_sequence=lane_info['adapter_index_sequence'],
+            sequence_lane=lane,
+        )
+        if created:
+            read_group.save()
+
+        bam_dataset.read_groups.add(lane)
+
         reference_genomes.add(lane_info['reference_genome'])
         aligners.add(lane_info['aligner'])
-
-        bam_dataset.lanes.add(lane)
 
     if len(reference_genomes) > 1:
         bam_dataset.reference_genome = tantalus.models.BamFile.UNUSABLE
@@ -244,14 +252,6 @@ def query_gsc_library(gsc_api, library_name):
             if created:
                 library.save()
 
-            dna_sequences, created = tantalus.models.DNASequences.objects.get_or_create(
-                dna_library=library,
-                sample=sample,
-                index_sequence=None,
-            )
-            if created:
-                dna_sequences.save()
-
             merge_infos = gsc_api.query('merge?library={}'.format(library_name))
 
             # Keep track of lanes that are in merged BAMs so that we
@@ -290,12 +290,14 @@ def query_gsc_library(gsc_api, library_name):
                     aligner = libcore['analysis_software']['name']
                     flowcell_info = gsc_api.query('flowcell/{}'.format(flowcell_id))
                     flowcell_code = flowcell_info['lims_flowcell_code']
+                    adapter_index_sequence = libcore['libcore']['primer']['adapter_index_sequence']
 
-                    merged_lanes.add((flowcell_code, lane_number))
+                    merged_lanes.add((flowcell_code, lane_number, adapter_index_sequence))
 
                     lane_info = dict(
                         flowcell_code=flowcell_code,
                         lane_number=lane_number,
+                        adapter_index_sequence=adapter_index_sequence,
                         sequencing_instrument=sequencing_instrument,
                         read_type=solexa_run_type_map[solexa_run_type],
                         reference_genome=reference_genome,
@@ -304,7 +306,7 @@ def query_gsc_library(gsc_api, library_name):
 
                     lane_infos.append(lane_info)
 
-                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences, lane_infos)
+                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, lane_infos)
 
             libcores = gsc_api.query('aligned_libcore/info?library={}'.format(library_name))
 
@@ -322,7 +324,7 @@ def query_gsc_library(gsc_api, library_name):
                 flowcell_code = flowcell_info['lims_flowcell_code']
 
                 # Skip lanes that are part of merged BAMs
-                if (flowcell_code, lane_number) in merged_lanes:
+                if (flowcell_code, lane_number, adapter_index_sequence) in merged_lanes:
                     continue
 
                 bam_path = lane_bam_path_template.format(
@@ -337,13 +339,14 @@ def query_gsc_library(gsc_api, library_name):
                 lane_infos = [dict(
                     flowcell_code=flowcell_code,
                     lane_number=lane_number,
+                    adapter_index_sequence=adapter_index_sequence,
                     sequencing_instrument=sequencing_instrument,
                     read_type=solexa_run_type_map[solexa_run_type],
                     reference_genome=reference_genome,
                     aligner=aligner,
                 )]
 
-                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, dna_sequences, lane_infos)
+                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, lane_infos)
 
         django.db.transaction.on_commit(lambda: tantalus.utils.start_md5_checks(new_file_instances))
 
@@ -464,14 +467,6 @@ def query_gsc_dlp_paired_fastqs(query_info):
             if created:
                 library.save()
 
-            dna_sequences, created = tantalus.models.DNASequences.objects.get_or_create(
-                dna_library=library,
-                sample=sample,
-                index_sequence=index_sequence,
-            )
-            if created:
-                dna_sequences.save()
-
             lane, created = tantalus.models.SequenceLane.objects.get_or_create(
                 flowcell_id=flowcell_code,
                 lane_number=lane_number,
@@ -483,6 +478,15 @@ def query_gsc_dlp_paired_fastqs(query_info):
             )
             if created:
                 lane.save()
+
+            read_group, created = tantalus.models.ReadGroup.objects.get_or_create(
+                sample=sample,
+                dna_library=library,
+                index_sequence=index_sequence,
+                sequence_lane=lane,
+            )
+            if created:
+                read_group.save()
 
             fastq_file, created = tantalus.models.FileResource.objects.get_or_create(
                 size=os.path.getsize(fastq_path),
@@ -511,29 +515,24 @@ def query_gsc_dlp_paired_fastqs(query_info):
 
             paired_fastq_infos[fastq_id][read_end] = {
                 'fastq_file':fastq_file,
-                'dna_sequences':dna_sequences,
-                'lane':lane,
+                'read_group':read_group,
             }
 
         for fastq_id, paired_fastq_info in paired_fastq_infos.iteritems():
             if set(paired_fastq_info.keys()) != set([1, 2]):
                 raise Exception('expected read end 1, 2 for {}, got {}'.format(fastq_id, paired_fastq_info.keys()))
 
-            if paired_fastq_info[1]['dna_sequences'].id != paired_fastq_info[2]['dna_sequences'].id:
-                raise Exception('expected same dna sequences for {}'.format(fastq_id))
-
-            if paired_fastq_info[1]['lane'].id != paired_fastq_info[2]['lane'].id:
+            if paired_fastq_info[1]['read_group'].id != paired_fastq_info[2]['read_group'].id:
                 raise Exception('expected same lane for {}'.format(fastq_id))
 
             fastq_dataset, created = tantalus.models.PairedEndFastqFiles.objects.get_or_create(
                 reads_1_file=paired_fastq_info[1]['fastq_file'],
                 reads_2_file=paired_fastq_info[2]['fastq_file'],
-                dna_sequences=paired_fastq_info[1]['dna_sequences'],
             )
             if created:
                 fastq_dataset.save()
 
-            fastq_dataset.lanes.add(paired_fastq_info[1]['lane'])
+            fastq_dataset.read_groups.add(paired_fastq_info[1]['read_group'])
             fastq_dataset.save()
 
         django.db.transaction.on_commit(lambda: tantalus.utils.start_md5_checks(new_file_instances))

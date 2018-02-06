@@ -14,17 +14,9 @@ class SampleViewSet(viewsets.ReadOnlyModelViewSet):
     filter_fields = ('sample_id',)
 
 
-class FileResourceFilterSet(django_filters.FilterSet):
-    library_id = django_filters.CharFilter(name='dataset__dna_sequences__dna_library__library_id')
-    class Meta:
-        model = tantalus.models.FileResource
-        fields = ['library_id']
-
-
 class FileResourceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class = tantalus.api.serializers.FileResourceSerializer
-    filter_class = FileResourceFilterSet
 
 
 class DNALibraryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -33,29 +25,20 @@ class DNALibraryViewSet(viewsets.ReadOnlyModelViewSet):
     filter_fields = ('library_id',)
 
 
-class DNASequencesViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = tantalus.models.DNASequences.objects.all()
-    serializer_class = tantalus.api.serializers.DNASequencesSerializer
-    filter_fields = ('dna_library__library_id', 'dna_library', 'index_sequence')
-
-
 class SequenceLaneViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.SequenceLane.objects.all()
     serializer_class = tantalus.api.serializers.SequenceLaneSerializer
     filter_fields = ('flowcell_id', 'lane_number', 'dna_library__library_id')
 
 
+class ReadGroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = tantalus.models.ReadGroup.objects.all()
+    serializer_class = tantalus.api.serializers.ReadGroupSerializer
+
+
 class AbstractDataSetViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.AbstractDataSet.objects.all()
     serializer_class = tantalus.api.serializers.AbstractDataSetSerializer
-    filter_fields = (
-                     # filters for SequenceLanes
-                     'lanes',
-                     'lanes__flowcell_id', 'lanes__lane_number',
-                     # filters for DNASequences
-                     'dna_sequences',
-                     'dna_sequences__dna_library__library_id', 'dna_sequences__dna_library', 'dna_sequences__index_sequence'
-                     )
 
 
 class BCLFolderViewSet(viewsets.ReadOnlyModelViewSet):
@@ -69,8 +52,8 @@ class SingleEndFastqFileViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class PairedEndFastqFilesFilterSet(django_filters.FilterSet):
-    library_id = django_filters.CharFilter(name='dna_sequences__dna_library__library_id')
-    index_sequence = django_filters.CharFilter(name='dna_sequences__index_sequence')
+    library_id = django_filters.CharFilter(name='read_groups__dna_library__library_id', distinct=True)
+    index_sequence = django_filters.CharFilter(name='read_groups__index_sequence', distinct=True)
     class Meta:
         model = tantalus.models.PairedEndFastqFiles
         fields = ['library_id', 'index_sequence']
@@ -83,8 +66,8 @@ class PairedEndFastqFilesViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class BamFileFilterSet(django_filters.FilterSet):
-    library_id = django_filters.CharFilter(name='dna_sequences__dna_library__library_id')
-    sample_id = django_filters.CharFilter(name='dna_sequences__sample__sample_id')
+    library_id = django_filters.CharFilter(name='read_groups__dna_library__library_id', distinct=True)
+    sample_id = django_filters.CharFilter(name='read_groups__sample__sample_id', distinct=True)
     class Meta:
         model = tantalus.models.BamFile
         fields = ['library_id', 'sample_id']

@@ -62,17 +62,6 @@ def create_sequence_lane(dna_library, flowcell_id, lane_number, sequencing_libra
     return sequence_lane
 
 
-def create_dna_sequences(dna_library, sample, index_sequence):
-    dna_sequence, created = tantalus.models.DNASequences.objects.get_or_create(
-        dna_library=dna_library,
-        sample=sample,
-        index_sequence=index_sequence,
-    )
-    if created:
-        dna_sequence.save()
-    return dna_sequence
-
-
 def create_file_resource(filename, filepath, read_end):
     file_resource_fields = {
         'size': os.path.getsize(filepath),
@@ -108,15 +97,14 @@ def create_file_instance(storage, file_resource):
     return file_instance, created
 
 
-def create_paired_end_fastq_files(reads_1_file, reads_2_file, dna_sequence, lane):
+def create_paired_end_fastq_files(reads_1_file, reads_2_file, read_group):
     Paired_End_Fastq_Files, created = tantalus.models.PairedEndFastqFiles.objects.get_or_create(
         reads_1_file=reads_1_file,
         reads_2_file=reads_2_file,
-        dna_sequences=dna_sequence,
     )
     if created:
         Paired_End_Fastq_Files.save()
-    Paired_End_Fastq_Files.lanes.add(lane)
+    Paired_End_Fastq_Files.read_groups.add(read_group)
     Paired_End_Fastq_Files.save()
 
 
@@ -255,10 +243,11 @@ def create_models(fastq_info, flowcell_id, storage):
                 sequencing_library_id=info['library_id'],
             )
 
-            dna_sequences = create_dna_sequences(
-                dna_library=dna_library,
+            read_group, created = tantalus.models.ReadGroup.objects.get_or_create(
                 sample=sample,
+                dna_library=dna_library,
                 index_sequence=info['index_sequence'],
+                sequence_lane=sequence_lane,
             )
 
             read_end_file_resources = {}
@@ -287,8 +276,7 @@ def create_models(fastq_info, flowcell_id, storage):
             create_paired_end_fastq_files(
                 reads_1_file=read_end_file_resources[1],
                 reads_2_file=read_end_file_resources[2],
-                dna_sequence=dna_sequences,
-                lane=sequence_lane,
+                read_group=read_group,
             )
 
         django.db.transaction.on_commit(lambda: tantalus.utils.start_md5_checks(new_file_instances))

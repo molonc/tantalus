@@ -111,8 +111,8 @@ class DatasetSearchForm(forms.Form):
         required=False,
     )
 
-    num_lanes = forms.IntegerField(
-        label="Number of lanes",
+    num_read_groups = forms.IntegerField(
+        label="Number of read groups",
         required=False,
     )
 
@@ -133,7 +133,7 @@ class DatasetSearchForm(forms.Form):
         if sample:
             no_match_samples = []
             for samp in sample.split():
-                if not AbstractDataSet.objects.filter(dna_sequences__sample__sample_id=samp).exists():
+                if not AbstractDataSet.objects.filter(read_groups__sample__sample_id=samp).exists():
                     no_match_samples.append(samp)
             if no_match_samples != []:
                 raise forms.ValidationError("Filter for the following sample resulted in 0 results: {}".format(
@@ -146,7 +146,7 @@ class DatasetSearchForm(forms.Form):
         if library:
             no_match_list = []
             for lib in library.split():
-                if not AbstractDataSet.objects.filter(dna_sequences__dna_library__library_id=lib).exists():
+                if not AbstractDataSet.objects.filter(read_groups__dna_library__library_id=lib).exists():
                     no_match_list.append(lib)
 
             if no_match_list:
@@ -162,13 +162,13 @@ class DatasetSearchForm(forms.Form):
             for flowcell_lane in flowcell_and_lane_number_input.split():
                 if "_" in flowcell_lane:
                     # parse out flowcell ID and lane number, assumed to be separated by an underscore
-                    flowcell, lane = flowcell_lane.split("_", 1)
+                    flowcell, lane_number = flowcell_lane.split("_", 1)
                     if not AbstractDataSet.objects.filter(
-                            lanes__flowcell_id=flowcell, lanes__lane_number=lane).exists():
+                            read_groups__sequence_lane__flowcell_id=flowcell, read_groups__sequence_lane__lane_number=lane_number).exists():
                         no_match_list.append(flowcell_lane)
                 else:
                     # no lane number included
-                    if not AbstractDataSet.objects.filter(lanes__flowcell_id=flowcell_lane).exists():
+                    if not AbstractDataSet.objects.filter(read_groups__sequence_lane__flowcell_id=flowcell_lane).exists():
                         no_match_list.append(flowcell_lane)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following flowcell lane resulted in 0 results: {}".format(
@@ -181,7 +181,7 @@ class DatasetSearchForm(forms.Form):
         if sequencing_library_id_field:
             no_match_list = []
             for sequencing_library in sequencing_library_id_field.split():
-                if not AbstractDataSet.objects.filter(lanes__sequencing_library_id=sequencing_library).exists():
+                if not AbstractDataSet.objects.filter(read_groups__sequence_lane__sequencing_library_id=sequencing_library).exists():
                     no_match_list.append(sequencing_library)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following sequencing library resulted in 0 results: {}".format(
@@ -201,7 +201,7 @@ class DatasetSearchForm(forms.Form):
     def get_dataset_search_results(self, clean=True, tagged_with=None, library=None, sample=None, dataset_type=None,
                                    flowcell_id_and_lane=None, sequencing_center=None,
                                    sequencing_instrument=None, sequencing_library_id=None, library_type=None,
-                                   index_format=None, num_lanes=None):
+                                   index_format=None, num_read_groups=None):
         """
         Performs the filter search with the given fields. The "clean" flag is used to indicate whether the cleaned data
         should be used or not.
@@ -226,7 +226,7 @@ class DatasetSearchForm(forms.Form):
             sequencing_library_id = self.cleaned_data['sequencing_library_id']
             library_type = self.cleaned_data['library_type']
             index_format = self.cleaned_data['index_format']
-            num_lanes = self.cleaned_data['num_lanes']
+            num_read_groups = self.cleaned_data['num_read_groups']
 
 
         results = AbstractDataSet.objects.all()
@@ -239,7 +239,7 @@ class DatasetSearchForm(forms.Form):
                 results = results.filter(tags__name=tag)
 
         if sample:
-            results = results.filter(dna_sequences__sample__sample_id__in=sample.split())
+            results = results.filter(read_groups__sample__sample_id__in=sample.split())
 
         if dataset_type:
             query = Q()
@@ -249,37 +249,39 @@ class DatasetSearchForm(forms.Form):
             results = results.filter(query)
 
         if library:
-            results = results.filter(dna_sequences__dna_library__library_id__in=library.split())
+            results = results.filter(read_groups__dna_library__library_id__in=library.split())
 
         if sequencing_center:
-            results = results.filter(lanes__sequencing_centre=sequencing_center)
+            results = results.filter(read_groups__sequence_lane__sequencing_centre=sequencing_center)
 
         if sequencing_instrument:
-            results = results.filter(lanes__sequencing_instrument=sequencing_instrument)
+            results = results.filter(read_groups__sequence_lane__sequencing_instrument=sequencing_instrument)
 
         if sequencing_library_id:
-            results = results.filter(lanes__sequencing_library_id__in=sequencing_library_id.split())
+            results = results.filter(read_groups__sequence_lane__sequencing_library_id__in=sequencing_library_id.split())
 
         if library_type:
-            results = results.filter(dna_sequences__dna_library__library_type=library_type)
+            results = results.filter(read_groups__dna_library__library_type=library_type)
 
         if index_format:
-            results = results.filter(dna_sequences__dna_library__index_format=index_format)
+            results = results.filter(read_groups__dna_library__index_format=index_format)
  
-        if num_lanes is not None:
-            results = results.annotate(num_lanes=Count('lanes')).filter(num_lanes=num_lanes)
+        if num_read_groups is not None:
+            results = results.annotate(num_read_groups=Count('read_groups')).filter(num_read_groups=num_read_groups)
 
         if flowcell_id_and_lane:
             query = Q()
             for flowcell_lane in flowcell_id_and_lane.split():
                 if "_" in flowcell_lane:
                     # parse out flowcell ID and lane number, assumed to be separated by an underscore
-                    flowcell, lane = flowcell_lane.split("_", 1)
-                    q = Q(lanes__flowcell_id=flowcell, lanes__lane_number=lane)
+                    flowcell, lane_number = flowcell_lane.split("_", 1)
+                    q = Q(read_groups__sequence_lane__flowcell_id=flowcell, read_groups__sequence_lane__lane_number=lane_number)
                 else:
-                    q = Q(lanes__flowcell_id=flowcell_lane)
+                    q = Q(read_groups__sequence_lane__flowcell_id=flowcell_lane)
                 query = query | q
             results = results.filter(query)
+
+        results = results.distinct()
 
         return list(results.values_list('id', flat=True))
 

@@ -212,10 +212,10 @@ class DatasetListJSON(BaseDatatableView):
     """
     model = AbstractDataSet
 
-    columns = ['id', 'dataset_type', 'dna_sequences.sample.sample_id', 'dna_sequences.dna_library.library_id', 'num_lanes', 'tags', ]
+    columns = ['id', 'dataset_type', 'sample_id', 'library_id', 'num_read_groups', 'tags', ]
 
     # MUST be in the order of the columns
-    order_columns = ['id', 'dataset_type', 'dna_sequences.sample.sample_id', 'dna_sequences.dna_library.library_id', 'num_lanes', 'tags', ]
+    order_columns = ['id', 'dataset_type', 'sample_id', 'library_id', 'num_read_groups', 'tags', ]
     max_display_length = 100
 
     def get_context_data(self, *args, **kwargs):
@@ -235,8 +235,14 @@ class DatasetListJSON(BaseDatatableView):
         if column == 'dataset_type':
             return row.dataset_type_name
 
-        if column == 'num_lanes':
-            return row.lanes.count()
+        if column == 'sample_id':
+            return row.get_sample_id()
+
+        if column == 'library_id':
+            return row.get_library_id()
+
+        if column == 'num_read_groups':
+            return row.read_groups.count()
 
         if column == 'tags':
             tags_string =  map(str, row.tags.all().values_list('name', flat=True))
@@ -258,6 +264,12 @@ class DatasetListJSON(BaseDatatableView):
                     # modified search queries for tags across related field manager
                     if col['name'] == 'tags':
                         q |= Q(tags__name__startswith=search)
+
+                    elif col['name'] == 'sample_id':
+                        q |= Q(read_groups__sample__sample_id__startswith=search)
+
+                    elif col['name'] == 'library_id':
+                        q |= Q(read_groups__dna_library__library_id__startswith=search)
 
                     # standard search for simple . lookups across models
                     else:

@@ -73,19 +73,20 @@ class DNALibrarySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DNASequencesSerializer(serializers.ModelSerializer):
-    dna_library = DNALibrarySerializer()
-    sample = SampleSerializer()
-
-    class Meta:
-        model = tantalus.models.DNASequences
-        fields = '__all__'
-
-
 class SequenceLaneSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = tantalus.models.SequenceLane
+        fields = '__all__'
+
+
+class ReadGroupSerializer(serializers.ModelSerializer):
+    sample = SampleSerializer()
+    dna_library = DNALibrarySerializer()
+    sequence_lane = SequenceLaneSerializer()
+
+    class Meta:
+        model = tantalus.models.ReadGroup
         fields = '__all__'
 
 
@@ -114,8 +115,7 @@ class BCLFolderSerializer(serializers.ModelSerializer):
 
 
 class SingleEndFastqFileSerializer(serializers.ModelSerializer):
-    lanes = SequenceLaneSerializer(many=True)
-    dna_sequences = DNASequencesSerializer()
+    read_groups = ReadGroupSerializer(many=True)
 
     class Meta:
         model = tantalus.models.SingleEndFastqFile
@@ -123,8 +123,7 @@ class SingleEndFastqFileSerializer(serializers.ModelSerializer):
 
 
 class PairedEndFastqFilesSerializer(serializers.ModelSerializer):
-    lanes = SequenceLaneSerializer(many=True)
-    dna_sequences = DNASequencesSerializer()
+    read_groups = ReadGroupSerializer(many=True)
     reads_1_file = FileResourceSerializer()
     reads_2_file = FileResourceSerializer()
 
@@ -134,8 +133,7 @@ class PairedEndFastqFilesSerializer(serializers.ModelSerializer):
 
 
 class BamFileSerializer(serializers.ModelSerializer):
-    lanes = SequenceLaneSerializer(many=True)
-    dna_sequences = DNASequencesSerializer()
+    read_groups = ReadGroupSerializer(many=True)
     bam_file = FileResourceSerializer()
     bam_index_file = FileResourceSerializer()
 
