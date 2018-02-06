@@ -26,7 +26,6 @@
         <a class="btn btn-primary btn-sm" style=" margin: auto;margin-top:5px; margin-bottom: 10px;" href={% url 'filetransfer-start' pk=transfer.pk %}>Start File Transfer</a>
 
     <br />
-    {% if std %}
 
     <div class="container" style="padding:0; margin-bottom:5px;">
         <table>
@@ -51,13 +50,10 @@
         <a class="btn btn-primary btn-sm" href="?page={{ std.next_page_number }},{{ err.number }}"> next </a>
         {% endif %}
     </span>
-    {% endif %}
 
     {% if std.has_next %}
     <a class="btn btn-primary btn-sm" href="{{ pk }}/detail">Detail</a>
     {% endif %}
-
-    {% if err %}
 
     <div class="container" style="padding:0; margin-bottom:5px;">
         <table>
@@ -85,8 +81,6 @@
 
     {% if err.has_next %}
     <a class="btn btn-primary btn-sm" href="{{ pk }}/detail">Detail</a>
-    {% endif %}
-
     {% endif %}
 
     </div>
