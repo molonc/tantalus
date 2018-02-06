@@ -194,6 +194,38 @@ class SequenceLane(models.Model):
         unique_together = ('flowcell_id', 'lane_number')
 
 
+class ReadGroup(models.Model):
+    """
+    Group of reads from a specific sample, library, lane and index sequence.
+    """
+
+    history = HistoricalRecords()
+
+    sample = models.ForeignKey(
+        Sample,
+        on_delete=models.CASCADE,
+    )
+
+    dna_library = models.ForeignKey(
+        DNALibrary,
+        on_delete=models.CASCADE,
+    )
+
+    index_sequence = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+
+    sequence_lane = models.ForeignKey(
+        SequenceLane,
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        unique_together = ('sample', 'dna_library', 'index_sequence', 'sequence_lane')
+
+
 class FileResource(models.Model):
     """
     Sequence data file.
@@ -289,6 +321,10 @@ class AbstractDataSet(PolymorphicModel):
         DNASequences,
         null=True,
         on_delete=models.SET_NULL,
+    )
+
+    read_groups = models.ManyToManyField(
+        ReadGroup,
     )
 
     def get_data_fileset(self):
