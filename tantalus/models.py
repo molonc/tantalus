@@ -179,11 +179,6 @@ class SequenceLane(models.Model):
         choices=read_type_choices,
     )
 
-    dna_library = models.ForeignKey(
-        DNALibrary,
-        on_delete=models.CASCADE,
-    )
-
     def __unicode__(self):
         if self.lane_number == '':
             return '{}_{}'.format(self.sequencing_centre, self.flowcell_id)
