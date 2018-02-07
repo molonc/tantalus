@@ -77,6 +77,28 @@ def check_or_update_md5(md5_check):
                 md5, existing_md5, filepath))
 
 
+def _as_gb(num_bytes):
+    return round(num_bytes / (1024. * 1024.), 2)
+
+
+class TransferProgress(object):
+    def __init__(self):
+        self._start = time.time()
+        self._interval = 10
+        self._last_print = self._start - self._interval * 2
+    def print_progress(self, current, total):
+        current_time = time.time()
+        if current_time < self._last_print + self._interval:
+            return
+        self._last_print = current_time
+        elapsed = current_time - self._start
+        print '{}/{} ({:.2f}%) in {}s'.format(
+            _as_gb(current),
+            _as_gb(total),
+            100. * float(current) / total,
+            elapsed)
+
+
 class AzureTransfer(object):
     def __init__(self, storage):
         self.block_blob_service = BlockBlobService(
@@ -110,7 +132,9 @@ class AzureTransfer(object):
         self.block_blob_service.get_blob_to_path(
             cloud_container,
             cloud_blobname,
-            local_filepath)
+            local_filepath,
+            progress_callback=TransferProgress().print_progress,
+            max_connections=16)
 
         os.chmod(local_filepath, 0444)
 
@@ -151,7 +175,9 @@ class AzureTransfer(object):
         self.block_blob_service.create_blob_from_path(
             cloud_container,
             cloud_blobname,
-            local_filepath)
+            local_filepath,
+            progress_callback=TransferProgress().print_progress,
+            max_connections=16)
 
 
 def check_file_same_local(file_resource, filepath):
@@ -276,5 +302,7 @@ def transfer_files(file_transfer):
     # Transfer all files that have reserved file instances
     # Create each file on success
     for file_instance in file_instances:
+        print 'starting transfer of {} to {}'.format(file_instance.file_resource.filename, to_storage.name)
         f_transfer(file_instance, to_storage)
         FileInstance.objects.create(file_resource=file_instance.file_resource, storage=to_storage)
+        print 'finished transfer of {} to {}'.format(file_instance.file_resource.filename, to_storage.name)
