@@ -134,7 +134,7 @@ class AzureTransfer(object):
             cloud_blobname,
             local_filepath,
             progress_callback=TransferProgress().print_progress,
-            max_connections=16)
+            max_connections=1)
 
         os.chmod(local_filepath, 0444)
 
@@ -177,7 +177,7 @@ class AzureTransfer(object):
             cloud_blobname,
             local_filepath,
             progress_callback=TransferProgress().print_progress,
-            max_connections=16)
+            max_connections=1)
 
 
 def check_file_same_local(file_resource, filepath):
