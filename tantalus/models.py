@@ -184,6 +184,10 @@ class ReadGroup(models.Model):
         on_delete=models.CASCADE,
     )
 
+    sequencing_library_id = create_id_field(
+        null=True,
+    )
+
     class Meta:
         unique_together = ('sample', 'dna_library', 'index_sequence', 'sequence_lane')
 
