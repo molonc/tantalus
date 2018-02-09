@@ -96,7 +96,7 @@ class MissingFileError(Exception):
     pass
 
 
-def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, lane_infos):
+def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos):
     library_name = library.library_id
 
     bai_path = bam_path + '.bai'
@@ -112,8 +112,8 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, lane_infos):
     bai_filename = bai_path[bai_path.find(library_name):]
 
     # Prepend sample id to filenames
-    bam_filename = os.path.join(sample_id, bam_filename)
-    bai_filename = os.path.join(sample_id, bai_filename)
+    bam_filename = os.path.join(sample.sample_id, bam_filename)
+    bai_filename = os.path.join(sample.sample_id, bai_filename)
 
     bam_file, created = tantalus.models.FileResource.objects.get_or_create(
         size=os.path.getsize(bam_path),
@@ -175,10 +175,8 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, lane_infos):
             flowcell_id=lane_info['flowcell_code'],
             lane_number=lane_info['lane_number'],
             sequencing_centre=tantalus.models.SequenceLane.GSC,
-            sequencing_library_id=library.library_id,
             sequencing_instrument=lane_info['sequencing_instrument'],
             read_type=lane_info['read_type'],
-            dna_library=library,
         )
         if created:
             lane.save()
@@ -188,11 +186,12 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, lane_infos):
             dna_library=library,
             index_sequence=lane_info['adapter_index_sequence'],
             sequence_lane=lane,
+            sequencing_library_id=library.library_id,
         )
         if created:
             read_group.save()
 
-        bam_dataset.read_groups.add(lane)
+        bam_dataset.read_groups.add(read_group)
 
         reference_genomes.add(lane_info['reference_genome'])
         aligners.add(lane_info['aligner'])
@@ -306,7 +305,7 @@ def query_gsc_library(gsc_api, library_name):
 
                     lane_infos.append(lane_info)
 
-                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, lane_infos)
+                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos)
 
             libcores = gsc_api.query('aligned_libcore/info?library={}'.format(library_name))
 
@@ -346,7 +345,7 @@ def query_gsc_library(gsc_api, library_name):
                     aligner=aligner,
                 )]
 
-                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample_id, library, lane_infos)
+                new_file_instances += add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos)
 
         django.db.transaction.on_commit(lambda: tantalus.utils.start_md5_checks(new_file_instances))
 
@@ -471,10 +470,8 @@ def query_gsc_dlp_paired_fastqs(query_info):
                 flowcell_id=flowcell_code,
                 lane_number=lane_number,
                 sequencing_centre=tantalus.models.SequenceLane.GSC,
-                sequencing_library_id=gsc_library_id,
                 sequencing_instrument=sequencing_instrument,
                 read_type=solexa_run_type_map[solexa_run_type],
-                dna_library=library,
             )
             if created:
                 lane.save()
@@ -484,6 +481,7 @@ def query_gsc_dlp_paired_fastqs(query_info):
                 dna_library=library,
                 index_sequence=index_sequence,
                 sequence_lane=lane,
+                sequencing_library_id=gsc_library_id,
             )
             if created:
                 read_group.save()
