@@ -222,4 +222,3 @@ class DatasetTagSerializer(serializers.Serializer):
         tag.abstractdataset_set.clear()
         tag.abstractdataset_set.add(*datasets)
         return validated_data
-

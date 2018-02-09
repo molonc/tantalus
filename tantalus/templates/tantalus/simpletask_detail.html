@@ -1,0 +1,61 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    {{ task_type }}: {{ simple_task.name }}
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">Task Details</h4>
+    </div>
+    
+    <div class="container" style="background-color:#F5F5F5;">
+        <table class="table-condensed">
+            <tbody>
+                {% if task_type == 'FileTransfer' %}
+                    <tr><th id="thid">Name:</th><td id="tdid">{{ simple_task.name }}</td></tr>
+                    <tr><th id="thid">Tag:</th><td id="tdid">{{ simple_task.tag_name }}</td></tr>
+                    <tr><th id="thid">From:</th><td id="tdid">{{ simple_task.from_storage }}</td></tr>
+                    <tr><th id="thid">To:</th><td id="tdid">{{ simple_task.to_storage }}</td></tr>
+                {% endif %}
+                <tr><th id="thid">Running:</th><td id="tdid">{{ simple_task.running }}</td></tr>
+                <tr><th id="thid">Finished:</th><td id="tdid">{{ simple_task.finished }}</td></tr>
+                <tr><th id="thid">Success:</th><td id="tdid">{{ simple_task.success }}</td></tr>
+                <tr><th id="thid">State:</th><td id="tdid">{{ simple_task.state }}</td></tr>
+                {% if task_type == 'FileTransfer' %}
+                    <tr><th id="thid">Finished:</th><td id="tdid">{{ simple_task.get_count_finished }} / {{ simple_task.get_count_total }}</td></tr>
+                {% endif %}
+                <tr><th id="thid" valign="top">Message:</th><td id="tdid"><pre>{{ simple_task.message }}</pre></td></tr>
+            </tbody>
+        </table>
+        
+        <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href={% url task_type|add:'-start'|lower pk=simple_task.pk %}>Start {{ task_type }}</a>
+    </div>
+
+    <br />
+
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <table>
+            <tr>
+                <td><h4>Task Standard Output</h4></td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="log_file_output" class="container" style="padding:0; margin-bottom:5px; height:300px; overflow:scroll; resize: both">
+        <pre><code>{% for line in simple_task_stdout %}{{ line }}{% endfor %}</code></pre>
+    </div>
+
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <table>
+            <tr>
+                <td><h4>Task Standard Error</h4></td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="log_file_output" class="container" style="padding:0; margin-bottom:5px; height:300px; overflow:scroll; resize: both">
+        <pre><code>{% for line in simple_task_stderr %}{{ line }}{% endfor %}</code></pre>
+    </div>
+{% endblock %}

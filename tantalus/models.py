@@ -584,6 +584,9 @@ class SimpleTask(models.Model):
     state = models.TextField(blank=True)
     message = models.TextField(blank=True)
 
+    def get_absolute_url(self):
+        return reverse(self.view)
+
     class Meta:
         abstract = True
 
@@ -592,6 +595,9 @@ class BRCFastqImport(SimpleTask):
     """
     When given an output dir + metadata, generate fastq files.
     """
+    
+    view = 'brcfastqimport-list'
+
     output_dir = models.CharField(
         max_length=500
     )
@@ -608,6 +614,8 @@ class FileTransfer(SimpleTask):
     """
     File transfer from one storage to another.
     """
+
+    view = 'filetransfer-list'
 
     name = models.CharField(
         max_length=50,
@@ -652,9 +660,6 @@ class FileTransfer(SimpleTask):
         else:
             raise Exception('no transfer queue for transfer')
 
-    def get_absolute_url(self):
-        return reverse("filetransfer-list")
-
     def __unicode__(self):
         return self.name
 
@@ -698,6 +703,8 @@ class GscWgsBamQuery(SimpleTask):
     Query GSC API for WGS Bam data paths.
     """
 
+    view = 'gscwgsbamquery-list'
+
     library_ids = django.contrib.postgres.fields.ArrayField(
         models.CharField(max_length=50),
     )
@@ -708,6 +715,8 @@ class GscDlpPairedFastqQuery(SimpleTask):
     Query GSC API for DLP paired fastq data paths.
     """
 
+    view = 'gscdlppairedfastqquery-list'
+
     dlp_library_id = models.CharField(
         max_length=50,
         unique=True,
@@ -717,4 +726,3 @@ class GscDlpPairedFastqQuery(SimpleTask):
         max_length=50,
         unique=True,
     )
-

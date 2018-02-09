@@ -10,8 +10,9 @@ from django import forms
 #---------------------------
 from django.db import transaction
 from django.db.models import Q, Count
+from django.shortcuts import get_object_or_404
 
-from .models import Sample, AbstractDataSet, FileTransfer, FileResource, SequenceLane, DNALibrary, Tag
+from .models import Sample, AbstractDataSet, FileTransfer, FileResource, SequenceLane, DNALibrary, Tag, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, ServerStorage
 import tantalus.tasks
 
 
@@ -307,7 +308,26 @@ class DatasetTagForm(forms.Form):
         tag.abstractdataset_set.add(*self.models_to_tag)
 
 
-class FileTransferCreateForm(forms.ModelForm):
+class SimpleTaskCreateForm(forms.ModelForm):
+
+    class Meta:
+        abstract = True
+
+    def get_queue_method(self):
+        raise NotImplementedError()
+
+    def save(self):
+        super(SimpleTaskCreateForm, self).save()
+        self.task_type.apply_async(
+            args=(self.instance.id,),
+            queue=self.get_queue_method())
+        return self.instance
+
+
+class FileTransferCreateForm(SimpleTaskCreateForm):
+
+    task_type = tantalus.tasks.transfer_files_task
+
     class Meta:
         model = FileTransfer
         fields = ('name', 'tag_name', 'from_storage', 'to_storage')
@@ -319,9 +339,51 @@ class FileTransferCreateForm(forms.ModelForm):
             raise forms.ValidationError('no datasets with tag {}'.format(tag_name))
         return tag_name
 
-    def save(self):
-        super(FileTransferCreateForm, self).save()
-        tantalus.tasks.transfer_files_task.apply_async(
-            args=(self.instance.id,),
-            queue=self.instance.get_transfer_queue_name())
-        return self.instance
+    def get_queue_method(self):
+        return self.instance.get_transfer_queue_name()
+
+
+class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
+    
+    task_type = tantalus.tasks.query_gsc_wgs_bams_task
+
+    library_ids = forms.CharField(
+        label="Library ids",
+        required=False,
+        help_text="A white space separated list of library IDs. Eg. A90652A",
+        widget=forms.widgets.Textarea
+    )
+
+    def clean_library_ids(self):
+        return self.cleaned_data['library_ids'].split()
+
+    class Meta:
+        model = GscWgsBamQuery
+        fields = ('library_ids',)
+
+    def get_queue_method(self):
+        return get_object_or_404(tantalus.models.ServerStorage, name='gsc').get_db_queue_name()
+
+
+class GscDlpPairedFastqQueryCreateForm(SimpleTaskCreateForm):
+
+    task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
+
+    class Meta:
+        model = GscDlpPairedFastqQuery
+        fields = ('dlp_library_id', 'gsc_library_id')
+
+    def get_queue_method(self):
+        return get_object_or_404(tantalus.models.ServerStorage, name='gsc').get_db_queue_name()
+
+
+class BRCFastqImportCreateForm(SimpleTaskCreateForm):
+
+    task_type = tantalus.tasks.import_brc_fastqs_task
+
+    class Meta:
+        model = BRCFastqImport
+        fields = ('output_dir', 'storage', 'flowcell_id')
+
+    def get_queue_method(self):
+        return self.instance.storage.get_db_queue_name()
