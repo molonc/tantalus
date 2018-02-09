@@ -127,8 +127,6 @@ class SequenceLane(models.Model):
         choices=sequencing_centre_choices,
     )
 
-    sequencing_library_id = create_id_field()
-
     sequencing_instrument = models.CharField(
         max_length=50,
     )
