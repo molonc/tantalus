@@ -279,7 +279,7 @@ class DatasetListJSON(BaseDatatableView):
                         if col['search.value']:
                             qs = qs.filter(**{'{0}__startswith'.format(self.columns[col_no].replace('.', '__')): col['search.value']})
 
-            qs = qs.filter(q)
+            qs = qs.filter(q).distinct()
         return qs
 
 
