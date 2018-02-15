@@ -22,6 +22,7 @@
                             <th class="dataset_library_id">Library</th>
                             <th class="dataset_num_read_groups">Num. Read Groups</th>
                             <th class="dataset_tags">Tags</th>
+                            <th class="dataset_storages">Storages</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -43,7 +44,8 @@
                     {"name": "sample_id", "targets": "dataset_sample_id", "orderable": false},
                     {"name": "library_id", "targets": "dataset_library_id", "orderable": false},
                     {"name": "num_read_groups", "targets": "dataset_num_read_groups", "orderable": false, "searchable": false},
-                    {"name": "tags", "targets": "dataset_tags"}
+                    {"name": "tags", "targets": "dataset_tags"},
+                    {"name": "storages", "targets": "dataset_storages", "orderable": false, "searchable": false}
                 ],
                 processing: true,
                 serverSide: true,

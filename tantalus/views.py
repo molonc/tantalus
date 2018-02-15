@@ -213,10 +213,10 @@ class DatasetListJSON(BaseDatatableView):
     """
     model = AbstractDataSet
 
-    columns = ['id', 'dataset_type', 'sample_id', 'library_id', 'num_read_groups', 'tags', ]
+    columns = ['id', 'dataset_type', 'sample_id', 'library_id', 'num_read_groups', 'tags', 'storages']
 
     # MUST be in the order of the columns
-    order_columns = ['id', 'dataset_type', 'sample_id', 'library_id', 'num_read_groups', 'tags', ]
+    order_columns = ['id', 'dataset_type', 'sample_id', 'library_id', 'num_read_groups', 'tags', 'storages']
     max_display_length = 100
 
     def get_context_data(self, *args, **kwargs):
@@ -248,6 +248,9 @@ class DatasetListJSON(BaseDatatableView):
         if column == 'tags':
             tags_string =  map(str, row.tags.all().values_list('name', flat=True))
             return tags_string
+
+        if column == 'storages':
+            return row.get_storage_names()
 
         else:
             return super(DatasetListJSON, self).render_column(row, column)
