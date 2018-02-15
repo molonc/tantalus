@@ -20,6 +20,7 @@
                 <tr><th id="thid">Finished:</th><td id="tdid">{{ transfer.finished }}</td></tr>
                 <tr><th id="thid">Success:</th><td id="tdid">{{ transfer.success }}</td></tr>
                 <tr><th id="thid">State:</th><td id="tdid">{{ transfer.state }}</td></tr>
+                <tr><th id="thid">Finished:</th><td id="tdid">{{ transfer.get_count_finished }} / {{ transfer.get_count_total }}</td></tr>
                 <tr><th id="thid" valign="top">Message:</th><td id="tdid"><pre>{{ transfer.message }}</pre></td></tr>
             </tbody>
         </table>

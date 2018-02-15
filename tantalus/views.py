@@ -93,11 +93,12 @@ class FileTransferDetailView(TemplateView):
         except EmptyPage:
             err = paginator_stderr.page(paginator_stderr.num_pages)
 
-        context = {'transfer': transfer,
-                   'std':std,
-                   'err':err,
-                   'pk':kwargs['pk'],
-                   }
+        context = {
+            'transfer': transfer,
+            'std': std,
+            'err': err,
+            'pk': kwargs['pk'],
+        }
 
         return context
 

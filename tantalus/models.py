@@ -623,6 +623,22 @@ class FileTransfer(SimpleTask):
         related_name='filetransfer_to_storage',
     )
 
+    def is_dataset_finished_transfer(self, dataset):
+        for f in dataset.get_data_fileset():
+            if f.fileinstance_set.filter(storage=self.to_storage).count() == 0:
+                return False
+        return True
+
+    def get_count_total(self):
+        return AbstractDataSet.objects.filter(tags__name=self.tag_name).count()
+
+    def get_count_finished(self):
+        finished = 0
+        for dataset in AbstractDataSet.objects.filter(tags__name=self.tag_name):
+            if self.is_dataset_finished_transfer(dataset):
+                finished += 1
+        return finished
+
     def get_transfer_queue_name(self):
         if self.to_storage.has_transfer_queue:
             return self.to_storage.get_transfer_queue_name()
