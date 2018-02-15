@@ -31,6 +31,27 @@ class Tag(models.Model):
         return self.name
 
 
+class Project(models.Model):
+    """
+    Project model
+    """
+    history = HistoricalRecords()
+
+    name =  models.CharField(unique=True,max_length=255)
+
+    def __unicode__(self):
+        return self.name
+
+
+class Patient(models.Model):
+
+    """
+    Patient model
+    """
+    patient_id = models.CharField(unique=True,max_length=120,null=True)
+
+
+
 class Sample(models.Model):
     """
     Physical tumour or other tissue sample.
@@ -40,11 +61,39 @@ class Sample(models.Model):
 
     sample_id = create_id_field(unique=True)
 
+    collab_sample_id = models.CharField(
+        max_length=240,
+        null=True,
+        blank=True
+    )
+
+    tissue = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    note = models.TextField(
+        null=True,
+        blank=True
+    )
+
+    patient_id = models.ForeignKey(
+        Patient,
+        on_delete=models.CASCADE,
+        null=True
+    )
+
+    projects = models.ManyToManyField(Project)
+
+
     def __unicode__(self):
         return self.sample_id
 
     def get_absolute_url(self):
         return reverse("sample-list")
+
+    def get_patient_name(self):
+        return self.patient_id
 
 
 class DNALibrary(models.Model):
@@ -61,19 +110,27 @@ class DNALibrary(models.Model):
     RNASEQ = 'RNASEQ'
     SINGLE_CELL_WGS = 'SC_WGS'
     SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
-    DNA_AMPLICON = 'DNA_AMPLICON'
+    EXCAP = 'EXCAP'
     BISULFITE = 'BISULFITE'
     CHIP = 'CHIP'
-        
+    MRE = 'MRE'
+    MIRNA = 'MIRNA'
+    MEDIP = 'MEDIP'
+    DNA_AMPLICON = 'DNA_AMPLICON'
+
     library_type_choices = (
         (EXOME, 'Bulk Whole Exome Sequence'),
         (WGS, 'Bulk Whole Genome Sequence'),
         (RNASEQ, 'Bulk RNA-Seq'),
         (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
         (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
-        (DNA_AMPLICON, 'Targetted DNA Amplicon Sequence'),
-        (BISULFITE, 'Bisulfite Sequence'),
-        (CHIP, 'Chromatin Immunoprecipitation Sequence'),
+        (EXCAP,'Exon Capture'),
+        (MIRNA,'micro RNA'),
+        (BISULFITE,'Bisulfite'),
+        (CHIP,'Chromatin Immunoprecipitation'),
+        (MRE,'Methylation sensitive restriction enzyme sequencing'),
+        (MEDIP,'Methylated DNA immunoprecipitation'),
+        (DNA_AMPLICON,'Targetted DNA Amplicon Sequence')
     )
 
     library_type = models.CharField(
@@ -787,3 +844,66 @@ class ImportDlpBam(SimpleTask):
             return self.storage.get_db_queue_name()
         else:
             return get_object_or_404(ServerStorage, name='shahlab').get_db_queue_name()
+
+
+class Sow(models.Model):
+    """
+    Sow model
+    """
+    # Unique on name
+    name = models.CharField(max_length=50,unique=True)
+
+    def __unicode__(self):
+        return self.name
+
+
+class Submission(models.Model):
+    """
+    Submission model
+    """
+    # Add nullable library id
+    sample = models.ForeignKey(
+        Sample,
+        on_delete=models.CASCADE,
+        null=True
+    )
+
+    sow = models.ForeignKey(
+        Sow,
+        on_delete=models.CASCADE,
+        null=True
+    )
+
+    submission_date = models.CharField(max_length=255,null=True)
+
+    submitted_by = models.CharField(max_length=50)
+
+    lanes_sequenced = models.IntegerField(
+        blank=True,
+        null=True
+    )
+
+    updated_goal = models.IntegerField(
+        blank=True,
+        null=True
+    )
+
+    payment = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    data_path = models.CharField(
+        max_length=240,
+        blank=True,
+        null=True,
+        default=None
+    )
+
+    library_type = models.CharField(
+        max_length=240,
+        blank=True,
+        null=True,
+        default=None
+    )
+
