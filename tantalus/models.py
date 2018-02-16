@@ -64,6 +64,7 @@ class DNALibrary(models.Model):
     RNASEQ = 'RNASEQ'
     SINGLE_CELL_WGS = 'SC_WGS'
     SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
+    DNA_AMPLICON = 'DNA_AMPLICON'
         
     library_type_choices = (
         (EXOME, 'Bulk Whole Exome Sequence'),
@@ -71,6 +72,7 @@ class DNALibrary(models.Model):
         (RNASEQ, 'Bulk RNA-Seq'),
         (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
         (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
+        (DNA_AMPLICON, 'Targetted DNA Amplicon Sequence'),
     )
 
     library_type = models.CharField(
