@@ -104,6 +104,7 @@ class AzureTransfer(object):
         self.block_blob_service = BlockBlobService(
             account_name=storage.storage_account,
             account_key=storage.credentials.storage_key)
+        self.block_blob_service.MAX_BLOCK_SIZE = 64 * 1024 * 1024
 
     def download_from_blob(self, file_instance, to_storage):
         """ Transfer a file from blob to a server.
