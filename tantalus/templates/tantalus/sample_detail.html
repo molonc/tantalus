@@ -1,0 +1,27 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Sample Detail
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+    </div>
+    <div class="container" style="background-color:#F5F5F5;">
+        <table class="table-condensed">
+            <thead>
+                {% for field in form %}
+                    <th>{{field.label}}</th>
+                {% endfor %}
+            </thead>
+            <tbody>
+                <tr>
+                    {% for field in form %}
+                        <td>{{field.value}}</td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

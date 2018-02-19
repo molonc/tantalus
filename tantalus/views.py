@@ -30,6 +30,19 @@ def sample_list(request):
     return context
 
 
+class SampleDetail(DetailView):
+
+    model = Sample
+    template_name = "tantalus/sample_detail.html"
+
+    def get_context_data(self, object):
+        instance = get_object_or_404(Sample, pk=object.id)
+        context = {
+            'form': SampleForm(instance=instance),
+        }
+        return context
+
+
 class FileTransferListView(TemplateView):
     template_name = 'tantalus/filetransfer_list.html'
     

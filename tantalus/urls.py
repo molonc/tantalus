@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'^filetransfers/start/(?P<pk>\d+)$', tantalus.views.start_filetransfer, name='filetransfer-start'),
     url(r'^samples/$', tantalus.views.sample_list, name='sample-list'),
     url(r'^samples/create$', tantalus.views.SampleCreate.as_view(), name='sample-add'),
+    url(r'^samples/(?P<pk>\d+)$', tantalus.views.SampleDetail.as_view(), name='sample-detail'),
     url(r'^datasets/$', tantalus.views.DatasetList.as_view(), name='dataset-list'),
     url(r'^datasets_json/$', tantalus.views.DatasetListJSON.as_view(), name='dataset-list-json'),
     url(r'^datasets/(?P<pk>\d+)$', tantalus.views.DatasetDetail.as_view(), name='dataset-detail'),
