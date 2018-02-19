@@ -139,7 +139,7 @@ class AzureTransfer(object):
 
         os.chmod(local_filepath, 0444)
 
-    def _check_file_same_blob(file_resource, container, blobname):
+    def _check_file_same_blob(self, file_resource, container, blobname):
         properties = self.block_blob_service.get_blob_properties(container, blobname)
         blobsize = properties.properties.content_length
         if file_resource.size != blobsize:
