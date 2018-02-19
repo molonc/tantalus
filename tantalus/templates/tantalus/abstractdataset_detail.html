@@ -19,12 +19,20 @@
                 </td>
             </tr>
             <tr>
-                <td class="td_name">Library: </td>
-                <td>{{ object.get_library_id }}</td>
+                <td class="td_name">Libraries: </td>
+                <td>
+                {% for library in object.get_libraries %}
+                    {{ library }} 
+                {% endfor %}
+                </td>
             </tr>
             <tr>
-                <td class="td_name">Sample: </td>
-                <td>{{ object.get_sample_id }}</td>
+                <td class="td_name">Samples: </td>
+                <td>
+                {% for sample in object.get_samples %}
+                    <a href={% url 'sample-detail' sample.id %}>{{ sample.sample_id }} </a>
+                {% endfor %}
+                </td>
             </tr>
             <tr>
                 <td class="td_name">Available on: </td>

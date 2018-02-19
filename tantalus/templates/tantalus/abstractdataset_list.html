@@ -18,8 +18,8 @@
                         <tr>
                             <th class="dataset_id">Dataset</th>
                             <th class="dataset_type">Type</th>
-                            <th class="dataset_sample_id">Sample</th>
-                            <th class="dataset_library_id">Library</th>
+                            <th class="dataset_sample_id">Samples</th>
+                            <th class="dataset_library_id">Libraries</th>
                             <th class="dataset_num_read_groups">Num. Read Groups</th>
                             <th class="dataset_tags">Tags</th>
                             <th class="dataset_storages">Storages</th>
@@ -39,7 +39,11 @@
         $(document).ready(function() {
             $('.dataset_datatable').DataTable({
                 columnDefs:[
-                    {"name": "id", "targets": "dataset_id"},
+                    {"name": "id", "targets": "dataset_id", 
+                    "render": function (targets) {
+                        var url_block = "{% url 'dataset-detail' 0 %}".replace(/0/, targets.toString());
+                        return '<a href=' + url_block + '>' + targets + '</a>';
+                    }},
                     {"name": "dataset_type", "targets": "dataset_type", "orderable": false, "searchable": false},
                     {"name": "sample_id", "targets": "dataset_sample_id", "orderable": false},
                     {"name": "library_id", "targets": "dataset_library_id", "orderable": false},
@@ -57,5 +61,3 @@
     </script>
 
 {% endblock %}
-
-

@@ -249,11 +249,11 @@ class DatasetListJSON(BaseDatatableView):
         if column == 'dataset_type':
             return row.dataset_type_name
 
-        if column == 'sample_id':
-            return row.get_sample_id()
+        if column == 'sample_id': 
+            return list([sample.sample_id for sample in row.get_samples()])
 
         if column == 'library_id':
-            return row.get_library_id()
+            return list(row.get_libraries())
 
         if column == 'num_read_groups':
             return row.read_groups.count()
@@ -263,7 +263,7 @@ class DatasetListJSON(BaseDatatableView):
             return tags_string
 
         if column == 'storages':
-            return row.get_storage_names()
+            return list(row.get_storage_names())
 
         else:
             return super(DatasetListJSON, self).render_column(row, column)
@@ -327,8 +327,7 @@ class DatasetDetail(DetailView):
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
         context = super(DatasetDetail, self).get_context_data(**kwargs)
-        storages = Storage.objects.filter(fileinstance__file_resource__in=self.object.get_data_fileset()).distinct()
-        context['storages'] = storages
+        context['storages'] = Storage.objects.filter(fileinstance__file_resource__in=self.object.get_data_fileset()).distinct()
         return context
 
 

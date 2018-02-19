@@ -282,14 +282,14 @@ class AbstractDataSet(PolymorphicModel):
         ReadGroup,
     )
 
-    def get_library_id(self):
-        return ','.join(set([r.dna_library.library_id for r in self.read_groups.all()]))
+    def get_libraries(self):
+        return set([r.dna_library.library_id for r in self.read_groups.all()])
 
-    def get_sample_id(self):
-        return ','.join(set([r.sample.sample_id for r in self.read_groups.all()]))
+    def get_samples(self):
+        return set([r.sample for r in self.read_groups.all()])
 
     def get_storage_names(self):
-        return ','.join(set([i.storage.name for f in self.get_data_fileset() for i in f.fileinstance_set.all()]))
+        return set([i.storage.name for f in self.get_data_fileset() for i in f.fileinstance_set.all()])
 
     def get_data_fileset(self):
         raise NotImplementedError()
