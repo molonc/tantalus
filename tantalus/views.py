@@ -27,7 +27,7 @@ import tantalus.tasks
 def sample_list(request):
     
     """
-    list of samples.
+    List of samples.
     """
     
     samples = Sample.objects.all().order_by('sample_id')
@@ -149,10 +149,9 @@ class SimpleTaskDetailView(TemplateView):
 
         context = {
             'simple_task': simple_task,
-            'simple_task_stdout': get_simple_task_log(simple_task, self.dir_name),
-            'simple_task_stderr': get_simple_task_log(simple_task, self.dir_name, stderr=True),
+            'std': std,
+            'err': err,
             'task_type': self.task_type,
-            'dir_name': self.dir_name,
         }
         return context
 
@@ -196,8 +195,6 @@ class SimpleTaskStdoutView(TemplateView):
         simple_task = get_object_or_404(self.task_model, id=kwargs['pk'])
         
         context = {
-            'simple_task': simple_task,
-            'pk': kwargs['pk'],
             'simple_task_stdout': get_simple_task_log(simple_task, self.dir_name, raw=True),
         }
         return context
@@ -206,28 +203,24 @@ class SimpleTaskStdoutView(TemplateView):
 class FileTransferStdoutView(SimpleTaskStdoutView):
 
     task_model = FileTransfer
-    task_type = 'FileTransfer'
     dir_name = 'transfer_files'
 
 
 class GscWgsBamQueryStdoutView(SimpleTaskStdoutView):
     
     task_model = GscWgsBamQuery
-    task_type = 'GscWgsBamQuery'
     dir_name = 'query_gsc_for_wgs_bams'
 
 
 class GscDlpPairedFastqQueryStdoutView(SimpleTaskStdoutView):
     
     task_model = GscDlpPairedFastqQuery
-    task_type = 'GscDlpPairedFastqQuery'
     dir_name = 'query_gsc_for_dlp_fastqs'
 
 
 class BRCFastqImportStdoutView(SimpleTaskStdoutView):
     
     task_model = BRCFastqImport
-    task_type = 'BRCFastqImport'
     dir_name = 'import_brc_fastqs_into_tantalus' 
 
 
@@ -242,8 +235,6 @@ class SimpleTaskStderrView(TemplateView):
         simple_task = get_object_or_404(self.task_model, id=kwargs['pk'])
         
         context = {
-            'simple_task': simple_task,
-            'pk': kwargs['pk'],
             'simple_task_stderr': get_simple_task_log(simple_task, self.dir_name, stderr=True, raw=True),
         }
         return context
@@ -252,28 +243,24 @@ class SimpleTaskStderrView(TemplateView):
 class FileTransferStderrView(SimpleTaskStderrView):
 
     task_model = FileTransfer
-    task_type = 'FileTransfer'
     dir_name = 'transfer_files'
 
 
 class GscWgsBamQueryStderrView(SimpleTaskStderrView):
     
     task_model = GscWgsBamQuery
-    task_type = 'GscWgsBamQuery'
     dir_name = 'query_gsc_for_wgs_bams'
 
 
 class GscDlpPairedFastqQueryStderrView(SimpleTaskStderrView):
     
     task_model = GscDlpPairedFastqQuery
-    task_type = 'GscDlpPairedFastqQuery'
     dir_name = 'query_gsc_for_dlp_fastqs'
 
 
 class BRCFastqImportStderrView(SimpleTaskStderrView):
     
     task_model = BRCFastqImport
-    task_type = 'BRCFastqImport'
     dir_name = 'import_brc_fastqs_into_tantalus'
 
 
@@ -487,7 +474,7 @@ class DatasetListJSON(BaseDatatableView):
     def filter_queryset(self, qs):
         
         """
-        If search['value'] is provided then filter all searchable columns using istartswith
+        If search['value'] is provided then filter all searchable columns using istartswith.
         """
         
         if not self.pre_camel_case_notation:
@@ -532,7 +519,7 @@ class DatasetList(ListView):
         
         # TODO: add other fields to the view?
         """
-        get context data, and pop session variables from search/tagging if they exist
+        Get context data, and pop session variables from search/tagging if they exist.
         """
         
         self.request.session.pop('dataset_search_results', None)
@@ -563,8 +550,7 @@ class DatasetSearch(FormView):
     def post(self, request, *args, **kwargs):
         
         """
-        Handles POST requests, instantiating a form instance with the passed
-        POST variables and then checked for validity.
+        Handles POST requests, instantiating a form instance with the passed POST variables and then checked for validity.
         """
         
         form = self.get_form()
@@ -586,8 +572,8 @@ class DatasetTag(FormView):
     def get_context_data(self, **kwargs):
         
         """
-        Insert the form into the context dict. Initialize queryset for tagging, and whether the default should have
-        the whole queryset default to selected or not.
+        Insert the form into the context dict.
+        Initialize queryset for tagging, and whether the default should have the whole queryset default to selected or not.
         """
 
         dataset_pks = self.request.session.get('dataset_search_results', None)
