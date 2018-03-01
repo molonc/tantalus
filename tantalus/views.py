@@ -337,7 +337,7 @@ class SimpleTaskStartView(View):
     class Meta:
         abstract = True
 
-    def queue_method(self):
+    def get_queue_method(self, pk):
         return NotImplementedError()
 
     def get(self, request, pk):
@@ -348,7 +348,7 @@ class SimpleTaskStartView(View):
         
         self.task_type.apply_async(
             args=(simple_task.id,),
-            queue=self.queue_method)
+            queue=self.get_queue_method(pk))
         return HttpResponseRedirect(simple_task.get_absolute_url())
 
 
@@ -358,7 +358,7 @@ class FileTransferStartView(SimpleTaskStartView):
     task_model = FileTransfer
     task_type = tantalus.tasks.transfer_files_task
     
-    def queue_method(self):
+    def get_queue_method(self, pk):
         return get_object_or_404(self.task_model, pk=pk).get_transfer_queue_name()
 
 
@@ -367,7 +367,7 @@ class GscWgsBamQueryStartView(SimpleTaskStartView):
     task_model = GscWgsBamQuery
     task_type = tantalus.tasks.query_gsc_wgs_bams_task
     
-    def queue_method(self):
+    def get_queue_method(self, pk):
         return get_object_or_404(tantalus.models.ServerStorage, name='gsc').get_db_queue_name()
 
 
@@ -376,7 +376,7 @@ class GscDlpPairedFastqQueryStartView(SimpleTaskStartView):
     task_model = GscDlpPairedFastqQuery
     task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
     
-    def queue_method(self):
+    def get_queue_method(self, pk):
         return get_object_or_404(tantalus.models.ServerStorage, name='gsc').get_db_queue_name()
 
 
@@ -385,7 +385,7 @@ class BRCFastqImportStartView(SimpleTaskStartView):
     task_model = BRCFastqImport
     task_type = tantalus.tasks.import_brc_fastqs_task
 
-    def queue_method(self):
+    def get_queue_method(self, pk):
         return get_object_or_404(self.task_model, pk=pk).storage.get_db_queue_name()
 
 
