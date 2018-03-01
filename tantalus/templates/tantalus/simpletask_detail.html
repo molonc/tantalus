@@ -26,9 +26,11 @@
                 {% if task_type == 'FileTransfer' %}
                     <tr><th id="thid">Finished:</th><td id="tdid">{{ simple_task.get_count_finished }} / {{ simple_task.get_count_total }}</td></tr>
                 {% endif %}
-                <tr><th id="thid" valign="top">Message:</th><td id="tdid"><pre>{{ simple_task.message }}</pre></td></tr>
+                <tr><th id="thid" valign="top">Message:</th></tr>
             </tbody>
         </table>
+
+        <div style=" height:auto; overflow:scroll;"><pre><code>{{ simple_task.message }}</code></pre></div>
         
         <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href={% url task_type|add:'-start'|lower pk=simple_task.pk %}>Start {{ task_type }}</a>
 
@@ -43,7 +45,7 @@
                 </table>
             </div>
 
-            <div class="col-md-12 well" style=" padding:0; margin-bottom:5px; height:300px; overflow:scroll; resize: both;">
+            <div class="col-md-12 well" style=" padding:0; margin-bottom:5px; height:300px; overflow:scroll;">
                 <pre><code>{% for line in std %}{{line}}{% endfor %}</code></pre>
             </div>
 
@@ -73,7 +75,7 @@
                 </table>
             </div>
 
-            <div class="col-md-12 well" style=" padding:0; margin-bottom:5px; height:300px; overflow:scroll; resize: both;">
+            <div class="col-md-12 well" style=" padding:0; margin-bottom:5px; height:300px; overflow:scroll;">
                 <pre><code>{% for line in err %}{{line}}{% endfor %}</code></pre>
             </div>
 
