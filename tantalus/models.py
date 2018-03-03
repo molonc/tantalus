@@ -26,6 +26,7 @@ class Tag(models.Model):
     """
     Simple text tag associated with datasets.
     """
+    
     history = HistoricalRecords()
 
     name = create_id_field(unique=True)
@@ -281,6 +282,11 @@ class AbstractDataSet(PolymorphicModel):
     read_groups = models.ManyToManyField(
         ReadGroup,
     )
+    
+    file_resources = models.ManyToManyField(
+        FileResource,
+        blank=True,
+    )
 
     def get_libraries(self):
         return set([r.dna_library.library_id for r in self.read_groups.all()])
@@ -289,10 +295,16 @@ class AbstractDataSet(PolymorphicModel):
         return set([r.sample for r in self.read_groups.all()])
 
     def get_storage_names(self):
-        return set([i.storage.name for f in self.get_data_fileset() for i in f.fileinstance_set.all()])
+        return set([i.storage.name for f in self.get_file_resources() for i in f.fileinstance_set.all()])
 
-    def get_data_fileset(self):
+    def get_file_resources(self):
         raise NotImplementedError()
+
+    def save(self):
+        super(AbstractDataSet, self).save()
+        self.file_resources.clear()
+        for file_resource in self.get_file_resources():
+            self.file_resources.add(file_resource)
 
 
 class BCLFolder(AbstractDataSet):
@@ -308,7 +320,7 @@ class BCLFolder(AbstractDataSet):
         related_name='bcl_folder',
     )
 
-    def get_data_fileset(self):
+    def get_file_resources(self):
         return [self.folder]
 
 
@@ -330,7 +342,7 @@ class SingleEndFastqFile(AbstractDataSet):
     def __str__(self):
         return "SingleEndFastQ {}".format(self.id)
 
-    def get_data_fileset(self):
+    def get_file_resources(self):
         return [self.reads_file]
 
 
@@ -358,7 +370,7 @@ class PairedEndFastqFiles(AbstractDataSet):
     def __str__(self):
         return "PairedEndFastq {}".format(self.id)
 
-    def get_data_fileset(self):
+    def get_file_resources(self):
         return [self.reads_1_file, self.reads_2_file]
 
     class Meta:
@@ -412,7 +424,7 @@ class BamFile(AbstractDataSet):
 
     dataset_type_name = 'BAM'
 
-    def get_data_fileset(self):
+    def get_file_resources(self):
         if self.bam_index_file is None:
             return [self.bam_file]
         else:
@@ -638,21 +650,11 @@ class FileTransfer(SimpleTask):
         related_name='filetransfer_to_storage',
     )
 
-    def is_dataset_finished_transfer(self, dataset):
-        for f in dataset.get_data_fileset():
-            if f.fileinstance_set.filter(storage=self.to_storage).count() == 0:
-                return False
-        return True
-
     def get_count_total(self):
         return AbstractDataSet.objects.filter(tags__name=self.tag_name).count()
 
     def get_count_finished(self):
-        finished = 0
-        for dataset in AbstractDataSet.objects.filter(tags__name=self.tag_name):
-            if self.is_dataset_finished_transfer(dataset):
-                finished += 1
-        return finished
+        return AbstractDataSet.objects.filter(tags__name=self.tag_name, file_resources__fileinstance__storage=self.to_storage).distinct().count()
 
     def get_transfer_queue_name(self):
         if self.to_storage.is_read_only:

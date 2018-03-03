@@ -228,7 +228,7 @@ class DeploymentAPITest(APITransactionTestCase):
         from_storage = self.test_rocks
         to_storage = self.test_thost
 
-        fileresource = dataset.get_data_fileset()[0]
+        fileresource = dataset.get_file_resources()[0]
 
         # checking precondition that FileResource has an existing FileInstance at from_storage and none at to_storage
         self.assertIn("test_rocks", fileresource.fileinstance_set.all().values_list('storage__name', flat=True))
@@ -263,7 +263,7 @@ class DeploymentAPITest(APITransactionTestCase):
         from_storage = self.test_thost
         to_storage = self.blob_storage
 
-        fileresource = dataset.get_data_fileset()[0]
+        fileresource = dataset.get_file_resources()[0]
 
         # checking precondition that FileResource has NO FileInstance at from_storage
         # using thost as from_storage for this
@@ -304,7 +304,7 @@ class DeploymentAPITest(APITransactionTestCase):
             username='jngo',
         )
 
-        fileresource = dataset.get_data_fileset()[0]
+        fileresource = dataset.get_file_resources()[0]
 
         # file instances for the file resource
         # the only loaded fileinstance for the file resource based on loading for these tests should be for rocks

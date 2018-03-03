@@ -13,7 +13,7 @@
             <tr>
                 <td class="td_name">File Resources: </td>
                 <td>
-                    {% for file_resource in object.get_data_fileset %}
+                    {% for file_resource in object.get_file_resources %}
                         {{ file_resource.filename }}<br/>
                     {% endfor %}
                 </td>

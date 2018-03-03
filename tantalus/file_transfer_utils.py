@@ -275,7 +275,7 @@ def transfer_files(file_transfer):
     # reserved file instances
     file_instances = []
     for dataset in AbstractDataSet.objects.filter(tags__name=tag_name):
-        file_resources = dataset.get_data_fileset()
+        file_resources = dataset.get_file_resources()
 
         for file_resource in file_resources:
             # Check for an existing file instance at destination

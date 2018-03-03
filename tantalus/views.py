@@ -524,7 +524,7 @@ class DatasetDetail(DetailView):
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
         context = super(DatasetDetail, self).get_context_data(**kwargs)
-        context['storages'] = Storage.objects.filter(fileinstance__file_resource__in=self.object.get_data_fileset()).distinct()
+        context['storages'] = Storage.objects.filter(fileinstance__file_resource__in=self.object.get_file_resources()).distinct()
         return context
 
 
