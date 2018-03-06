@@ -43,4 +43,5 @@ def query_libraries_by_library_id(library_id):
     if len(results) > 1:
         raise Exception('Multiple entries for library {}'.format(library_id))
 
-    return results
+    return results[0]
+
