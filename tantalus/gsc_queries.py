@@ -354,9 +354,24 @@ def reverse_complement(sequence):
     return str(sequence[::-1]).translate(string.maketrans('ACTGactg','TGACtgac'))
 
 
-def decode_raw_index_sequence(raw_index_sequence, instrument):
+def decode_raw_index_sequence(raw_index_sequence, instrument, rev_comp_override):
     i7 = raw_index_sequence.split("-")[0]
     i5 = raw_index_sequence.split("-")[1]
+
+    if rev_comp_override is not None:
+        if rev_comp_override == 'i7,i5':
+            pass
+        elif 'i7,rev(i5)':
+            i5 = reverse_complement(i5)
+        elif 'rev(i7),i5':
+            i7 = reverse_complement(i7)
+        elif 'rev(i7),rev(i5)':
+            i7 = reverse_complement(i7)
+            i5 = reverse_complement(i5)
+        else:
+            raise Exception('unknown override {}'.format(rev_comp_override))
+
+        return i7 + '-' + i5
 
     if instrument == 'HiSeqX':
         i7 = reverse_complement(i7)
@@ -384,6 +399,17 @@ def query_colossus_dlp_cell_info(library_id):
     return cell_samples
 
 
+def query_colossus_dlp_rev_comp_override(library_id):
+    library_info = query_libraries_by_library_id(library_id)
+
+    rev_comp_override = {}
+    for sequencing in library_info['dlpsequencing_set']:
+        for lane in sequencing['dlplane_set']:
+            rev_comp_override[lane['flow_cell_id']] = sequencing['dlpsequencingdetail']['rev_comp_override']
+
+    return rev_comp_override
+
+
 # Mapping from filename pattern to read end, pass/fail
 filename_pattern_map = {
     '_1.fastq.gz': (1, True),
@@ -403,6 +429,7 @@ def query_gsc_dlp_paired_fastqs(query_info):
     storage = tantalus.models.ServerStorage.objects.get(name='gsc')
 
     cell_samples = query_colossus_dlp_cell_info(dlp_library_id)
+    rev_comp_overrides = query_colossus_dlp_rev_comp_override(dlp_library_id)
 
     # ASSUMPTION: GSC stored files are pathed from root
     assert storage.storage_directory == '/'
@@ -431,7 +458,13 @@ def query_gsc_dlp_paired_fastqs(query_info):
             primer_info = gsc_api.query('primer/{}'.format(primer_id))
             raw_index_sequence = primer_info['adapter_index_sequence']
 
-            index_sequence = decode_raw_index_sequence(raw_index_sequence, sequencing_instrument)
+            flowcell_lane = flowcell_code
+            if lane_number is not None:
+                flowcell_lane = flowcell_lane + '_' + str(lane_number)
+
+            rev_comp_override = rev_comp_overrides.get(flowcell_lane)
+
+            index_sequence = decode_raw_index_sequence(raw_index_sequence, sequencing_instrument, rev_comp_override)
 
             filename_pattern = fastq_info['file_type']['filename_pattern']
             read_end, passed = filename_pattern_map.get(filename_pattern, (None, None))
