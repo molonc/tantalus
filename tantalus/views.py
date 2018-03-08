@@ -61,34 +61,30 @@ class SimpleTaskListView(TemplateView):
 
     def get_context_data(self):
         context = {
-            'tasks': self.objects,
-            'task_type': self.task_type,
+            'tasks': self.model.objects.all(),
+            'task_type': self.model.__name__,
         }
         return context
 
 
 class FileTransferListView(SimpleTaskListView):
-    
-    task_type = 'FileTransfer'
-    objects = FileTransfer.objects.all()
+
+    model = FileTransfer
 
 
 class GscWgsBamQueryListView(SimpleTaskListView):
-    
-    task_type = 'GscWgsBamQuery'
-    objects = GscWgsBamQuery.objects.all()
+
+    model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryListView(SimpleTaskListView):
-    
-    task_type = 'GscDlpPairedFastqQuery'
-    objects = GscDlpPairedFastqQuery.objects.all()
+
+    model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportListView(SimpleTaskListView):
-    
-    task_type = 'BRCFastqImport'
-    objects = BRCFastqImport.objects.all()
+
+    model = BRCFastqImport
 
 
 def get_simple_task_log(simple_task, dir_name, stderr=False, raw=False, preview_size=1000):
@@ -124,6 +120,9 @@ class SimpleTaskDetailView(TemplateView):
 
     template_name = 'tantalus/simpletask_detail.html'
 
+    class Meta:
+        abstract = True
+
     def get_context_data(self, **kwargs):
         simple_task = get_object_or_404(self.task_model, id=kwargs['pk'])
         try:
@@ -151,7 +150,7 @@ class SimpleTaskDetailView(TemplateView):
             'simple_task': simple_task,
             'std': std,
             'err': err,
-            'task_type': self.task_type,
+            'task_type': self.task_model.__name__,
         }
         return context
 
@@ -159,28 +158,24 @@ class SimpleTaskDetailView(TemplateView):
 class FileTransferDetailView(SimpleTaskDetailView):
 
     task_model = FileTransfer
-    task_type = 'FileTransfer'
     dir_name = 'transfer_files'
 
 
 class GscWgsBamQueryDetailView(SimpleTaskDetailView):
     
     task_model = GscWgsBamQuery
-    task_type = 'GscWgsBamQuery'
     dir_name = 'query_gsc_for_wgs_bams'
 
 
 class GscDlpPairedFastqQueryDetailView(SimpleTaskDetailView):
     
     task_model = GscDlpPairedFastqQuery
-    task_type = 'GscDlpPairedFastqQuery'
     dir_name = 'query_gsc_for_dlp_fastqs'
 
 
 class BRCFastqImportDetailView(SimpleTaskDetailView):
     
     task_model = BRCFastqImport
-    task_type = 'BRCFastqImport'
     dir_name = 'import_brc_fastqs_into_tantalus'
 
 
@@ -275,7 +270,7 @@ class SimpleTaskCreateView(TemplateView):
     def get_context_and_render(self, request, form):
         context = {
             'form': form,
-            'task_type': self.task_type,
+            'task_type': self.form.Meta.model.__name__,
         }
         return render(request, self.template_name, context)
 
@@ -295,26 +290,18 @@ class SimpleTaskCreateView(TemplateView):
 
 
 class FileTransferCreateView(SimpleTaskCreateView):
-
-    task_type = 'FileTransfer'
     form = FileTransferCreateForm
 
 
 class GscWgsBamQueryCreateView(SimpleTaskCreateView):
-    
-    task_type = 'GscWgsBamQuery'
     form = GscWgsBamQueryCreateForm
 
 
 class GscDlpPairedFastqQueryCreateView(SimpleTaskCreateView):
-    
-    task_type = 'GscDlpPairedFastqQuery'
     form = GscDlpPairedFastqQueryCreateForm
 
 
 class BRCFastqImportCreateView(SimpleTaskCreateView):
-    
-    task_type = 'BRCFastqImport'
     form = BRCFastqImportCreateForm
 
 
