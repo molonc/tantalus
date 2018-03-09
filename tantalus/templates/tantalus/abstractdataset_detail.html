@@ -30,7 +30,7 @@
                 <td class="td_name">Samples: </td>
                 <td>
                 {% for sample in object.get_samples %}
-                    <a href={% url 'sample-detail' sample.id %}>{{ sample.sample_id }} </a>
+                    <a href="{% url 'sample-detail' sample.id %}">{{ sample.sample_id }} </a>
                 {% endfor %}
                 </td>
             </tr>

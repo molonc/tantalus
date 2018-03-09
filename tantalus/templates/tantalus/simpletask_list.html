@@ -35,6 +35,7 @@
                             <th>Finished</th>
                             <th>Success</th>
                             <th>State</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,6 +52,9 @@
                                 <td>{{task.finished}}</td>
                                 <td>{{task.success}}</td>
                                 <td>{{task.state}}</td>
+                                <td>
+                                    <a href="{% url task_type|add:'-delete'|lower pk=task.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

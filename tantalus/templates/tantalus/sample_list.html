@@ -23,7 +23,7 @@
                         <br/>
                         {% for sample in samples %}
                             <tr>
-                                <td><a href={% url 'sample-detail' sample.id %}>{{sample.sample_id}}</a></td>
+                                <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
                             </tr>
                         {% endfor %}
                     </tbody>

@@ -68,22 +68,18 @@ class SimpleTaskListView(TemplateView):
 
 
 class FileTransferListView(SimpleTaskListView):
-
     model = FileTransfer
 
 
 class GscWgsBamQueryListView(SimpleTaskListView):
-
     model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryListView(SimpleTaskListView):
-
     model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportListView(SimpleTaskListView):
-
     model = BRCFastqImport
 
 
@@ -361,6 +357,44 @@ class BRCFastqImportStartView(SimpleTaskStartView):
 
     def get_queue_method(self, pk):
         return get_object_or_404(self.task_model, pk=pk).storage.get_db_queue_name()
+
+
+@method_decorator(login_required, name='dispatch')
+class SimpleTaskDeleteView(TemplateView):
+
+    template_name = 'tantalus/simpletask_delete.html'
+
+    class Meta:
+        abstract = True
+
+    def get_context_data(self, pk): 
+        context = {
+            'task_type': self.model.__name__,
+            'pk': pk,
+        }
+        return context
+
+    def post(self, request, pk):
+        get_object_or_404(self.model, pk=pk).delete()
+        msg = "Successfully deleted the SimpleTask."
+        messages.success(request, msg)
+        return HttpResponseRedirect(reverse(self.model.__name__.lower() + '-list'))
+
+
+class FileTransferDeleteView(SimpleTaskDeleteView):
+    model = FileTransfer
+
+
+class GscWgsBamQueryDeleteView(SimpleTaskDeleteView):
+    model = GscWgsBamQuery
+
+
+class GscDlpPairedFastqQueryDeleteView(SimpleTaskDeleteView):
+    model = GscDlpPairedFastqQuery
+
+
+class BRCFastqImportDeleteView(SimpleTaskDeleteView):
+    model = BRCFastqImport
 
 
 @method_decorator(login_required, name='dispatch')
