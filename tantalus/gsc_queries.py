@@ -483,7 +483,11 @@ def query_gsc_dlp_paired_fastqs(query_info):
             # Prepend single_cell_indexing/<gsc_lib_id>/ so it follows our file structure
             fastq_filename = 'single_cell_indexing/HiSeq/' + fastq_filename
 
-            cell_sample_id = cell_samples[index_sequence]
+            try:
+                cell_sample_id = cell_samples[index_sequence]
+            except KeyError:
+                raise Exception('unable to find index {} for flowcell lane {} for library {}'.format(
+                    index_sequence, flowcell_lane, dlp_library_id))
 
             sample, created = tantalus.models.Sample.objects.get_or_create(
                 sample_id=cell_sample_id,
