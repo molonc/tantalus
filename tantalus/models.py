@@ -440,6 +440,10 @@ class Storage(PolymorphicModel):
     def get_filepath(self, file_resource):
         raise NotImplementedError()
 
+    @property
+    def is_read_only(self):
+        return False
+
 
 class ServerStorage(Storage):
     """
@@ -483,6 +487,10 @@ class ServerStorage(Storage):
         return os.path.join(
             str(self.get_storage_directory()),
             file_resource.filename.strip('/'))
+
+    @property
+    def is_read_only(self):
+        return self.read_only
 
     has_transfer_queue = True
 
@@ -647,7 +655,7 @@ class FileTransfer(SimpleTask):
         return finished
 
     def get_transfer_queue_name(self):
-        if self.to_storage.read_only:
+        if self.to_storage.is_read_only:
             raise Exception('{name} is read only!'.format(name=repr(self.to_storage.name)))
         if self.to_storage.has_transfer_queue:
             return self.to_storage.queue_prefix + '.transfer'
