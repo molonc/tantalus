@@ -19,6 +19,10 @@
                     <tr><th id="thid">From:</th><td id="tdid">{{ simple_task.from_storage }}</td></tr>
                     <tr><th id="thid">To:</th><td id="tdid">{{ simple_task.to_storage }}</td></tr>
                 {% endif %}
+                {% if task_type == 'GscDlpPairedFastqQuery' %}
+                    <tr><th id="thid">DLP Library ID:</th><td id="tdid">{{ simple_task.dlp_library_id }}</td></tr>
+                    <tr><th id="thid">GSC Library ID:</th><td id="tdid">{{ simple_task.gsc_library_id }}</td></tr>
+                {% endif %}
                 <tr><th id="thid">Running:</th><td id="tdid">{{ simple_task.running }}</td></tr>
                 <tr><th id="thid">Finished:</th><td id="tdid">{{ simple_task.finished }}</td></tr>
                 <tr><th id="thid">Success:</th><td id="tdid">{{ simple_task.success }}</td></tr>
