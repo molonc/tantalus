@@ -473,12 +473,6 @@ class ServerStorage(Storage):
             return self.storage_directory.rstrip('/') + '_test'
         return self.storage_directory
 
-    def get_transfer_queue_name(self):
-        if self.read_only:
-            raise Exception('{name} is read only!'.format(name=repr(self.name)))
-        else:
-            return self.queue_prefix + '.transfer'
-
     def get_md5_queue_name(self):
         return self.queue_prefix + '.md5'
 
@@ -653,10 +647,12 @@ class FileTransfer(SimpleTask):
         return finished
 
     def get_transfer_queue_name(self):
+        if self.to_storage.read_only:
+            raise Exception('{name} is read only!'.format(name=repr(self.to_storage.name)))
         if self.to_storage.has_transfer_queue:
-            return self.to_storage.get_transfer_queue_name()
+            return self.to_storage.queue_prefix + '.transfer'
         elif self.from_storage.has_transfer_queue:
-            return self.from_storage.get_transfer_queue_name()
+            return self.from_storage.queue_prefix + '.transfer'
         else:
             raise Exception('no transfer queue for transfer')
 
