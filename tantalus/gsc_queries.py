@@ -361,11 +361,11 @@ def decode_raw_index_sequence(raw_index_sequence, instrument, rev_comp_override)
     if rev_comp_override is not None:
         if rev_comp_override == 'i7,i5':
             pass
-        elif 'i7,rev(i5)':
+        elif rev_comp_override == 'i7,rev(i5)':
             i5 = reverse_complement(i5)
-        elif 'rev(i7),i5':
+        elif rev_comp_override == 'rev(i7),i5':
             i7 = reverse_complement(i7)
-        elif 'rev(i7),rev(i5)':
+        elif rev_comp_override == 'rev(i7),rev(i5)':
             i7 = reverse_complement(i7)
             i5 = reverse_complement(i5)
         else:
