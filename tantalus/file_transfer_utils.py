@@ -178,7 +178,7 @@ class AzureTransfer(object):
             cloud_blobname,
             local_filepath,
             progress_callback=TransferProgress().print_progress,
-            max_connections=1,
+            max_connections=16,
             timeout=10*60*64)
 
 
