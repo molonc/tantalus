@@ -90,3 +90,11 @@ def import_brc_fastqs_task(query_id):
         id_=query_id,
         model=tantalus.models.BRCFastqImport,
     )
+
+
+@shared_task
+def import_dlp_bams_task(query_id):
+    simple_task_wrapper(
+        id_=query_id,
+        model=tantalus.models.ImportDlpBam,
+    )

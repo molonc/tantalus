@@ -210,6 +210,29 @@ class QueryGscDlpPairedFastqsSerializer(QueryGscSerializer):
         fields = '__all__'
 
 
+class ImportDlpBamSerializer(serializers.ModelSerializer):
+    celery_task = tantalus.tasks.import_dlp_bams_task
+    class Meta:
+        model = tantalus.models.ImportDlpBam
+        fields = '__all__'
+    def update(self, instance, validated_data):
+        self.Meta.model.objects.update_or_create(id=instance.id, **validated_data)
+        instance.full_clean()
+        instance.save()
+        self.celery_task.apply_async(
+            args=(instance.id,),
+            queue=instance.get_queue_name())
+        return instance
+    def create(self, validated_data):
+        instance = self.Meta.model(**validated_data)
+        instance.full_clean()
+        instance.save()
+        self.celery_task.apply_async(
+            args=(instance.id,),
+            queue=instance.get_queue_name())
+        return instance
+
+
 class DatasetTagSerializer(serializers.Serializer):
     tag = serializers.CharField()
     datasets = serializers.PrimaryKeyRelatedField(many=True, queryset=tantalus.models.AbstractDataSet.objects.all())

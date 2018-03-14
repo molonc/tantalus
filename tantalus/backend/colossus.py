@@ -1,4 +1,4 @@
-import django
+import os
 import requests
 
 def get_colossus_sublibraries_from_library_id(library_id):
@@ -7,7 +7,7 @@ def get_colossus_sublibraries_from_library_id(library_id):
     :return: results for a sublibrary query
     """
     sublibraries = []
-    sublibrary_url = '{}sublibraries/?library__pool_id={}'.format(django.conf.settings.COLOSSUS_API_URL, library_id)
+    sublibrary_url = '{}sublibraries/?library__pool_id={}'.format(os.environ['COLOSSUS_API_URL'], library_id)
 
     while sublibrary_url is not None:
         r = requests.get(sublibrary_url)
@@ -28,7 +28,7 @@ def get_colossus_sublibraries_from_library_id(library_id):
     return sublibraries
 
 def query_libraries_by_library_id(library_id):
-    library_url = '{}library/?pool_id={}'.format(django.conf.settings.COLOSSUS_API_URL, library_id)
+    library_url = '{}library/?pool_id={}'.format(os.environ['COLOSSUS_API_URL'], library_id)
 
     r = requests.get(library_url)
 

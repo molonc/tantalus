@@ -5,7 +5,7 @@ from django.utils.six import BytesIO
 from rest_framework import serializers
 from rest_framework.parsers import JSONParser
 
-from tantalus.models import ServerStorage, Sample, DNALibrary, FileResource, FileInstance, SequenceLane, ReadGroup, BamFile, GscWgsBamQuery
+from tantalus.models import Storage, Sample, DNALibrary, FileResource, FileInstance, SequenceLane, ReadGroup, BamFile, GscWgsBamQuery
 from tantalus.utils import start_md5_checks
 
 
@@ -16,6 +16,8 @@ class GetCreateModelSerializer(serializers.ModelSerializer):
             try:
                 # Try to get or create the object in question
                 obj, created = self.Meta.model.objects.get_or_create(**self.initial_data)
+                self.instance = obj
+                return True
             except django.core.exceptions.MultipleObjectsReturned:
                 # Except not finding the object or the data being ambiguous
                 # for defining it. Then validate the data as usual
@@ -29,18 +31,6 @@ class GetCreateModelSerializer(serializers.ModelSerializer):
             # If the Serializer was instantiated with just an object, and no
             # data={something} proceed as usual 
             return super(GetCreateModelSerializer, self).is_valid(raise_exception)
-
-
-class ServerStorageSerializer(GetCreateModelSerializer):
-    class Meta:
-        model = ServerStorage
-        fields = ('name', 'storage_directory')
-
-
-def get_or_create_serialize_server_storage(data):
-    server_storage_serializer = ServerStorageSerializer(data=data)
-    server_storage_serializer.is_valid(raise_exception=True)
-    return server_storage_serializer.instance.id
 
 
 class SampleSerializer(GetCreateModelSerializer):
@@ -98,7 +88,7 @@ class FileInstanceSerializer(GetCreateModelSerializer):
 
 
 def get_or_create_serialize_file_instance(data):
-    data['storage_id'] = get_or_create_serialize_server_storage(data.pop('storage'))
+    data['storage_id'] = Storage.objects.get(**data.pop('storage')).id
     data['file_resource_id'] = get_or_create_serialize_file_resource(data.pop('file_resource'))
 
     file_instance_serializer = FileInstanceSerializer(data=data)

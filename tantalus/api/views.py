@@ -134,6 +134,11 @@ class QueryGscDlpPairedFastqsViewSet(viewsets.ModelViewSet):
     filter_fields = ('dlp_library_id',)
 
 
+class ImportDlpBamViewSet(viewsets.ModelViewSet):
+    queryset = tantalus.models.ImportDlpBam.objects.all()
+    serializer_class = tantalus.api.serializers.ImportDlpBamSerializer
+
+
 class FileTransferRestart(APIView):
     def get(self, request, pk, format=None):
         transfer = tantalus.models.FileTransfer.objects.get(pk=pk)

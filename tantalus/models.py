@@ -502,6 +502,8 @@ class ServerStorage(Storage):
 
     has_transfer_queue = True
 
+    storage_type = 'server'
+
 
 class AzureBlobCredentials(models.Model):
     """
@@ -548,6 +550,8 @@ class AzureBlobStorage(Storage):
         return blobpath
 
     has_transfer_queue = False
+
+    storage_type = 'blob'
 
 
 class FileInstance(models.Model):
@@ -750,3 +754,29 @@ class GscDlpPairedFastqQuery(SimpleTask):
 
     def get_queue_name(self):
         return get_object_or_404(ServerStorage, name='gsc').get_db_queue_name()
+
+
+class ImportDlpBam(SimpleTask):
+    """
+    Import BAMs from DLP pipeline.
+    """
+
+    view = 'importdlpbam-list'
+
+    task_name = 'import_dlp_bams'
+
+    storage = models.ForeignKey(
+        Storage,
+    )
+
+    bam_paths = django.contrib.postgres.fields.ArrayField(
+        models.CharField(max_length=500),
+    )
+
+    def get_queue_name(self):
+        if self.storage.has_transfer_queue:
+            return self.storage.get_db_queue_name()
+        else:
+            return get_object_or_404(ServerStorage, name='shahlab').get_db_queue_name()
+
+

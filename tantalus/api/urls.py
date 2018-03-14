@@ -25,6 +25,7 @@ router.register(r'md5_check', views.MD5CheckViewSet)
 router.register(r'queries/gsc_wgs_bams', views.QueryGscWgsBamsViewSet)
 router.register(r'queries/gsc_dlp_paired_fastqs', views.QueryGscDlpPairedFastqsViewSet)
 router.register(r'brc_import_fastqs', views.BRCImportFastqsViewSet)
+router.register(r'import_dlp_bam', views.ImportDlpBamViewSet)
 
 schema_view = get_swagger_view(title='Tantalus API')
 
