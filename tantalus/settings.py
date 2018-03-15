@@ -29,7 +29,7 @@ DEBUG = bool(os.environ.get('TANTALUS_DEBUG', False))
 # Safeguard to ensure production code is not run during development
 IS_PRODUCTION = (os.environ.get('TANTALUS_IS_PRODUCTION', '') == 'thisismostdefinitelyproduction')
 
-ALLOWED_HOSTS = [os.environ.get('TANTALUS_ALLOWED_HOSTS', '127.0.0.1')]
+ALLOWED_HOSTS = os.environ.get('TANTALUS_ALLOWED_HOSTS', '127.0.0.1').split(' ')
 
 AUTH_USER_MODEL = 'account.User'
 
