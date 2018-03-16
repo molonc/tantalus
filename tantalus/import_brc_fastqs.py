@@ -49,13 +49,11 @@ def create_dna_library(library_id):
 
 def create_sequence_lane(dna_library, flowcell_id, lane_number, sequencing_library_id):
     sequence_lane, created = tantalus.models.SequenceLane.objects.get_or_create(
-        dna_library=dna_library,
         flowcell_id=flowcell_id,
         lane_number=lane_number,
         read_type=BRC_READ_TYPE,
         sequencing_centre=BRC_SEQ_CENTRE,
         sequencing_instrument=BRC_INSTRUMENT,
-        sequencing_library_id=sequencing_library_id,
     )
     if created:
         sequence_lane.save()
