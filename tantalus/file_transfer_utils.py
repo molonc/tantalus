@@ -92,10 +92,13 @@ class TransferProgress(object):
             return
         self._last_print = current_time
         elapsed = current_time - self._start
-        print '{}/{} ({:.2f}%) in {}s'.format(
+        percent = 'NA'
+        if total > 0:
+            percent = '{:.2f}'.format(100. * float(current) / total)
+        print '{}/{} ({}%) in {}s'.format(
             _as_gb(current),
             _as_gb(total),
-            100. * float(current) / total,
+            percent,
             elapsed)
 
 
