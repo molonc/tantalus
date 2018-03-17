@@ -139,6 +139,7 @@ class FileTransferRestart(APIView):
     def post(self, request, pk, format=None):
         transfer = tantalus.models.FileTransfer.objects.get(pk=pk)
         if not transfer.running:
+            transfer.state = 'transfer files queued'
             transfer.finished = False
             transfer.save()
             tantalus.tasks.transfer_files_task.apply_async(
