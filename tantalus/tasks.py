@@ -109,5 +109,5 @@ def import_brc_fastqs_task(query_id):
         id_=query_id,
         model=tantalus.models.BRCFastqImport,
         func=tantalus.import_brc_fastqs.load_brc_fastqs,
-        name="Import brc fastqs into tantalus"
+        name='import brc fastqs into tantalus',
     )

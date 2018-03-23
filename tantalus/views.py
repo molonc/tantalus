@@ -316,6 +316,7 @@ class SimpleTaskStartView(View):
         if simple_task.running:
             return HttpResponseRedirect(simple_task.get_absolute_url())
         
+        simple_task.state = self.task_name + ' queued'
         self.task_type.apply_async(
             args=(simple_task.id,),
             queue=self.get_queue_method(pk))
@@ -325,6 +326,7 @@ class SimpleTaskStartView(View):
 class FileTransferStartView(SimpleTaskStartView):
 
     # TODO: error for starting filetransfer that is running
+    task_name = 'transfer files'
     task_model = FileTransfer
     task_type = tantalus.tasks.transfer_files_task
     
@@ -334,6 +336,7 @@ class FileTransferStartView(SimpleTaskStartView):
 
 class GscWgsBamQueryStartView(SimpleTaskStartView):
     
+    task_name = 'query GSC for WGS BAMs'
     task_model = GscWgsBamQuery
     task_type = tantalus.tasks.query_gsc_wgs_bams_task
     
@@ -343,6 +346,7 @@ class GscWgsBamQueryStartView(SimpleTaskStartView):
 
 class GscDlpPairedFastqQueryStartView(SimpleTaskStartView):
     
+    task_name = 'query GSC for DLP fastqs'
     task_model = GscDlpPairedFastqQuery
     task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
     
@@ -352,6 +356,7 @@ class GscDlpPairedFastqQueryStartView(SimpleTaskStartView):
 
 class BRCFastqImportStartView(SimpleTaskStartView):
     
+    task_name = 'import brc fastqs into tantalus'
     task_model = BRCFastqImport
     task_type = tantalus.tasks.import_brc_fastqs_task
 

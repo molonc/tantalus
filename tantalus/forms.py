@@ -318,6 +318,7 @@ class SimpleTaskCreateForm(forms.ModelForm):
 
     def save(self):
         super(SimpleTaskCreateForm, self).save()
+        self.instance.state = self.task_name + ' queued'
         self.task_type.apply_async(
             args=(self.instance.id,),
             queue=self.get_queue_method())
@@ -326,6 +327,7 @@ class SimpleTaskCreateForm(forms.ModelForm):
 
 class FileTransferCreateForm(SimpleTaskCreateForm):
 
+    task_name = 'transfer files'
     task_type = tantalus.tasks.transfer_files_task
 
     class Meta:
@@ -345,6 +347,7 @@ class FileTransferCreateForm(SimpleTaskCreateForm):
 
 class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
     
+    task_name = 'query GSC for WGS BAMs'
     task_type = tantalus.tasks.query_gsc_wgs_bams_task
 
     library_ids = forms.CharField(
@@ -367,6 +370,7 @@ class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
 
 class GscDlpPairedFastqQueryCreateForm(SimpleTaskCreateForm):
 
+    task_name = 'query GSC for DLP fastqs'
     task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
 
     class Meta:
@@ -379,6 +383,7 @@ class GscDlpPairedFastqQueryCreateForm(SimpleTaskCreateForm):
 
 class BRCFastqImportCreateForm(SimpleTaskCreateForm):
 
+    task_name = 'import brc fastqs into tantalus'
     task_type = tantalus.tasks.import_brc_fastqs_task
 
     class Meta:
