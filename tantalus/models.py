@@ -1,7 +1,3 @@
-"""
-Tantalus models
-"""
-
 from __future__ import unicode_literals
 
 import os
@@ -613,14 +609,16 @@ class BRCFastqImport(SimpleTask):
     view = 'brcfastqimport-list'
 
     output_dir = models.CharField(
-        max_length=500
+        max_length=500,
     )
+    
     storage = models.ForeignKey(
         ServerStorage,
         on_delete=models.CASCADE,
     )
+    
     flowcell_id = models.CharField(
-        max_length=50
+        max_length=50,
     )
 
 
