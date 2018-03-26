@@ -306,6 +306,7 @@ class SimpleTaskStartView(View):
             return HttpResponseRedirect(simple_task.get_absolute_url())
         
         simple_task.state = self.task_name + ' queued'
+        simple_task.save()
         self.task_type.apply_async(
             args=(simple_task.id,),
             queue=simple_task.get_queue_name())
