@@ -7,7 +7,7 @@ import os
 
 import re
 
-from tantalus.colossus import *
+from tantalus.backend.colossus import *
 
 if __name__ == '__main__':
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tantalus.settings')

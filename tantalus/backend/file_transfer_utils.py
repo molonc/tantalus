@@ -1,15 +1,11 @@
 from azure.storage.blob import BlockBlobService
 import paramiko
-import custom_paramiko
 import time
 import subprocess
 import sys
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 from tantalus.models import *
 from tantalus.exceptions.file_transfer_exceptions import *
-import tantalus.custom_shutils
 import errno
 
 

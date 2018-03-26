@@ -14,7 +14,7 @@ if __name__ == '__main__':
 import tantalus.models
 import tantalus.tasks
 import tantalus.utils
-from tantalus.colossus import *
+from tantalus.backend.colossus import *
 
 from pprint import pprint
 
@@ -575,5 +575,3 @@ def query_gsc_dlp_paired_fastqs(query_info):
 
 if __name__ == '__main__':
     query_gsc_dlp_paired_fastqs('A90696ABC')
-
-

@@ -147,7 +147,6 @@ class SimpleTaskSerializer(serializers.ModelSerializer):
     finished = serializers.BooleanField(read_only=True)
     success = serializers.BooleanField(read_only=True)
     state = serializers.CharField(read_only=True)
-    message = serializers.CharField(read_only=True)
 
 
 class FileTransferSerializer(SimpleTaskSerializer):

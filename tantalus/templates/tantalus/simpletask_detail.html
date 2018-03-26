@@ -27,11 +27,8 @@
                 <tr><th id="thid">Finished:</th><td id="tdid">{{ simple_task.finished }}</td></tr>
                 <tr><th id="thid">Success:</th><td id="tdid">{{ simple_task.success }}</td></tr>
                 <tr><th id="thid">State:</th><td id="tdid">{{ simple_task.state }}</td></tr>
-                <tr><th id="thid" valign="top">Message:</th></tr>
             </tbody>
         </table>
-
-        <div style="height:auto; overflow:scroll;"><pre><code>{{ simple_task.message }}</code></pre></div>
         
         <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="{% url task_type|add:'-start'|lower pk=simple_task.pk %}">Start {{ task_type }}</a>
 

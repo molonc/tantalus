@@ -68,18 +68,22 @@ class SimpleTaskListView(TemplateView):
 
 
 class FileTransferListView(SimpleTaskListView):
+    
     model = FileTransfer
 
 
 class GscWgsBamQueryListView(SimpleTaskListView):
+    
     model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryListView(SimpleTaskListView):
+    
     model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportListView(SimpleTaskListView):
+    
     model = BRCFastqImport
 
 
@@ -126,7 +130,7 @@ class SimpleTaskDetailView(TemplateView):
         except ValueError as e:
             stdout_page, stderr_page = 1, 1
 
-        paginator_stdout = Paginator(get_simple_task_log(simple_task, self.task_model.log_dir_name), 100)
+        paginator_stdout = Paginator(get_simple_task_log(simple_task, self.task_model.task_name), 100)
         try:
             std = paginator_stdout.page(stdout_page)
         except PageNotAnInteger:
@@ -134,7 +138,7 @@ class SimpleTaskDetailView(TemplateView):
         except EmptyPage:
             std = paginator_stdout.page(paginator_stdout.num_pages)
 
-        paginator_stderr = Paginator(get_simple_task_log(simple_task, self.task_model.log_dir_name, stderr=True), 100)
+        paginator_stderr = Paginator(get_simple_task_log(simple_task, self.task_model.task_name, stderr=True), 100)
         try:
             err = paginator_stderr.page(stderr_page)
         except PageNotAnInteger:
@@ -182,7 +186,7 @@ class SimpleTaskStdoutView(TemplateView):
         simple_task = get_object_or_404(self.task_model, id=kwargs['pk'])
         
         context = {
-            'simple_task_stdout': get_simple_task_log(simple_task, self.task_model.log_dir_name, raw=True),
+            'simple_task_stdout': get_simple_task_log(simple_task, self.task_model.task_name, raw=True),
         }
         return context
 
@@ -218,7 +222,7 @@ class SimpleTaskStderrView(TemplateView):
         simple_task = get_object_or_404(self.task_model, id=kwargs['pk'])
         
         context = {
-            'simple_task_stderr': get_simple_task_log(simple_task, self.task_model.log_dir_name, stderr=True, raw=True),
+            'simple_task_stderr': get_simple_task_log(simple_task, self.task_model.task_name, stderr=True, raw=True),
         }
         return context
 
@@ -305,7 +309,7 @@ class SimpleTaskStartView(View):
         if simple_task.running:
             return HttpResponseRedirect(simple_task.get_absolute_url())
         
-        simple_task.state = self.task_name + ' queued'
+        simple_task.state = simple_task.task_name.replace('_', ' ') + ' queued'
         simple_task.save()
         self.task_type.apply_async(
             args=(simple_task.id,),
@@ -316,28 +320,24 @@ class SimpleTaskStartView(View):
 class FileTransferStartView(SimpleTaskStartView):
 
     # TODO: error for starting filetransfer that is running
-    task_name = 'transfer files'
     task_model = FileTransfer
     task_type = tantalus.tasks.transfer_files_task
 
 
 class GscWgsBamQueryStartView(SimpleTaskStartView):
     
-    task_name = 'query GSC for WGS BAMs'
     task_model = GscWgsBamQuery
     task_type = tantalus.tasks.query_gsc_wgs_bams_task
 
 
 class GscDlpPairedFastqQueryStartView(SimpleTaskStartView):
     
-    task_name = 'query GSC for DLP fastqs'
     task_model = GscDlpPairedFastqQuery
     task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
 
 
 class BRCFastqImportStartView(SimpleTaskStartView):
     
-    task_name = 'import brc fastqs into tantalus'
     task_model = BRCFastqImport
     task_type = tantalus.tasks.import_brc_fastqs_task
 
@@ -366,18 +366,22 @@ class SimpleTaskDeleteView(TemplateView):
 
 
 class FileTransferDeleteView(SimpleTaskDeleteView):
+    
     model = FileTransfer
 
 
 class GscWgsBamQueryDeleteView(SimpleTaskDeleteView):
+    
     model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryDeleteView(SimpleTaskDeleteView):
+    
     model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportDeleteView(SimpleTaskDeleteView):
+    
     model = BRCFastqImport
 
 

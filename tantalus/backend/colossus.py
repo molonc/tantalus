@@ -44,4 +44,3 @@ def query_libraries_by_library_id(library_id):
         raise Exception('Multiple entries for library {}'.format(library_id))
 
     return results[0]
-

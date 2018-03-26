@@ -2,7 +2,7 @@ from django.test import TestCase, TransactionTestCase
 
 from misc.update_tantalus_db import add_new_sequencelanes, add_new_libraries, add_new_samples
 import socket, getpass
-from tantalus.file_transfer_utils import *
+from tantalus.backend.file_transfer_utils import *
 from django.utils import timezone
 import shutil
 import subprocess

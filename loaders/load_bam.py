@@ -2,7 +2,7 @@ import argparse
 import django
 import paramiko
 import re
-from tantalus.colossus import *
+from tantalus.backend.colossus import *
 
 django.setup()
 from tantalus.models import *

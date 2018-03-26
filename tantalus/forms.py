@@ -315,7 +315,7 @@ class SimpleTaskCreateForm(forms.ModelForm):
 
     def save(self):
         super(SimpleTaskCreateForm, self).save()
-        self.instance.state = self.task_name + ' queued'
+        self.instance.state = self.instance.task_name.replace('_', ' ') + ' queued'
         self.task_type.apply_async(
             args=(self.instance.id,),
             queue=self.instance.get_queue_name())
@@ -377,4 +377,3 @@ class BRCFastqImportCreateForm(SimpleTaskCreateForm):
     class Meta:
         model = BRCFastqImport
         fields = ('output_dir', 'storage', 'flowcell_id')
-

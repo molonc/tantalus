@@ -16,7 +16,7 @@ django.setup()
 DIRECTORY_TO_STRIP = "/share/lustre/archive/single_cell_indexing/HiSeq/"
 
 from tantalus.models import *
-from tantalus.gsc_queries import add_gsc_wgs_bam_dataset
+from tantalus.backend.gsc_queries import add_gsc_wgs_bam_dataset
 from tantalus.utils import start_md5_checks
 
 

@@ -593,7 +593,6 @@ class SimpleTask(models.Model):
     finished = models.BooleanField(default=False)
     success = models.BooleanField(default=False)
     state = models.TextField(blank=True)
-    message = models.TextField(blank=True)
 
     def get_queue_name(self):
         raise NotImplementedError()
@@ -609,10 +608,10 @@ class BRCFastqImport(SimpleTask):
     """
     When given an output dir + metadata, generate fastq files.
     """
-    
+
     view = 'brcfastqimport-list'
 
-    log_dir_name = 'import_brc_fastqs_into_tantalus'
+    task_name = 'import_brc_fastqs_into_tantalus'
 
     output_dir = models.CharField(
         max_length=500,
@@ -638,7 +637,7 @@ class FileTransfer(SimpleTask):
 
     view = 'filetransfer-list'
 
-    log_dir_name = 'transfer_files'
+    task_name = 'transfer_files'
 
     name = models.CharField(
         max_length=50,
@@ -706,7 +705,7 @@ class MD5Check(SimpleTask):
     Check of set MD5 task.
     """
 
-    log_dir_name = 'check_or_update_md5',
+    task_name = 'check_or_update_md5'
 
     file_instance = models.ForeignKey(
         FileInstance,
@@ -720,7 +719,7 @@ class GscWgsBamQuery(SimpleTask):
 
     view = 'gscwgsbamquery-list'
 
-    log_dir_name = 'query_gsc_for_wgs_bams'
+    task_name = 'query_gsc_for_wgs_bams'
 
     library_ids = django.contrib.postgres.fields.ArrayField(
         models.CharField(max_length=50),
@@ -737,7 +736,7 @@ class GscDlpPairedFastqQuery(SimpleTask):
 
     view = 'gscdlppairedfastqquery-list'
 
-    log_dir_name = 'query_gsc_for_dlp_fastqs'
+    task_name = 'query_gsc_for_dlp_fastqs'
 
     dlp_library_id = models.CharField(
         max_length=50,
@@ -751,4 +750,3 @@ class GscDlpPairedFastqQuery(SimpleTask):
 
     def get_queue_name(self):
         return get_object_or_404(ServerStorage, name='gsc').get_db_queue_name()
-
