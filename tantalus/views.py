@@ -126,7 +126,7 @@ class SimpleTaskDetailView(TemplateView):
         except ValueError as e:
             stdout_page, stderr_page = 1, 1
 
-        paginator_stdout = Paginator(get_simple_task_log(simple_task, self.dir_name), 100)
+        paginator_stdout = Paginator(get_simple_task_log(simple_task, self.task_model.log_dir_name), 100)
         try:
             std = paginator_stdout.page(stdout_page)
         except PageNotAnInteger:
@@ -134,7 +134,7 @@ class SimpleTaskDetailView(TemplateView):
         except EmptyPage:
             std = paginator_stdout.page(paginator_stdout.num_pages)
 
-        paginator_stderr = Paginator(get_simple_task_log(simple_task, self.dir_name, stderr=True), 100)
+        paginator_stderr = Paginator(get_simple_task_log(simple_task, self.task_model.log_dir_name, stderr=True), 100)
         try:
             err = paginator_stderr.page(stderr_page)
         except PageNotAnInteger:
@@ -154,25 +154,21 @@ class SimpleTaskDetailView(TemplateView):
 class FileTransferDetailView(SimpleTaskDetailView):
 
     task_model = FileTransfer
-    dir_name = 'transfer_files'
 
 
 class GscWgsBamQueryDetailView(SimpleTaskDetailView):
     
     task_model = GscWgsBamQuery
-    dir_name = 'query_gsc_for_wgs_bams'
 
 
 class GscDlpPairedFastqQueryDetailView(SimpleTaskDetailView):
     
     task_model = GscDlpPairedFastqQuery
-    dir_name = 'query_gsc_for_dlp_fastqs'
 
 
 class BRCFastqImportDetailView(SimpleTaskDetailView):
     
     task_model = BRCFastqImport
-    dir_name = 'import_brc_fastqs_into_tantalus'
 
 
 class SimpleTaskStdoutView(TemplateView):
@@ -186,7 +182,7 @@ class SimpleTaskStdoutView(TemplateView):
         simple_task = get_object_or_404(self.task_model, id=kwargs['pk'])
         
         context = {
-            'simple_task_stdout': get_simple_task_log(simple_task, self.dir_name, raw=True),
+            'simple_task_stdout': get_simple_task_log(simple_task, self.task_model.log_dir_name, raw=True),
         }
         return context
 
@@ -194,25 +190,21 @@ class SimpleTaskStdoutView(TemplateView):
 class FileTransferStdoutView(SimpleTaskStdoutView):
 
     task_model = FileTransfer
-    dir_name = 'transfer_files'
 
 
 class GscWgsBamQueryStdoutView(SimpleTaskStdoutView):
     
     task_model = GscWgsBamQuery
-    dir_name = 'query_gsc_for_wgs_bams'
 
 
 class GscDlpPairedFastqQueryStdoutView(SimpleTaskStdoutView):
     
     task_model = GscDlpPairedFastqQuery
-    dir_name = 'query_gsc_for_dlp_fastqs'
 
 
 class BRCFastqImportStdoutView(SimpleTaskStdoutView):
     
     task_model = BRCFastqImport
-    dir_name = 'import_brc_fastqs_into_tantalus' 
 
 
 class SimpleTaskStderrView(TemplateView):
@@ -226,7 +218,7 @@ class SimpleTaskStderrView(TemplateView):
         simple_task = get_object_or_404(self.task_model, id=kwargs['pk'])
         
         context = {
-            'simple_task_stderr': get_simple_task_log(simple_task, self.dir_name, stderr=True, raw=True),
+            'simple_task_stderr': get_simple_task_log(simple_task, self.task_model.log_dir_name, stderr=True, raw=True),
         }
         return context
 
@@ -234,25 +226,21 @@ class SimpleTaskStderrView(TemplateView):
 class FileTransferStderrView(SimpleTaskStderrView):
 
     task_model = FileTransfer
-    dir_name = 'transfer_files'
 
 
 class GscWgsBamQueryStderrView(SimpleTaskStderrView):
     
     task_model = GscWgsBamQuery
-    dir_name = 'query_gsc_for_wgs_bams'
 
 
 class GscDlpPairedFastqQueryStderrView(SimpleTaskStderrView):
     
     task_model = GscDlpPairedFastqQuery
-    dir_name = 'query_gsc_for_dlp_fastqs'
 
 
 class BRCFastqImportStderrView(SimpleTaskStderrView):
     
     task_model = BRCFastqImport
-    dir_name = 'import_brc_fastqs_into_tantalus'
 
 
 @method_decorator(login_required, name='get')
@@ -286,18 +274,22 @@ class SimpleTaskCreateView(TemplateView):
 
 
 class FileTransferCreateView(SimpleTaskCreateView):
+
     form = FileTransferCreateForm
 
 
 class GscWgsBamQueryCreateView(SimpleTaskCreateView):
+
     form = GscWgsBamQueryCreateForm
 
 
 class GscDlpPairedFastqQueryCreateView(SimpleTaskCreateView):
+
     form = GscDlpPairedFastqQueryCreateForm
 
 
 class BRCFastqImportCreateView(SimpleTaskCreateView):
+
     form = BRCFastqImportCreateForm
 
 
@@ -306,9 +298,6 @@ class SimpleTaskStartView(View):
 
     class Meta:
         abstract = True
-
-    def get_queue_method(self, pk):
-        return NotImplementedError()
 
     def get(self, request, pk):
         simple_task = get_object_or_404(self.task_model, pk=pk)
@@ -319,7 +308,7 @@ class SimpleTaskStartView(View):
         simple_task.state = self.task_name + ' queued'
         self.task_type.apply_async(
             args=(simple_task.id,),
-            queue=self.get_queue_method(pk))
+            queue=simple_task.get_queue_name())
         return HttpResponseRedirect(simple_task.get_absolute_url())
 
 
@@ -329,9 +318,6 @@ class FileTransferStartView(SimpleTaskStartView):
     task_name = 'transfer files'
     task_model = FileTransfer
     task_type = tantalus.tasks.transfer_files_task
-    
-    def get_queue_method(self, pk):
-        return get_object_or_404(self.task_model, pk=pk).get_transfer_queue_name()
 
 
 class GscWgsBamQueryStartView(SimpleTaskStartView):
@@ -339,9 +325,6 @@ class GscWgsBamQueryStartView(SimpleTaskStartView):
     task_name = 'query GSC for WGS BAMs'
     task_model = GscWgsBamQuery
     task_type = tantalus.tasks.query_gsc_wgs_bams_task
-    
-    def get_queue_method(self, pk):
-        return get_object_or_404(tantalus.models.ServerStorage, name='gsc').get_db_queue_name()
 
 
 class GscDlpPairedFastqQueryStartView(SimpleTaskStartView):
@@ -349,9 +332,6 @@ class GscDlpPairedFastqQueryStartView(SimpleTaskStartView):
     task_name = 'query GSC for DLP fastqs'
     task_model = GscDlpPairedFastqQuery
     task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
-    
-    def get_queue_method(self, pk):
-        return get_object_or_404(tantalus.models.ServerStorage, name='gsc').get_db_queue_name()
 
 
 class BRCFastqImportStartView(SimpleTaskStartView):
@@ -360,8 +340,6 @@ class BRCFastqImportStartView(SimpleTaskStartView):
     task_model = BRCFastqImport
     task_type = tantalus.tasks.import_brc_fastqs_task
 
-    def get_queue_method(self, pk):
-        return get_object_or_404(self.task_model, pk=pk).storage.get_db_queue_name()
 
 
 @method_decorator(login_required, name='dispatch')

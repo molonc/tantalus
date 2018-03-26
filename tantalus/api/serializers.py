@@ -161,7 +161,7 @@ class FileTransferSerializer(SimpleTaskSerializer):
             instance.save()
             transaction.on_commit(lambda: tantalus.tasks.transfer_files_task.apply_async(
                 args=(instance.id,),
-                queue=instance.get_transfer_queue_name()))
+                queue=instance.get_queue_name()))
         return instance
 
 

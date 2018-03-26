@@ -19,8 +19,7 @@ def simple_task_wrapper(id_, model, func, name):
     if task_model.running:
         return
 
-    task_log_name = name.replace(' ', '_').lower()
-    log_dir = os.path.join(django.conf.settings.TASK_LOG_DIRECTORY, task_log_name, str(id_))
+    log_dir = os.path.join(django.conf.settings.TASK_LOG_DIRECTORY, model.log_dir_name, str(id_))
 
     try:
         os.makedirs(log_dir)

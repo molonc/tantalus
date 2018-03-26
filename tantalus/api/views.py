@@ -144,7 +144,7 @@ class FileTransferRestart(APIView):
             transfer.save()
             tantalus.tasks.transfer_files_task.apply_async(
                 args=(transfer.id,),
-                queue=transfer.get_transfer_queue_name())
+                queue=transfer.get_queue_name())
         serializer = tantalus.api.serializers.FileTransferSerializer(transfer)
         return Response(serializer.data)
 

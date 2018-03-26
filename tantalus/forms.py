@@ -313,15 +313,12 @@ class SimpleTaskCreateForm(forms.ModelForm):
     class Meta:
         abstract = True
 
-    def get_queue_method(self):
-        raise NotImplementedError()
-
     def save(self):
         super(SimpleTaskCreateForm, self).save()
         self.instance.state = self.task_name + ' queued'
         self.task_type.apply_async(
             args=(self.instance.id,),
-            queue=self.get_queue_method())
+            queue=self.instance.get_queue_name())
         return self.instance
 
 
@@ -340,9 +337,6 @@ class FileTransferCreateForm(SimpleTaskCreateForm):
         if len(datasets) == 0:
             raise forms.ValidationError('no datasets with tag {}'.format(tag_name))
         return tag_name
-
-    def get_queue_method(self):
-        return self.instance.get_transfer_queue_name()
 
 
 class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
@@ -364,9 +358,6 @@ class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
         model = GscWgsBamQuery
         fields = ('library_ids',)
 
-    def get_queue_method(self):
-        return get_object_or_404(tantalus.models.ServerStorage, name='gsc').get_db_queue_name()
-
 
 class GscDlpPairedFastqQueryCreateForm(SimpleTaskCreateForm):
 
@@ -376,9 +367,6 @@ class GscDlpPairedFastqQueryCreateForm(SimpleTaskCreateForm):
     class Meta:
         model = GscDlpPairedFastqQuery
         fields = ('dlp_library_id', 'gsc_library_id')
-
-    def get_queue_method(self):
-        return get_object_or_404(tantalus.models.ServerStorage, name='gsc').get_db_queue_name()
 
 
 class BRCFastqImportCreateForm(SimpleTaskCreateForm):
@@ -390,5 +378,3 @@ class BRCFastqImportCreateForm(SimpleTaskCreateForm):
         model = BRCFastqImport
         fields = ('output_dir', 'storage', 'flowcell_id')
 
-    def get_queue_method(self):
-        return self.instance.storage.get_db_queue_name()
