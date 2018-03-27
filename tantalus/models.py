@@ -5,6 +5,7 @@ import django
 import django.contrib.postgres.fields
 from django.db import models
 from django.core.urlresolvers import reverse
+from django.shortcuts import get_object_or_404
 import simple_history
 from simple_history.models import HistoricalRecords
 from polymorphic.models import PolymorphicModel
@@ -726,7 +727,7 @@ class GscWgsBamQuery(SimpleTask):
     )
 
     def get_queue_name(self):
-        return get_object_or_404(tantalus.models.ServerStorage, name='gsc').get_db_queue_name()
+        return get_object_or_404(ServerStorage, name='gsc').get_db_queue_name()
 
 
 class GscDlpPairedFastqQuery(SimpleTask):
@@ -749,5 +750,5 @@ class GscDlpPairedFastqQuery(SimpleTask):
     )
 
     def get_queue_name(self):
-        return get_object_or_404(tantalus.models.ServerStorage, name='gsc').get_db_queue_name()
+        return get_object_or_404(ServerStorage, name='gsc').get_db_queue_name()
 
