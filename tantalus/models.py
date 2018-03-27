@@ -297,8 +297,8 @@ class AbstractDataSet(PolymorphicModel):
     def get_file_resources(self):
         raise NotImplementedError()
 
-    def save(self):
-        super(AbstractDataSet, self).save()
+    def save(self, *args, **kwargs):
+        super(AbstractDataSet, self).save(*args, **kwargs)
         self.file_resources.clear()
         for file_resource in self.get_file_resources():
             self.file_resources.add(file_resource)
