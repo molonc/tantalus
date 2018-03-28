@@ -3,6 +3,8 @@ from __future__ import absolute_import
 import os
 import errno
 import subprocess
+import time
+import signal
 import django
 import tantalus.models
 from celery import shared_task
@@ -22,7 +24,17 @@ def simple_task_wrapper(id_, model):
 
     with open(stdout_filename, 'a', 0) as stdout_file, open(stderr_filename, 'a', 0) as stderr_file:
         script = os.path.join(django.conf.settings.BASE_DIR, 'tantalus', 'backend', 'scripts', model.task_name + '.py')
-        subprocess.check_call(['python', '-u', script, str(id_)], stdout=stdout_file, stderr=stderr_file)
+        task = subprocess.Popen(['python', '-u', script, str(id_)], stdout=stdout_file, stderr=stderr_file)
+        while True:
+            time.sleep(10)
+            model_instance = model.objects.get(pk=id_)
+            
+            if model_instance.stopping == True:
+                task.send_signal(signal.SIGINT)
+                time.sleep(60)
+                task.kill()
+                model_instance.stopping = False
+                model_instance.save()
 
 
 @shared_task

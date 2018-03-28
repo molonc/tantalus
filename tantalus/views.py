@@ -342,7 +342,6 @@ class BRCFastqImportStartView(SimpleTaskStartView):
     task_type = tantalus.tasks.import_brc_fastqs_task
 
 
-
 @method_decorator(login_required, name='dispatch')
 class SimpleTaskDeleteView(TemplateView):
 
@@ -383,6 +382,41 @@ class GscDlpPairedFastqQueryDeleteView(SimpleTaskDeleteView):
 class BRCFastqImportDeleteView(SimpleTaskDeleteView):
     
     model = BRCFastqImport
+
+
+@method_decorator(login_required, name='get')
+class SimpleTaskStopView(View):
+
+    class Meta:
+        abstract = True
+
+    def get(self, request, pk):
+        simple_task = get_object_or_404(self.task_model, pk=pk)
+        simple_task.stopping = True
+        simple_task.save()
+        msg = "Successfully stopped the " + self.task_model.__name__ + "."
+        messages.success(request, msg)
+        return HttpResponseRedirect(simple_task.get_absolute_url())
+
+
+class FileTransferStopView(SimpleTaskStopView):
+
+    task_model = FileTransfer
+
+
+class GscWgsBamQueryStopView(SimpleTaskStopView):
+    
+    task_model = GscWgsBamQuery
+
+
+class GscDlpPairedFastqQueryStopView(SimpleTaskStopView):
+    
+    task_model = GscDlpPairedFastqQuery
+
+
+class BRCFastqImportStopView(SimpleTaskStopView):
+    
+    task_model = BRCFastqImport
 
 
 @method_decorator(login_required, name='dispatch')

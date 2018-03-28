@@ -32,6 +32,8 @@
         
         <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="{% url task_type|add:'-start'|lower pk=simple_task.pk %}">Start {{ task_type }}</a>
 
+        <a class="btn btn-warning btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="{% url task_type|add:'-stop'|lower pk=simple_task.pk %}">Stop {{ task_type }}</a>
+
         <a class="btn btn-danger btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="{% url task_type|add:'-delete'|lower pk=simple_task.pk %}">Delete</a>
 
         <br />

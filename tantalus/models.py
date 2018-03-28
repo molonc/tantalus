@@ -592,6 +592,7 @@ class SimpleTask(models.Model):
     running = models.BooleanField(default=False)
     finished = models.BooleanField(default=False)
     success = models.BooleanField(default=False)
+    stopping = models.BooleanField(default=False)
     state = models.TextField(blank=True)
 
     def get_queue_name(self):
