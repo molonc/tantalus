@@ -15,7 +15,7 @@ def run_task(id_, model, func):
     task_model = model.objects.get(pk=id_)
 
     if task_model.running:
-        return
+        raise Exception('task already running')
 
     task_model.running = True
     task_model.finished = False
@@ -25,7 +25,7 @@ def run_task(id_, model, func):
 
     try:
         func(task_model)
-    except Exception as e:
+    except:
         task_model.running = False
         task_model.finished = True
         task_model.success = False
