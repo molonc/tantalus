@@ -21,7 +21,7 @@ def simple_task_wrapper(id_, model):
     stderr_filename = os.path.join(log_dir, 'stderr.txt')
 
     with open(stdout_filename, 'a', 0) as stdout_file, open(stderr_filename, 'a', 0) as stderr_file:
-        subprocess.check_call(['python', 'backend/scripts/' + model.task_name + '.py', id_], stdout=stdout_file, stderr=stderr_file)
+        subprocess.check_call(['python', 'backend/scripts/' + model.task_name + '.py', str(id_)], stdout=stdout_file, stderr=stderr_file)
 
 
 @shared_task
