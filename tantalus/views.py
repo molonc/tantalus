@@ -61,30 +61,30 @@ class SimpleTaskListView(TemplateView):
 
     def get_context_data(self):
         context = {
-            'tasks': self.model.objects.all(),
-            'task_type': self.model.__name__,
+            'tasks': self.task_model.objects.all(),
+            'task_type': self.task_model.__name__,
         }
         return context
 
 
 class FileTransferListView(SimpleTaskListView):
     
-    model = FileTransfer
+    task_model = FileTransfer
 
 
 class GscWgsBamQueryListView(SimpleTaskListView):
     
-    model = GscWgsBamQuery
+    task_model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryListView(SimpleTaskListView):
     
-    model = GscDlpPairedFastqQuery
+    task_model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportListView(SimpleTaskListView):
     
-    model = BRCFastqImport
+    task_model = BRCFastqImport
 
 
 def get_simple_task_log(simple_task, dir_name, stderr=False, raw=False, preview_size=1000):
@@ -258,47 +258,49 @@ class SimpleTaskCreateView(TemplateView):
     def get_context_and_render(self, request, form):
         context = {
             'form': form,
-            'task_type': self.form.Meta.model.__name__,
+            'task_type': self.task_form.Meta.model.__name__,
         }
         return render(request, self.template_name, context)
 
     def get(self, request):
-        form = self.form()
+        form = self.task_form()
         return self.get_context_and_render(request, form)
 
     def post(self, request):
-        form = self.form(request.POST)
+        form = self.task_form(request.POST)
         if form.is_valid():
+            msg = "Successfully created the " + self.task_form.Meta.model.__name__ + "."
+            messages.success(request, msg)
             instance = form.save()
             return HttpResponseRedirect(instance.get_absolute_url())
         else:
-            msg = "Failed to create the transfer. Please fix the errors below."
+            msg = "Failed to create the " + self.task_form.Meta.model.__name__ + ". Please fix the errors below."
             messages.error(request, msg)
         return self.get_context_and_render(request, form)
 
 
 class FileTransferCreateView(SimpleTaskCreateView):
 
-    form = FileTransferCreateForm
+    task_form = FileTransferCreateForm
 
 
 class GscWgsBamQueryCreateView(SimpleTaskCreateView):
 
-    form = GscWgsBamQueryCreateForm
+    task_form = GscWgsBamQueryCreateForm
 
 
 class GscDlpPairedFastqQueryCreateView(SimpleTaskCreateView):
 
-    form = GscDlpPairedFastqQueryCreateForm
+    task_form = GscDlpPairedFastqQueryCreateForm
 
 
 class BRCFastqImportCreateView(SimpleTaskCreateView):
 
-    form = BRCFastqImportCreateForm
+    task_form = BRCFastqImportCreateForm
 
 
 @method_decorator(login_required, name='get')
-class SimpleTaskStartView(View):
+class SimpleTaskRestartView(View):
 
     class Meta:
         abstract = True
@@ -307,6 +309,8 @@ class SimpleTaskStartView(View):
         simple_task = get_object_or_404(self.task_model, pk=pk)
         
         if simple_task.running:
+            msg = "The " + self.task_model.__name__ + "is already running."
+            messages.warning(request, msg)
             return HttpResponseRedirect(simple_task.get_absolute_url())
         
         simple_task.state = simple_task.task_name.replace('_', ' ') + ' queued'
@@ -314,74 +318,67 @@ class SimpleTaskStartView(View):
         self.task_type.apply_async(
             args=(simple_task.id,),
             queue=simple_task.get_queue_name())
+        msg = "Successfully restarted the " + self.task_model.__name__ + "."
+        messages.success(request, msg)
         return HttpResponseRedirect(simple_task.get_absolute_url())
 
 
-class FileTransferStartView(SimpleTaskStartView):
+class FileTransferRestartView(SimpleTaskRestartView):
 
     # TODO: error for starting filetransfer that is running
     task_model = FileTransfer
     task_type = tantalus.tasks.transfer_files_task
 
 
-class GscWgsBamQueryStartView(SimpleTaskStartView):
+class GscWgsBamQueryRestartView(SimpleTaskRestartView):
     
     task_model = GscWgsBamQuery
     task_type = tantalus.tasks.query_gsc_wgs_bams_task
 
 
-class GscDlpPairedFastqQueryStartView(SimpleTaskStartView):
+class GscDlpPairedFastqQueryRestartView(SimpleTaskRestartView):
     
     task_model = GscDlpPairedFastqQuery
     task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
 
 
-class BRCFastqImportStartView(SimpleTaskStartView):
+class BRCFastqImportRestartView(SimpleTaskRestartView):
     
     task_model = BRCFastqImport
     task_type = tantalus.tasks.import_brc_fastqs_task
 
 
-@method_decorator(login_required, name='dispatch')
-class SimpleTaskDeleteView(TemplateView):
-
-    template_name = 'tantalus/simpletask_delete.html'
+@method_decorator(login_required, name='get')
+class SimpleTaskDeleteView(View):
 
     class Meta:
         abstract = True
 
-    def get_context_data(self, pk): 
-        context = {
-            'task_type': self.model.__name__,
-            'pk': pk,
-        }
-        return context
-
-    def post(self, request, pk):
-        get_object_or_404(self.model, pk=pk).delete()
-        msg = "Successfully deleted the SimpleTask."
+    def get(self, request, pk):
+        get_object_or_404(self.task_model, pk=pk).delete()
+        msg = "Successfully deleted the " + self.task_model.__name__ + "."
         messages.success(request, msg)
-        return HttpResponseRedirect(reverse(self.model.__name__.lower() + '-list'))
+        return HttpResponseRedirect(reverse(self.task_model.__name__.lower() + '-list'))
 
 
 class FileTransferDeleteView(SimpleTaskDeleteView):
     
-    model = FileTransfer
+    task_model = FileTransfer
 
 
 class GscWgsBamQueryDeleteView(SimpleTaskDeleteView):
     
-    model = GscWgsBamQuery
+    task_model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryDeleteView(SimpleTaskDeleteView):
     
-    model = GscDlpPairedFastqQuery
+    task_model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportDeleteView(SimpleTaskDeleteView):
     
-    model = BRCFastqImport
+    task_model = BRCFastqImport
 
 
 @method_decorator(login_required, name='get')
@@ -392,10 +389,16 @@ class SimpleTaskStopView(View):
 
     def get(self, request, pk):
         simple_task = get_object_or_404(self.task_model, pk=pk)
-        simple_task.stopping = True
-        simple_task.save()
-        msg = "Successfully stopped the " + self.task_model.__name__ + "."
-        messages.success(request, msg)
+        
+        if simple_task.stopping == False:
+            simple_task.stopping = True
+            simple_task.save()
+            msg = "Stopping the " + self.task_model.__name__ + "."
+            messages.success(request, msg)
+            return HttpResponseRedirect(simple_task.get_absolute_url())
+
+        msg = "The " + self.task_model.__name__ + " is already stopping."
+        messages.warning(request, msg)
         return HttpResponseRedirect(simple_task.get_absolute_url())
 
 

@@ -7,7 +7,16 @@
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.2/css/font-awesome.min.css">
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css">
+
+    <!-- jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script
+      src="http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
+      integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw="
+      crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css" />
+    <!-- end of jQuery -->
+
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
     <!-- Bootstrap-select assets -->
@@ -22,7 +31,6 @@
     <!-- end of DataTable -->
 
     <link rel="stylesheet" href="{% static 'tantalus/style.css' %}" />
-
     <title>Tantalus</title>
 </head>
 <body>
@@ -73,22 +81,20 @@
     </div>
 
     <!-- Page title -->
-        <div class="container subheader">
-            <h2>{% block title %}{% endblock %}</h2>
-        </div>
+    <div class="container subheader">
+        <h2>{% block title %}{% endblock %}</h2>
+    </div>
     <!-- end of page title -->
 
     {% block body %}{% endblock %}
-
 
     <script type="text/javascript">
         $(document).ready(function(){
             $("#datatable").DataTable({
                 "order": [[0, "asc"]]
-            } );
+            });
+            $("#datatable").show();
         });
-
    </script>
-
 </body>
 </html>

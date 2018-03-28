@@ -9,7 +9,7 @@
     <div class="container" style="padding:0; margin-bottom:5px;">
         <h4 style="float:left;">Task Details</h4>
     </div>
-    
+
     <div class="container" style="background-color:#F5F5F5;">
         <table class="table-condensed">
             <tbody>
@@ -29,12 +29,15 @@
                 <tr><th id="thid">State:</th><td id="tdid">{{ simple_task.state }}</td></tr>
             </tbody>
         </table>
-        
-        <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="{% url task_type|add:'-start'|lower pk=simple_task.pk %}">Start {{ task_type }}</a>
 
-        <a class="btn btn-warning btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="{% url task_type|add:'-stop'|lower pk=simple_task.pk %}">Stop {{ task_type }}</a>
+        <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="#" id="restart">Restart</a>                   
+        <div id="restartConfirmation" style="display:none;">This action will have no effect if the {{ task_type }} is already running.</div>
 
-        <a class="btn btn-danger btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="{% url task_type|add:'-delete'|lower pk=simple_task.pk %}">Delete</a>
+        <a class="btn btn-warning btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="#" id="stop">Stop</a>
+        <div id="stopConfirmation" style="display:none;">The {{ task_type }} will have to be restarted if you want it to complete.</div>
+
+        <a class="btn btn-danger btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="#" id="delete">Delete</a>
+        <div id="deleteConfirmation" style="display:none;">This action cannot be reversed.</div>
 
         <br />
     
@@ -98,4 +101,77 @@
             {% endif %}
         {% endif %}
     </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#restartConfirmation').dialog({
+                autoOpen: false,
+                modal: true,
+                resizable: false,
+                draggable: false,
+                title: 'Are you sure?',
+                open: function(event, ui) { 
+                    $(".ui-dialog-titlebar-close").hide(); 
+                },
+                buttons: {
+                    Yes: function() {
+                        window.location.href = "{% url task_type|add:'-restart'|lower pk=simple_task.pk %}";
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+            }).prev(".ui-dialog-titlebar").css("background","#DEE57D");
+            
+            $('#stopConfirmation').dialog({
+                autoOpen: false,
+                modal: true,
+                resizable: false,
+                draggable: false,
+                title: 'Are you sure?',
+                open: function(event, ui) { 
+                    $(".ui-dialog-titlebar-close").hide(); 
+                },
+                buttons: {
+                    Yes: function() {
+                        window.location.href = "{% url task_type|add:'-stop'|lower pk=simple_task.pk %}";
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+            }).prev(".ui-dialog-titlebar").css("background","#DEE57D");
+            
+            $('#deleteConfirmation').dialog({
+                autoOpen: false,
+                modal: true,
+                resizable: false,
+                draggable: false,
+                title: 'Are you sure?',
+                open: function(event, ui) { 
+                    $(".ui-dialog-titlebar-close").hide(); 
+                },
+                buttons: {
+                    Yes: function() {
+                        window.location.href = "{% url task_type|add:'-delete'|lower pk=simple_task.pk %}";
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+            }).prev(".ui-dialog-titlebar").css("background","#DEE57D");
+            
+            $('#restart').click(function() {
+                $('#restartConfirmation').dialog('open');
+            });
+            
+            $('#stop').click(function() {
+                $('#stopConfirmation').dialog('open');
+            });
+            
+            $('#delete').click(function() {
+                $('#deleteConfirmation').dialog('open');
+            });
+        });
+    </script>
 {% endblock %}
