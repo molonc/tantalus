@@ -12,6 +12,8 @@
         dest: $HOME/{{ mode }}/tantalus
         version: "{{ stashversion }}"
         executable: "{{ gitexecutable }}"
+      tags:
+        - backend
 
     - name: Install requirements
       pip:
