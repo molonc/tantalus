@@ -24,16 +24,28 @@ def simple_task_wrapper(id_, model):
 
     with open(stdout_filename, 'a', 0) as stdout_file, open(stderr_filename, 'a', 0) as stderr_file:
         script = os.path.join(django.conf.settings.BASE_DIR, 'tantalus', 'backend', 'scripts', model.task_name + '.py')
+
+        stdout_file.write('!! Starting task process !!\n')
+        stderr_file.write('!! Starting task process !!\n')
+
         task = subprocess.Popen(['python', '-u', script, str(id_)], stdout=stdout_file, stderr=stderr_file)
-        while True:
+
+        while task.poll() is None:
             time.sleep(10)
-            model_instance = model.objects.get(pk=id_)
-            
-            if model_instance.stopping == True:
+
+            if model.objects.get(pk=id_).stopping == True:
+                stderr_file.write('!! Sending interrupt to task process !!\n')
                 task.send_signal(signal.SIGINT)
                 time.sleep(60)
-                task.kill()
+
+                if task.poll() is None:
+                    stderr_file.write('!! Sending kill to task process !!\n')
+                    task.kill()
+
+                model_instance = model.objects.get(pk=id_)
                 model_instance.stopping = False
+                model_instance.running = False
+                model_instance.finished = True
                 model_instance.save()
 
 
