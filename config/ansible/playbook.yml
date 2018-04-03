@@ -9,7 +9,7 @@
     - name: Clone tantalus repo
       git:
         repo: "https://{{ stashuser | urlencode }}:{{ stashpassword }}@svn.bcgsc.ca/bitbucket/scm/sc/tantalus.git"
-        dest: $HOME/{{ mode }}/tantalus
+        dest: $HOME/{{ mode }}/{{ queue_prefix }}/tantalus
         version: "{{ stashversion }}"
         executable: "{{ gitexecutable }}"
       tags:
@@ -17,26 +17,26 @@
 
     - name: Install requirements
       pip:
-        requirements: $HOME/{{ mode }}/tantalus/requirements.txt
-        virtualenv: $HOME/{{ mode }}/tantalus/venv
+        requirements: $HOME/{{ mode }}/{{ queue_prefix }}/tantalus/requirements.txt
+        virtualenv: $HOME/{{ mode }}/{{ queue_prefix }}/tantalus/venv
         virtualenv_python: python2
 
     - name: Create supervisor tmp
-      file: path=$HOME/{{ mode }}/tantalus/tmp state=directory
+      file: path=$HOME/{{ mode }}/{{ queue_prefix }}/tantalus/tmp state=directory
 
     - name: Create supervisor tmp/logs
-      file: path=$HOME/{{ mode }}/tantalus/tmp/logs state=directory
+      file: path=$HOME/{{ mode }}/{{ queue_prefix }}/tantalus/tmp/logs state=directory
 
     - name: Stop celery
-      shell: "$HOME/{{ mode }}/tantalus/venv/bin/supervisorctl -c $HOME/{{ mode }}/tantalus/supervisord.conf stop all"
+      shell: "$HOME/{{ mode }}/{{ queue_prefix }}/tantalus/venv/bin/supervisorctl -c $HOME/{{ mode }}/{{ queue_prefix }}/tantalus/supervisord.conf stop all"
       tags: shutdown
 
     - name: Stop supervisord
-      shell: "if [ -f $HOME/{{ mode }}/tantalus/tmp/supervisord.pid ]; then kill -15 $($HOME/{{ mode }}/tantalus/venv/bin/supervisorctl -c $HOME/{{ mode }}/tantalus/supervisord.conf pid); fi; sleep 10"
+      shell: "if [ -f $HOME/{{ mode }}/{{ queue_prefix }}/tantalus/tmp/supervisord.pid ]; then kill -15 $($HOME/{{ mode }}/{{ queue_prefix }}/tantalus/venv/bin/supervisorctl -c $HOME/{{ mode }}/{{ queue_prefix }}/tantalus/supervisord.conf pid); fi; sleep 10"
       tags: shutdown
 
     - name: Start supervisord
-      shell: "$HOME/{{ mode }}/tantalus/venv/bin/supervisord -c $HOME/{{ mode }}/tantalus/supervisord.conf"
+      shell: "$HOME/{{ mode }}/{{ queue_prefix }}/tantalus/venv/bin/supervisord -c $HOME/{{ mode }}/{{ queue_prefix }}/tantalus/supervisord.conf"
       environment:
         TANTALUS_QUEUE_PREFIX: "{{ queue_prefix }}"
         TANTALUS_SECRET_KEY: "{{ lookup('env', 'TANTALUS_SECRET_KEY') }}"
