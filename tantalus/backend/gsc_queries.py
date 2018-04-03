@@ -7,10 +7,6 @@ import collections
 import string
 import pandas as pd
 
-if __name__ == '__main__':
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tantalus.settings')
-    django.setup()
-
 import tantalus.models
 import tantalus.tasks
 import tantalus.utils

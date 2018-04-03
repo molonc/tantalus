@@ -9,10 +9,6 @@ import re
 
 from tantalus.backend.colossus import *
 
-if __name__ == '__main__':
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tantalus.settings')
-    django.setup()
-
 import pandas as pd
 import requests
 
