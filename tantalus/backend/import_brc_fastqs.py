@@ -14,6 +14,7 @@ import requests
 
 import tantalus.models
 import tantalus.tasks
+import tantalus.utils
 
 # Hard coded BRC details
 BRC_INSTRUMENT = "NextSeq550"
