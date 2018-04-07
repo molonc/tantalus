@@ -54,9 +54,10 @@ class SingleEndFastqFileViewSet(viewsets.ReadOnlyModelViewSet):
 class PairedEndFastqFilesFilterSet(django_filters.FilterSet):
     library_id = django_filters.CharFilter(name='read_groups__dna_library__library_id', distinct=True)
     index_sequence = django_filters.CharFilter(name='read_groups__index_sequence', distinct=True)
+    tag_name = django_filters.CharFilter(name='tags__name', distinct=True)
     class Meta:
         model = tantalus.models.PairedEndFastqFiles
-        fields = ['library_id', 'index_sequence']
+        fields = ['library_id', 'index_sequence', 'tag_name']
 
 
 class PairedEndFastqFilesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -68,9 +69,10 @@ class PairedEndFastqFilesViewSet(viewsets.ReadOnlyModelViewSet):
 class BamFileFilterSet(django_filters.FilterSet):
     library_id = django_filters.CharFilter(name='read_groups__dna_library__library_id', distinct=True)
     sample_id = django_filters.CharFilter(name='read_groups__sample__sample_id', distinct=True)
+    tag_name = django_filters.CharFilter(name='tags__name', distinct=True)
     class Meta:
         model = tantalus.models.BamFile
-        fields = ['library_id', 'sample_id']
+        fields = ['library_id', 'index_sequence', 'tag_name']
 
 
 class BamFileViewSet(viewsets.ReadOnlyModelViewSet):
