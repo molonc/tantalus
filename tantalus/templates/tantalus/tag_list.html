@@ -1,0 +1,44 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Tags
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">Select a Tag to view its details</h4>
+    </div>
+    <div class="container" style="background-color:#F5F5F5;">
+        {% if tags %}
+            <div class="table-responsive">
+                <table id="datatable" class="table table-striped" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Tag name</th>
+                            <th>Dataset</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <br>
+                        {% for tag in tags %}
+                            <tr>
+                                <td>{{ tag }}</td>
+                                <td>
+                                    {{tag.abstractdataset_set.values|length}}
+                                </td>
+                                <td>
+                                <a href="{% url 'tag-delete' pk=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
+                                </td>
+
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h><i class="text-warning">No tags yet.</i></h>
+        {% endif %}
+    </div>
+{% endblock %}

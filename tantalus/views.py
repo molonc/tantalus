@@ -15,7 +15,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 import os
 
-from tantalus.models import FileTransfer, FileResource, Sample, AbstractDataSet, Storage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport
+from tantalus.models import FileTransfer, FileResource, Sample, AbstractDataSet, Storage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport,Tag
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT
 from misc.helpers import Render
@@ -464,6 +464,30 @@ class SampleCreate(TemplateView):
             msg = "Failed to create the sample. Please fix the errors below."
             messages.error(request, msg)
             return self.get_context_and_render(request, form, multi_form)
+
+
+@Render("tantalus/tag_list.html")
+def TagList(request):
+    """
+    List of Tags.
+    """
+    tags = Tag.objects.all().order_by('name')
+    context = {
+        'tags': tags,
+    }
+    return context
+
+
+@method_decorator(login_required, name='dispatch')
+class TagDelete(View):
+    """
+    Tag delete page.
+    """
+    def get(self, request, pk):
+        get_object_or_404(Tag,pk=pk).delete()
+        msg = "Successfully deleted tag"
+        messages.success(request, msg)
+        return HttpResponseRedirect(reverse('tag-list'))
 
 
 class DatasetListJSON(BaseDatatableView):

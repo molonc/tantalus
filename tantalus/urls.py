@@ -60,10 +60,12 @@ urlpatterns = [
     url(r'^samples/$', tantalus.views.sample_list, name='sample-list'),
     url(r'^samples/create$', tantalus.views.SampleCreate.as_view(), name='sample-add'),
     url(r'^samples/(?P<pk>\d+)$', tantalus.views.SampleDetail.as_view(), name='sample-detail'),
+    url(r'^tags/$', tantalus.views.TagList, name='tag-list'),
+    url(r'^tags/delete/(?P<pk>\d+)$', tantalus.views.TagDelete.as_view(), name='tag-delete'),
     url(r'^datasets/$', tantalus.views.DatasetList.as_view(), name='dataset-list'),
     url(r'^datasets_json/$', tantalus.views.DatasetListJSON.as_view(), name='dataset-list-json'),
     url(r'^datasets/(?P<pk>\d+)$', tantalus.views.DatasetDetail.as_view(), name='dataset-detail'),
     url(r'^datasets/tag$', tantalus.views.DatasetTag.as_view(), name='dataset-tag'),
     url(r'^datasets/search$', tantalus.views.DatasetSearch.as_view(), name='dataset-search'),
-    url(r'^$', tantalus.views.HomeView.as_view(), name='home')
+    url(r'^$', tantalus.views.HomeView.as_view(), name='home'),
 ]
