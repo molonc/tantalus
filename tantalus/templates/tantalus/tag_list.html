@@ -16,7 +16,7 @@
                     <thead>
                         <tr>
                             <th>Tag name</th>
-                            <th>Dataset</th>
+                            <th>Num Datasets</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -31,7 +31,6 @@
                                 <td>
                                 <a href="{% url 'tag-delete' pk=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
                                 </td>
-
                             </tr>
                         {% endfor %}
                     </tbody>

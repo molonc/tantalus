@@ -467,7 +467,7 @@ class SampleCreate(TemplateView):
 
 
 @Render("tantalus/tag_list.html")
-def TagList(request):
+def tag_list(request):
     """
     List of Tags.
     """
