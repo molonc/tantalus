@@ -395,7 +395,6 @@ class BamFile(AbstractDataSet):
 
     reference_genome = models.CharField(
         max_length=50,
-        choices=reference_genome_choices,
         default=UNALIGNED,
     )
 
