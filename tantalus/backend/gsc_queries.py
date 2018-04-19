@@ -1,4 +1,3 @@
-import json
 import os
 import requests
 import django
@@ -8,11 +7,8 @@ import string
 import pandas as pd
 
 import tantalus.models
-import tantalus.tasks
 import tantalus.utils
 from tantalus.backend.colossus import *
-
-from pprint import pprint
 
 
 GSC_API_URL = "http://sbs:8100/"
@@ -135,7 +131,7 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos):
         bai_file, created = tantalus.models.FileResource.objects.get_or_create(
             size=os.path.getsize(bai_path),
             created=pd.Timestamp(time.ctime(os.path.getmtime(bai_path)), tz='Canada/Pacific'),
-            file_type=tantalus.models.FileResource.BAM,
+            file_type=tantalus.models.FileResource.BAI,
             read_end=None,
             compression=tantalus.models.FileResource.UNCOMPRESSED,
             filename=bai_filename,
