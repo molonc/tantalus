@@ -23,7 +23,7 @@ def simple_task_wrapper(id_, model):
     stderr_filename = os.path.join(log_dir, 'stderr.txt')
 
     with open(stdout_filename, 'a', 0) as stdout_file, open(stderr_filename, 'a', 0) as stderr_file:
-        script = os.path.join(django.conf.settings.BASE_DIR, 'tantalus', 'backend', 'scripts', model.task_name + '.py')
+        script = os.path.join(django.conf.settings.BASE_DIR, 'tantalus', 'backend', 'task_scripts', model.task_name + '.py')
 
         task = subprocess.Popen(['python', '-u', script, str(id_)], stdout=stdout_file, stderr=stderr_file)
 
