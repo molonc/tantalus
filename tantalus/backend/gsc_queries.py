@@ -199,7 +199,7 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos):
     return new_file_instances
 
 
-def query_gsc_wgs_bams(query_info):
+def query_gsc_wgs_bams(query_info, temp_directory):
     gsc_api = GSCAPI()
 
     for library_id in query_info.library_ids:
@@ -415,7 +415,7 @@ filename_pattern_map = {
 }
 
 
-def query_gsc_dlp_paired_fastqs(query_info):
+def query_gsc_dlp_paired_fastqs(query_info, temp_directory):
     dlp_library_id = query_info.dlp_library_id
     gsc_library_id = query_info.gsc_library_id
     storage = tantalus.models.ServerStorage.objects.get(name='gsc')

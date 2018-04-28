@@ -54,7 +54,7 @@ def make_dirs(dirname):
             raise
 
 
-def check_or_update_md5(md5_check):
+def check_or_update_md5(md5_check, temp_directory):
     """ Check or update an md5 for a file instance in an md5 check object.
     """
 
@@ -258,7 +258,7 @@ def get_file_transfer_function(from_storage, to_storage):
         return rsync_file
 
 
-def transfer_files(file_transfer):
+def transfer_files(file_transfer, temp_directory):
     """ Transfer a set of files
     """
 

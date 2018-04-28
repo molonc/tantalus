@@ -1,5 +1,6 @@
 import django
 import argparse
+import errno
 
 django.setup()
 
@@ -14,6 +15,14 @@ def parse_args():
 def run_task(id_, model, func):
     task_model = model.objects.get(pk=id_)
 
+    temp_directory = os.path.join(django.conf.settings.TASK_LOG_DIRECTORY, task_model.task_name, str(id_))
+
+    try:
+        os.makedirs(temp_directory)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
     if task_model.running:
         raise Exception('task already running')
 
@@ -24,7 +33,7 @@ def run_task(id_, model, func):
     task_model.save()
 
     try:
-        func(task_model)
+        func(task_model, temp_directory)
     except:
         task_model.running = False
         task_model.finished = True

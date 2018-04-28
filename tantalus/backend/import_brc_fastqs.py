@@ -120,7 +120,7 @@ def query_colossus_dlp_cell_info(library_id):
 
 #### output_dir = '/genesis/shahlab/archive/single_cell_indexing/NextSeq/fastq/171031_NS500668_0271_AHLNK5AFXX/'
 
-def load_brc_fastqs(import_brc_fastqs):
+def load_brc_fastqs(import_brc_fastqs, temp_directory):
     # Check for .. in file path
     if ".." in import_brc_fastqs.output_dir:
         raise Exception("Invalid path for output_dir. \'..\' detected")
