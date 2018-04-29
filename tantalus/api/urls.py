@@ -1,6 +1,7 @@
 from django.conf.urls import url, include
 from rest_framework import routers
 from tantalus.api import views
+from rest_framework_swagger.views import get_swagger_view
 
 
 router = routers.DefaultRouter()
@@ -25,10 +26,13 @@ router.register(r'queries/gsc_wgs_bams', views.QueryGscWgsBamsViewSet)
 router.register(r'queries/gsc_dlp_paired_fastqs', views.QueryGscDlpPairedFastqsViewSet)
 router.register(r'brc_import_fastqs', views.BRCImportFastqsViewSet)
 
+schema_view = get_swagger_view(title='Tantalus API')
+
 # name to specify name space, all the views can be referred to as reverse('app_name:view_name')
 # eg. reverse('api:filetransfer-list')
 app_name='api'
 urlpatterns = [
+    url(r'^swagger$', schema_view),
     url(r'^', include(router.urls)),
     url(r'^file_transfer/restart/(?P<pk>\d+)$', views.FileTransferRestart.as_view(), name='filetransfer-restart'),
 ]
