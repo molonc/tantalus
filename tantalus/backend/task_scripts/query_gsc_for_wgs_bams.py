@@ -15,11 +15,8 @@ def query_gsc_wgs_bams(query_info, temp_directory):
         temp_directory, 'new_data.json')
 
     cmd = ['python', '-u', script]
-    cmd.append('--library_ids')
-    cmd.extend(query_info.library_ids)
-
-    cmd.append('--json_data')
     cmd.append(json_data_filename)
+    cmd.extend(query_info.library_ids)
 
     task = subprocess.Popen(cmd)
     

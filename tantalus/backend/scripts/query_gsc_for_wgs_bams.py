@@ -183,7 +183,7 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos):
     return json_list
 
 
-def query_gsc_library(libraries):
+def query_gsc_library(json_filename, libraries):
     """
     Take a list of library names as input.
     """
@@ -319,7 +319,8 @@ def query_gsc_library(libraries):
 
                 json_list += add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos)
 
-    return json.dumps(json_list, indent=4, sort_keys=True, cls=DjangoJSONEncoder)
+    with open(json_filename, 'w') as f:
+        json.dump(json_list, f, indent=4, sort_keys=True, cls=DjangoJSONEncoder)
 
 
 if __name__ == '__main__':
@@ -328,4 +329,4 @@ if __name__ == '__main__':
     parser.add_argument('library_ids', nargs='+')
     args = vars(parser.parse_args())
 
-    json_list = query_gsc_library(args['library_ids'])
+    json_list = query_gsc_library(args['json_data'], args['library_ids'])
