@@ -1,3 +1,5 @@
+import os
+import subprocess
 import django
 
 from tantalus.backend.task_scripts.utils import *
@@ -18,7 +20,7 @@ def query_gsc_wgs_bams(query_info, temp_directory):
     cmd.append(json_data_filename)
     cmd.extend(query_info.library_ids)
 
-    task = subprocess.Popen(cmd)
+    subprocess.check_call(cmd)
     
     tantalus.backend.serializers.read_models(json_data_filename)
 
