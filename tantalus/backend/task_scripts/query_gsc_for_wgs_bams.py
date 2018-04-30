@@ -1,6 +1,6 @@
 import django
 
-from tantalus.backend.scripts.utils import *
+from tantalus.backend.task_scripts.utils import *
 from tantalus.models import GscWgsBamQuery
 import tantalus.backend.serializers
 

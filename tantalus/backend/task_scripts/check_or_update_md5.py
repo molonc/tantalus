@@ -1,4 +1,4 @@
-from tantalus.backend.scripts.utils import *
+from tantalus.backend.task_scripts.utils import *
 from tantalus.backend.file_transfer_utils import check_or_update_md5
 from tantalus.models import CheckMD5
 

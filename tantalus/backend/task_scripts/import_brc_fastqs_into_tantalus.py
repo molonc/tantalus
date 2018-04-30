@@ -1,4 +1,4 @@
-from tantalus.backend.scripts.utils import *
+from tantalus.backend.task_scripts.utils import *
 from tantalus.backend.import_brc_fastqs import load_brc_fastqs
 from tantalus.models import BRCFastqImport
 
