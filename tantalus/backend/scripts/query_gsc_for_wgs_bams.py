@@ -329,4 +329,4 @@ if __name__ == '__main__':
     parser.add_argument('library_ids', nargs='+')
     args = vars(parser.parse_args())
 
-    json_list = query_gsc_library(args['json_data'], args['library_ids'])
+    query_gsc_library(args['json_data'], args['library_ids'])
