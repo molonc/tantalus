@@ -1,0 +1,32 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Tag Detail
+{% endblock %}
+
+{% block body %}
+     <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">Datasets</h4>
+     </div>
+    <div class="container" style="background-color:#F5F5F5;">
+    <table id="datatable" class="table table-striped" style="display:none;">
+        <thead>
+                <tr>
+                    <th>Dataset ID</th>
+                    <th></th>
+                </tr>
+        </thead>
+        <tbody>
+            {% for dataset in datasets %}
+            <tr>
+                <td>{{ dataset }}</td>
+                <td>
+                    <a href="{% url 'tag-dataset-delete' pk=dataset pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+{% endblock %}

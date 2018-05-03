@@ -490,6 +490,34 @@ class TagDelete(View):
         return HttpResponseRedirect(reverse('tag-list'))
 
 
+class TagDetail(DetailView):
+    model = Tag
+    template_name = "tantalus/tag_detail.html"
+
+    def get_context_data(self, object):
+        tag = get_object_or_404(Tag, pk=object.id)
+        datasets = [x['id'] for x in tag.abstractdataset_set.values()]
+        context = {
+            'tag': tag,
+            'datasets':datasets,
+        }
+        return context
+
+
+@method_decorator(login_required, name='dispatch')
+class TagDatasetDelete(View):
+    """
+    Tag dataset delete page.
+    """
+    def get(self, request, pk,pk_2):
+        dataset = get_object_or_404(AbstractDataSet,pk=pk)
+        tag = get_object_or_404(Tag,pk=pk_2)
+        tag.abstractdataset_set.remove(dataset)
+        msg = "Successfully removed datasest "
+        messages.success(request, msg)
+        return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
+
+
 class DatasetListJSON(BaseDatatableView):
     
     """
@@ -634,10 +662,8 @@ class DatasetSearch(FormView):
 
 
 class DatasetTag(FormView):
-    
     form_class = DatasetTagForm
     template_name = 'tantalus/abstractdataset_tag_form.html'
-    success_url = reverse_lazy('dataset-list')
 
     def get_context_data(self, **kwargs):
         
@@ -673,10 +699,11 @@ class DatasetTag(FormView):
 
     def form_valid(self, form):
         form.add_dataset_tags()
-
+        tag =  form.cleaned_data['tag_name']
+        tag_id = Tag.objects.get(name=tag)
         self.request.session.pop('dataset_search_results', None)
         self.request.session.pop('select_none_default', None)
-        return super(DatasetTag, self).form_valid(form)
+        return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':tag_id.id}))
 
 
 class HomeView(TemplateView):

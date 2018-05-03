@@ -24,7 +24,7 @@
                     <br>
                         {% for tag in tags %}
                             <tr>
-                                <td>{{ tag }}</td>
+                                <td><a href="{% url 'tag-detail' tag.id %}">{{tag.name}}</a></td>
                                 <td>
                                     {{tag.abstractdataset_set.values|length}}
                                 </td>
