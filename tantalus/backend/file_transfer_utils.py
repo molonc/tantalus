@@ -298,6 +298,17 @@ def transfer_files(file_transfer, temp_directory):
 
             file_instance = source_file_instance[0]
 
+            existing_transfers = FileTransfer.objects.filter(
+                reservedfileinstance__to_storage=to_storage,
+                reservedfileinstance__file_resource=file_resource)
+
+            existing_transfers = existing_transfers.exclude(
+                reservedfileinstance__file_transfer=file_transfer)
+
+            if existing_transfers.count() > 0:
+                raise Exception('FileResource {} for dataset {} already transferring with FileTransfer {}'.format(
+                    file_resource.id, dataset.id, existing_transfers[0].id))
+
             ReservedFileInstance.objects.get_or_create(
                 to_storage=to_storage,
                 file_resource=file_resource,
