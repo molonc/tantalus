@@ -3,11 +3,19 @@ import paramiko
 import time
 import subprocess
 import sys
+import os
+import logging
 
 from tantalus.models import *
 from tantalus.exceptions.file_transfer_exceptions import *
 import errno
 
+logger = logging.getLogger('azure.storage')
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s %(name)-20s %(levelname)-5s %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 # if available memory on the storage is less than this, include this as a possible source of error if the transfer fails
 __MINIMUM_FREE_DISK_SPACE = 50e10
