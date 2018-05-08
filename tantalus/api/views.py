@@ -28,7 +28,7 @@ class DNALibraryViewSet(viewsets.ReadOnlyModelViewSet):
 class SequenceLaneViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.SequenceLane.objects.all()
     serializer_class = tantalus.api.serializers.SequenceLaneSerializer
-    filter_fields = ('flowcell_id', 'lane_number', 'dna_library__library_id')
+    filter_fields = ('flowcell_id', 'lane_number',)
 
 
 class ReadGroupViewSet(viewsets.ReadOnlyModelViewSet):
