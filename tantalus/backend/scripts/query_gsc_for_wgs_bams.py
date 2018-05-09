@@ -7,17 +7,24 @@ import pandas as pd
 from django.core.serializers.json import DjangoJSONEncoder
 
 
-bam_path_template = '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}_dupsFlagged.bam'
+bam_path_templates = {
+    'WGS': '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}_dupsFlagged.bam',
+}
 
-lane_bam_path_template = '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}.bam'
+lane_bam_path_template = {
+    'WGS': '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}.bam',
+    'RNASEQ': '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}_withJunctionsOnGenome_dupsFlagged.bam',
+}
 
-wgs_protocol_ids = (
-    12,
-    73,
-    136,
-    140,
-    123,
-)
+protocol_id_map = {
+    12: 'WGS',
+    73: 'WGS',
+    136: 'WGS',
+    140: 'WGS',
+    123: 'WGS',
+    96: 'EXOME',
+    80: 'RNASEQ',
+}
 
 solexa_run_type_map = {
     'Paired': 'P',
@@ -205,9 +212,11 @@ def query_gsc_library(json_filename, libraries):
         for library_info in library_infos:
             protocol_info = gsc_api.query('protocol/{}'.format(library_info['protocol_id']))
 
-            if library_info['protocol_id'] not in wgs_protocol_ids:
+            if library_info['protocol_id'] not in protocol_id_map:
                 print 'warning, protocol {}:{} not supported'.format(library_info['protocol_id'], protocol_info['extended_name'])
                 continue
+
+            library_type = protocol_id_map[library_info['protocol_id']]
 
             sample_id = library_info['external_identifier']
 
@@ -219,7 +228,7 @@ def query_gsc_library(json_filename, libraries):
 
             library = dict(
                 library_id=library_name,
-                library_type='WGS',
+                library_type=library_type,
                 index_format='N',
             )
 
@@ -298,7 +307,7 @@ def query_gsc_library(json_filename, libraries):
                 if (flowcell_code, lane_number, adapter_index_sequence) in merged_lanes:
                     continue
 
-                bam_path = lane_bam_path_template.format(
+                bam_path = lane_bam_path_template[library_type].format(
                     data_path=data_path,
                     flowcell_code=flowcell_code,
                     lane_number=lane_number,
