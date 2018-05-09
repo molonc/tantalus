@@ -1,0 +1,183 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    {{ task_type.task_name }} task: {{ instance.instance_name }}
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">{{ task_type.task_name }} instance details</h4>
+    </div>
+
+    <div class="container" style="background-color:#F5F5F5;">
+
+        {# Instance attributes #}
+        <table class="table-condensed">
+            <tbody>
+            <tr><th id="thid">Instance&nbsp;name:</th><td id="tdid">{{ instance.instance_name }}</td></tr>
+            <tr><th id="thid">Task&nbsp;name:</th><td id="tdid">{{ instance.task_type.task_name }}</td></tr>
+            <tr><th id="thid">Relative&nbsp;script&nbsp;path:</th><td id="tdid">{{ instance.task_type.relative_script_path }}</td></tr>
+            <tr><th id="thid">JSON&nbsp;arguments&nbsp;dump:</th><td id="tdid"><pre><code>{{ instance.dump_args_as_JSON_string }}</code></pre></td></tr>
+
+            {# Blank row. There's probably a better way to do this? #}
+            <tr><th></th><td></td></tr>
+
+            <tr><th id="thid">Host:</th><td id="tdid">{{ instance.host }}</td></tr>
+            <tr><th id="thid">Running:</th><td id="tdid">{{ instance.running }}</td></tr>
+            <tr><th id="thid">Finished:</th><td id="tdid">{{ instance.finished }}</td></tr>
+            <tr><th id="thid">Success:</th><td id="tdid">{{ instance.success }}</td></tr>
+            <tr><th id="thid">State:</th><td id="tdid">{{ instance.state }}</td></tr>
+            </tbody>
+        </table>
+
+        {# Buttons for job management #}
+        <a class="btn btn-primary btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="#" id="restart">Restart</a>
+        <div id="restartConfirmation" style="display:none;">This action will have no effect if {{ instance.instance_name }} is already running.</div>
+
+        <a class="btn btn-warning btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="#" id="stop">Stop</a>
+        <div id="stopConfirmation" style="display:none;">{{ instance.instance_name }} will have to be restarted if you want it to complete.</div>
+
+        <a class="btn btn-danger btn-sm" style="margin-top:5px; margin-bottom: 10px;" href="#" id="delete">Delete</a>
+        <div id="deleteConfirmation" style="display:none;">This action cannot be reversed.</div>
+
+        <br />
+
+        {# stdout #}
+        {% if stdout %}
+            <div class="container" style="padding:0; margin-bottom:5px;">
+                <table>
+                    <tr>
+                        <td><h4>Task Standard Output</h4></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="height:auto; overflow:scroll;">
+                <pre><code>{% for line in stdout %}{{ line }}{% endfor %}</code></pre>
+            </div>
+
+            <span class="step-links pagination">
+                {% if stdout.has_previous %}
+                    <a class="btn btn-primary btn-sm" href="?page={{ stdout.previous_page_number }},{{ stderr.number }}"> previous </a>
+                {% endif %}
+                    <span class="current">
+                        Page {{ stdout.number }} of {{ stdout.paginator.num_pages }}
+                    </span>
+                {% if stdout.has_next %}
+                    <a class="btn btn-primary btn-sm" href="?page={{ stdout.next_page_number }},{{ stderr.number }}"> next </a>
+                {% endif %}
+            </span>
+
+            {% if stdout.has_next %}
+                <a class="btn btn-primary btn-sm" href="{% url 'generictaskinstance-log' task_type.pk instance.pk 'stdout' %}">Detail</a>
+            {% endif %}
+        {% endif %}
+
+        {% if stderr %}
+            <div class="container" style="padding:0; margin-bottom:5px;">
+                <table>
+                    <tr>
+                        <td><h4>Task Standard Error</h4></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="height:auto; overflow:scroll;">
+                <pre><code>{% for line in stderr %}{{ line }}{% endfor %}</code></pre>
+            </div>
+
+            <span class="step-links pagination">
+                {% if stderr.has_previous %}
+                    <a a class="btn btn-primary btn-sm" href="?page={{ stdout.number }},{{ stderr.previous_page_number }}"> previous </a>
+                {% endif %}
+                <span class="current">
+                    Page {{ stderr.number }} of {{ stderr.paginator.num_pages }}
+                </span>
+                {% if stderr.has_next %}
+                    <a class="btn btn-primary btn-sm" href="?page={{ stdout.number }},{{ stderr.next_page_number }}"> next </a>
+                {% endif %}
+            </span>
+
+            {% if stderr.has_next %}
+                <a class="btn btn-primary btn-sm" href="{% url 'generictaskinstance-log' task_type.pk instance.pk 'stderr' %}">Detail</a>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {# JS for the buttons #}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#restartConfirmation').dialog({
+                autoOpen: false,
+                modal: true,
+                resizable: false,
+                draggable: false,
+                title: 'Are you sure?',
+                open: function(event, ui) {
+                    $(".ui-dialog-titlebar-close").hide();
+                },
+                buttons: {
+                    Yes: function() {
+                        window.location.href = "{% url 'generictaskinstance-restart' task_type.pk instance.pk %}";
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+            }).prev(".ui-dialog-titlebar").css("background","#DEE57D");
+
+            $('#stopConfirmation').dialog({
+                autoOpen: false,
+                modal: true,
+                resizable: false,
+                draggable: false,
+                title: 'Are you sure?',
+                open: function(event, ui) {
+                    $(".ui-dialog-titlebar-close").hide();
+                },
+                buttons: {
+                    Yes: function() {
+                        window.location.href = "{% url 'generictaskinstance-stop' task_type.pk instance.pk %}";
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+            }).prev(".ui-dialog-titlebar").css("background","#DEE57D");
+
+            $('#deleteConfirmation').dialog({
+                autoOpen: false,
+                modal: true,
+                resizable: false,
+                draggable: false,
+                title: 'Are you sure?',
+                open: function(event, ui) {
+                    $(".ui-dialog-titlebar-close").hide();
+                },
+                buttons: {
+                    Yes: function() {
+                        window.location.href = "{% url 'generictaskinstance-delete' task_type.pk instance.pk %}";
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                },
+            }).prev(".ui-dialog-titlebar").css("background","#DEE57D");
+
+            $('#restart').click(function() {
+                $('#restartConfirmation').dialog('open');
+            });
+
+            $('#stop').click(function() {
+                $('#stopConfirmation').dialog('open');
+            });
+
+            $('#delete').click(function() {
+                $('#deleteConfirmation').dialog('open');
+            });
+        });
+    </script>
+
+
+{% endblock %}

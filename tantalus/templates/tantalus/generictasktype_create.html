@@ -1,0 +1,36 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Generic Task Type Creation
+{% endblock %}
+
+{% block body %}
+    <div class="container graybg">
+        <form action="{% url 'generictasktype-create' %}" method="post">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Information</legend>
+                <table class="table-condensed">
+                    <thead>
+                    {{ form.non_field_errors }}
+                    {% for field in form %}
+                        <tr>
+                            <th>{{ field.label_tag }}</th>
+                            <td>
+                                {{ field }}
+                                {% if field.help_text %}
+                                <p class="helptext">{{ field.help_text }}</p>
+                                {% endif %}
+                                {{ field.errors }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </thead>
+                </table>
+             </fieldset>
+            <input class="btn btn-primary btn-sm" type="submit" value="Create" />
+            <a class="btn btn-default btn-sm" href="{% url 'generictasktype-list' %}">Cancel</a>
+        </form><br>
+    </div>
+{% endblock %}

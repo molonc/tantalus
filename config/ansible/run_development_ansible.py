@@ -18,15 +18,8 @@ branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True).
 os.environ['GSC_API_PASSWORD'] = password
 os.environ['TANTALUS_IS_PRODUCTION'] = "nope"
 
-logs_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, 'tmp', 'logs'))
-
-try:
-    os.makedirs(logs_dir)
-except OSError as e:
-    if e.errno != errno.EEXIST:
-        raise
-
-os.environ['TASK_LOG_DIRECTORY'] = logs_dir
+# Default environment variables for task log rsyncing. The variable
+# TASK_LOG_DIRECTORY must be set in the environment.
 os.environ['TASK_LOG_USERNAME'] = os.environ['USER']
 os.environ['TASK_LOG_HOSTNAME'] = socket.gethostname()
 

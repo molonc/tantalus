@@ -1,6 +1,7 @@
 from django.conf.urls import url, include
 from rest_framework import routers
 from tantalus.api import views
+from tantalus.api import generictask_api_views
 from rest_framework_swagger.views import get_swagger_view
 
 
@@ -26,6 +27,8 @@ router.register(r'queries/gsc_wgs_bams', views.QueryGscWgsBamsViewSet)
 router.register(r'queries/gsc_dlp_paired_fastqs', views.QueryGscDlpPairedFastqsViewSet)
 router.register(r'brc_import_fastqs', views.BRCImportFastqsViewSet)
 router.register(r'import_dlp_bam', views.ImportDlpBamViewSet)
+router.register(r'generic_task_types', generictask_api_views.GenericTaskTypeViewSet)
+router.register(r'generic_task_instances', generictask_api_views.GenericTaskInstanceViewSet)
 
 schema_view = get_swagger_view(title='Tantalus API')
 

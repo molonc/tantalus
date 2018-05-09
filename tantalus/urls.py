@@ -19,12 +19,25 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 import tantalus.views
+import tantalus.generictask_views
 import account.views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('tantalus.api.urls')),
     url(r'^account/', include('account.urls')),
+    url(r'^generictasktypes/$', tantalus.generictask_views.GenericTaskTypeListView.as_view(), name='generictasktype-list'),
+    url(r'^generictasktypes/create$', tantalus.generictask_views.GenericTaskTypeCreateView.as_view(), name='generictasktype-create'),
+    url(r'^generictasktypes/(?P<pk>\d+)$', tantalus.generictask_views.GenericTaskTypeDetailView.as_view(), name='generictasktype-detail'),
+    url(r'^generictasktypes/delete/(?P<pk>\d+)$', tantalus.generictask_views.GenericTaskTypeDeleteView.as_view(), name='generictasktype-delete'),
+    url(r'^generictaskinstances/$', tantalus.generictask_views.GenericTaskInstanceSubMenuView.as_view(), name='generictaskinstance-submenu'),
+    url(r'^generictaskinstances/tasktype/(?P<task_type_pk>\d+)/instances$', tantalus.generictask_views.GenericTaskInstanceListView.as_view(), name='generictaskinstance-list'),
+    url(r'^generictaskinstances/tasktype/(?P<task_type_pk>\d+)/instances/create$', tantalus.generictask_views.GenericTaskInstanceCreateView.as_view(), name='generictaskinstance-create'),
+    url(r'^generictaskinstances/tasktype/(?P<task_type_pk>\d+)/instances/(?P<instance_pk>\d+)$', tantalus.generictask_views.GenericTaskInstanceDetailView.as_view(), name='generictaskinstance-detail'),
+    url(r'^generictaskinstances/tasktype/(?P<task_type_pk>\d+)/instances/(?P<instance_pk>\d+)/logs/(?P<logfile>[-._a-zA-Z0-9]+)$', tantalus.generictask_views.GenericTaskInstanceLogView.as_view(), name='generictaskinstance-log'),
+    url(r'^generictaskinstances/tasktype/(?P<task_type_pk>\d+)/instances/restart/(?P<instance_pk>\d+)$', tantalus.generictask_views.GenericTaskInstanceRestartView.as_view(), name='generictaskinstance-restart'),
+    url(r'^generictaskinstances/tasktype/(?P<task_type_pk>\d+)/instances/stop/(?P<instance_pk>\d+)$', tantalus.generictask_views.GenericTaskInstanceStopView.as_view(), name='generictaskinstance-stop'),
+    url(r'^generictaskinstances/tasktype/(?P<task_type_pk>\d+)/instances/delete/(?P<instance_pk>\d+)$', tantalus.generictask_views.GenericTaskInstanceDeleteView.as_view(), name='generictaskinstance-delete'),
     url(r'^filetransfers/$', tantalus.views.FileTransferListView.as_view(), name='filetransfer-list'),
     url(r'^filetransfers/create$', tantalus.views.FileTransferCreateView.as_view(), name='filetransfer-create'),
     url(r'^filetransfers/(?P<pk>\d+)$', tantalus.views.FileTransferDetailView.as_view(), name='filetransfer-detail'),

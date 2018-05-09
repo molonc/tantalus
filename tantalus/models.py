@@ -6,7 +6,6 @@ import django.contrib.postgres.fields
 from django.db import models
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
-import simple_history
 from simple_history.models import HistoricalRecords
 from polymorphic.models import PolymorphicModel
 
@@ -785,5 +784,3 @@ class ImportDlpBam(SimpleTask):
             return self.storage.get_db_queue_name()
         else:
             return get_object_or_404(ServerStorage, name='shahlab').get_db_queue_name()
-
-
