@@ -210,7 +210,7 @@ class QueryGscDlpPairedFastqsSerializer(QueryGscSerializer):
         fields = '__all__'
 
 
-class ImportDlpBamSerializer(serializers.ModelSerializer):
+class ImportDlpBamSerializer(SimpleTaskSerializer):
     celery_task = tantalus.tasks.import_dlp_bams_task
     class Meta:
         model = tantalus.models.ImportDlpBam
