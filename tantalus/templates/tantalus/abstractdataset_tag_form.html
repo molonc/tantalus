@@ -30,6 +30,8 @@
                                 <th class="dataset_library_id">Library</th>
                                 <th class="dataset_num_lanes">Num. Read Groups</th>
                                 <th class="dataset_tags">Tags</th>
+                                <th class="dataset_tags">Storages</th>
+
                             </tr>
                         </thead>
                         <tbody>
@@ -48,12 +50,18 @@
     $(document).ready(function() {
         $('.dataset_datatable').DataTable({
             columnDefs:[
-                {"name": "id", "targets": "dataset_id"},
+                {"name": "id", "targets": "dataset_id",
+                    "render": function (targets) {
+                        var url_block = "{% url 'dataset-detail' 0 %}".replace(/0/, targets.toString());
+                        return '<a href=' + url_block + '>' + targets + '</a>';
+                    }},
                 {"name": "dataset_type", "targets": "dataset_type", "orderable": false, "searchable": false},
                 {"name": "sample_id", "targets": "dataset_sample_id"},
                 {"name": "library_id", "targets": "dataset_library_id"},
                 {"name": "num_lanes", "targets": "dataset_num_lanes", "orderable": false, "searchable": false},
-                {"name": "tags", "targets": "dataset_tags"}
+                {"name": "tags", "targets": "dataset_tags"},
+                {"name": "storages", "targets": "dataset_storages", "orderable": false, "searchable": false}
+
             ],
             processing: true,
             serverSide: true,

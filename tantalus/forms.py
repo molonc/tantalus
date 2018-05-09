@@ -12,7 +12,7 @@ from django.db import transaction
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
 
-from .models import Sample, AbstractDataSet, FileTransfer, FileResource, SequenceLane, DNALibrary, Tag, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, ServerStorage
+from .models import Sample, AbstractDataSet, FileTransfer, FileResource, SequenceLane, DNALibrary, Tag, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, ServerStorage, Storage
 import tantalus.tasks
 
 
@@ -50,6 +50,11 @@ class DatasetSearchForm(forms.Form):
         help_text="A comma separated list of tags",
         required=False,
     )
+    exclude = forms.CharField(
+        label="Exclude",
+        help_text="A comma separated list of tags you want to exclude",
+        required=False,
+    )
     library = forms.CharField(
         label="Library",
         required=False,
@@ -70,7 +75,12 @@ class DatasetSearchForm(forms.Form):
         help_text="Type of files to process",
         widget=forms.widgets.CheckboxSelectMultiple()
     )
-
+    storages = forms.MultipleChoiceField(
+        choices=tuple([(s.name, s.name) for s in Storage.objects.all()]),
+        required=False,
+        help_text="Only look for files that are present in the selected storage.",
+        widget=forms.widgets.CheckboxSelectMultiple(),
+    )
     flowcell_id_and_lane = forms.CharField(
         label="Flowcell ID + lane number",
         required=False,
@@ -199,7 +209,7 @@ class DatasetSearchForm(forms.Form):
                 "Found zero datasets."
             )
 
-    def get_dataset_search_results(self, clean=True, tagged_with=None, library=None, sample=None, dataset_type=None,
+    def get_dataset_search_results(self, clean=True, exclude=None, tagged_with=None, library=None, sample=None, dataset_type=None,storages=None,
                                    flowcell_id_and_lane=None, sequencing_center=None,
                                    sequencing_instrument=None, sequencing_library_id=None, library_type=None,
                                    index_format=None, num_read_groups=None):
@@ -218,9 +228,11 @@ class DatasetSearchForm(forms.Form):
 
         if clean:
             tagged_with = self.cleaned_data['tagged_with']
+            exclude = self.cleaned_data['exclude']
             library = self.cleaned_data['library']
             sample = self.cleaned_data['sample']
             dataset_type = self.cleaned_data['dataset_type']
+            storages = self.cleaned_data['storages']
             flowcell_id_and_lane = self.cleaned_data['flowcell_id_and_lane']
             sequencing_center = self.cleaned_data['sequencing_center']
             sequencing_instrument = self.cleaned_data['sequencing_instrument']
@@ -236,8 +248,9 @@ class DatasetSearchForm(forms.Form):
 
         if tagged_with:
             tags_list = [tag.strip() for tag in tagged_with.split(",")]
+            exclude_list = [tag.strip() for tag in exclude.split(",")]
             for tag in tags_list:
-                results = results.filter(tags__name=tag)
+                results = results.filter(tags__name=tag).exclude(tags__name__in=exclude_list)
 
         if sample:
             results = results.filter(read_groups__sample__sample_id__in=sample.split())
@@ -248,6 +261,9 @@ class DatasetSearchForm(forms.Form):
                 temp_query = {"{}__isnull".format(d_type.lower()): False}
                 query = query | Q(**temp_query)
             results = results.filter(query)
+
+        if storages:
+            results = results.filter(file_resources__fileinstance__storage__name__in=storages)
 
         if library:
             results = results.filter(read_groups__dna_library__library_id__in=library.split())
