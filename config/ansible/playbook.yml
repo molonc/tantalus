@@ -7,6 +7,8 @@
     gitexecutable: git
   tasks:
     - name: Clone tantalus repo
+      environment:
+        GIT_SSL_NO_VERIFY: true
       git:
         repo: "https://{{ stashuser | urlencode }}:{{ stashpassword }}@svn.bcgsc.ca/bitbucket/scm/sc/tantalus.git"
         dest: $HOME/{{ mode }}/{{ queue_prefix }}/tantalus
@@ -19,7 +21,6 @@
       pip:
         requirements: $HOME/{{ mode }}/{{ queue_prefix }}/tantalus/requirements.txt
         virtualenv: $HOME/{{ mode }}/{{ queue_prefix }}/tantalus/venv
-        virtualenv_python: python2
 
     - name: Create supervisor tmp
       file: path=$HOME/{{ mode }}/{{ queue_prefix }}/tantalus/tmp state=directory
@@ -48,9 +49,11 @@
         TANTALUS_RABBIT_USER: "{{ lookup('env', 'TANTALUS_RABBIT_USER') }}"
         TANTALUS_RABBIT_PASSWORD: "{{ lookup('env', 'TANTALUS_RABBIT_PASSWORD') }}"
         TANTALUS_RABBIT_VHOST: "{{ lookup('env', 'TANTALUS_RABBIT_VHOST') }}"
+        GSC_API_URL: "{{ lookup('env', 'GSC_API_URL') }}"
         GSC_API_USERNAME: "{{ lookup('env', 'GSC_API_USERNAME') }}"
         GSC_API_PASSWORD: "'{{ lookup('env', 'GSC_API_PASSWORD') }}'"
         TASK_LOG_USERNAME: "'{{ lookup('env', 'TASK_LOG_USERNAME') }}'"
         TASK_LOG_HOSTNAME: "'{{ lookup('env', 'TASK_LOG_HOSTNAME') }}'"
         TASK_LOG_DIRECTORY: "'{{ lookup('env', 'TASK_LOG_DIRECTORY') }}'"
+        COLOSSUS_API_URL: "'{{ lookup('env', 'COLOSSUS_API_URL') }}'"
 
