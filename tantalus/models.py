@@ -63,6 +63,8 @@ class DNALibrary(models.Model):
     SINGLE_CELL_WGS = 'SC_WGS'
     SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
     DNA_AMPLICON = 'DNA_AMPLICON'
+    BISULFITE = 'BISULFITE'
+    CHIP = 'CHIP'
         
     library_type_choices = (
         (EXOME, 'Bulk Whole Exome Sequence'),
@@ -71,6 +73,8 @@ class DNALibrary(models.Model):
         (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
         (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
         (DNA_AMPLICON, 'Targetted DNA Amplicon Sequence'),
+        (BISULFITE, 'Bisulfite Sequence'),
+        (CHIP, 'Chromatin Immunoprecipitation Sequence'),
     )
 
     library_type = models.CharField(
