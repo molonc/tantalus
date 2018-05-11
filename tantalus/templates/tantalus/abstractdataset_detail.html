@@ -35,22 +35,34 @@
                 </td>
             </tr>
             <tr>
-                <td class="td_name">Available on: </td>
+                <td valign="top" class="td_name">Available on: </td>
                 <td>
                     {% for s in storages  %}
                         {% if s.get_storage_directory %}
-                        {{ s.name }} - <i>{{ s.server_ip }}:{{ s.get_storage_directory }}</i>
+                          <h5 style="color: #212121" align="left" > {{ s.name }} - <i>{{ s.server_ip }}</i> </h5>
+                                {% for file_resource in object.get_file_resources %}
+                                    {% for i in file_resource.fileinstance_set.all %}
+                                        {% if i.storage|stringformat:"s" == s.name|stringformat:"s" %}
+                                            {{ i.get_filepath }}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
                         {% else %}
-                        {{ s.name }}{{ s.get_storage_container }}
+                          <h5 style="color: #212121" align="left" > Storage account:{{ s.storage_account }} | Container:{{ s.storage_container }}</h5>
+                            {% for file_resource in object.get_file_resources %}
+                                {{ file_resource.filename }}<br/>
+                            {% endfor %}
                         {% endif %}
+                        <br>
                     {% endfor %}
                 </td>
             </tr>
             <tr>
                 <td class="td_name">Tags: </td>
                 <td>
-                {{ object.tags.all|join:", <br/>" }}
-                </td>
+                {%  for tag in object.tags.all %}
+                    <p><a href="{% url 'tag-detail' tag.id %}">{{tag.name}}</a></p>
+                {% endfor %}
             </tr>
         </table>
     </div>
