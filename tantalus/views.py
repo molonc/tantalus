@@ -276,7 +276,7 @@ class SimpleTaskCreateView(TemplateView):
             msg = "Successfully created the " + self.task_form.Meta.model.__name__ + "."
             messages.success(request, msg)
             instance = form.save()
-            return HttpResponseRedirect(instance.get_absolute_url())
+            return HttpResponseRedirect(reverse('filetransfer-detail',kwargs={'pk':instance.id}))
         else:
             msg = "Failed to create the " + self.task_form.Meta.model.__name__ + ". Please fix the errors below."
             messages.error(request, msg)
@@ -324,7 +324,7 @@ class SimpleTaskRestartView(View):
             queue=simple_task.get_queue_name())
         msg = "Successfully restarted the " + self.task_model.__name__ + "."
         messages.success(request, msg)
-        return HttpResponseRedirect(simple_task.get_absolute_url())
+        return HttpResponseRedirect(reverse('filetransfer-detail',kwargs={'pk':simple_task.id}))
 
 
 class FileTransferRestartView(SimpleTaskRestartView):
