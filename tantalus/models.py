@@ -292,6 +292,9 @@ class AbstractDataSet(PolymorphicModel):
     def get_libraries(self):
         return set([r.dna_library.library_id for r in self.read_groups.all()])
 
+    def get_library_type(self):
+        return set([r.dna_library.library_type for r in self.read_groups.all()])
+
     def get_samples(self):
         return set([r.sample for r in self.read_groups.all()])
 

@@ -527,10 +527,10 @@ class DatasetListJSON(BaseDatatableView):
     
     model = AbstractDataSet
 
-    columns = ['id', 'dataset_type', 'sample_id', 'library_id', 'num_read_groups', 'tags', 'storages']
+    columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'tags', 'storages']
 
     # MUST be in the order of the columns
-    order_columns = ['id', 'dataset_type', 'sample_id', 'library_id', 'num_read_groups', 'tags', 'storages']
+    order_columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'tags', 'storages']
     max_display_length = 100
 
     def get_context_data(self, *args, **kwargs):
@@ -566,6 +566,9 @@ class DatasetListJSON(BaseDatatableView):
         if column == 'storages':
             return list(row.get_storage_names())
 
+        if column == 'library_type':
+            return list(row.get_library_type())
+
         else:
             return super(DatasetListJSON, self).render_column(row, column)
 
@@ -591,6 +594,9 @@ class DatasetListJSON(BaseDatatableView):
 
                     elif col['name'] == 'library_id':
                         q |= Q(read_groups__dna_library__library_id__startswith=search)
+
+                    elif col['name'] == 'library_type':
+                        q |= Q(read_groups__dna_library__library_type__startswith=search)
 
                     # standard search for simple . lookups across models
                     else:
