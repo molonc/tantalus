@@ -156,10 +156,11 @@ REST_FRAMEWORK = {
 }
 
 # Celery settings
+RABBIT_IP = os.environ.get('TANTALUS_RABBIT_IP', '10.9.215.82')
 RABBIT_USER = os.environ.get('TANTALUS_RABBIT_USER', 'guest')
 RABBIT_PASSWORD = os.environ.get('TANTALUS_RABBIT_PASSWORD', 'guest')
 RABBIT_VHOST = os.environ.get('TANTALUS_RABBIT_VHOST', '')
-CELERY_BROKER_URL = 'amqp://{}:{}@10.9.215.82:5672/{}'.format(RABBIT_USER, RABBIT_PASSWORD, RABBIT_VHOST)
+CELERY_BROKER_URL = 'amqp://{}:{}@{}:5672/{}'.format(RABBIT_USER, RABBIT_PASSWORD, RABBIT_IP, RABBIT_VHOST)
 
 #: Only add pickle to this list if your broker is secured
 #: from unwanted access (see userguide/security.html)
