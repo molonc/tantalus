@@ -81,6 +81,7 @@ urlpatterns = [
     url(r'^datasets_json/$', tantalus.views.DatasetListJSON.as_view(), name='dataset-list-json'),
     url(r'^datasets/(?P<pk>\d+)$', tantalus.views.DatasetDetail.as_view(), name='dataset-detail'),
     url(r'^datasets/tag$', tantalus.views.DatasetTag.as_view(), name='dataset-tag'),
+    url(r'^datasets/tag/csv$', tantalus.views.dataset_set_to_CSV, name='dataset-tag-csv'),
     url(r'^datasets/search$', tantalus.views.DatasetSearch.as_view(), name='dataset-search'),
     url(r'^$', tantalus.views.HomeView.as_view(), name='home'),
 ]

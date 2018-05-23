@@ -1,9 +1,10 @@
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 from django.views.generic import DetailView, FormView
 from django.views.generic.base import TemplateView
@@ -13,6 +14,8 @@ from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+import csv
+import json
 import os
 
 from tantalus.models import FileTransfer, FileResource, Sample, AbstractDataSet, Storage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, Tag
@@ -683,6 +686,7 @@ class DatasetTag(FormView):
         if dataset_pks:
             datasets = AbstractDataSet.objects.filter(pk__in=dataset_pks)
             kwargs['datasets'] = datasets
+            kwargs['dataset_pks'] = dataset_pks
         else:
             kwargs['datasets'] = AbstractDataSet.objects.all()
             kwargs['select_none_default'] = True
@@ -711,6 +715,102 @@ class DatasetTag(FormView):
         self.request.session.pop('dataset_search_results', None)
         self.request.session.pop('select_none_default', None)
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':tag_id.id}))
+
+
+@require_POST
+def dataset_set_to_CSV(request):
+    """A view to generate a CSV of datasets.
+
+    Expects dataset_pks to be provided in the POST as a list of ints
+    serialized as a string, each int of which corresponds to a dataset
+    primary key.
+
+    See https://docs.djangoproject.com/en/2.0/howto/outputting-csv/ for
+    more info on outputting to CSV with Django.
+    """
+    # The http response, to which we'll write CSV rows to
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="datasets.csv"'
+
+    # Set up an object to write CSVs to
+    writer = csv.writer(response)
+
+    # Functions to get dataset attributes. These need to return strings.
+    def get_dataset_samples(instance):
+        samples = instance.get_samples()
+        return ','.join([sample.sample_id for sample in samples])
+
+    def get_dataset_libraries(instance):
+        libraries = instance.get_libraries()
+        return ','.join(libraries)
+
+    def get_dataset_library_type(instance):
+        library_types = instance.get_library_type()
+        return ','.join(library_types)
+
+    def get_dataset_tags(instance):
+        tags = instance.tags.all().values_list('name', flat=True)
+        return ','.join([str(tag) for tag in tags])
+
+    def get_dataset_storages(instance):
+        storages = instance.get_storage_names()
+        return ','.join(storages)
+
+
+    # Title and lambda function dictionary for dataset attributes used
+    # for CSV header row. Each attribute has a title, used for the CSV
+    # header row, and each attribute has a function, used getting the
+    # value of the attribute, given a dataset instance.
+    attribute_dict = {
+            'pk': {'title': 'Dataset PK',
+                   'function': lambda x: x.pk},
+            'type': {'title': 'Type',
+                     'function': lambda x: x.dataset_type_name},
+            'samples': {'title': 'Samples',
+                        'function': get_dataset_samples},
+            'libraries': {'title': 'Libraries',
+                          'function': get_dataset_libraries},
+            'library type': {'title': 'Library Type',
+                             'function': get_dataset_library_type},
+            'num read groups': {'title': 'Number of Read Groups',
+                                'function': lambda x: x.read_groups.count()},
+            'tags': {'title': 'Tags',
+                     'function': get_dataset_tags},
+            'storages': {'title': 'Storages',
+                         'function': get_dataset_storages},
+            }
+
+    # Dataset attributes to use. Choose from keys used in attribute_dict
+    # above
+    csv_attrs = ['pk',
+                 'type',
+                 'samples',
+                 'libraries',
+                 'library type',
+                 'num read groups',
+                 'tags',
+                 'storages',]
+
+    # Write the headers to the CSV file
+    header_row = [attribute_dict[attr]['title'] for attr in csv_attrs]
+    writer.writerow(header_row)
+
+    # Get the dataset pks from the POST
+    pks = sorted(json.loads(request.POST['dataset_pks']))
+
+    # Write the data from each dataset
+    for pk in pks:
+        # Load the dataset
+        this_dataset = AbstractDataSet.objects.get(pk=pk)
+
+        # Get its attributes
+        this_dataset_row = [attribute_dict[attr]['function'](this_dataset)
+                                                        for attr in csv_attrs]
+
+        # Write to CSV
+        writer.writerow(this_dataset_row)
+
+    return response
 
 
 class HomeView(TemplateView):

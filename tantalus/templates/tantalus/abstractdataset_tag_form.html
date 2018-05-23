@@ -44,7 +44,15 @@
             {% endif %}
             <input class="btn btn-primary btn-sm" type="submit" value="Tag!" />
             <a class="btn btn-default btn-sm" href="{% url 'dataset-list' %}">Cancel</a>
-        </form><br>
+        </form>
+
+        {# Output to CSV #}
+        <form action="{% url 'dataset-tag-csv' %}" method="post" style="padding-top: 10px">
+            {% csrf_token %}
+            <button class="btn btn-default btn-sm" name="dataset_pks" value="{{ dataset_pks }}" type=submit>Output to CSV</button>
+        </form>
+
+        <br/>
     </div>
 
 <script type="text/javascript">
