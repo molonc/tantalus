@@ -7,7 +7,7 @@ import pandas as pd
 from django.core.serializers.json import DjangoJSONEncoder
 
 
-bam_path_templates = {
+bam_path_template = {
     'WGS': '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}_dupsFlagged.bam',
 }
 
@@ -24,6 +24,7 @@ protocol_id_map = {
     123: 'WGS',
     96: 'EXOME',
     80: 'RNASEQ',
+    137: 'RNASEQ',
 }
 
 solexa_run_type_map = {
@@ -202,7 +203,6 @@ def query_gsc_library(json_filename, libraries):
     # ASSUMPTION: GSC stored files are pathed from root
     storage = dict(
         name='gsc',
-        storage_directory='/',
     )
     # TODO: check that all GSC file instances have filename overrides 
 
@@ -247,7 +247,7 @@ def query_gsc_library(json_filename, libraries):
                 if data_path is None:
                     raise Exception('no data path for merge info {}'.format(merge_info['id']))
 
-                bam_path = bam_path_template.format(
+                bam_path = bam_path_template[library_type].format(
                     data_path=data_path,
                     library_name=library_name,
                     num_lanes=num_lanes,
