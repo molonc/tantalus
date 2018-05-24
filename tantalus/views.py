@@ -795,20 +795,18 @@ def dataset_set_to_CSV(request):
     header_row = [attribute_dict[attr]['title'] for attr in csv_attrs]
     writer.writerow(header_row)
 
-    # Get the dataset pks from the POST
+    # Get the datasets from the POST
     pks = sorted(json.loads(request.POST['dataset_pks']))
+    datasets = AbstractDataSet.objects.filter(pk__in=pks)
 
     # Write the data from each dataset
-    for pk in pks:
-        # Load the dataset
-        this_dataset = AbstractDataSet.objects.get(pk=pk)
-
+    for dataset in datasets:
         # Get its attributes
-        this_dataset_row = [attribute_dict[attr]['function'](this_dataset)
+        dataset_row = [attribute_dict[attr]['function'](dataset)
                                                         for attr in csv_attrs]
 
         # Write to CSV
-        writer.writerow(this_dataset_row)
+        writer.writerow(dataset_row)
 
     return response
 
