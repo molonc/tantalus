@@ -124,6 +124,8 @@ class AzureTransfer(object):
         assert cloud_container == file_instance.storage.get_storage_container()
         local_filepath = to_storage.get_filepath(file_instance.file_resource)
 
+        make_dirs(os.path.dirname(local_filepath))
+
         if not self.block_blob_service.exists(cloud_container, cloud_blobname):
             error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
                 filepath=cloud_filepath,
