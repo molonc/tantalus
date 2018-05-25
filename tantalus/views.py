@@ -818,13 +818,13 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = {
             'datasets_count': AbstractDataSet.objects.count(),
-            'file_transfer_count': FileTransfer.objects.all().count(),
-            'gsc_wgs_bam_query_count': GscWgsBamQuery.objects.all().count(),
-            'gsc_dlp_paired_fastq_query_count': GscDlpPairedFastqQuery.objects.all().count(),
-            'brc_fastq_import_count': BRCFastqImport.objects.all().count(),
-            'generic_task_type_count': GenericTaskType.objects.all().count(),
-            'generic_task_instances_count': GenericTaskInstance.objects.all().count(),
             'sample_count': Sample.objects.all().count(),
-            'transfer_count': FileTransfer.objects.all().count(),
+            'tag_count': Tag.objects.all().count(),
+            'brc_fastq_import_count': BRCFastqImport.objects.all().count(),
+            'file_transfer_count': FileTransfer.objects.all().count(),
+            'gsc_dlp_paired_fastq_query_count': GscDlpPairedFastqQuery.objects.all().count(),
+            'gsc_wgs_bam_query_count': GscWgsBamQuery.objects.all().count(),
+            'generic_task_instance_count': GenericTaskInstance.objects.all().count(),
+            'generic_task_type_count': GenericTaskType.objects.all().count(),
         }
         return context
