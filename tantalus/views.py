@@ -671,6 +671,7 @@ class DatasetSearch(FormView):
             return self.form_invalid(form)
 
 
+@method_decorator(login_required, name='post')
 class DatasetTag(FormView):
     form_class = DatasetTagForm
     template_name = 'tantalus/abstractdataset_tag_form.html'
