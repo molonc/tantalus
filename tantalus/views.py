@@ -18,7 +18,7 @@ import csv
 import json
 import os
 
-from tantalus.models import FileTransfer, FileResource, Sample, AbstractDataSet, Storage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, Tag
+from tantalus.models import FileTransfer, FileResource, Sample, AbstractDataSet, SingleEndFastqFile, PairedEndFastqFiles, BamFile, Storage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, Tag
 from tantalus.generictask_models import GenericTaskType, GenericTaskInstance
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT
@@ -818,7 +818,10 @@ class HomeView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = {
-            'datasets_count': AbstractDataSet.objects.count(),
+            #'dataset_count': AbstractDataSet.objects.count(),
+            'dataset_single_end_fastq_count': SingleEndFastqFile.objects.count(),
+            'dataset_paired_end_fastq_count': PairedEndFastqFiles.objects.count(),
+            'dataset_bam_count': BamFile.objects.count(),
             'sample_count': Sample.objects.all().count(),
             'tag_count': Tag.objects.all().count(),
             'brc_fastq_import_count': BRCFastqImport.objects.all().count(),
