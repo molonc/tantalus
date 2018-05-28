@@ -192,7 +192,7 @@ class DatasetSearchForm(forms.Form):
         if sequencing_library_id_field:
             no_match_list = []
             for sequencing_library in sequencing_library_id_field.split():
-                if not AbstractDataSet.objects.filter(read_groups__sequence_lane__sequencing_library_id=sequencing_library).exists():
+                if not AbstractDataSet.objects.filter(read_groups__sequencing_library_id=sequencing_library).exists():
                     no_match_list.append(sequencing_library)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following sequencing library resulted in 0 results: {}".format(
@@ -275,7 +275,7 @@ class DatasetSearchForm(forms.Form):
             results = results.filter(read_groups__sequence_lane__sequencing_instrument=sequencing_instrument)
 
         if sequencing_library_id:
-            results = results.filter(read_groups__sequence_lane__sequencing_library_id__in=sequencing_library_id.split())
+            results = results.filter(read_groups__sequencing_library_id__in=sequencing_library_id.split())
 
         if library_type:
             results = results.filter(read_groups__dna_library__library_type=library_type)
