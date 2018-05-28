@@ -122,8 +122,9 @@ class DatasetSearchForm(forms.Form):
         required=False,
     )
 
-    num_read_groups = forms.IntegerField(
-        label="Number of read groups",
+    min_num_read_groups = forms.IntegerField(
+        label="Minimum number of read groups",
+        min_value=0,
         required=False,
     )
 
@@ -212,7 +213,7 @@ class DatasetSearchForm(forms.Form):
     def get_dataset_search_results(self, clean=True, exclude=None, tagged_with=None, library=None, sample=None, dataset_type=None,storages=None,
                                    flowcell_id_and_lane=None, sequencing_center=None,
                                    sequencing_instrument=None, sequencing_library_id=None, library_type=None,
-                                   index_format=None, num_read_groups=None):
+                                   index_format=None, min_num_read_groups=None):
         """
         Performs the filter search with the given fields. The "clean" flag is used to indicate whether the cleaned data
         should be used or not.
@@ -239,7 +240,7 @@ class DatasetSearchForm(forms.Form):
             sequencing_library_id = self.cleaned_data['sequencing_library_id']
             library_type = self.cleaned_data['library_type']
             index_format = self.cleaned_data['index_format']
-            num_read_groups = self.cleaned_data['num_read_groups']
+            min_num_read_groups = self.cleaned_data['min_num_read_groups']
 
 
         results = AbstractDataSet.objects.all()
@@ -282,9 +283,9 @@ class DatasetSearchForm(forms.Form):
 
         if index_format:
             results = results.filter(read_groups__dna_library__index_format=index_format)
- 
-        if num_read_groups is not None:
-            results = results.annotate(num_read_groups=Count('read_groups')).filter(num_read_groups=num_read_groups)
+
+        if min_num_read_groups is not None:
+            results = results.annotate(num_read_groups=Count('read_groups')).filter(num_read_groups__gte=min_num_read_groups)
 
         if flowcell_id_and_lane:
             query = Q()
