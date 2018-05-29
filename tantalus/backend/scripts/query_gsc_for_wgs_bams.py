@@ -9,9 +9,10 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 bam_path_template = {
     'WGS': '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}_dupsFlagged.bam',
+    'EXOME': '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}_dupsFlagged.bam',
 }
 
-lane_bam_path_template = {
+lane_bam_path_templates = {
     'WGS': '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}.bam',
     'RNASEQ': '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}_withJunctionsOnGenome_dupsFlagged.bam',
 }
@@ -307,7 +308,7 @@ def query_gsc_library(json_filename, libraries):
                 if (flowcell_code, lane_number, adapter_index_sequence) in merged_lanes:
                     continue
 
-                bam_path = lane_bam_path_template[library_type].format(
+                bam_path = lane_bam_path_templates[library_type].format(
                     data_path=data_path,
                     flowcell_code=flowcell_code,
                     lane_number=lane_number,
