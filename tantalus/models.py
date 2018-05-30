@@ -744,7 +744,8 @@ class FileTransfer(SimpleTask):
         elif self.from_storage.has_transfer_queue:
             return self.from_storage.queue_prefix + '.transfer'
         else:
-            raise Exception('no transfer queue for transfer')
+            # Use Shahlab for default Azure-Azure transfer queue
+            return ServerStorage.objects.get(name='shahlab').queue_prefix + '.transfer'
 
     def __unicode__(self):
         return self.name
