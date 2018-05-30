@@ -530,12 +530,15 @@ class AzureBlobStorage(Storage):
 
     history = HistoricalRecords()
 
+    # The max length for the CharField of the storage account and
+    # container name match the name contraints imposed by Azure, at
+    # least as of 2018-05-30
     storage_account = models.CharField(
-        max_length=50,
+        max_length=24,
     )
 
     storage_container = models.CharField(
-        max_length=50,
+        max_length=63,
     )
 
     credentials = models.ForeignKey(
