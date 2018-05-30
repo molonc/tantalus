@@ -276,7 +276,7 @@ class SimpleTaskCreateView(TemplateView):
             msg = "Successfully created the " + self.task_form.Meta.model.__name__ + "."
             messages.success(request, msg)
             instance = form.save()
-            return HttpResponseRedirect(reverse('filetransfer-detail',kwargs={'pk':instance.id}))
+            return HttpResponseRedirect(reverse(self.detail_url_name, kwargs={'pk':instance.id}))
         else:
             msg = "Failed to create the " + self.task_form.Meta.model.__name__ + ". Please fix the errors below."
             messages.error(request, msg)
@@ -286,21 +286,25 @@ class SimpleTaskCreateView(TemplateView):
 class FileTransferCreateView(SimpleTaskCreateView):
 
     task_form = FileTransferCreateForm
+    detail_url_name = 'filetransfer-detail'
 
 
 class GscWgsBamQueryCreateView(SimpleTaskCreateView):
 
     task_form = GscWgsBamQueryCreateForm
+    detail_url_name = 'gscwgsbamquery-detail'
 
 
 class GscDlpPairedFastqQueryCreateView(SimpleTaskCreateView):
 
     task_form = GscDlpPairedFastqQueryCreateForm
+    detail_url_name = 'gscdlppairedfastqquery-detail'
 
 
 class BRCFastqImportCreateView(SimpleTaskCreateView):
 
     task_form = BRCFastqImportCreateForm
+    detail_url_name = 'brcfastqimport-detail'
 
 
 @method_decorator(login_required, name='get')
