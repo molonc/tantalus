@@ -328,7 +328,7 @@ class SimpleTaskRestartView(View):
             queue=simple_task.get_queue_name())
         msg = "Successfully restarted the " + self.task_model.__name__ + "."
         messages.success(request, msg)
-        return HttpResponseRedirect(reverse('filetransfer-detail',kwargs={'pk':simple_task.id}))
+        return HttpResponseRedirect(reverse(self.detail_url_name,kwargs={'pk':simple_task.id}))
 
 
 class FileTransferRestartView(SimpleTaskRestartView):
@@ -336,25 +336,26 @@ class FileTransferRestartView(SimpleTaskRestartView):
     # TODO: error for starting filetransfer that is running
     task_model = FileTransfer
     task_type = tantalus.tasks.transfer_files_task
-
+    detail_url_name = 'filetransfer-detail'
 
 class GscWgsBamQueryRestartView(SimpleTaskRestartView):
     
     task_model = GscWgsBamQuery
     task_type = tantalus.tasks.query_gsc_wgs_bams_task
-
+    detail_url_name = 'gscwgsbamquery-detail'
 
 class GscDlpPairedFastqQueryRestartView(SimpleTaskRestartView):
     
     task_model = GscDlpPairedFastqQuery
     task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
+    detail_url_name = 'gscdlppairedfastqquery-detail'
 
 
 class BRCFastqImportRestartView(SimpleTaskRestartView):
     
     task_model = BRCFastqImport
     task_type = tantalus.tasks.import_brc_fastqs_task
-
+    detail_url_name = 'brcfastqimport-detail'
 
 @method_decorator(login_required, name='get')
 class SimpleTaskDeleteView(View):
