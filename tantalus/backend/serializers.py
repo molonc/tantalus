@@ -148,3 +148,11 @@ def read_models(json_data_filename):
                 dictionary.pop('model')
                 get_or_create_serialize_bam_file(dictionary)
 
+            elif dictionary['model'] == 'ReadGroup':
+                dictionary.pop('model')
+                get_or_create_serialize_read_group(dictionary)
+
+            else:
+                raise ValueError('model type {} not supported'.format(dictionary['model']))
+
+

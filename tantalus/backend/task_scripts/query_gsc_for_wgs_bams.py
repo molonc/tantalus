@@ -17,6 +17,8 @@ def query_gsc_wgs_bams(query_info, temp_directory):
         temp_directory, 'new_data.json')
 
     cmd = ['python', '-u', script]
+    if query_info.skip_file_import:
+        cmd.append('--skip_file_import')
     cmd.append(json_data_filename)
     cmd.extend(query_info.library_ids)
 

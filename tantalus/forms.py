@@ -373,7 +373,7 @@ class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
 
     class Meta:
         model = GscWgsBamQuery
-        fields = ('library_ids',)
+        fields = ('library_ids', 'skip_file_import')
 
 
 class GscDlpPairedFastqQueryCreateForm(SimpleTaskCreateForm):
