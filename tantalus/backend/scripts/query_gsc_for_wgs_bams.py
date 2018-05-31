@@ -12,10 +12,18 @@ bam_path_template = {
     'EXOME': '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}_dupsFlagged.bam',
 }
 
+# GSC paths for non-lane SpEC-compressed BAM files. Differ from BAM
+# paths above only in that they have `.spec` attached on the end
+bam_spec_path_template = {key: value + '.spec' for key, value in bam_path_template.iteritems()}
+
 lane_bam_path_templates = {
     'WGS': '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}.bam',
     'RNASEQ': '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}_withJunctionsOnGenome_dupsFlagged.bam',
 }
+
+# GSC paths for lane SpEC-compressed BAM files. Differ from lane BAM
+# paths above only in that they have `.spec` attached on the end
+lane_bam_spec_path_templates = {key: value + '.spec' for key, value in lane_bam_path_templates.iteritems()}
 
 protocol_id_map = {
     12: 'WGS',
@@ -94,7 +102,7 @@ def get_sequencing_instrument(machine):
     return raw_instrument_map[raw_instrument]
 
 
-def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos):
+def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos, is_spec=False):
     library_name = library['library_id']
 
     bai_path = bam_path + '.bai'
@@ -113,12 +121,13 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos):
     bam_filename = os.path.join(sample['sample_id'], bam_filename)
     bai_filename = os.path.join(sample['sample_id'], bai_filename)
 
+    # Save BAM file info xor save BAM SpEC file info
     bam_file = dict(
         size=os.path.getsize(bam_path),
         created=pd.Timestamp(time.ctime(os.path.getmtime(bam_path)), tz='Canada/Pacific'),
         file_type='BAM',
         read_end=None,
-        compression='UNCOMPRESSED',
+        compression='SPEC' if is_spec else 'UNCOMPRESSED',
         filename=bam_filename,
     )
 
@@ -130,7 +139,9 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos):
     )
     json_list.append(bam_instance)   
 
-    if os.path.exists(bai_path):
+    # BAI files are only found with uncompressed BAMs (and even then not
+    # always)
+    if not is_spec and os.path.exists(bai_path):
         bai_file = dict(
             size=os.path.getsize(bai_path),
             created=pd.Timestamp(time.ctime(os.path.getmtime(bai_path)), tz='Canada/Pacific'),
@@ -151,6 +162,8 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos):
     else:
         bai_file = None
 
+    # If the bam file is compressed, store the file under the BamFile's
+    # bam_spec_file column. Otherwise, use the bam_file column.
     bam_dataset = dict(
         bam_file=bam_file,
         bam_index_file=bai_file,
@@ -314,10 +327,21 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False):
                         num_lanes=num_lanes,
                         lane_pluralize=lane_pluralize)
 
-                    if not os.path.exists(bam_path):
+                    bam_spec_path = bam_spec_path_template[library_type].format(
+                        data_path=data_path,
+                        library_name=library_name,
+                        num_lanes=num_lanes,
+                        lane_pluralize=lane_pluralize)
+
+                    # Test for BAM path first, then BAM SpEC path if
+                    # no BAM available
+                    if os.path.exists(bam_path):
+                        json_list += add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos)
+                    elif os.path.exists(bam_spec_path):
+                        json_list += add_gsc_wgs_bam_dataset(bam_spec, path, storage, sample, library, lane_infos, is_spec=True)
+                    else:
                         raise Exception('missing merged bam file {}'.format(bam_path))
 
-                    json_list += add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos)
 
             libcores = gsc_api.query('aligned_libcore/info?library={}'.format(library_name))
 
@@ -358,10 +382,21 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False):
                         lane_number=lane_number,
                         adapter_index_sequence=adapter_index_sequence)
 
-                    if not os.path.exists(bam_path):
+                    bam_spec_path = lane_bam_spec_path_templates[library_type].format(
+                        data_path=data_path,
+                        flowcell_code=flowcell_code,
+                        lane_number=lane_number,
+                        adapter_index_sequence=adapter_index_sequence)
+
+                    # Test for BAM path first, then BAM SpEC path if
+                    # no BAM available
+                    if os.path.exists(bam_path):
+                        json_list += add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos)
+                    elif os.path.exists(bam_spec_path):
+                        json_list += add_gsc_wgs_bam_dataset(bam_spec_path, storage, sample, library, lane_infos, is_spec=True)
+                    else:
                         raise Exception('missing lane bam file {}'.format(bam_path))
 
-                    json_list += add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos)
 
     with open(json_filename, 'w') as f:
         json.dump(json_list, f, indent=4, sort_keys=True, cls=DjangoJSONEncoder)
