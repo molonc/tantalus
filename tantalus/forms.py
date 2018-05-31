@@ -58,7 +58,7 @@ class DatasetSearchForm(forms.Form):
     library = forms.CharField(
         label="Library",
         required=False,
-        help_text="A white space separated list of library IDs. Eg. A90652A",
+        help_text="A white space separated list of library IDs. Eg. MF1606301",
         widget=forms.widgets.Textarea
     )
     sample = forms.CharField(
@@ -106,7 +106,7 @@ class DatasetSearchForm(forms.Form):
         required=False,
         help_text="A white space separated list of external sequencing library ids. " + \
                   "Note that this is different from internal library IDs. " + \
-                  "For example, these are external library IDs given to us by the GSC, eg. PX0395",
+                  "For example, these are external library IDs given to us by the GSC, eg. PX0827",
         widget=forms.widgets.Textarea
     )
 
