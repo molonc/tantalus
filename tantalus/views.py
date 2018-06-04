@@ -9,16 +9,18 @@ from django.views.generic.list import ListView
 from django.views.generic import DetailView, FormView
 from django.views.generic.base import TemplateView
 from django.db import transaction
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404, render
 from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.template.defaulttags import register
 
 import csv
 import json
 import os
 
-from tantalus.models import FileTransfer, FileResource, Sample, AbstractDataSet, SingleEndFastqFile, PairedEndFastqFiles, BamFile, Storage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, Tag
+from tantalus.models import FileInstance, FileTransfer, FileResource, Sample, AbstractDataSet, SingleEndFastqFile, PairedEndFastqFiles, BamFile, Storage, AzureBlobStorage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, Tag, DNALibrary
 from tantalus.generictask_models import GenericTaskType, GenericTaskInstance
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT
@@ -817,16 +819,180 @@ def dataset_set_to_CSV(request):
     return response
 
 
+def get_storage_stats(storages=['all']):
+    """A helper function to get data stats for all storages.
+
+    Expects a list of storages as input, and outputs a dictionary of
+    integers specifying the following:
+
+    - num_bams: number of bam files in the storages
+    - num_specs: number of spec files in the storages
+    - num_bais: ...
+    - num_fastqs: ...
+    - num_active_file_transfers: ...
+    - storage_size: size in bytes of files tracked on server
+    """
+    # Build the file instance set
+    if 'all' in storages:
+        file_resources = FileResource.objects.all()
+    else:
+        file_resources = FileResource.objects.filter(
+            fileinstance__storage__name__in=storages)
+
+    # Find info on number of files
+    num_bams = file_resources.filter(
+        file_type=FileResource.BAM).filter(
+        ~Q(compression='SPEC')).count()
+    num_specs = file_resources.filter(
+        file_type=FileResource.BAM).filter(
+        compression='SPEC').count()
+    num_bais = file_resources.filter(
+        file_type=FileResource.BAI).count()
+    num_fastqs = file_resources.filter(
+        file_type=FileResource.FQ).count()
+
+    # Get the size of all storages
+    storage_size = file_resources.aggregate(Sum('size'))
+    storage_size = storage_size['size__sum']
+
+    # Build the file transfer set
+    if 'all' in storages:
+        num_active_file_transfers = FileTransfer.objects.filter(
+            running=True).count()
+    else:
+        num_active_file_transfers = FileTransfer.objects.filter(
+            running=True).filter(
+            Q(from_storage__name__in=storages)
+            | Q(to_storage__name__in=storages)).count()
+
+    return {'num_bams': num_bams,
+            'num_specs': num_specs,
+            'num_bais': num_bais,
+            'num_fastqs': num_fastqs,
+            'num_active_file_transfers': num_active_file_transfers,
+            'storage_size': storage_size,
+           }
+
+
+def get_library_stats(filetype, storages_dict):
+    """Get info on number of files in libraries.
+
+    An assumption that this function makes is that all FASTQs come in
+    the form of paired end FASTQs (cf. single end FASTQs). This
+    assumption is currently true, and making it helps simplify the code
+    a little.
+
+    Args:
+        filetype: A string which is either 'BAM' or 'FASTQ'.
+        storages_dict: A dictionary where keys are storage names and
+            values are a list of string of storage names. This framework
+            lets us cluster several storages under a single name.
+    Returns:
+        A dictionary where the keys are the library types and the values
+        are lists containing the name, file, and size count (under
+        'name, 'file', and 'size') for each storage.
+    """
+    # Make sure the filetype is 'BAM' or 'FASTQ'
+    assert filetype in ['BAM', 'FASTQ']
+
+    # Get the list of library types that we'll get data for
+    library_types = [x[0] for x in DNALibrary.library_type_choices]
+
+    # Results dictionary
+    results = dict()
+
+    # Go through each library
+    for lib_type in library_types:
+        # Make a list to store results in
+        results[lib_type] = list()
+
+        # Go through each storage
+        for storage_name, storages in storages_dict.iteritems():
+            # Get data for this storage and library. The distinct() at
+            # the end of the queryset operations is necessary here, and
+            # I'm not exactly sure why this is so, without it, filter
+            # picks up a ton of duplicates. Very strange.
+            matching_files = FileResource.objects.filter(
+                abstractdataset__read_groups__dna_library__library_type=lib_type).filter(
+                fileinstance__storage__name__in=storages).distinct()
+
+            if filetype == 'BAM':
+                # Get all the matching BAM files
+                matching_files = matching_files.filter(file_type=FileResource.BAM)
+            else:
+                # Get all the matching FASTQ files
+                matching_files = matching_files.filter(file_type=FileResource.FQ)
+
+            # Compute results - first the number of files- Add field skip_file_import to gscwgsbamquery
+            number = matching_files.count()
+            size = matching_files.aggregate(Sum('size'))
+            size = size['size__sum']
+            size = 0 if size is None else int(size)
+
+
+            results[lib_type].append({
+                'name': storage_name,
+                'number': number,
+                'size': size,
+                })
+
+    # Return the per-library results
+    return results
+
+
+class DataStatsView(TemplateView):
+    """A view to show info on data statistics."""
+    template_name = 'tantalus/data_stats.html'
+
+    def get_context_data(self, **kwargs):
+        """Get data info."""
+        # Contains per-storage specific stats
+        storage_stats = dict()
+
+        # Go through local storages (i.e., non-cloud)
+        for local_storage_name in ['gsc', 'shahlab', 'rocks']:
+            # General stats
+            storage_stats[local_storage_name] = (
+                get_storage_stats([local_storage_name]))
+
+        # Go through cloud storages.
+        azure_storages = [x.name for x in AzureBlobStorage.objects.all()]
+        storage_stats['azure'] = get_storage_stats(azure_storages)
+
+        # Get overall data stats over all storage locations
+        storage_stats['all'] = get_storage_stats(['all'])
+
+        # Contains per-library-type stats
+        storages_dict = {'all': ['gsc', 'shahlab', 'rocks'] + azure_storages,
+                         'gsc': ['gsc'],
+                         'shahlab': ['shahlab'],
+                         'rocks': ['rocks'],
+                         'azure': azure_storages,
+                        }
+        bam_dict = get_library_stats('BAM', storages_dict)
+        fastq_dict = get_library_stats('FASTQ', storages_dict)
+
+        context = {
+            'storage_stats': sorted(storage_stats.iteritems(),
+                                            key=lambda (x, y): y['storage_size'],
+                                            reverse=True),
+            'locations_list': sorted(['all', 'azure', 'gsc', 'rocks', 'shahlab']),
+            'bam_library_stats': sorted(bam_dict.iteritems()),
+            'fastq_library_stats': sorted(fastq_dict.iteritems()),
+            }
+        return context
+
+
 class HomeView(TemplateView):
-    
+
     template_name = 'tantalus/index.html'
-    
+
     def get_context_data(self, **kwargs):
         context = {
             #'dataset_count': AbstractDataSet.objects.count(),
-            'dataset_single_end_fastq_count': SingleEndFastqFile.objects.count(),
-            'dataset_paired_end_fastq_count': PairedEndFastqFiles.objects.count(),
             'dataset_bam_count': BamFile.objects.count(),
+            'dataset_paired_end_fastq_count': PairedEndFastqFiles.objects.count(),
+            'dataset_single_end_fastq_count': SingleEndFastqFile.objects.count(),
             'sample_count': Sample.objects.all().count(),
             'tag_count': Tag.objects.all().count(),
             'brc_fastq_import_count': BRCFastqImport.objects.all().count(),

@@ -1,0 +1,95 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Data stats
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="border:solid 1px #E0E0E0; border-radius: 3px; margin-top: 0.75em; padding-bottom: 0.5em; margin-bottom: 1em;">
+        <h4>Overview</h4>
+        <table class="table-striped" style="width:100%;">
+            <thead style="font-weight: bold">
+                <tr>
+                    <td>Storage</td>
+                    <td>BAMs</td>
+                    <td>SpECs</td>
+                    <td>BAIs</td>
+                    <td>FASTQs</td>
+                    <td>Active file transfers</td>
+                    <td>Total size</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for storage, counts_dict in storage_stats %}
+                    <tr>
+                        <td style="font-weight: bold">{{ storage|upper }}</td>
+                        <td>{{ counts_dict.num_bams }}</td>
+                        <td>{{ counts_dict.num_specs }}</td>
+                        <td>{{ counts_dict.num_bais }}</td>
+                        <td>{{ counts_dict.num_fastqs }}</td>
+                        <td>{{ counts_dict.num_active_file_transfers }}</td>
+                        <td>{{ counts_dict.storage_size|filesizeformat }}</td>
+                    </tr>
+               {% endfor %}
+           </tbody>
+        </table>
+
+        </br>
+
+        <h4>Library stats</h4>
+
+        <h4>BAMs</h4>
+        <table class="table-striped" style="width:100%;">
+            <thead style="font-weight: bold">
+                <tr>
+                    <td>Library type</td>
+
+                    {% for location in locations_list %}
+                        <td>{{ location|upper }}</td>
+                    {% endfor %}
+
+                </tr>
+            </thead>
+            <tbody>
+                {% for library_type, storages_dict_list in bam_library_stats %}
+                    <tr>
+                        <td>{{ library_type }}</td>
+
+                        {% for storage_dict in storages_dict_list|dictsort:"name" %}
+                            <td>{{ storage_dict.number }} files/{{ storage_dict.size|filesizeformat }}</td>
+                        {% endfor %}
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        </br>
+
+        <h4>FASTQs</h4>
+        <table class="table-striped" style="width:100%;">
+            <thead style="font-weight: bold">
+                <tr>
+                    <td>Library type</td>
+
+                    {% for location in locations_list %}
+                        <td>{{ location|upper }}</td>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for library_type, storages_dict_list in fastq_library_stats %}
+                    <tr>
+                        <td>{{ library_type }}</td>
+
+                        {% for storage_dict in storages_dict_list|dictsort:"name" %}
+                            <td>{{ storage_dict.number }} files/{{ storage_dict.size|filesizeformat }}</td>
+                        {% endfor %}
+
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
