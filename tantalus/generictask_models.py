@@ -35,6 +35,12 @@ class GenericTaskType(models.Model):
                                  unique=True,
                                  help_text="The name of the task.")
 
+    # A description of the task type
+    description = models.TextField(max_length=50,
+                                   blank=True,
+                                   null=True,
+                                   help_text="A description of the task.")
+
     # The path of the script used by this generic task type relative to
     # the root of the generic task scripts directory.
     relative_script_path = models.CharField(
