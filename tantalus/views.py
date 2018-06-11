@@ -310,6 +310,21 @@ class FileTransferCreateView(SimpleTaskCreateView):
     task_form = FileTransferCreateForm
     detail_url_name = 'filetransfer-detail'
 
+    def get(self, request):
+        """Get the form.
+
+        Differs from super method in that this allows initializing
+        a tag name.
+        """
+        tag_query_param = request.GET.get('tag', None)
+
+        if tag_query_param:
+            form = self.task_form(initial={'tag_name': tag_query_param})
+        else:
+            form = self.task_form
+
+        return self.get_context_and_render(request, form)
+
 
 class GscWgsBamQueryCreateView(SimpleTaskCreateView):
 
@@ -766,7 +781,7 @@ class DatasetTag(FormView):
         tag_id = Tag.objects.get(name=tag)
         self.request.session.pop('dataset_search_results', None)
         self.request.session.pop('select_none_default', None)
-        return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':tag_id.id}))
+        return HttpResponseRedirect("%s?tag=%s" % (reverse('filetransfer-create'), tag))
 
 
 @require_POST
