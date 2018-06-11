@@ -103,8 +103,7 @@ class AzureBlobStorageViewSet(viewsets.ReadOnlyModelViewSet):
 class FileInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.FileInstance.objects.all()
     serializer_class = tantalus.api.serializers.FileInstanceSerializer
-    filter_fields = ('file_resource__md5', 'file_resource',
-                     'storage__name',)
+    filter_fields = ('storage__name',)
 
 
 class FileTransferViewSet(viewsets.ModelViewSet):
