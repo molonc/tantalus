@@ -440,6 +440,9 @@ def query_gsc_dlp_paired_fastqs(query_info, temp_directory):
             if fastq_info['status'] != 'production':
                 continue
 
+            if fastq_info['removed_datetime'] is not None:
+                continue
+
             fastq_path = fastq_info['data_path']
             flowcell_code = fastq_info['libcore']['run']['flowcell']['lims_flowcell_code']
             lane_number = fastq_info['libcore']['run']['lane_number']
@@ -449,6 +452,8 @@ def query_gsc_dlp_paired_fastqs(query_info, temp_directory):
             primer_id = fastq_info['libcore']['primer_id']
             primer_info = gsc_api.query('primer/{}'.format(primer_id))
             raw_index_sequence = primer_info['adapter_index_sequence']
+
+            print 'loading fastq', fastq_info['id'], 'index', raw_index_sequence
 
             flowcell_lane = flowcell_code
             if lane_number is not None:
