@@ -781,7 +781,14 @@ class DatasetTag(FormView):
         tag_id = Tag.objects.get(name=tag)
         self.request.session.pop('dataset_search_results', None)
         self.request.session.pop('select_none_default', None)
-        return HttpResponseRedirect("%s?tag=%s" % (reverse('filetransfer-create'), tag))
+
+        # Depending on which of the "Tag" or "Tag then transfer" buttons
+        # was clicked to submit the form, take the appropriate action
+        if self.request.POST.get('tag_and_transfer_button'):
+            # Redirect to transfer
+            return HttpResponseRedirect("%s?tag=%s" % (reverse('filetransfer-create'), tag))
+        # Go to Tag detail page
+        return HttpResponseRedirect(reverse('tag-detail', kwargs={'pk': tag_id.id}))
 
 
 @require_POST

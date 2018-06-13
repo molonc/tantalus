@@ -42,7 +42,8 @@
             {% else %}
                 <h5><i class="text-warning">No datasets yet.</i></h5>
             {% endif %}
-            <input class="btn btn-primary btn-sm" type="submit" value="Tag!" />
+            <input class="btn btn-primary btn-sm" type="submit" name="tag_button" value="Tag" />
+            <input class="btn btn-primary btn-sm" type="submit" name="tag_and_transfer_button" value="Tag and transfer" />
             <a class="btn btn-default btn-sm" href="{% url 'dataset-list' %}">Cancel</a>
         </form>
 
