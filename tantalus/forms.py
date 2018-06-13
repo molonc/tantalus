@@ -378,12 +378,18 @@ class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
         widget=forms.widgets.Textarea
     )
 
+    skip_older_than = forms.DateField(
+        widget=forms.SelectDateWidget(),
+        initial=None,
+        required=False,
+    )
+
     def clean_library_ids(self):
         return self.cleaned_data['library_ids'].split()
 
     class Meta:
         model = GscWgsBamQuery
-        fields = ('library_ids', 'skip_file_import')
+        fields = ('library_ids', 'skip_file_import', 'skip_older_than')
 
 
 class GscDlpPairedFastqQueryCreateForm(SimpleTaskCreateForm):

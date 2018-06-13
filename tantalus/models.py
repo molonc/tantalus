@@ -804,6 +804,12 @@ class GscWgsBamQuery(SimpleTask):
         default=False,
     )
 
+    skip_older_than = models.DateTimeField(
+        default=None,
+        blank=True,
+        null=True,
+    )
+
     def get_queue_name(self):
         return get_object_or_404(ServerStorage, name='gsc').get_db_queue_name()
 

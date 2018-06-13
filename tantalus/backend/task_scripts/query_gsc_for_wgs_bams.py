@@ -19,6 +19,9 @@ def query_gsc_wgs_bams(query_info, temp_directory):
     cmd = ['python', '-u', script]
     if query_info.skip_file_import:
         cmd.append('--skip_file_import')
+    if query_info.skip_older_than is not None:
+        cmd.append('skip_older_than')
+        cmd.append(query_info.skip_older_than.strftime("%Y-%m-%d"))
     cmd.append(json_data_filename)
     cmd.extend(query_info.library_ids)
 
