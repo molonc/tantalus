@@ -167,7 +167,7 @@ def start_generic_task_instance(instance_pk):
                 if return_code is 0:
                     # The job was successful
                     instance.success = True
-                    instance.state = instance.task_type.task_name + ' succesful'
+                    instance.state = instance.task_type.task_name + ' successful'
                 else:
                     # The job failed
                     instance.state = instance.task_type.task_name + ' failed'
