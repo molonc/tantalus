@@ -120,8 +120,8 @@ class BamFileSerializer(GetCreateModelSerializer):
 
 def get_or_create_serialize_bam_file(data):
     data['bam_file_id'] = get_or_create_serialize_file_resource(data.pop('bam_file'))
-    
-    if 'bam_index_file' in data:
+
+    if data.get('bam_index_file') is not None:
         data['bam_index_file_id'] = get_or_create_serialize_file_resource(data.pop('bam_index_file'))
 
     read_groups = data.pop('read_groups')
