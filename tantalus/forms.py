@@ -1,4 +1,5 @@
 import os
+import datetime
 
 #===========================
 # Django imports
@@ -379,7 +380,7 @@ class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
     )
 
     skip_older_than = forms.DateField(
-        widget=forms.SelectDateWidget(),
+        widget=forms.SelectDateWidget(years=range(2000, datetime.datetime.now().timetuple()[0] + 1)),
         initial=None,
         required=False,
     )
