@@ -4,26 +4,59 @@ import requests
 import time
 import argparse
 import pandas as pd
+from datetime import datetime
 from django.core.serializers.json import DjangoJSONEncoder
 
 
-bam_path_template = {
+def add_compression_suffix(path, compression):
+    # GSC paths for non-lane SpEC-compressed BAM files. Differ from BAM
+    # paths above only in that they have `.spec` attached on the end
+    if compression == 'spec':
+        return path + '.spec'
+    else:
+        raise ValueError('unsupported compression {}'.format(compression))
+
+merge_bam_path_template = {
     'WGS': '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}_dupsFlagged.bam',
     'EXOME': '{data_path}/{library_name}_{num_lanes}_lane{lane_pluralize}_dupsFlagged.bam',
 }
 
-# GSC paths for non-lane SpEC-compressed BAM files. Differ from BAM
-# paths above only in that they have `.spec` attached on the end
-bam_spec_path_template = {key: value + '.spec' for key, value in bam_path_template.iteritems()}
+def get_merge_bam_path(library_type, data_path, library_name, num_lanes, compression=None):
+    lane_pluralize = ('', 's')[num_lanes > 1]
+    bam_path = merge_bam_path_template[library_type].format(
+        data_path=data_path,
+        library_name=library_name,
+        num_lanes=num_lanes,
+        lane_pluralize=lane_pluralize)
+    if compression is not None:
+        bam_path = add_compression_suffix(bam_path, compression)
+    return bam_path
 
 lane_bam_path_templates = {
+    'WGS': '{data_path}/{flowcell_code}_{lane_number}.bam',
+    'RNASEQ': '{data_path}/{flowcell_code}_{lane_number}_withJunctionsOnGenome_dupsFlagged.bam',
+}
+
+multiplexed_lane_bam_path_templates = {
     'WGS': '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}.bam',
     'RNASEQ': '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}_withJunctionsOnGenome_dupsFlagged.bam',
 }
 
-# GSC paths for lane SpEC-compressed BAM files. Differ from lane BAM
-# paths above only in that they have `.spec` attached on the end
-lane_bam_spec_path_templates = {key: value + '.spec' for key, value in lane_bam_path_templates.iteritems()}
+def get_lane_bam_path(library_type, data_path, flowcell_code, lane_number, adapter_index_sequence=None, compression=None):
+    if adapter_index_sequence is not None:
+        bam_path = multiplexed_lane_bam_path_templates[library_type].format(
+            data_path=data_path,
+            flowcell_code=flowcell_code,
+            lane_number=lane_number,
+            adapter_index_sequence=adapter_index_sequence)
+    else:
+        bam_path = lane_bam_path_templates[library_type].format(
+            data_path=data_path,
+            flowcell_code=flowcell_code,
+            lane_number=lane_number)
+    if compression is not None:
+        bam_path = add_compression_suffix(bam_path, compression)
+    return bam_path
 
 protocol_id_map = {
     12: 'WGS',
@@ -231,7 +264,7 @@ def add_gsc_bam_read_groups(sample, library, lane_infos):
     return json_list
 
 
-def query_gsc_library(json_filename, libraries, skip_file_import=False):
+def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_older_than=None):
     """
     Take a list of library names as input.
     """
@@ -249,6 +282,8 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False):
     for library_name in libraries:
         library_infos = gsc_api.query('library?name={}'.format(library_name))
 
+        print 'importing', library_name
+
         for library_info in library_infos:
             protocol_info = gsc_api.query('protocol/{}'.format(library_info['protocol_id']))
 
@@ -257,6 +292,8 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False):
                 continue
 
             library_type = protocol_id_map[library_info['protocol_id']]
+
+            print 'found', library_type
 
             sample_id = library_info['external_identifier']
 
@@ -282,7 +319,18 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False):
             for merge_info in merge_infos:
                 data_path = merge_info['data_path']
                 num_lanes = len(merge_info['merge_xrefs'])
-                lane_pluralize = ('', 's')[num_lanes > 1]
+
+                if merge_info['complete'] is None:
+                    print 'skipping merge with no completed date'
+                    continue
+
+                completed_date = datetime.strptime(merge_info['complete'], '%Y-%m-%dT%H:%M:%S')
+
+                print 'merge completed', completed_date
+
+                if skip_older_than is not None and completed_date < skip_older_than:
+                    print 'skipping old merge'
+                    continue
 
                 lane_infos = []
 
@@ -321,24 +369,25 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False):
                     if data_path is None:
                         raise Exception('no data path for merge info {}'.format(merge_info['id']))
 
-                    bam_path = bam_path_template[library_type].format(
+                    bam_path = get_merge_bam_path(
+                        library_type=library_type,
                         data_path=data_path,
                         library_name=library_name,
-                        num_lanes=num_lanes,
-                        lane_pluralize=lane_pluralize)
+                        num_lanes=num_lanes)
 
-                    bam_spec_path = bam_spec_path_template[library_type].format(
+                    bam_spec_path = get_merge_bam_path(
+                        library_type=library_type,
                         data_path=data_path,
                         library_name=library_name,
                         num_lanes=num_lanes,
-                        lane_pluralize=lane_pluralize)
+                        compression='spec')
 
                     # Test for BAM path first, then BAM SpEC path if
                     # no BAM available
                     if os.path.exists(bam_path):
                         json_list += add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos)
                     elif os.path.exists(bam_spec_path):
-                        json_list += add_gsc_wgs_bam_dataset(bam_spec, path, storage, sample, library, lane_infos, is_spec=True)
+                        json_list += add_gsc_wgs_bam_dataset(bam_spec_path, storage, sample, library, lane_infos, is_spec=True)
                     else:
                         raise Exception('missing merged bam file {}'.format(bam_path))
 
@@ -346,6 +395,14 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False):
             libcores = gsc_api.query('aligned_libcore/info?library={}'.format(library_name))
 
             for libcore in libcores:
+                created_date = datetime.strptime(libcore['created'], '%Y-%m-%dT%H:%M:%S.%f')
+
+                print 'libcore created', created_date
+
+                if skip_older_than is not None and created_date < skip_older_than:
+                    print 'skipping old lane'
+                    continue
+
                 flowcell_id = libcore['libcore']['run']['flowcell_id']
                 lane_number = libcore['libcore']['run']['lane_number']
                 sequencing_instrument = get_sequencing_instrument(libcore['libcore']['run']['machine'])
@@ -376,17 +433,20 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False):
                     json_list += add_gsc_bam_read_groups(sample, library, lane_infos)
 
                 else:
-                    bam_path = lane_bam_path_templates[library_type].format(
+                    bam_path = get_lane_bam_path(
+                        library_type=library_type,
                         data_path=data_path,
                         flowcell_code=flowcell_code,
                         lane_number=lane_number,
                         adapter_index_sequence=adapter_index_sequence)
 
-                    bam_spec_path = lane_bam_spec_path_templates[library_type].format(
+                    bam_spec_path = get_lane_bam_path(
+                        library_type=library_type,
                         data_path=data_path,
                         flowcell_code=flowcell_code,
                         lane_number=lane_number,
-                        adapter_index_sequence=adapter_index_sequence)
+                        adapter_index_sequence=adapter_index_sequence,
+                        compression='spec')
 
                     # Test for BAM path first, then BAM SpEC path if
                     # no BAM available
@@ -402,11 +462,23 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False):
         json.dump(json_list, f, indent=4, sort_keys=True, cls=DjangoJSONEncoder)
 
 
+def valid_date(s):
+    try:
+        return datetime.strptime(s, "%Y-%m-%d")
+    except ValueError:
+        msg = "Not a valid date: '{0}'.".format(s)
+        raise argparse.ArgumentTypeError(msg)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('json_data')
     parser.add_argument('library_ids', nargs='+')
     parser.add_argument('--skip_file_import', action='store_true')
+    parser.add_argument('--skip_older_than', type=valid_date, default=None)
     args = vars(parser.parse_args())
 
-    query_gsc_library(args['json_data'], args['library_ids'], skip_file_import=args['skip_file_import'])
+    query_gsc_library(args['json_data'], args['library_ids'],
+        skip_file_import=args['skip_file_import'],
+        skip_older_than=args['skip_older_than'])
+
