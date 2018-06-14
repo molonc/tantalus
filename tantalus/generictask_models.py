@@ -36,8 +36,7 @@ class GenericTaskType(models.Model):
                                  help_text="The name of the task.")
 
     # A description of the task type
-    description = models.TextField(max_length=50,
-                                   blank=True,
+    description = models.TextField(blank=True,
                                    null=True,
                                    help_text="A description of the task.")
 
