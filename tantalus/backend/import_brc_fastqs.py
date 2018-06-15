@@ -168,7 +168,7 @@ def get_fastq_info(output_dir):
     fastq_info = {}
 
     for filename in fastq_filenames:
-        match = re.match("^([a-zA-Z0-9]+)-(A[a-zA-Z0-9]+)-R(\\d+)-C(\\d+)_S(\\d+)(_L(\\d+))?_R([12])_001.fastq.gz$", filename)
+        match = re.match("^([a-zA-Z0-9]+)-([a-zA-Z0-9]+)-R(\\d+)-C(\\d+)_S(\\d+)(_L(\\d+))?_R([12])_001.fastq.gz$", filename)
 
         if match is None:
             raise Exception('unrecognized fastq filename structure for {}'.format(filename))
