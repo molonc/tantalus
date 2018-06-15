@@ -325,10 +325,10 @@ class SimpleTaskRestartView(View):
         
         simple_task.state = simple_task.task_name.replace('_', ' ') + ' queued'
         simple_task.save()
-        self.task_type.apply_async(
+        task_id = self.task_type.apply_async(
             args=(simple_task.id,),
             queue=simple_task.get_queue_name())
-        msg = "Successfully restarted the " + self.task_model.__name__ + "."
+        msg = "Successfully restarted the " + self.task_model.__name__ + " with id " + str(task_id)
         messages.success(request, msg)
         return HttpResponseRedirect(reverse(self.detail_url_name,kwargs={'pk':simple_task.id}))
 
