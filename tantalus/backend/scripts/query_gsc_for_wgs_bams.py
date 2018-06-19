@@ -8,6 +8,18 @@ from datetime import datetime
 from django.core.serializers.json import DjangoJSONEncoder
 
 
+def convert_time(a):
+    try:
+        return datetime.strptime(a, '%Y-%m-%dT%H:%M:%S')
+    except:
+        pass
+    try:
+        return datetime.strptime(a, '%Y-%m-%dT%H:%M:%S.%f')
+    except:
+        pass
+    raise
+
+
 def add_compression_suffix(path, compression):
     # GSC paths for non-lane SpEC-compressed BAM files. Differ from BAM
     # paths above only in that they have `.spec` attached on the end
@@ -324,7 +336,7 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
                     print 'skipping merge with no completed date'
                     continue
 
-                completed_date = datetime.strptime(merge_info['complete'], '%Y-%m-%dT%H:%M:%S')
+                completed_date = convert_time(merge_info['complete'])
 
                 print 'merge completed', completed_date
 
@@ -395,7 +407,7 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
             libcores = gsc_api.query('aligned_libcore/info?library={}'.format(library_name))
 
             for libcore in libcores:
-                created_date = datetime.strptime(libcore['created'], '%Y-%m-%dT%H:%M:%S.%f')
+                created_date = convert_time(libcore['created'])
 
                 print 'libcore created', created_date
 
