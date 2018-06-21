@@ -67,6 +67,13 @@
                     </td>
                 </tr>
                 <tr>
+                    <td><a href="{% url 'importdlpbam-list' %}">Import DLP BAMs</a> <i class="counter">{{import_dlp_bam_count}}</i></td>
+                    <td>
+                        <p style="float:right;">
+                        <a href="{% url 'importdlpbam-create' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
+                    </td>
+                </tr>
+                <tr>
                     <td><a href="{% url 'generictaskinstance-submenu' %}">Generic Task Instances</a> <i class="counter">{{generic_task_instance_count}}</i></td>
                     <td>
                     </td>

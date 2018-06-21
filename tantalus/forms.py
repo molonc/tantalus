@@ -13,7 +13,7 @@ from django.db import transaction
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
 
-from .models import Sample, AbstractDataSet, FileTransfer, FileResource, SequenceLane, DNALibrary, Tag, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, ServerStorage, Storage
+from .models import Sample, AbstractDataSet, FileTransfer, FileResource, SequenceLane, DNALibrary, Tag, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, ImportDlpBam, ServerStorage, Storage
 import tantalus.tasks
 
 
@@ -411,3 +411,14 @@ class BRCFastqImportCreateForm(SimpleTaskCreateForm):
     class Meta:
         model = BRCFastqImport
         fields = ('output_dir', 'storage', 'flowcell_id')
+
+
+class ImportDlpBamCreateForm(SimpleTaskCreateForm):
+
+    task_name = 'import dlp bams into tantalus'
+    task_type = tantalus.tasks.import_dlp_bams_task
+
+    class Meta:
+        model = ImportDlpBam
+        fields = ('storage', 'bam_paths')
+

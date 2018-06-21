@@ -20,12 +20,12 @@ import csv
 import json
 import os
 
-from tantalus.models import FileInstance, FileTransfer, FileResource, Sample, AbstractDataSet, SingleEndFastqFile, PairedEndFastqFiles, BamFile, Storage, AzureBlobStorage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, Tag, DNALibrary
+from tantalus.models import FileInstance, FileTransfer, FileResource, Sample, AbstractDataSet, SingleEndFastqFile, PairedEndFastqFiles, BamFile, Storage, AzureBlobStorage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, ImportDlpBam, Tag, DNALibrary
 from tantalus.generictask_models import GenericTaskType, GenericTaskInstance
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT
 from misc.helpers import Render
-from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, FileTransferCreateForm, GscWgsBamQueryCreateForm, GscDlpPairedFastqQueryCreateForm, BRCFastqImportCreateForm
+from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, FileTransferCreateForm, GscWgsBamQueryCreateForm, GscDlpPairedFastqQueryCreateForm, BRCFastqImportCreateForm, ImportDlpBamCreateForm
 import tantalus.tasks
 
 
@@ -91,6 +91,11 @@ class GscDlpPairedFastqQueryListView(SimpleTaskListView):
 class BRCFastqImportListView(SimpleTaskListView):
     
     task_model = BRCFastqImport
+
+
+class ImportDlpBamListView(SimpleTaskListView):
+    
+    task_model = ImportDlpBam
 
 
 def get_simple_task_log(simple_task, dir_name, stderr=False, raw=False, preview_size=1000):
@@ -181,6 +186,11 @@ class BRCFastqImportDetailView(SimpleTaskDetailView):
     task_model = BRCFastqImport
 
 
+class ImportDlpBamDetailView(SimpleTaskDetailView):
+    
+    task_model = ImportDlpBam
+
+
 class SimpleTaskStdoutView(TemplateView):
     
     template_name = 'tantalus/simpletask_stdout.html'
@@ -217,6 +227,11 @@ class BRCFastqImportStdoutView(SimpleTaskStdoutView):
     task_model = BRCFastqImport
 
 
+class ImportDlpBamStdoutView(SimpleTaskStdoutView):
+    
+    task_model = ImportDlpBam
+
+
 class SimpleTaskStderrView(TemplateView):
     
     template_name = 'tantalus/simpletask_stderr.html'
@@ -251,6 +266,11 @@ class GscDlpPairedFastqQueryStderrView(SimpleTaskStderrView):
 class BRCFastqImportStderrView(SimpleTaskStderrView):
     
     task_model = BRCFastqImport
+
+
+class ImportDlpBamStderrView(SimpleTaskStderrView):
+    
+    task_model = ImportDlpBam
 
 
 @method_decorator(login_required, name='get')
@@ -309,6 +329,12 @@ class BRCFastqImportCreateView(SimpleTaskCreateView):
     detail_url_name = 'brcfastqimport-detail'
 
 
+class ImportDlpBamCreateView(SimpleTaskCreateView):
+
+    task_form = ImportDlpBamCreateForm
+    detail_url_name = 'importdlpbam-detail'
+
+
 @method_decorator(login_required, name='get')
 class SimpleTaskRestartView(View):
 
@@ -359,6 +385,14 @@ class BRCFastqImportRestartView(SimpleTaskRestartView):
     task_type = tantalus.tasks.import_brc_fastqs_task
     detail_url_name = 'brcfastqimport-detail'
 
+
+class ImportDlpBamRestartView(SimpleTaskRestartView):
+    
+    task_model = ImportDlpBam
+    task_type = tantalus.tasks.import_dlp_bams_task
+    detail_url_name = 'importdlpbam-detail'
+
+
 @method_decorator(login_required, name='get')
 class SimpleTaskDeleteView(View):
 
@@ -390,6 +424,11 @@ class GscDlpPairedFastqQueryDeleteView(SimpleTaskDeleteView):
 class BRCFastqImportDeleteView(SimpleTaskDeleteView):
     
     task_model = BRCFastqImport
+
+
+class ImportDlpBamDeleteView(SimpleTaskDeleteView):
+    
+    task_model = ImportDlpBam
 
 
 @method_decorator(login_required, name='get')
@@ -431,6 +470,11 @@ class GscDlpPairedFastqQueryStopView(SimpleTaskStopView):
 class BRCFastqImportStopView(SimpleTaskStopView):
     
     task_model = BRCFastqImport
+
+
+class ImportDlpBamStopView(SimpleTaskStopView):
+    
+    task_model = ImportDlpBam
 
 
 @method_decorator(login_required, name='dispatch')
@@ -999,6 +1043,7 @@ class HomeView(TemplateView):
             'file_transfer_count': FileTransfer.objects.all().count(),
             'gsc_dlp_paired_fastq_query_count': GscDlpPairedFastqQuery.objects.all().count(),
             'gsc_wgs_bam_query_count': GscWgsBamQuery.objects.all().count(),
+            'import_dlp_bam_count': ImportDlpBam.objects.all().count(),
             'generic_task_instance_count': GenericTaskInstance.objects.all().count(),
             'generic_task_type_count': GenericTaskType.objects.all().count(),
         }
