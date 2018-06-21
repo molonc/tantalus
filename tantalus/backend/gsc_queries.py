@@ -453,7 +453,7 @@ def query_gsc_dlp_paired_fastqs(query_info, temp_directory):
             primer_info = gsc_api.query('primer/{}'.format(primer_id))
             raw_index_sequence = primer_info['adapter_index_sequence']
 
-            print 'loading fastq', fastq_info['id'], 'index', raw_index_sequence
+            print 'loading fastq', fastq_info['id'], 'index', raw_index_sequence, fastq_path
 
             flowcell_lane = flowcell_code
             if lane_number is not None:
@@ -543,7 +543,7 @@ def query_gsc_dlp_paired_fastqs(query_info, temp_directory):
             fastq_id = (index_sequence, flowcell_code, lane_number)
 
             if read_end in paired_fastq_infos[fastq_id]:
-                raise Exception('duplicate fastq end {} for {}'.format(read_end, fastq_id))
+                raise Exception('duplicate fastq {} end {} for {}'.format(read_end, fastq_info['id'], fastq_id))
 
             paired_fastq_infos[fastq_id][read_end] = {
                 'fastq_file':fastq_file,

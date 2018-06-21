@@ -76,6 +76,7 @@ protocol_id_map = {
     136: 'WGS',
     140: 'WGS',
     123: 'WGS',
+    179: 'WGS',
     96: 'EXOME',
     80: 'RNASEQ',
     137: 'RNASEQ',
