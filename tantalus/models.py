@@ -369,6 +369,9 @@ class AbstractDataSet(PolymorphicModel):
             sample__in=Sample.objects.filter(readgroup__abstractdataset=self),
             dna_library__in=DNALibrary.objects.filter(readgroup__abstractdataset=self)).count()
 
+    def get_is_complete(self):
+        return self.read_groups.all().count() == self.get_num_total_read_groups()
+
     def save(self, *args, **kwargs):
         super(AbstractDataSet, self).save(*args, **kwargs)
         self.file_resources.clear()

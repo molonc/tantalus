@@ -7,22 +7,27 @@
 
 {% block body %}
      <div class="container" style="padding:0; margin-bottom:5px;">
-        <h4 style="float:left;">Datasets</h4>
+        <h4 style="float:left;">Name: {{ tag.name }}</h4>
+     </div>
+     <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">Datasets:</h4>
      </div>
     <div class="container" style="background-color:#F5F5F5;">
     <table id="datatable" class="table table-striped" style="display:none;">
         <thead>
                 <tr>
                     <th>Dataset ID</th>
+                    <th>Is Complete</th>
                     <th></th>
                 </tr>
         </thead>
         <tbody>
             {% for dataset in datasets %}
             <tr>
-                <td>{{ dataset }}</td>
+                <td>{{ dataset.id }}</td>
+                <td>{{ dataset.get_is_complete }}</td>
                 <td>
-                    <a href="{% url 'tag-dataset-delete' pk=dataset pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
+                    <a href="{% url 'tag-dataset-delete' pk=dataset.id pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
                 </td>
             </tr>
             {% endfor %}

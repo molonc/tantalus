@@ -566,7 +566,7 @@ class TagDetail(DetailView):
 
     def get_context_data(self, object):
         tag = get_object_or_404(Tag, pk=object.id)
-        datasets = [x['id'] for x in tag.abstractdataset_set.values()]
+        datasets = tag.abstractdataset_set.all()
         context = {
             'tag': tag,
             'datasets':datasets,
@@ -643,7 +643,7 @@ class DatasetListJSON(BaseDatatableView):
             return row.get_num_total_read_groups()
 
         if column == 'is_complete':
-            return row.get_num_total_read_groups() == row.read_groups.count()
+            return row.get_is_complete()
 
         else:
             return super(DatasetListJSON, self).render_column(row, column)

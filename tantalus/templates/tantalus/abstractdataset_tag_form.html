@@ -30,9 +30,10 @@
                                 <th class="dataset_library_id">Library</th>
                                 <th class="dataset_library_type">Library Type</th>
                                 <th class="dataset_num_lanes">Num. Read Groups</th>
+                                <th class="dataset_num_total_read_groups">Num. Total Read Groups</th>
+                                <th class="dataset_is_complete">Complete</th>
                                 <th class="dataset_tags">Tags</th>
-                                <th class="dataset_tags">Storages</th>
-
+                                <th class="dataset_storages">Storages</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -70,9 +71,10 @@
                 {"name": "library_id", "targets": "dataset_library_id"},
                 {"name": "library_type", "targets": "dataset_library_type", "orderable": false},
                 {"name": "num_lanes", "targets": "dataset_num_lanes", "orderable": false, "searchable": false},
+                {"name": "num_total_read_groups", "targets": "dataset_num_total_read_groups", "orderable": false, "searchable": false},
+                {"name": "is_complete", "targets": "dataset_is_complete", "orderable": false, "searchable": false},
                 {"name": "tags", "targets": "dataset_tags"},
                 {"name": "storages", "targets": "dataset_storages", "orderable": false, "searchable": false}
-
             ],
             processing: true,
             serverSide: true,
