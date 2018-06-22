@@ -597,10 +597,10 @@ class DatasetListJSON(BaseDatatableView):
     
     model = AbstractDataSet
 
-    columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'tags', 'storages']
+    columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
 
     # MUST be in the order of the columns
-    order_columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'tags', 'storages']
+    order_columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
     max_display_length = 100
 
     def get_context_data(self, *args, **kwargs):
@@ -638,6 +638,12 @@ class DatasetListJSON(BaseDatatableView):
 
         if column == 'library_type':
             return list(row.get_library_type())
+
+        if column == 'num_total_read_groups':
+            return row.get_num_total_read_groups()
+
+        if column == 'is_complete':
+            return row.get_num_total_read_groups() == row.read_groups.count()
 
         else:
             return super(DatasetListJSON, self).render_column(row, column)

@@ -364,6 +364,11 @@ class AbstractDataSet(PolymorphicModel):
     def get_file_resources(self):
         raise NotImplementedError()
 
+    def get_num_total_read_groups(self):
+        return ReadGroup.objects.filter(
+            sample__in=Sample.objects.filter(readgroup__abstractdataset=self),
+            dna_library__in=DNALibrary.objects.filter(readgroup__abstractdataset=self)).count()
+
     def save(self, *args, **kwargs):
         super(AbstractDataSet, self).save(*args, **kwargs)
         self.file_resources.clear()
