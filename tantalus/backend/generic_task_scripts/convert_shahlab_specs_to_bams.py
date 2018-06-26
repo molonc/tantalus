@@ -37,8 +37,8 @@ SHAHLAB_SPEC2BAM_BINARY_PATH = r'/gsc/software/linux-x86_64-centos6'
 # about the reference genomes that BamFile cares about (currently HG18
 # and HG19).
 HUMAN_REFERENCE_GENOMES_MAP = {
-    BamFile.HG18: r'/genesis/extscratch/shahlab/pipelines/reference/hg18.fa',
-    BamFile.HG19: r'/genesis/extscratch/shahlab/pipelines/reference/ucsc.hg19.fa',}
+    'hg18': r'/shahlab/pipelines/reference/gsc_hg18.fa',
+    'hg19': r'/shahlab/pipelines/reference/gsc_hg19a.fa',}
 
 
 def spec_to_bam(bamfile):
