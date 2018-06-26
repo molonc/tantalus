@@ -7,6 +7,8 @@ import pandas as pd
 from datetime import datetime
 from django.core.serializers.json import DjangoJSONEncoder
 
+import tantalus.backend.gsc
+
 
 def convert_time(a):
     try:
@@ -85,67 +87,6 @@ protocol_id_map = {
 solexa_run_type_map = {
     'Paired': 'P',
 }
-
-raw_instrument_map = {
-    'HiSeq': 'HiSeq2500',
-    'HiSeqX': 'HiSeqX',
-    'NextSeq': 'NextSeq550',
-}
-
-
-class GSCAPI(object):
-    def __init__(self):
-        """
-        Create a session object, authenticating based on the tantalus user.
-        """
-
-        self.request_handle = requests.Session()
-
-        self.headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        }
-
-        self.gsc_api_url = os.environ.get('GSC_API_URL', 'http://sbs:8100/')
-
-        create_session_url = os.path.join(self.gsc_api_url, 'session')
-        auth_json = {
-            'username': os.environ.get('GSC_API_USERNAME'),
-            'password': os.environ.get('GSC_API_PASSWORD'),
-        }
-
-        # TODO: prompt for username and password if none are provided
-        response = self.request_handle.post(create_session_url, json=auth_json, headers=self.headers)
-
-        if response.status_code == 200:
-            # Add the authentication token to the headers.
-            token = response.json().get('token')
-            self.headers.update({'X-Token': token})
-        else:
-            raise Exception('unable to authenticate GSC API')
-
-    def query(self, query_string):
-        """
-        Query the gsc api.
-        """
-        
-        query_url = self.gsc_api_url + query_string
-        result = self.request_handle.get(query_url, headers=self.headers).json()
-
-        if 'status' in result and result['status'] == 'error':
-            raise Exception(result['errors'])
-
-        return result
-
-
-def get_sequencing_instrument(machine):
-    """
-    Sequencing instrument decode.
-    Example machines are HiSeq-27 or HiSeqX-2.
-    """
-    
-    raw_instrument = machine.split('-')[0]
-    return raw_instrument_map[raw_instrument]
 
 
 def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos, is_spec=False):
@@ -284,7 +225,7 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
 
     json_list = []
 
-    gsc_api = GSCAPI()
+    gsc_api = tantalus.backend.gsc.GSCAPI()
 
     # ASSUMPTION: GSC stored files are pathed from root
     storage = dict(
@@ -353,7 +294,7 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
                     libcore = gsc_api.query('aligned_libcore/{}/info'.format(libcore_id))
                     flowcell_id = libcore['libcore']['run']['flowcell_id']
                     lane_number = libcore['libcore']['run']['lane_number']
-                    sequencing_instrument = get_sequencing_instrument(libcore['libcore']['run']['machine'])
+                    sequencing_instrument = tantalus.backend.gsc.get_sequencing_instrument(libcore['libcore']['run']['machine'])
                     solexa_run_type = libcore['libcore']['run']['solexarun_type']
                     reference_genome = libcore['lims_genome_reference']['path']
                     aligner = libcore['analysis_software']['name']
@@ -418,7 +359,7 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
 
                 flowcell_id = libcore['libcore']['run']['flowcell_id']
                 lane_number = libcore['libcore']['run']['lane_number']
-                sequencing_instrument = get_sequencing_instrument(libcore['libcore']['run']['machine'])
+                sequencing_instrument = tantalus.backend.gsc.get_sequencing_instrument(libcore['libcore']['run']['machine'])
                 solexa_run_type = libcore['libcore']['run']['solexarun_type']
                 reference_genome = libcore['lims_genome_reference']['path']
                 aligner = libcore['analysis_software']['name']

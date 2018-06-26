@@ -5,7 +5,7 @@ from django.utils.six import BytesIO
 from rest_framework import serializers
 from rest_framework.parsers import JSONParser
 
-from tantalus.models import Storage, Sample, DNALibrary, FileResource, FileInstance, SequenceLane, ReadGroup, BamFile, GscWgsBamQuery
+from tantalus.models import Storage, Sample, DNALibrary, FileResource, FileInstance, SequenceLane, ReadGroup, BamFile, GscWgsBamQuery, PairedEndFastqFiles
 from tantalus.utils import start_md5_checks
 
 
@@ -132,6 +132,26 @@ def get_or_create_serialize_bam_file(data):
         bam_file_serializer.instance.read_groups.add(get_or_create_serialize_read_group(read_group))
 
     return bam_file_serializer.instance.id
+
+
+class PairedEndFastqFilesSerializer(GetCreateModelSerializer):
+    class Meta:
+        model = PairedEndFastqFiles
+        fields = ('reads_1_file_id', 'reads_2_file_id', 'reference_genome', 'aligner')
+
+
+def get_or_create_serialize_fastq_files(data):
+    data['reads_1_file'] = get_or_create_serialize_file_resource(data.pop('reads_1_file'))
+    data['reads_2_file'] = get_or_create_serialize_file_resource(data.pop('reads_2_file'))
+
+    read_groups = data.pop('read_groups')
+    fastq_files_serializer = PairedEndFastqFilesSerializer(data=data)
+    fastq_files_serializer.is_valid(raise_exception=True)
+
+    for read_group in read_groups:
+        fastq_files_serializer.instance.read_groups.add(get_or_create_serialize_read_group(read_group))
+
+    return fastq_files_serializer.instance.id
 
 
 def read_models(json_data_filename):
