@@ -176,3 +176,31 @@ class DatasetsTag(viewsets.ViewSet):
             return Response(serializer.data, status=201)
 
 
+# TODO: move this
+from tantalus.backend.serializers import *
+
+class AddDataView(viewsets.ViewSet):
+    def create(self, request, format=None):
+        with django.db.transaction.atomic():
+            for dictionary in request.data:
+                if dictionary['model'] == 'FileInstance':
+                    dictionary.pop('model')
+                    get_or_create_serialize_file_instance(dictionary)
+                
+                elif dictionary['model'] == 'BamFile':
+                    dictionary.pop('model')
+                    get_or_create_serialize_bam_file(dictionary)
+
+                elif dictionary['model'] == 'PairedEndFastqFiles':
+                    dictionary.pop('model')
+                    get_or_create_serialize_fastq_files(dictionary)
+
+                elif dictionary['model'] == 'ReadGroup':
+                    dictionary.pop('model')
+                    get_or_create_serialize_read_group(dictionary)
+
+                else:
+                    raise ValueError('model type {} not supported'.format(dictionary['model']))
+
+            return Response('success', status=201)
+
