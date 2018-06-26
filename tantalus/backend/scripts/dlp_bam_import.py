@@ -217,7 +217,7 @@ def import_dlp_realign_bam(storage, bam_info, bai_info, bam_header):
     bai_resource = dict(
         size=bai_info['size'],
         created=bai_info['created'],
-        file_type='BAM',
+        file_type='BAI',
         read_end=None,
         compression='UNCOMPRESSED',
         filename=bai_info['filename'],
