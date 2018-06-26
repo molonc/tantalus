@@ -16,11 +16,15 @@ import json
 import os
 import subprocess
 import sys
+import django
 from django.db import transaction
-from tantalus.backend.file_transfer_utils import get_file_md5
 
-# Allow access to Django DB
+# Allow access to Tantalus DB
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tantalus.settings")
+django.setup()
+
+# Import Tantalus stuff now that we have access
+from tantalus.backend.file_transfer_utils import get_file_md5
 from tantalus.models import BamFile, FileInstance, FileResource, Storage
 
 
