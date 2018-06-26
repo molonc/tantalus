@@ -14,6 +14,7 @@ from __future__ import print_function
 import datetime
 import json
 import os
+import re
 import subprocess
 import sys
 import django
@@ -40,6 +41,19 @@ HUMAN_REFERENCE_GENOMES_MAP = {
     'hg18': r'/shahlab/pipelines/reference/gsc_hg18.fa',
     'hg19': r'/shahlab/pipelines/reference/gsc_hg19a.fa',}
 
+# These are regular expressions for identifying which human reference
+# genome to use. See https://en.wikipedia.org/wiki/Reference_genome for
+# more details on the common standards and how they relate to each
+# other. All of these should be run with a case-insensitive regex
+# matcher.
+HUMAN_REFERENCE_GENOMES_REGEX_MAP = {
+    'hg18': [r'hg[-_ ]?18',                 # hg18
+             r'ncbi[-_ ]?build[-_ ]?36.1',  # NCBI-Build-36.1
+            ],
+    'hg19': [r'hg[-_ ]?19',                 # hg19
+             r'grc[-_ ]?h[-_ ]?37',         # grch37
+            ],}
+
 
 def spec_to_bam(bamfile):
     """Decompresses a SpEC compressed BamFile.
@@ -48,6 +62,27 @@ def spec_to_bam(bamfile):
     """
     # Ensure the BamFile is SpEC compressed
     assert bamfile.bam_file.compression == FileResource.SPEC
+
+    # Find out what reference genome to use. Currently there are no
+    # standardized strings that we can expect, and for reference genomes
+    # there are multiple naming standards, so we need to be clever here.
+    found_match = False
+
+    for ref, regex_list in HUMAN_REFERENCE_GENOMES_REGEX_MAP.iteritems():
+        for regex in regex_list:
+            if re.search(regex, bamfile.reference_genome, flags=re.I):
+                # Found a match
+                reference_genome = ref
+                found_match = True
+                break
+
+        if found_match:
+            break
+    else:
+        # No match was found!
+        raise ValueError(
+            bamfile.reference_genome
+            + ' is not a recognized or supported reference genome')
 
     # Get path of uncompressed BAM: remove '.spec' but path otherwise is
     # the same
@@ -58,7 +93,7 @@ def spec_to_bam(bamfile):
                '--in',
                bamfile.bam_file.filename,
                '--ref',
-               HUMAN_REFERENCE_GENOMES_MAP[bamfile.reference_genome],
+               HUMAN_REFERENCE_GENOMES_MAP[reference_genome],
                '--out',
                output_bam_path,
               ]
