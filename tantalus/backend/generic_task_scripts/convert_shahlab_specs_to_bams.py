@@ -30,7 +30,7 @@ from tantalus.models import BamFile, FileInstance, FileResource, Storage
 
 # Useful variables
 SHAHLAB_HOSTNAME = 'node0515'
-SHAHLAB_SPEC2BAM_BINARY_PATH = r'/gsc/software/linux-x86_64-centos6'
+SHAHLAB_SPEC2BAM_BINARY_PATH = r'/gsc/software/linux-x86_64-centos6/spec-1.3.2/spec2bam'
 
 # This dictionary maps a (Tantalus) BamFile's reference genome field to
 # the path of the reference genome FASTA files on Shahlab. We only care
