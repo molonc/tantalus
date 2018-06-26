@@ -58,7 +58,7 @@ def spec_to_bam(bamfile):
                '--in',
                bamfile.bam_file.filename,
                '--ref',
-               HUMAN_REFERENCE_GENOMES_MAP[bamfile.refence_genome],
+               HUMAN_REFERENCE_GENOMES_MAP[bamfile.reference_genome],
                '--out',
                output_bam_path,
               ]
