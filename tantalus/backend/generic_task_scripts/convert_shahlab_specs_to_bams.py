@@ -7,18 +7,20 @@ available on Shahlab and GSC; since write access is currently prohibited
 on GSC, it makes sense to use the binary on Shahlab.
 
 The JSON arguments this script expects is 'tags', which is a list of
-strings containing tag names attached to SpEC files to be decompressed.
+strings containing tag names attached to Tantalus BamFiles that have
+SpEC FileInstances on Shahlab to be decompressed.
 """
 
 from __future__ import print_function
-import datetime
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
 import django
 from django.db import transaction
+from django.utils import timezone
 
 # Allow access to Tantalus DB
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tantalus.settings")
@@ -29,7 +31,12 @@ from tantalus.backend.file_transfer_utils import get_file_md5
 from tantalus.models import BamFile, FileInstance, FileResource, Storage
 
 
-# Useful variables
+# Logging config (it will print to console by default)
+logging.basicConfig(format='%(levelname)s:%(message)s',
+                    level=logging.DEBUG)
+
+# Useful Shahlab-specific variables
+SHAHLAB_TANTALUS_SERVER_NAME = 'shahlab'
 SHAHLAB_HOSTNAME = 'node0515'
 SHAHLAB_SPEC2BAM_BINARY_PATH = r'/gsc/software/linux-x86_64-centos6/spec-1.3.2/spec2bam'
 
@@ -55,22 +62,54 @@ HUMAN_REFERENCE_GENOMES_REGEX_MAP = {
             ],}
 
 
-def spec_to_bam(bamfile):
+class BadReferenceGenomeError(Exception):
+    pass
+
+
+def get_uncompressed_bam_path(spec_path):
+    """Get path of corresponding BAM file given a SpEC path.
+
+    Get path of uncompressed BAM: remove '.spec' but path otherwise is
+    the same.
+    """
+    return spec_path[:-5]
+
+
+def spec_to_bam(spec_path,
+                generic_spec_path,
+                raw_reference_genome,
+                aligner,
+                read_groups):
     """Decompresses a SpEC compressed BamFile.
 
     Registers the new uncompressed file in the database.
-    """
-    # Ensure the BamFile is SpEC compressed
-    assert bamfile.bam_file.compression == FileResource.SPEC
 
+    Args:
+        spec_path: A string containing the path to the SpEC file on
+            Shahlab.
+        generic_spec_path: A string containing the path to the SpEC with
+            the /archive/shahlab bit not included at the beginning of
+            the path.
+        raw_reference_genome: A string containing the reference genome,
+            which will be interpreted to be either hg18 or hg 19 (or it
+            will raise an error).
+        aligner: A string containing the BamFile aligner.
+        read_groups: A django.db.models.query.QuerySet of read groups
+            associated with the bam file.
+    Raises:
+        A BadReferenceGenomeError if the raw_reference_genome can not be
+        interpreted as either hg18 or hg19.
+    """
     # Find out what reference genome to use. Currently there are no
     # standardized strings that we can expect, and for reference genomes
     # there are multiple naming standards, so we need to be clever here.
+    logging.debug("Parsing reference genome %s", raw_reference_genome)
+
     found_match = False
 
     for ref, regex_list in HUMAN_REFERENCE_GENOMES_REGEX_MAP.iteritems():
         for regex in regex_list:
-            if re.search(regex, bamfile.reference_genome, flags=re.I):
+            if re.search(regex, raw_reference_genome, flags=re.I):
                 # Found a match
                 reference_genome = ref
                 found_match = True
@@ -80,18 +119,20 @@ def spec_to_bam(bamfile):
             break
     else:
         # No match was found!
-        raise ValueError(
-            bamfile.reference_genome
+        raise BadReferenceGenomeError(
+            raw_reference_genome
             + ' is not a recognized or supported reference genome')
 
-    # Get path of uncompressed BAM: remove '.spec' but path otherwise is
-    # the same
-    output_bam_path = bamfile.bam_file.filename[:-5]
+    # Get path of uncompressed BAM
+    output_bam_path = get_uncompressed_bam_path(spec_path)
+    generic_bam_path = get_uncompressed_bam_path(generic_spec_path)
 
     # Convert the SpEC to a BAM
+    logging.debug("Converting %s", spec_path)
+
     command = [SHAHLAB_SPEC2BAM_BINARY_PATH,
                '--in',
-               bamfile.bam_file.filename,
+               spec_path,
                '--ref',
                HUMAN_REFERENCE_GENOMES_MAP[reference_genome],
                '--out',
@@ -100,25 +141,31 @@ def spec_to_bam(bamfile):
     subprocess.check_call(command)
 
     # Create the new BamFile, starting with the file resource first
+    logging.debug("Creating Tantalus instances")
+
     new_bam_file_resource = FileResource(
         md5=get_file_md5(output_bam_path),
         size=os.path.getsize(output_bam_path),
-        created=datetime.datetime.now(),
+        created=timezone.now(),
         file_type=FileResource.BAM,
         compression=FileResource.UNCOMPRESSED,
-        filename=output_bam_path)
+        filename=generic_bam_path,)
     new_bam_file_resource.save()
 
     # Now the BamFile
     new_bam_file = BamFile(
-        reference_genome=bamfile.reference_genome,
-        aligner=bamfile.aligner,
+        reference_genome=raw_reference_genome,
+        aligner=aligner,
         bam_file=new_bam_file_resource,)
+    new_bam_file.save()
+
+    # Add in the read groups to the bam_file
+    new_bam_file.read_groups = read_groups
     new_bam_file.save()
 
     # Now the file instance
     new_bam_file_instance = FileInstance(
-        storage=Storage.objects.get(name='shahlab'),
+        storage=Storage.objects.get(name=SHAHLAB_TANTALUS_SERVER_NAME),
         file_resource=new_bam_file_resource,)
     new_bam_file_instance.save()
 
@@ -127,21 +174,54 @@ def spec_to_bam(bamfile):
 def main():
     """Main script for SpEC to BAM conversion."""
     # Make sure we're on Shahlab
+    logging.debug("Checking that we're on Shahlab")
+
     if os.environ['HOSTNAME'] != SHAHLAB_HOSTNAME:
         print("Must run this script on GSC!", file=sys.stderr)
         sys.exit(1)
 
     # Parse the JSON args
+    logging.debug("Loading JSON arguments")
+
     json_args = sys.argv[1]
     args_dict = json.loads(json_args)
 
     # Get the BamFile rows that contains the SpEC files
+    logging.debug("Loading BamFiles to process")
+
     tag_names = args_dict['tags']
     bams = BamFile.objects.filter(tags__name__in=tag_names)
 
     # Process each BamFile
     for bam in bams:
-        spec_to_bam(bam)
+        logging.debug("Processing BAM file %s", bam.id)
+
+        # Get the SpEC filepath
+        file_instance = FileInstance.objects.filter(
+            file_resource__id=bam.bam_file.id).filter(
+            storage__name=SHAHLAB_TANTALUS_SERVER_NAME).get()
+        spec_path = file_instance.get_filepath()
+
+        # Check to make sure there doesn't already exist an uncompressed
+        # BAM file
+        if os.path.isfile(get_uncompressed_bam_path(spec_path)):
+            # The uncompressed BAM file already exists! Move on to the
+            # next file.
+            logging.warning("An uncompressed BAM file already exists on "
+                            "Shahlab! Skipping decompression of SpEC file "
+                            "%s.", spec_path)
+            continue
+
+        # Convert
+        try:
+            spec_to_bam(
+                spec_path=spec_path,
+                generic_spec_path=bam.bam_file.filename,
+                raw_reference_genome=bam.reference_genome,
+                aligner=bam.aligner,
+                read_groups=bam.read_groups.all(),)
+        except BadReferenceGenomeError as e:
+            logging.exception("Unrecognized reference genome")
 
 
 if __name__ == '__main__':
