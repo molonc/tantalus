@@ -1,9 +1,9 @@
 from django.conf.urls import url, include
-from rest_framework import routers
+from rest_framework import routers, permissions
 from tantalus.api import views
 from tantalus.api import generictask_api_views
-from rest_framework_swagger.views import get_swagger_view
-
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 
 router = routers.DefaultRouter()
 router.register(r'sample', views.SampleViewSet)
@@ -31,13 +31,23 @@ router.register(r'import_dlp_bam', views.ImportDlpBamViewSet)
 router.register(r'generic_task_types', generictask_api_views.GenericTaskTypeViewSet)
 router.register(r'generic_task_instances', generictask_api_views.GenericTaskInstanceViewSet)
 
-schema_view = get_swagger_view(title='Tantalus API')
+# Schema for Swagger API
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Tantalus API",
+        default_version='v1',),
+   validators=['flex', 'ssv'],
+   public=True,
+   permission_classes=(permissions.IsAuthenticatedOrReadOnly,),
+)
 
 # name to specify name space, all the views can be referred to as reverse('app_name:view_name')
 # eg. reverse('api:filetransfer-list')
 app_name='api'
 urlpatterns = [
-    url(r'^swagger$', schema_view),
+    url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=None), name='schema-json'),
+    url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=None), name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=None), name='schema-redoc'),
     url(r'^', include(router.urls)),
     url(r'^file_transfer/restart/(?P<pk>\d+)$', views.FileTransferRestart.as_view(), name='filetransfer-restart'),
 ]
