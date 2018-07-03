@@ -1,5 +1,6 @@
 """Views relating to the GenericTask models."""
 
+import json
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
@@ -194,7 +195,7 @@ class GenericTaskInstanceCreateView(LoginRequiredMixin, TemplateView):
             arg_dict = dict()
 
             for arg, value in form.yield_task_args():
-                arg_dict[arg] = value
+                arg_dict[arg] = json.loads(value)
 
             # Build the instance and save it
             instance = GenericTaskInstance(task_type=task_type,

@@ -56,10 +56,11 @@ class GenericTaskInstanceCreateForm(forms.Form):
             if task_arg[1]:
                 # There's a default
                 help_text = mark_safe(
-                    'Defaults to <code>%s</code> if left blank' % task_arg[1])
+                    'Insert valid JSON. '
+                    'Defaults to <code>"%s"</code> if left blank' % task_arg[1])
                 required_setting = False
             else:
-                help_text = 'This is a required argument'
+                help_text = 'This is a required argument. Insert valid JSON.'
                 required_setting = True
 
             # Create the field
