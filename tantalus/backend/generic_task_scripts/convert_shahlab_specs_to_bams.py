@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import re
+import socket
 import subprocess
 import sys
 import django
@@ -176,7 +177,7 @@ def main():
     # Make sure we're on Shahlab
     logging.debug("Checking that we're on Shahlab")
 
-    if os.environ['HOSTNAME'] != SHAHLAB_HOSTNAME:
+    if socket.gethostname() != SHAHLAB_HOSTNAME:
         print("Must run this script on GSC!", file=sys.stderr)
         sys.exit(1)
 
