@@ -2,10 +2,11 @@ import argparse
 import os
 import sys
 import datetime
+import time
 import pysam
 import json
 import azure.storage.blob
-
+import pandas as pd
 from django.core.serializers.json import DjangoJSONEncoder
 from tantalus.backend.colossus import *
 
@@ -172,21 +173,21 @@ def import_dlp_realign_bam_blob(storage_name, bam_filename, container_name):
     return import_dlp_realign_bam(storage, bam_info, bai_info, bam_header)
 
 
-def import_dlp_realign_bam_server(storage_name, container_name, bam_filename):
+def import_dlp_realign_bam_server(storage_name, bam_filename):
     bai_filename = bam_filename + '.bai'
 
-    bam_header = get_bam_header_file(blob_service, container_name, bam_filename)
+    bam_header = get_bam_header_file(bam_filename)
 
     bam_info = {
         'filename': bam_filename,
-        'size': get_size_file(blob_service, container_name, bam_filename),
-        'created': get_created_time_file(blob_service, container_name, bam_filename),
+        'size': get_size_file(bam_filename),
+        'created': get_created_time_file(bam_filename),
     }
 
     bai_info = {
         'filename': bai_filename,
-        'size': get_size_file(blob_service, container_name, bai_filename),
-        'created': get_created_time_file(blob_service, container_name, bai_filename),
+        'size': get_size_file(bai_filename),
+        'created': get_created_time_file(bai_filename),
     }
 
     storage = dict(
