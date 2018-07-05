@@ -257,6 +257,7 @@ if __name__ == '__main__':
     parser.add_argument('storage_type', choices=['blob', 'server'])
     parser.add_argument('bam_filenames', nargs='+')
     parser.add_argument('--blob_container_name', required=False)
+    parser.add_argument('--tag_name', required=False)
     args = vars(parser.parse_args())
 
     json_list = import_dlp_realign_bams(
@@ -264,5 +265,6 @@ if __name__ == '__main__':
         args['storage_name'],
         args['storage_type'],
         args['bam_filenames'],
+        blob_container_name=args.get('tag_name'),
         blob_container_name=args.get('blob_container_name'))
 
