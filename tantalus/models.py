@@ -189,6 +189,8 @@ class SequenceLane(models.Model):
     )
 
     sequencing_instrument = models.CharField(
+        blank=True,
+        null=True,
         max_length=50,
     )
 
