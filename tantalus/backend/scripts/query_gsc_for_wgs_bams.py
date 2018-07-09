@@ -351,10 +351,15 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
             for libcore in libcores:
                 created_date = convert_time(libcore['created'])
 
-                print 'libcore created', created_date
+                print 'libcore {} created {}'.format(libcore['id'], created_date)
 
                 if skip_older_than is not None and created_date < skip_older_than:
                     print 'skipping old lane'
+                    continue
+
+                lims_run_validation = libcore['libcore']['run']['lims_run_validation']
+                if lims_run_validation == 'Rejected':
+                    print 'skipping rejected lane'
                     continue
 
                 flowcell_id = libcore['libcore']['run']['flowcell_id']
@@ -365,6 +370,9 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
                 aligner = libcore['analysis_software']['name']
                 adapter_index_sequence = libcore['libcore']['primer']['adapter_index_sequence']
                 data_path = libcore['data_path']
+
+                if not skip_file_import and data_path is None:
+                    print Exception('data path is None')
 
                 flowcell_info = gsc_api.query('flowcell/{}'.format(flowcell_id))
                 flowcell_code = flowcell_info['lims_flowcell_code']
