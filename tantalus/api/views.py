@@ -84,6 +84,12 @@ class BamFileViewSet(viewsets.ReadOnlyModelViewSet):
     filter_class = BamFileFilterSet
 
 
+class SequenceDatasetViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = tantalus.models.SequenceDataset.objects.all()
+    serializer_class = tantalus.api.serializers.SequenceDatasetSerializer
+    filter_fields = ('library__library_id', 'sample__sample_id',)
+
+
 class StorageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.Storage.objects.all()
     serializer_class = tantalus.api.serializers.StorageSerializer
@@ -177,7 +183,7 @@ class AddDataView(viewsets.ViewSet):
                 if dictionary['model'] == 'FileInstance':
                     dictionary.pop('model')
                     get_or_create_serialize_file_instance(dictionary)
-                
+
                 elif dictionary['model'] == 'BamFile':
                     dictionary.pop('model')
                     get_or_create_serialize_bam_file(dictionary)
@@ -194,4 +200,3 @@ class AddDataView(viewsets.ViewSet):
                     raise ValueError('model type {} not supported'.format(dictionary['model']))
 
             return Response('success', status=201)
-

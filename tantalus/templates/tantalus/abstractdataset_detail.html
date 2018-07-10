@@ -13,25 +13,21 @@
             <tr>
                 <td class="td_name">File Resources: </td>
                 <td>
-                    {% for file_resource in object.get_file_resources %}
-                        {{ file_resource.filename }}<br/>
+                    {% for sequence_file_resource in object.sequence_file_resources.all %}
+                        {{ sequence_file_resource.file_resource.filename }}<br/>
                     {% endfor %}
                 </td>
             </tr>
             <tr>
-                <td class="td_name">Libraries: </td>
+                <td class="td_name">Library: </td>
                 <td>
-                {% for library in object.get_libraries %}
-                    {{ library }} 
-                {% endfor %}
+                    {{ object.library }}
                 </td>
             </tr>
             <tr>
                 <td class="td_name">Samples: </td>
                 <td>
-                {% for sample in object.get_samples %}
-                    <a href="{% url 'sample-detail' sample.id %}">{{ sample.sample_id }} </a>
-                {% endfor %}
+                    <a href="{% url 'sample-detail' object.sample.id %}">{{ object.sample.sample_id }} </a>
                 </td>
             </tr>
             <tr>
@@ -40,7 +36,7 @@
                     {% for s in storages  %}
                         {% if s.get_storage_directory %}
                           <h5 style="color: #212121" align="left" > {{ s.name }} - <i>{{ s.server_ip }}</i> </h5>
-                                {% for file_resource in object.get_file_resources %}
+                                {% for file_resource in object.asdf %}
                                     {% for i in file_resource.fileinstance_set.all %}
                                         {% if i.storage|stringformat:"s" == s.name|stringformat:"s" %}
                                             {{ i.get_filepath }}
@@ -49,7 +45,7 @@
                                 {% endfor %}
                         {% else %}
                           <h5 style="color: #212121" align="left" > Storage account:{{ s.storage_account }} | Container:{{ s.storage_container }}</h5>
-                            {% for file_resource in object.get_file_resources %}
+                            {% for file_resource in object.asdf %}
                                 {{ file_resource.filename }}<br/>
                             {% endfor %}
                         {% endif %}

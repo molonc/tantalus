@@ -142,6 +142,19 @@ class BamFileSerializer(serializers.ModelSerializer):
         exclude = ['polymorphic_ctype']
 
 
+class SequencingLaneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.SequencingLane
+        fields = '__all__'
+
+
+class SequenceDatasetSerializer(serializers.ModelSerializer):
+    sequence_lanes = SequencingLaneSerializer(many=True)
+    class Meta:
+        model = tantalus.models.SequenceDataset
+        fields = '__all__'
+
+
 class SimpleTaskSerializer(serializers.ModelSerializer):
     running = serializers.BooleanField(read_only=True)
     finished = serializers.BooleanField(read_only=True)

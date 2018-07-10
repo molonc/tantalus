@@ -22,7 +22,7 @@ class Tag(models.Model):
     """
     Simple text tag associated with datasets.
     """
-    
+
     history = HistoricalRecords()
 
     name = create_id_field(unique=True)
@@ -217,6 +217,74 @@ class SequenceLane(models.Model):
         unique_together = ('flowcell_id', 'lane_number')
 
 
+class SequencingLane(models.Model):
+    """
+    Lane of Illumina Sequencing.
+    """
+
+    history = HistoricalRecords()
+
+    flowcell_id = create_id_field()
+
+    lane_number_choices = [('', '')] + [(str(a), str(a)) for a in range(1, 10)]
+
+    lane_number = models.CharField(
+        max_length=50,
+        choices=lane_number_choices,
+        blank=True,
+    )
+
+    dna_library = models.ForeignKey(
+        DNALibrary,
+        on_delete=models.CASCADE,
+    )
+
+    GSC = 'GSC'
+    BRC = 'BRC'
+
+    sequencing_centre_choices = (
+        (GSC, 'Genome Science Centre'),
+        (BRC, 'Biomedical Research Centre'),
+    )
+
+    sequencing_centre = models.CharField(
+        max_length=50,
+        choices=sequencing_centre_choices,
+    )
+
+    sequencing_instrument = models.CharField(
+        blank=True,
+        null=True,
+        max_length=50,
+    )
+
+    sequencing_library_id = create_id_field(
+        null=True,
+    )
+
+    PAIRED = 'P'
+    SINGLE = 'S'
+
+    read_type_choices = (
+        (PAIRED, 'Paired end tags'),
+        (SINGLE, 'Single end tags')
+    )
+
+    read_type = models.CharField(
+        max_length=50,
+        choices=read_type_choices,
+    )
+
+    def __unicode__(self):
+        if self.lane_number == '':
+            return '{}_{}'.format(self.sequencing_centre, self.flowcell_id)
+        else:
+            return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
+
+    class Meta:
+        unique_together = ('flowcell_id', 'lane_number', 'dna_library')
+
+
 class ReadGroup(models.Model):
     """
     Group of reads from a specific sample, library, lane and index sequence.
@@ -289,6 +357,17 @@ class FileResource(models.Model):
         null=True,
     )
 
+    genome_region = models.CharField(
+        max_length=50,
+        null=True,
+    )
+
+    index_sequence = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+
     GZIP = 'GZIP'
     BZIP2 = 'BZIP2'
     SPEC = 'SPEC'
@@ -333,122 +412,88 @@ class FileResource(models.Model):
         }[self.compression]
 
 
-class AbstractDataSet(PolymorphicModel):
+class SequenceDataset(models.Model):
     """
-    General Sequence Dataset.
+    Generalized dataset class.
     """
 
     history = HistoricalRecords()
+
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+    )
 
     tags = models.ManyToManyField(Tag)
 
-    read_groups = models.ManyToManyField(
-        ReadGroup,
+    BAM = 'BAM'
+    FQ = 'FQ'
+
+    dataset_type_choices = (
+        (BAM, 'BAM Files'),
+        (FQ, 'FastQ Files'),
     )
-    
+
+    dataset_type = models.CharField(
+        max_length=50,
+        choices=dataset_type_choices,
+        null=False,
+        default=BAM,
+    )
+
+    sample = models.ForeignKey(
+        Sample,
+    )
+
+    library = models.ForeignKey(
+        DNALibrary,
+    )
+
     file_resources = models.ManyToManyField(
         FileResource,
-        blank=True,
     )
 
-    def get_libraries(self):
-        return set([r.dna_library.library_id for r in self.read_groups.all()])
+    sequence_lanes = models.ManyToManyField(
+        SequencingLane,
+    )
 
-    def get_library_type(self):
-        return set([r.dna_library.library_type for r in self.read_groups.all()])
+    HG19 = 'HG19'
+    HG18 = 'HG18'
+    UNALIGNED = 'UNALIGNED'
+    UNUSABLE = 'UNUSABLE'
 
-    def get_samples(self):
-        return set([r.sample for r in self.read_groups.all()])
+    reference_genome_choices = (
+        (HG19, 'Human Genome 19'),
+        (HG18, 'Human Genome 18'),
+        (UNALIGNED, 'Not aligned to a reference'),
+        (UNUSABLE, 'Alignments are not usable'),
+    )
 
-    def get_storage_names(self):
-        return set([i.storage.name for f in self.get_file_resources() for i in f.fileinstance_set.all()])
+    reference_genome = models.CharField(
+        max_length=50,
+        choices=reference_genome_choices,
+        default=UNALIGNED,
+    )
 
-    def get_file_resources(self):
-        raise NotImplementedError()
+    aligner = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        default=None,
+    )
 
-    def get_num_total_read_groups(self):
-        return ReadGroup.objects.filter(
-            sample__in=Sample.objects.filter(readgroup__abstractdataset=self),
-            dna_library__in=DNALibrary.objects.filter(readgroup__abstractdataset=self)).count()
+    def get_num_total_sequencing_lanes(self):
+        return SequencingLane.objects.filter(dna_library=self.library).count()
 
     def get_is_complete(self):
-        return self.read_groups.all().count() == self.get_num_total_read_groups()
+        return self.sequence_lanes.all().count() == self.get_num_total_sequencing_lanes()
 
-    def save(self, *args, **kwargs):
-        super(AbstractDataSet, self).save(*args, **kwargs)
-        self.file_resources.clear()
-        for file_resource in self.get_file_resources():
-            self.file_resources.add(file_resource)
-
-
-class BCLFolder(AbstractDataSet):
-    """
-    BCL folder.
-    """
-
-    history = HistoricalRecords()
-
-    folder = models.OneToOneField(
-        FileResource,
-        on_delete=models.CASCADE,
-        related_name='bcl_folder',
-    )
-
-    def get_file_resources(self):
-        return [self.folder]
-
-
-class SingleEndFastqFile(AbstractDataSet):
-    """
-    Fastq file of single ended Illumina Sequencing.
-    """
-
-    history = HistoricalRecords()
-
-    reads_file = models.OneToOneField(
-        FileResource,
-        on_delete=models.CASCADE,
-        related_name='reads_file',
-    )
-
-    dataset_type_name = 'Single End FASTQ'
-
-    def __str__(self):
-        return "SingleEndFastQ {}".format(self.id)
-
-    def get_file_resources(self):
-        return [self.reads_file]
-
-
-class PairedEndFastqFiles(AbstractDataSet):
-    """
-    Fastq file of paired ended Illumina Sequencing.
-    """
-
-    history = HistoricalRecords()
-
-    reads_1_file = models.ForeignKey(
-        FileResource,
-        on_delete=models.CASCADE,
-        related_name='reads_1_file',
-    )
-
-    reads_2_file = models.ForeignKey(
-        FileResource,
-        on_delete=models.CASCADE,
-        related_name='reads_2_file',
-    )
-
-    dataset_type_name = 'Paired End FASTQ'
-
-    def __str__(self):
-        return "PairedEndFastq {}".format(self.id)
-
-    def get_file_resources(self):
-        return [self.reads_1_file, self.reads_2_file]
-
-    class Meta:
-        unique_together = ('reads_1_file', 'reads_2_file')
+    def get_storage_names(self):
+        return list(
+            FileInstance.objects.filter(
+                file_resource__sequencedataset=self)
+            .values_list('storage__name', flat=True)
+            .distinct())
 
 
 class BamFile(AbstractDataSet):
@@ -505,6 +550,11 @@ class BamFile(AbstractDataSet):
 
     def __str__(self):
         return "BamFile ID: {}".format(self.id)
+
+    def get_name(self):
+        lib = unicode(self.library)
+        # sample = unicode(self.sample)
+        return '_'.join([lib, str(self.id)])
 
 
 class Storage(PolymorphicModel):
@@ -931,4 +981,3 @@ class Submission(models.Model):
         null=True,
         default=None
     )
-

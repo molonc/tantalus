@@ -13,7 +13,7 @@
                 <tr>
                     <td><a href="{% url 'dataset-list' %}">Datasets</a>
                         <i class="counter">{{dataset_bam_count}} BAMs</i>
-                        <i class="counter">{{dataset_paired_end_fastq_count}} paired end FASTQs</i>
+                        <i class="counter">{{dataset_fastq_count}} FASTQs</i>
                         {% if dataset_single_end_fastq_count %}
                             <i class="counter">{{dataset_single_end_fastq_count}} single end FASTQs</i></td>
                         {% endif %}

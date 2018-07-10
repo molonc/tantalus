@@ -20,7 +20,7 @@ import csv
 import json
 import os
 
-from tantalus.models import FileInstance, FileTransfer, FileResource, Sample, AbstractDataSet, SingleEndFastqFile, PairedEndFastqFiles, BamFile, Storage, AzureBlobStorage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, ImportDlpBam, Tag, DNALibrary
+from tantalus.models import FileInstance, FileTransfer, FileResource, Sample, SequenceDataset, SingleEndFastqFile, PairedEndFastqFiles, BamFile, Storage, AzureBlobStorage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, ImportDlpBam, Tag, DNALibrary
 from tantalus.generictask_models import GenericTaskType, GenericTaskInstance
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT
@@ -31,13 +31,13 @@ import tantalus.tasks
 
 @Render("tantalus/sample_list.html")
 def sample_list(request):
-    
+
     """
     List of samples.
     """
-    
+
     samples = Sample.objects.all().order_by('sample_id')
-    
+
     context = {
         'samples': samples,
     }
@@ -51,7 +51,7 @@ class SampleDetail(DetailView):
 
     def get_context_data(self, object):
         instance = get_object_or_404(Sample, pk=object.id)
-        
+
         context = {
             'form': SampleForm(instance=instance),
         }
@@ -59,7 +59,7 @@ class SampleDetail(DetailView):
 
 
 class SimpleTaskListView(TemplateView):
-    
+
     template_name = 'tantalus/simpletask_list.html'
 
     class Meta:
@@ -74,32 +74,32 @@ class SimpleTaskListView(TemplateView):
 
 
 class FileTransferListView(SimpleTaskListView):
-    
+
     task_model = FileTransfer
 
 
 class GscWgsBamQueryListView(SimpleTaskListView):
-    
+
     task_model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryListView(SimpleTaskListView):
-    
+
     task_model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportListView(SimpleTaskListView):
-    
+
     task_model = BRCFastqImport
 
 
 class ImportDlpBamListView(SimpleTaskListView):
-    
+
     task_model = ImportDlpBam
 
 
 def get_simple_task_log(simple_task, dir_name, stderr=False, raw=False, preview_size=1000):
-    
+
     if stderr:
         kind = 'stderr'
     else:
@@ -172,27 +172,27 @@ class FileTransferDetailView(SimpleTaskDetailView):
 
 
 class GscWgsBamQueryDetailView(SimpleTaskDetailView):
-    
+
     task_model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryDetailView(SimpleTaskDetailView):
-    
+
     task_model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportDetailView(SimpleTaskDetailView):
-    
+
     task_model = BRCFastqImport
 
 
 class ImportDlpBamDetailView(SimpleTaskDetailView):
-    
+
     task_model = ImportDlpBam
 
 
 class SimpleTaskStdoutView(TemplateView):
-    
+
     template_name = 'tantalus/simpletask_stdout.html'
 
     class Meta:
@@ -200,7 +200,7 @@ class SimpleTaskStdoutView(TemplateView):
 
     def get_context_data(self, **kwargs):
         simple_task = get_object_or_404(self.task_model, id=kwargs['pk'])
-        
+
         context = {
             'simple_task_stdout': get_simple_task_log(simple_task, self.task_model.task_name, raw=True),
         }
@@ -213,27 +213,27 @@ class FileTransferStdoutView(SimpleTaskStdoutView):
 
 
 class GscWgsBamQueryStdoutView(SimpleTaskStdoutView):
-    
+
     task_model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryStdoutView(SimpleTaskStdoutView):
-    
+
     task_model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportStdoutView(SimpleTaskStdoutView):
-    
+
     task_model = BRCFastqImport
 
 
 class ImportDlpBamStdoutView(SimpleTaskStdoutView):
-    
+
     task_model = ImportDlpBam
 
 
 class SimpleTaskStderrView(TemplateView):
-    
+
     template_name = 'tantalus/simpletask_stderr.html'
 
     class Meta:
@@ -241,7 +241,7 @@ class SimpleTaskStderrView(TemplateView):
 
     def get_context_data(self, **kwargs):
         simple_task = get_object_or_404(self.task_model, id=kwargs['pk'])
-        
+
         context = {
             'simple_task_stderr': get_simple_task_log(simple_task, self.task_model.task_name, stderr=True, raw=True),
         }
@@ -254,22 +254,22 @@ class FileTransferStderrView(SimpleTaskStderrView):
 
 
 class GscWgsBamQueryStderrView(SimpleTaskStderrView):
-    
+
     task_model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryStderrView(SimpleTaskStderrView):
-    
+
     task_model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportStderrView(SimpleTaskStderrView):
-    
+
     task_model = BRCFastqImport
 
 
 class ImportDlpBamStderrView(SimpleTaskStderrView):
-    
+
     task_model = ImportDlpBam
 
 
@@ -358,12 +358,12 @@ class SimpleTaskRestartView(View):
 
     def get(self, request, pk):
         simple_task = get_object_or_404(self.task_model, pk=pk)
-        
+
         if simple_task.running:
             msg = "The " + self.task_model.__name__ + "is already running."
             messages.warning(request, msg)
             return HttpResponseRedirect(simple_task.get_absolute_url())
-        
+
         simple_task.state = simple_task.task_name.replace('_', ' ') + ' queued'
         simple_task.save()
         task_id = self.task_type.apply_async(
@@ -382,27 +382,27 @@ class FileTransferRestartView(SimpleTaskRestartView):
     detail_url_name = 'filetransfer-detail'
 
 class GscWgsBamQueryRestartView(SimpleTaskRestartView):
-    
+
     task_model = GscWgsBamQuery
     task_type = tantalus.tasks.query_gsc_wgs_bams_task
     detail_url_name = 'gscwgsbamquery-detail'
 
 class GscDlpPairedFastqQueryRestartView(SimpleTaskRestartView):
-    
+
     task_model = GscDlpPairedFastqQuery
     task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
     detail_url_name = 'gscdlppairedfastqquery-detail'
 
 
 class BRCFastqImportRestartView(SimpleTaskRestartView):
-    
+
     task_model = BRCFastqImport
     task_type = tantalus.tasks.import_brc_fastqs_task
     detail_url_name = 'brcfastqimport-detail'
 
 
 class ImportDlpBamRestartView(SimpleTaskRestartView):
-    
+
     task_model = ImportDlpBam
     task_type = tantalus.tasks.import_dlp_bams_task
     detail_url_name = 'importdlpbam-detail'
@@ -422,27 +422,27 @@ class SimpleTaskDeleteView(View):
 
 
 class FileTransferDeleteView(SimpleTaskDeleteView):
-    
+
     task_model = FileTransfer
 
 
 class GscWgsBamQueryDeleteView(SimpleTaskDeleteView):
-    
+
     task_model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryDeleteView(SimpleTaskDeleteView):
-    
+
     task_model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportDeleteView(SimpleTaskDeleteView):
-    
+
     task_model = BRCFastqImport
 
 
 class ImportDlpBamDeleteView(SimpleTaskDeleteView):
-    
+
     task_model = ImportDlpBam
 
 
@@ -454,7 +454,7 @@ class SimpleTaskStopView(View):
 
     def get(self, request, pk):
         simple_task = get_object_or_404(self.task_model, pk=pk)
-        
+
         if simple_task.stopping == False:
             simple_task.stopping = True
             simple_task.save()
@@ -473,22 +473,22 @@ class FileTransferStopView(SimpleTaskStopView):
 
 
 class GscWgsBamQueryStopView(SimpleTaskStopView):
-    
+
     task_model = GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryStopView(SimpleTaskStopView):
-    
+
     task_model = GscDlpPairedFastqQuery
 
 
 class BRCFastqImportStopView(SimpleTaskStopView):
-    
+
     task_model = BRCFastqImport
 
 
 class ImportDlpBamStopView(SimpleTaskStopView):
-    
+
     task_model = ImportDlpBam
 
 
@@ -580,7 +580,7 @@ class TagDatasetDelete(View):
     Tag dataset delete page.
     """
     def get(self, request, pk,pk_2):
-        dataset = get_object_or_404(AbstractDataSet,pk=pk)
+        dataset = get_object_or_404(SequenceDataset,pk=pk)
         tag = get_object_or_404(Tag,pk=pk_2)
         tag.abstractdataset_set.remove(dataset)
         msg = "Successfully removed datasest "
@@ -589,13 +589,13 @@ class TagDatasetDelete(View):
 
 
 class DatasetListJSON(BaseDatatableView):
-    
+
     """
     Class used as AJAX data source through the ajax option in the abstractdataset_list template.
     This enables server-side processing of the data used in the javascript DataTables.
     """
-    
-    model = AbstractDataSet
+
+    model = SequenceDataset
 
     columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
 
@@ -613,21 +613,21 @@ class DatasetListJSON(BaseDatatableView):
 
     def get_initial_queryset(self):
         if 'datasets' in self.kwargs.keys():
-            return AbstractDataSet.objects.filter(pk__in=self.kwargs['datasets'])
-        return AbstractDataSet.objects.all()
+            return SequenceDataset.objects.filter(pk__in=self.kwargs['datasets'])
+        return SequenceDataset.objects.all()
 
     def render_column(self, row, column):
         if column == 'dataset_type':
-            return row.dataset_type_name
+            return row.dataset_type
 
-        if column == 'sample_id': 
-            return list([sample.sample_id for sample in row.get_samples()])
+        if column == 'sample_id':
+            return row.sample.sample_id
 
         if column == 'library_id':
-            return list(row.get_libraries())
+            return row.library.library_id
 
         if column == 'num_read_groups':
-            return row.read_groups.count()
+            return row.sequence_lanes.count()
 
         if column == 'tags':
             tags_string =  map(str, row.tags.all().values_list('name', flat=True))
@@ -637,10 +637,10 @@ class DatasetListJSON(BaseDatatableView):
             return list(row.get_storage_names())
 
         if column == 'library_type':
-            return list(row.get_library_type())
+            return row.library.library_type
 
         if column == 'num_total_read_groups':
-            return row.get_num_total_read_groups()
+            return row.get_num_total_sequencing_lanes()
 
         if column == 'is_complete':
             return row.get_is_complete()
@@ -649,12 +649,13 @@ class DatasetListJSON(BaseDatatableView):
             return super(DatasetListJSON, self).render_column(row, column)
 
     def filter_queryset(self, qs):
-        
+
         """
         If search['value'] is provided then filter all searchable columns using istartswith.
         """
-        
+
         if not self.pre_camel_case_notation:
+            return qs
             # get global search value
             search = self._querydict.get('search[value]', None)
             col_data = self.extract_datatables_column_data()
@@ -688,7 +689,7 @@ class DatasetListJSON(BaseDatatableView):
 
 class DatasetList(ListView):
 
-    model = AbstractDataSet
+    model = SequenceDataset
     template_name = "tantalus/abstractdataset_list.html"
     paginate_by = 100
 
@@ -696,12 +697,12 @@ class DatasetList(ListView):
         ordering = ["id"]
 
     def get_context_data(self, **kwargs):
-        
+
         # TODO: add other fields to the view?
         """
         Get context data, and pop session variables from search/tagging if they exist.
         """
-        
+
         self.request.session.pop('dataset_search_results', None)
         self.request.session.pop('select_none_default', None)
 
@@ -711,28 +712,32 @@ class DatasetList(ListView):
 
 class DatasetDetail(DetailView):
 
-    model = AbstractDataSet
+    model = SequenceDataset
     template_name = "tantalus/abstractdataset_detail.html"
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
         context = super(DatasetDetail, self).get_context_data(**kwargs)
-        context['storages'] = Storage.objects.filter(fileinstance__file_resource__in=self.object.get_file_resources()).distinct()
+        storage_ids = list(FileInstance.objects.filter(
+                file_resource__sequencefileresource__sequencedataset=self.object)
+            .values_list('storage', flat=True)
+            .distinct())
+        context['storages'] = [Storage.objects.get(id=i) for i in storage_ids]
         return context
 
 
 class DatasetSearch(FormView):
-    
+
     form_class = DatasetSearchForm
     success_url = reverse_lazy('dataset-tag')
     template_name = 'tantalus/abstractdataset_search_form.html'
 
     def post(self, request, *args, **kwargs):
-        
+
         """
         Handles POST requests, instantiating a form instance with the passed POST variables and then checked for validity.
         """
-        
+
         form = self.get_form()
         if form.is_valid():
             kwargs['kw_search_results'] = form.get_dataset_search_results()
@@ -749,7 +754,7 @@ class DatasetTag(FormView):
     template_name = 'tantalus/abstractdataset_tag_form.html'
 
     def get_context_data(self, **kwargs):
-        
+
         """
         Insert the form into the context dict.
         Initialize queryset for tagging, and whether the default should have the whole queryset default to selected or not.
@@ -757,11 +762,11 @@ class DatasetTag(FormView):
 
         dataset_pks = self.request.session.get('dataset_search_results', None)
         if dataset_pks:
-            datasets = AbstractDataSet.objects.filter(pk__in=dataset_pks)
+            datasets = SequenceDataset.objects.filter(pk__in=dataset_pks)
             kwargs['datasets'] = datasets
             kwargs['dataset_pks'] = dataset_pks
         else:
-            kwargs['datasets'] = AbstractDataSet.objects.all()
+            kwargs['datasets'] = SequenceDataset.objects.all()
             kwargs['select_none_default'] = True
 
         if 'form' not in kwargs:
@@ -770,11 +775,11 @@ class DatasetTag(FormView):
         return super(DatasetTag, self).get_context_data(**kwargs)
 
     def get_form(self, form_class=None):
-        
+
         """
         Returns an instance of the form to be used in this view.
         """
-        
+
         if form_class is None:
             form_class = self.get_form_class()
 
@@ -877,7 +882,7 @@ def dataset_set_to_CSV(request):
 
     # Get the datasets from the POST
     pks = sorted(json.loads(request.POST['dataset_pks']))
-    datasets = AbstractDataSet.objects.filter(pk__in=pks)
+    datasets = SequenceDataset.objects.filter(pk__in=pks)
 
     # Write the data from each dataset
     for dataset in datasets:
@@ -1061,10 +1066,8 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {
-            #'dataset_count': AbstractDataSet.objects.count(),
-            'dataset_bam_count': BamFile.objects.count(),
-            'dataset_paired_end_fastq_count': PairedEndFastqFiles.objects.count(),
-            'dataset_single_end_fastq_count': SingleEndFastqFile.objects.count(),
+            'dataset_bam_count': SequenceDataset.objects.filter(dataset_type='BAM').count(),
+            'dataset_fastq_count': SequenceDataset.objects.filter(dataset_type='FQ').count(),
             'sample_count': Sample.objects.all().count(),
             'tag_count': Tag.objects.all().count(),
             'brc_fastq_import_count': BRCFastqImport.objects.all().count(),
