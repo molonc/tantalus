@@ -27,6 +27,9 @@ def import_dlp_realign_bams_wrapper(query_info, temp_directory):
         os.environ['COLOSSUS_API_URL'] = django.conf.settings.COLOSSUS_API_URL
         cmd.append('--blob_container_name')
         cmd.append(query_info.storage.azureblobstorage.storage_container)
+    elif query_info.storage.storage_type == 'server':
+        cmd.append('--server_storage_directory')
+        cmd.append(query_info.storage.storage_directory)
 
     subprocess.check_call(cmd)
     

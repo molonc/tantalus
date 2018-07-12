@@ -130,7 +130,7 @@ def import_dlp_realign_bams(json_filename, storage_name, storage_type, bam_filen
             metadata.extend(import_dlp_realign_bam_blob(storage_name, bam_filename, kwargs['blob_container_name']))
     elif storage_type == 'server':
         for bam_filename in bam_filenames:
-            metadata.extend(import_dlp_realign_bam_server(storage_name, bam_filename))
+            metadata.extend(import_dlp_realign_bam_server(storage_name, bam_filename, kwargs['server_storage_directory']))
     else:
         raise ValueError('unsupported storage type {}'.format(storage_type))
 
@@ -173,21 +173,28 @@ def import_dlp_realign_bam_blob(storage_name, bam_filename, container_name):
     return import_dlp_realign_bam(storage, bam_info, bai_info, bam_header)
 
 
-def import_dlp_realign_bam_server(storage_name, bam_filename):
+def import_dlp_realign_bam_server(storage_name, bam_filepath, storage_directory):
+    if not bam_filepath.startswith(storage_directory):
+        raise Exception('bam filename {} should have storage directory {} as prefix'.format(
+            bam_filepath, storage_directory))
+
+    bam_filename = bam_filepath[len(storage_directory):].lstrip('/')
+
+    bai_filepath = bam_filepath + '.bai'
     bai_filename = bam_filename + '.bai'
 
-    bam_header = get_bam_header_file(bam_filename)
+    bam_header = get_bam_header_file(bam_filepath)
 
     bam_info = {
         'filename': bam_filename,
-        'size': get_size_file(bam_filename),
-        'created': get_created_time_file(bam_filename),
+        'size': get_size_file(bam_filepath),
+        'created': get_created_time_file(bam_filepath),
     }
 
     bai_info = {
         'filename': bai_filename,
-        'size': get_size_file(bai_filename),
-        'created': get_created_time_file(bai_filename),
+        'size': get_size_file(bai_filepath),
+        'created': get_created_time_file(bai_filepath),
     }
 
     storage = dict(
@@ -257,7 +264,7 @@ if __name__ == '__main__':
     parser.add_argument('storage_type', choices=['blob', 'server'])
     parser.add_argument('bam_filenames', nargs='+')
     parser.add_argument('--blob_container_name', required=False)
-    parser.add_argument('--tag_name', required=False)
+    parser.add_argument('--server_storage_directory', required=False)
     args = vars(parser.parse_args())
 
     json_list = import_dlp_realign_bams(
@@ -265,6 +272,6 @@ if __name__ == '__main__':
         args['storage_name'],
         args['storage_type'],
         args['bam_filenames'],
-        blob_container_name=args.get('tag_name'),
+        server_storage_directory=args.get('server_storage_directory'),
         blob_container_name=args.get('blob_container_name'))
 
