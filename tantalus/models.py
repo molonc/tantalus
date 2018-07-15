@@ -8,6 +8,7 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 from simple_history.models import HistoricalRecords
 from polymorphic.models import PolymorphicModel
+import account.models
 
 
 def create_id_field(*args, **kwargs):
@@ -104,6 +105,12 @@ class DNALibrary(models.Model):
 
     history = HistoricalRecords()
 
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
     library_id = create_id_field(unique=True)
 
     EXOME = 'EXOME'
@@ -164,6 +171,12 @@ class SequencingLane(models.Model):
     """
 
     history = HistoricalRecords()
+
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
 
     flowcell_id = create_id_field()
 
@@ -232,6 +245,12 @@ class FileResource(models.Model):
     """
 
     history = HistoricalRecords()
+
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
 
     md5 = models.CharField(
         max_length=50,
@@ -324,6 +343,12 @@ class SequenceDataset(models.Model):
 
     history = HistoricalRecords()
 
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
     name = models.CharField(
         max_length=200,
         unique=True,
@@ -407,6 +432,12 @@ class Storage(PolymorphicModel):
     """
 
     history = HistoricalRecords()
+
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
 
     name = models.CharField(
         max_length=50,
@@ -534,6 +565,12 @@ class FileInstance(models.Model):
     """
 
     history = HistoricalRecords()
+
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
 
     storage = models.ForeignKey(
         Storage,

@@ -77,7 +77,7 @@ class DatasetSearchForm(forms.Form):
         widget=forms.widgets.CheckboxSelectMultiple()
     )
     storages = forms.MultipleChoiceField(
-        choices=tuple([(s.name, s.name) for s in tantalus.models.Storage.objects.all()]),
+        # choices=tuple([(s.name, s.name) for s in tantalus.models.Storage.objects.all()]),
         required=False,
         help_text="Only look for files that are present in the selected storage.",
         widget=forms.widgets.CheckboxSelectMultiple(),

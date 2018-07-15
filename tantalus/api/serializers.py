@@ -48,6 +48,12 @@ class AzureBlobStorageSerializer(serializers.ModelSerializer):
 
 
 class FileInstanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.FileInstance
+        fields = '__all__'
+
+
+class FileInstanceSerializerRead(serializers.ModelSerializer):
     filepath = serializers.SerializerMethodField()
     storage = StorageSerializer(read_only=True)
 
@@ -60,8 +66,13 @@ class FileInstanceSerializer(serializers.ModelSerializer):
 
 
 class FileResourceSerializer(serializers.ModelSerializer):
-    file_instances = FileInstanceSerializer(source='fileinstance_set', many=True, read_only=True)
+    class Meta:
+        model = tantalus.models.FileResource
+        fields = '__all__'
 
+
+class FileResourceSerializerRead(serializers.ModelSerializer):
+    file_instances = FileInstanceSerializer(source='fileinstance_set', many=True, read_only=True)
     class Meta:
         model = tantalus.models.FileResource
         fields = '__all__'
@@ -80,6 +91,12 @@ class SequencingLaneSerializer(serializers.ModelSerializer):
 
 
 class SequenceDatasetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.SequenceDataset
+        fields = '__all__'
+
+
+class SequenceDatasetSerializerRead(serializers.ModelSerializer):
     sequence_lanes = SequencingLaneSerializer(many=True)
     class Meta:
         model = tantalus.models.SequenceDataset

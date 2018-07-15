@@ -6,6 +6,20 @@ import django_filters
 import tantalus.models
 import tantalus.api.serializers
 import tantalus.tasks
+from tantalus.api.permissions import IsOwnerOrReadOnly
+from rest_framework import permissions
+
+
+class OwnerEditModelViewSet(viewsets.ModelViewSet):
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly,
+        IsOwnerOrReadOnly,)
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return self.serializer_class_readonly
+        return self.serializer_class_readwrite
 
 
 class SampleViewSet(viewsets.ReadOnlyModelViewSet):
@@ -14,26 +28,30 @@ class SampleViewSet(viewsets.ReadOnlyModelViewSet):
     filter_fields = ('sample_id',)
 
 
-class FileResourceViewSet(viewsets.ReadOnlyModelViewSet):
+class FileResourceViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.FileResource.objects.all()
-    serializer_class = tantalus.api.serializers.FileResourceSerializer
+    serializer_class_readonly = tantalus.api.serializers.FileResourceSerializerRead
+    serializer_class_readwrite = tantalus.api.serializers.FileResourceSerializer
 
 
-class DNALibraryViewSet(viewsets.ReadOnlyModelViewSet):
+class DNALibraryViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.DNALibrary.objects.all()
-    serializer_class = tantalus.api.serializers.DNALibrarySerializer
+    serializer_class_readonly = tantalus.api.serializers.DNALibrarySerializer
+    serializer_class_readwrite = tantalus.api.serializers.DNALibrarySerializer
     filter_fields = ('library_id',)
 
 
-class SequencingLaneViewSet(viewsets.ReadOnlyModelViewSet):
+class SequencingLaneViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.SequencingLane.objects.all()
-    serializer_class = tantalus.api.serializers.SequencingLaneSerializer
+    serializer_class_readonly = tantalus.api.serializers.SequencingLaneSerializer
+    serializer_class_readwrite = tantalus.api.serializers.SequencingLaneSerializer
     filter_fields = ('flowcell_id', 'lane_number', 'library_id')
 
 
-class SequenceDatasetViewSet(viewsets.ReadOnlyModelViewSet):
+class SequenceDatasetViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.SequenceDataset.objects.all()
-    serializer_class = tantalus.api.serializers.SequenceDatasetSerializer
+    serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
+    serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
     filter_fields = ('library__library_id', 'sample__sample_id',)
 
 
@@ -54,9 +72,10 @@ class AzureBlobStorageViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
 
 
-class FileInstanceViewSet(viewsets.ReadOnlyModelViewSet):
+class FileInstanceViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.FileInstance.objects.all()
-    serializer_class = tantalus.api.serializers.FileInstanceSerializer
+    serializer_class_readonly = tantalus.api.serializers.FileInstanceSerializerRead
+    serializer_class_readwrite = tantalus.api.serializers.FileInstanceSerializer
     filter_fields = ('storage__name',)
 
 

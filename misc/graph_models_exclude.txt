@@ -1,8 +1,14 @@
-*User*
 Historical*
 LogEntry
 Group
 Permission
 ContentType
-*Tag*
 *Session*
+*Query*
+*Generic*
+SimpleTask
+FileTransfer
+BRCFastqImport
+ImportDlpBam
+MD5Check
+ReservedFileInstance
