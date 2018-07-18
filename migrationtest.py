@@ -37,6 +37,49 @@ for bamfile in BamFile.objects.exclude(read_groups__dna_library__library_type='S
         print bamfile.bam_file.filename, bamfile.get_storage_names()
 
 
+# Check 4: 
+name_check = collections.defaultdict(list)
+i = 0
+for bamfile in BamFile.objects.filter(read_groups__dna_library__library_type='SC_WGS').distinct():
+    if i % 1000 == 0:
+        print i
+    i += 1
+    samples = get_samples(bamfile)
+    libraries = get_libraries(bamfile)
+
+    if len(samples) != 1 or len(libraries) != 1:
+        continue
+
+    sample = samples[0]
+    library = libraries[0]
+    lanes = get_lanes_str(SequenceLane, bamfile)
+
+    index_sequences = set()
+    for readgroup in bamfile.read_groups.all():
+        index_sequences.add(readgroup.index_sequence)
+    assert len(index_sequences) == 1
+    index_sequence = list(index_sequences)[0]
+
+    name = 'BAM-{}-{}-{}-{} ({})'.format(
+        sample.sample_id,
+        library.library_type,
+        library.library_id,
+        lanes,
+        index_sequence,
+    )
+
+    name_check[name].append(bamfile)
+
+    if len(name_check[name]) > 1:
+        print bamfile.id
+
+for name in name_check:
+    if len(name_check[name]) > 1:
+        print name, bamfile.bam_file.filename
+
+
+
+
 
 for bamfile in BamFile.objects.exclude(read_groups__dna_library__library_type='SC_WGS'):
     samples = bamfile.get_samples()
