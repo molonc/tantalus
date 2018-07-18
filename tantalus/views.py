@@ -20,13 +20,12 @@ import csv
 import json
 import os
 
-from tantalus.models import FileInstance, FileTransfer, FileResource, Sample, SequenceDataset, SingleEndFastqFile, PairedEndFastqFiles, BamFile, Storage, AzureBlobStorage, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, ImportDlpBam, Tag, DNALibrary
-from tantalus.generictask_models import GenericTaskType, GenericTaskInstance
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT
 from misc.helpers import Render
-from .forms import SampleForm, MultipleSamplesForm, DatasetSearchForm, DatasetTagForm, FileTransferCreateForm, GscWgsBamQueryCreateForm, GscDlpPairedFastqQueryCreateForm, BRCFastqImportCreateForm, ImportDlpBamCreateForm
+import tantalus.models
 import tantalus.tasks
+import tantalus.forms
 
 
 @Render("tantalus/sample_list.html")
@@ -36,7 +35,7 @@ def sample_list(request):
     List of samples.
     """
 
-    samples = Sample.objects.all().order_by('sample_id')
+    samples = tantalus.models.Sample.objects.all().order_by('sample_id')
 
     context = {
         'samples': samples,
@@ -46,14 +45,14 @@ def sample_list(request):
 
 class SampleDetail(DetailView):
 
-    model = Sample
+    model = tantalus.models.Sample
     template_name = "tantalus/sample_detail.html"
 
     def get_context_data(self, object):
-        instance = get_object_or_404(Sample, pk=object.id)
+        instance = get_object_or_404(tantalus.models.Sample, pk=object.id)
 
         context = {
-            'form': SampleForm(instance=instance),
+            'form': tantalus.forms.SampleForm(instance=instance),
         }
         return context
 
@@ -75,27 +74,27 @@ class SimpleTaskListView(TemplateView):
 
 class FileTransferListView(SimpleTaskListView):
 
-    task_model = FileTransfer
+    task_model = tantalus.models.FileTransfer
 
 
 class GscWgsBamQueryListView(SimpleTaskListView):
 
-    task_model = GscWgsBamQuery
+    task_model = tantalus.models.GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryListView(SimpleTaskListView):
 
-    task_model = GscDlpPairedFastqQuery
+    task_model = tantalus.models.GscDlpPairedFastqQuery
 
 
 class BRCFastqImportListView(SimpleTaskListView):
 
-    task_model = BRCFastqImport
+    task_model = tantalus.models.BRCFastqImport
 
 
 class ImportDlpBamListView(SimpleTaskListView):
 
-    task_model = ImportDlpBam
+    task_model = tantalus.models.ImportDlpBam
 
 
 def get_simple_task_log(simple_task, dir_name, stderr=False, raw=False, preview_size=1000):
@@ -168,27 +167,27 @@ class SimpleTaskDetailView(TemplateView):
 
 class FileTransferDetailView(SimpleTaskDetailView):
 
-    task_model = FileTransfer
+    task_model = tantalus.models.FileTransfer
 
 
 class GscWgsBamQueryDetailView(SimpleTaskDetailView):
 
-    task_model = GscWgsBamQuery
+    task_model = tantalus.models.GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryDetailView(SimpleTaskDetailView):
 
-    task_model = GscDlpPairedFastqQuery
+    task_model = tantalus.models.GscDlpPairedFastqQuery
 
 
 class BRCFastqImportDetailView(SimpleTaskDetailView):
 
-    task_model = BRCFastqImport
+    task_model = tantalus.models.BRCFastqImport
 
 
 class ImportDlpBamDetailView(SimpleTaskDetailView):
 
-    task_model = ImportDlpBam
+    task_model = tantalus.models.ImportDlpBam
 
 
 class SimpleTaskStdoutView(TemplateView):
@@ -209,27 +208,27 @@ class SimpleTaskStdoutView(TemplateView):
 
 class FileTransferStdoutView(SimpleTaskStdoutView):
 
-    task_model = FileTransfer
+    task_model = tantalus.models.FileTransfer
 
 
 class GscWgsBamQueryStdoutView(SimpleTaskStdoutView):
 
-    task_model = GscWgsBamQuery
+    task_model = tantalus.models.GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryStdoutView(SimpleTaskStdoutView):
 
-    task_model = GscDlpPairedFastqQuery
+    task_model = tantalus.models.GscDlpPairedFastqQuery
 
 
 class BRCFastqImportStdoutView(SimpleTaskStdoutView):
 
-    task_model = BRCFastqImport
+    task_model = tantalus.models.BRCFastqImport
 
 
 class ImportDlpBamStdoutView(SimpleTaskStdoutView):
 
-    task_model = ImportDlpBam
+    task_model = tantalus.models.ImportDlpBam
 
 
 class SimpleTaskStderrView(TemplateView):
@@ -250,27 +249,27 @@ class SimpleTaskStderrView(TemplateView):
 
 class FileTransferStderrView(SimpleTaskStderrView):
 
-    task_model = FileTransfer
+    task_model = tantalus.models.FileTransfer
 
 
 class GscWgsBamQueryStderrView(SimpleTaskStderrView):
 
-    task_model = GscWgsBamQuery
+    task_model = tantalus.models.GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryStderrView(SimpleTaskStderrView):
 
-    task_model = GscDlpPairedFastqQuery
+    task_model = tantalus.models.GscDlpPairedFastqQuery
 
 
 class BRCFastqImportStderrView(SimpleTaskStderrView):
 
-    task_model = BRCFastqImport
+    task_model = tantalus.models.BRCFastqImport
 
 
 class ImportDlpBamStderrView(SimpleTaskStderrView):
 
-    task_model = ImportDlpBam
+    task_model = tantalus.models.ImportDlpBam
 
 
 @method_decorator(login_required, name='get')
@@ -307,7 +306,7 @@ class SimpleTaskCreateView(TemplateView):
 
 class FileTransferCreateView(SimpleTaskCreateView):
 
-    task_form = FileTransferCreateForm
+    task_form = tantalus.forms.FileTransferCreateForm
     detail_url_name = 'filetransfer-detail'
 
     def get(self, request):
@@ -328,25 +327,25 @@ class FileTransferCreateView(SimpleTaskCreateView):
 
 class GscWgsBamQueryCreateView(SimpleTaskCreateView):
 
-    task_form = GscWgsBamQueryCreateForm
+    task_form = tantalus.forms.GscWgsBamQueryCreateForm
     detail_url_name = 'gscwgsbamquery-detail'
 
 
 class GscDlpPairedFastqQueryCreateView(SimpleTaskCreateView):
 
-    task_form = GscDlpPairedFastqQueryCreateForm
+    task_form = tantalus.forms.GscDlpPairedFastqQueryCreateForm
     detail_url_name = 'gscdlppairedfastqquery-detail'
 
 
 class BRCFastqImportCreateView(SimpleTaskCreateView):
 
-    task_form = BRCFastqImportCreateForm
+    task_form = tantalus.forms.BRCFastqImportCreateForm
     detail_url_name = 'brcfastqimport-detail'
 
 
 class ImportDlpBamCreateView(SimpleTaskCreateView):
 
-    task_form = ImportDlpBamCreateForm
+    task_form = tantalus.forms.ImportDlpBamCreateForm
     detail_url_name = 'importdlpbam-detail'
 
 
@@ -377,33 +376,33 @@ class SimpleTaskRestartView(View):
 class FileTransferRestartView(SimpleTaskRestartView):
 
     # TODO: error for starting filetransfer that is running
-    task_model = FileTransfer
+    task_model = tantalus.models.FileTransfer
     task_type = tantalus.tasks.transfer_files_task
     detail_url_name = 'filetransfer-detail'
 
 class GscWgsBamQueryRestartView(SimpleTaskRestartView):
 
-    task_model = GscWgsBamQuery
+    task_model = tantalus.models.GscWgsBamQuery
     task_type = tantalus.tasks.query_gsc_wgs_bams_task
     detail_url_name = 'gscwgsbamquery-detail'
 
 class GscDlpPairedFastqQueryRestartView(SimpleTaskRestartView):
 
-    task_model = GscDlpPairedFastqQuery
+    task_model = tantalus.models.GscDlpPairedFastqQuery
     task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
     detail_url_name = 'gscdlppairedfastqquery-detail'
 
 
 class BRCFastqImportRestartView(SimpleTaskRestartView):
 
-    task_model = BRCFastqImport
+    task_model = tantalus.models.BRCFastqImport
     task_type = tantalus.tasks.import_brc_fastqs_task
     detail_url_name = 'brcfastqimport-detail'
 
 
 class ImportDlpBamRestartView(SimpleTaskRestartView):
 
-    task_model = ImportDlpBam
+    task_model = tantalus.models.ImportDlpBam
     task_type = tantalus.tasks.import_dlp_bams_task
     detail_url_name = 'importdlpbam-detail'
 
@@ -423,27 +422,27 @@ class SimpleTaskDeleteView(View):
 
 class FileTransferDeleteView(SimpleTaskDeleteView):
 
-    task_model = FileTransfer
+    task_model = tantalus.models.FileTransfer
 
 
 class GscWgsBamQueryDeleteView(SimpleTaskDeleteView):
 
-    task_model = GscWgsBamQuery
+    task_model = tantalus.models.GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryDeleteView(SimpleTaskDeleteView):
 
-    task_model = GscDlpPairedFastqQuery
+    task_model = tantalus.models.GscDlpPairedFastqQuery
 
 
 class BRCFastqImportDeleteView(SimpleTaskDeleteView):
 
-    task_model = BRCFastqImport
+    task_model = tantalus.models.BRCFastqImport
 
 
 class ImportDlpBamDeleteView(SimpleTaskDeleteView):
 
-    task_model = ImportDlpBam
+    task_model = tantalus.models.ImportDlpBam
 
 
 @method_decorator(login_required, name='get')
@@ -469,34 +468,34 @@ class SimpleTaskStopView(View):
 
 class FileTransferStopView(SimpleTaskStopView):
 
-    task_model = FileTransfer
+    task_model = tantalus.models.FileTransfer
 
 
 class GscWgsBamQueryStopView(SimpleTaskStopView):
 
-    task_model = GscWgsBamQuery
+    task_model = tantalus.models.GscWgsBamQuery
 
 
 class GscDlpPairedFastqQueryStopView(SimpleTaskStopView):
 
-    task_model = GscDlpPairedFastqQuery
+    task_model = tantalus.models.GscDlpPairedFastqQuery
 
 
 class BRCFastqImportStopView(SimpleTaskStopView):
 
-    task_model = BRCFastqImport
+    task_model = tantalus.models.BRCFastqImport
 
 
 class ImportDlpBamStopView(SimpleTaskStopView):
 
-    task_model = ImportDlpBam
+    task_model = tantalus.models.ImportDlpBam
 
 
 @method_decorator(login_required, name='dispatch')
 class SampleCreate(TemplateView):
 
     """
-    Sample create page.
+    tantalus.models.Sample create page.
     """
 
     template_name = "tantalus/sample_create.html"
@@ -510,23 +509,23 @@ class SampleCreate(TemplateView):
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
-        form = SampleForm()
-        multi_form = MultipleSamplesForm()
+        form = tantalus.forms.SampleForm()
+        multi_form = tantalus.forms.MultipleSamplesForm()
         return self.get_context_and_render(request, form, multi_form)
 
     def post(self, request, *args, **kwargs):
-        form = SampleForm(request.POST)
-        multi_form = MultipleSamplesForm(request.POST, request.FILES)
+        form = tantalus.forms.SampleForm(request.POST)
+        multi_form = tantalus.forms.MultipleSamplesForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
-            msg = "Successfully created the Sample."
+            msg = "Successfully created the tantalus.models.Sample."
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
         elif multi_form.is_valid():
             sample_ids = multi_form.get_sample_ids()
             for sample_id in sample_ids:
-                sample, created = Sample.objects.get_or_create(sample_id=sample_id)
+                sample, created = tantalus.models.Sample.objects.get_or_create(sample_id=sample_id)
                 if created:
                     sample.save()
             return HttpResponseRedirect(sample.get_absolute_url())
@@ -541,7 +540,7 @@ def tag_list(request):
     """
     List of Tags.
     """
-    tags = Tag.objects.all().order_by('name')
+    tags = tantalus.models.Tag.objects.all().order_by('name')
     context = {
         'tags': tags,
     }
@@ -551,21 +550,21 @@ def tag_list(request):
 @method_decorator(login_required, name='dispatch')
 class TagDelete(View):
     """
-    Tag delete page.
+    tantalus.models.Tag delete page.
     """
     def get(self, request, pk):
-        get_object_or_404(Tag,pk=pk).delete()
+        get_object_or_404(tantalus.models.Tag,pk=pk).delete()
         msg = "Successfully deleted tag"
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('tag-list'))
 
 
 class TagDetail(DetailView):
-    model = Tag
+    model = tantalus.models.Tag
     template_name = "tantalus/tag_detail.html"
 
     def get_context_data(self, object):
-        tag = get_object_or_404(Tag, pk=object.id)
+        tag = get_object_or_404(tantalus.models.Tag, pk=object.id)
         datasets = tag.abstractdataset_set.all()
         context = {
             'tag': tag,
@@ -577,11 +576,11 @@ class TagDetail(DetailView):
 @method_decorator(login_required, name='dispatch')
 class TagDatasetDelete(View):
     """
-    Tag dataset delete page.
+    tantalus.models.Tag dataset delete page.
     """
     def get(self, request, pk,pk_2):
-        dataset = get_object_or_404(SequenceDataset,pk=pk)
-        tag = get_object_or_404(Tag,pk=pk_2)
+        dataset = get_object_or_404(tantalus.models.SequenceDataset,pk=pk)
+        tag = get_object_or_404(tantalus.models.Tag,pk=pk_2)
         tag.abstractdataset_set.remove(dataset)
         msg = "Successfully removed datasest "
         messages.success(request, msg)
@@ -595,7 +594,7 @@ class DatasetListJSON(BaseDatatableView):
     This enables server-side processing of the data used in the javascript DataTables.
     """
 
-    model = SequenceDataset
+    model = tantalus.models.SequenceDataset
 
     columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
 
@@ -613,8 +612,8 @@ class DatasetListJSON(BaseDatatableView):
 
     def get_initial_queryset(self):
         if 'datasets' in self.kwargs.keys():
-            return SequenceDataset.objects.filter(pk__in=self.kwargs['datasets'])
-        return SequenceDataset.objects.all()
+            return tantalus.models.SequenceDataset.objects.filter(pk__in=self.kwargs['datasets'])
+        return tantalus.models.SequenceDataset.objects.all()
 
     def render_column(self, row, column):
         if column == 'dataset_type':
@@ -689,7 +688,7 @@ class DatasetListJSON(BaseDatatableView):
 
 class DatasetList(ListView):
 
-    model = SequenceDataset
+    model = tantalus.models.SequenceDataset
     template_name = "tantalus/abstractdataset_list.html"
     paginate_by = 100
 
@@ -712,23 +711,23 @@ class DatasetList(ListView):
 
 class DatasetDetail(DetailView):
 
-    model = SequenceDataset
+    model = tantalus.models.SequenceDataset
     template_name = "tantalus/abstractdataset_detail.html"
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
         context = super(DatasetDetail, self).get_context_data(**kwargs)
-        storage_ids = list(FileInstance.objects.filter(
+        storage_ids = list(tantalus.models.FileInstance.objects.filter(
                 file_resource__sequencefileresource__sequencedataset=self.object)
             .values_list('storage', flat=True)
             .distinct())
-        context['storages'] = [Storage.objects.get(id=i) for i in storage_ids]
+        context['storages'] = [tantalus.models.Storage.objects.get(id=i) for i in storage_ids]
         return context
 
 
 class DatasetSearch(FormView):
 
-    form_class = DatasetSearchForm
+    form_class = tantalus.forms.DatasetSearchForm
     success_url = reverse_lazy('dataset-tag')
     template_name = 'tantalus/abstractdataset_search_form.html'
 
@@ -750,7 +749,7 @@ class DatasetSearch(FormView):
 
 @method_decorator(login_required, name='post')
 class DatasetTag(FormView):
-    form_class = DatasetTagForm
+    form_class = tantalus.forms.DatasetTagForm
     template_name = 'tantalus/abstractdataset_tag_form.html'
 
     def get_context_data(self, **kwargs):
@@ -762,15 +761,15 @@ class DatasetTag(FormView):
 
         dataset_pks = self.request.session.get('dataset_search_results', None)
         if dataset_pks:
-            datasets = SequenceDataset.objects.filter(pk__in=dataset_pks)
+            datasets = tantalus.models.SequenceDataset.objects.filter(pk__in=dataset_pks)
             kwargs['datasets'] = datasets
             kwargs['dataset_pks'] = dataset_pks
         else:
-            kwargs['datasets'] = SequenceDataset.objects.all()
+            kwargs['datasets'] = tantalus.models.SequenceDataset.objects.all()
             kwargs['select_none_default'] = True
 
         if 'form' not in kwargs:
-            kwargs['form'] = DatasetTagForm(datasets=dataset_pks)
+            kwargs['form'] = tantalus.forms.DatasetTagForm(datasets=dataset_pks)
 
         return super(DatasetTag, self).get_context_data(**kwargs)
 
@@ -789,16 +788,16 @@ class DatasetTag(FormView):
     def form_valid(self, form):
         form.add_dataset_tags()
         tag =  form.cleaned_data['tag_name']
-        tag_id = Tag.objects.get(name=tag)
+        tag_id = tantalus.models.Tag.objects.get(name=tag)
         self.request.session.pop('dataset_search_results', None)
         self.request.session.pop('select_none_default', None)
 
-        # Depending on which of the "Tag" or "Tag then transfer" buttons
+        # Depending on which of the "tantalus.models.Tag" or "tantalus.models.Tag then transfer" buttons
         # was clicked to submit the form, take the appropriate action
         if self.request.POST.get('tag_and_transfer_button'):
             # Redirect to transfer
             return HttpResponseRedirect("%s?tag=%s" % (reverse('filetransfer-create'), tag))
-        # Go to Tag detail page
+        # Go to tantalus.models.Tag detail page
         return HttpResponseRedirect(reverse('tag-detail', kwargs={'pk': tag_id.id}))
 
 
@@ -882,7 +881,7 @@ def dataset_set_to_CSV(request):
 
     # Get the datasets from the POST
     pks = sorted(json.loads(request.POST['dataset_pks']))
-    datasets = SequenceDataset.objects.filter(pk__in=pks)
+    datasets = tantalus.models.SequenceDataset.objects.filter(pk__in=pks)
 
     # Write the data from each dataset
     for dataset in datasets:
@@ -911,22 +910,22 @@ def get_storage_stats(storages=['all']):
     """
     # Build the file instance set
     if 'all' in storages:
-        file_resources = FileResource.objects.all()
+        file_resources = tantalus.models.FileResource.objects.all()
     else:
-        file_resources = FileResource.objects.filter(
+        file_resources = tantalus.models.FileResource.objects.filter(
             fileinstance__storage__name__in=storages)
 
     # Find info on number of files
     num_bams = file_resources.filter(
-        file_type=FileResource.BAM).filter(
+        file_type=tantalus.models.FileResource.BAM).filter(
         ~Q(compression='SPEC')).count()
     num_specs = file_resources.filter(
-        file_type=FileResource.BAM).filter(
+        file_type=tantalus.models.FileResource.BAM).filter(
         compression='SPEC').count()
     num_bais = file_resources.filter(
-        file_type=FileResource.BAI).count()
+        file_type=tantalus.models.FileResource.BAI).count()
     num_fastqs = file_resources.filter(
-        file_type=FileResource.FQ).count()
+        file_type=tantalus.models.FileResource.FQ).count()
 
     # Get the size of all storages
     storage_size = file_resources.aggregate(Sum('size'))
@@ -934,10 +933,10 @@ def get_storage_stats(storages=['all']):
 
     # Build the file transfer set
     if 'all' in storages:
-        num_active_file_transfers = FileTransfer.objects.filter(
+        num_active_file_transfers = tantalus.models.FileTransfer.objects.filter(
             running=True).count()
     else:
-        num_active_file_transfers = FileTransfer.objects.filter(
+        num_active_file_transfers = tantalus.models.FileTransfer.objects.filter(
             running=True).filter(
             Q(from_storage__name__in=storages)
             | Q(to_storage__name__in=storages)).count()
@@ -973,7 +972,7 @@ def get_library_stats(filetype, storages_dict):
     assert filetype in ['BAM', 'FASTQ']
 
     # Get the list of library types that we'll get data for
-    library_types = [x[0] for x in DNALibrary.library_type_choices]
+    library_types = [x[0] for x in tantalus.models.DNALibrary.library_type_choices]
 
     # Results dictionary
     results = dict()
@@ -989,16 +988,16 @@ def get_library_stats(filetype, storages_dict):
             # the end of the queryset operations is necessary here, and
             # I'm not exactly sure why this is so, without it, filter
             # picks up a ton of duplicates. Very strange.
-            matching_files = FileResource.objects.filter(
+            matching_files = tantalus.models.FileResource.objects.filter(
                 abstractdataset__read_groups__dna_library__library_type=lib_type).filter(
                 fileinstance__storage__name__in=storages).distinct()
 
             if filetype == 'BAM':
                 # Get all the matching BAM files
-                matching_files = matching_files.filter(file_type=FileResource.BAM)
+                matching_files = matching_files.filter(file_type=tantalus.models.FileResource.BAM)
             else:
                 # Get all the matching FASTQ files
-                matching_files = matching_files.filter(file_type=FileResource.FQ)
+                matching_files = matching_files.filter(file_type=tantalus.models.FileResource.FQ)
 
             # Compute results - first the number of files- Add field skip_file_import to gscwgsbamquery
             number = matching_files.count()
@@ -1033,7 +1032,7 @@ class DataStatsView(TemplateView):
                 get_storage_stats([local_storage_name]))
 
         # Go through cloud storages.
-        azure_storages = [x.name for x in AzureBlobStorage.objects.all()]
+        azure_storages = [x.name for x in tantalus.models.AzureBlobStorage.objects.all()]
         storage_stats['azure'] = get_storage_stats(azure_storages)
 
         # Get overall data stats over all storage locations
@@ -1066,16 +1065,16 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {
-            'dataset_bam_count': SequenceDataset.objects.filter(dataset_type='BAM').count(),
-            'dataset_fastq_count': SequenceDataset.objects.filter(dataset_type='FQ').count(),
-            'sample_count': Sample.objects.all().count(),
-            'tag_count': Tag.objects.all().count(),
-            'brc_fastq_import_count': BRCFastqImport.objects.all().count(),
-            'file_transfer_count': FileTransfer.objects.all().count(),
-            'gsc_dlp_paired_fastq_query_count': GscDlpPairedFastqQuery.objects.all().count(),
-            'gsc_wgs_bam_query_count': GscWgsBamQuery.objects.all().count(),
-            'import_dlp_bam_count': ImportDlpBam.objects.all().count(),
-            'generic_task_instance_count': GenericTaskInstance.objects.all().count(),
-            'generic_task_type_count': GenericTaskType.objects.all().count(),
+            'dataset_bam_count': tantalus.models.SequenceDataset.objects.filter(dataset_type='BAM').count(),
+            'dataset_fastq_count': tantalus.models.SequenceDataset.objects.filter(dataset_type='FQ').count(),
+            'sample_count': tantalus.models.Sample.objects.all().count(),
+            'tag_count': tantalus.models.Tag.objects.all().count(),
+            'brc_fastq_import_count': tantalus.models.BRCFastqImport.objects.all().count(),
+            'file_transfer_count': tantalus.models.FileTransfer.objects.all().count(),
+            'gsc_dlp_paired_fastq_query_count': tantalus.models.GscDlpPairedFastqQuery.objects.all().count(),
+            'gsc_wgs_bam_query_count': tantalus.models.GscWgsBamQuery.objects.all().count(),
+            'import_dlp_bam_count': tantalus.models.ImportDlpBam.objects.all().count(),
+            'generic_task_instance_count': tantalus.generictask_models.GenericTaskInstance.objects.all().count(),
+            'generic_task_type_count': tantalus.generictask_models.GenericTaskType.objects.all().count(),
         }
         return context

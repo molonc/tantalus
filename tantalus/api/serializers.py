@@ -73,75 +73,6 @@ class DNALibrarySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SequenceLaneSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = tantalus.models.SequenceLane
-        fields = '__all__'
-
-
-class ReadGroupSerializer(serializers.ModelSerializer):
-    sample = SampleSerializer()
-    dna_library = DNALibrarySerializer()
-    sequence_lane = SequenceLaneSerializer()
-
-    class Meta:
-        model = tantalus.models.ReadGroup
-        fields = '__all__'
-
-
-class AbstractDataSetSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = tantalus.models.AbstractDataSet
-        fields = '__all__'
-
-    def to_representation(self, obj):
-        if isinstance(obj, tantalus.models.SingleEndFastqFile):
-            return SingleEndFastqFileSerializer(obj, context=self.context).to_representation(obj)
-
-        elif isinstance(obj, tantalus.models.PairedEndFastqFiles):
-            return PairedEndFastqFilesSerializer(obj, context=self.context).to_representation(obj)
-
-        elif isinstance(obj, tantalus.models.BamFile):
-            return BamFileSerializer(obj, context=self.context).to_representation(obj)
-
-        return super(AbstractDataSetSerializer, self).to_representation(obj)
-
-
-class BCLFolderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = tantalus.models.BCLFolder
-        exclude = ['polymorphic_ctype']
-
-
-class SingleEndFastqFileSerializer(serializers.ModelSerializer):
-    read_groups = ReadGroupSerializer(many=True)
-
-    class Meta:
-        model = tantalus.models.SingleEndFastqFile
-        exclude = ['polymorphic_ctype']
-
-
-class PairedEndFastqFilesSerializer(serializers.ModelSerializer):
-    read_groups = ReadGroupSerializer(many=True)
-    reads_1_file = FileResourceSerializer()
-    reads_2_file = FileResourceSerializer()
-
-    class Meta:
-        model = tantalus.models.PairedEndFastqFiles
-        exclude = ['polymorphic_ctype']
-
-
-class BamFileSerializer(serializers.ModelSerializer):
-    read_groups = ReadGroupSerializer(many=True)
-    bam_file = FileResourceSerializer()
-    bam_index_file = FileResourceSerializer()
-
-    class Meta:
-        model = tantalus.models.BamFile
-        exclude = ['polymorphic_ctype']
-
-
 class SequencingLaneSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.SequencingLane
@@ -248,11 +179,11 @@ class ImportDlpBamSerializer(SimpleTaskSerializer):
 
 class DatasetTagSerializer(serializers.ModelSerializer):
     """Serializer for tags."""
-    abstractdataset_set = serializers.PrimaryKeyRelatedField(
+    sequencedataset_set = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=tantalus.models.AbstractDataSet.objects.all(),)
+        queryset=tantalus.models.SequenceDataset.objects.all(),)
 
     class Meta:
         model = tantalus.models.Tag
-        fields = ('id', 'name', 'abstractdataset_set')
+        fields = ('id', 'name', 'sequencedataset_set')
 

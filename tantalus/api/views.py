@@ -25,63 +25,10 @@ class DNALibraryViewSet(viewsets.ReadOnlyModelViewSet):
     filter_fields = ('library_id',)
 
 
-class SequenceLaneViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = tantalus.models.SequenceLane.objects.all()
-    serializer_class = tantalus.api.serializers.SequenceLaneSerializer
-    filter_fields = ('flowcell_id', 'lane_number',)
-
-
-class ReadGroupViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = tantalus.models.ReadGroup.objects.all()
-    serializer_class = tantalus.api.serializers.ReadGroupSerializer
-    filter_fields = ('sequence_lane__flowcell_id', 'sequence_lane__lane_number', 'dna_library__library_id', 'dna_library_id')
-
-
-class AbstractDataSetViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = tantalus.models.AbstractDataSet.objects.all()
-    serializer_class = tantalus.api.serializers.AbstractDataSetSerializer
-
-
-class BCLFolderViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = tantalus.models.BCLFolder.objects.all()
-    serializer_class = tantalus.api.serializers.BCLFolderSerializer
-
-
-class SingleEndFastqFileViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = tantalus.models.SingleEndFastqFile.objects.all()
-    serializer_class = tantalus.api.serializers.SingleEndFastqFileSerializer
-
-
-class PairedEndFastqFilesFilterSet(django_filters.FilterSet):
-    library_id = django_filters.CharFilter(name='read_groups__dna_library__library_id', distinct=True)
-    sample_id = django_filters.CharFilter(name='read_groups__sample__sample_id', distinct=True)
-    index_sequence = django_filters.CharFilter(name='read_groups__index_sequence', distinct=True)
-    tag_name = django_filters.CharFilter(name='tags__name', distinct=True)
-    class Meta:
-        model = tantalus.models.PairedEndFastqFiles
-        fields = ['library_id', 'sample_id', 'index_sequence', 'tag_name']
-
-
-class PairedEndFastqFilesViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = tantalus.models.PairedEndFastqFiles.objects.all()
-    filter_class = PairedEndFastqFilesFilterSet
-    serializer_class = tantalus.api.serializers.PairedEndFastqFilesSerializer
-
-
-class BamFileFilterSet(django_filters.FilterSet):
-    library_id = django_filters.CharFilter(name='read_groups__dna_library__library_id', distinct=True)
-    sample_id = django_filters.CharFilter(name='read_groups__sample__sample_id', distinct=True)
-    index_sequence = django_filters.CharFilter(name='read_groups__index_sequence', distinct=True)
-    tag_name = django_filters.CharFilter(name='tags__name', distinct=True)
-    class Meta:
-        model = tantalus.models.BamFile
-        fields = ['library_id', 'sample_id', 'index_sequence', 'tag_name']
-
-
-class BamFileViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = tantalus.models.BamFile.objects.all()
-    serializer_class = tantalus.api.serializers.BamFileSerializer
-    filter_class = BamFileFilterSet
+class SequencingLaneViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = tantalus.models.SequencingLane.objects.all()
+    serializer_class = tantalus.api.serializers.SequencingLaneSerializer
+    filter_fields = ('flowcell_id', 'lane_number', 'library_id')
 
 
 class SequenceDatasetViewSet(viewsets.ReadOnlyModelViewSet):

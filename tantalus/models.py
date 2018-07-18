@@ -158,65 +158,6 @@ class DNALibrary(models.Model):
         return '{}_{}'.format(self.library_type, self.library_id)
 
 
-class SequenceLane(models.Model):
-    """
-    Lane of Illumina Sequencing.
-    """
-
-    history = HistoricalRecords()
-
-    flowcell_id = create_id_field()
-
-    lane_number_choices = [('', '')] + [(str(a), str(a)) for a in range(1, 10)]
-
-    lane_number = models.CharField(
-        max_length=50,
-        choices=lane_number_choices,
-        blank=True,
-    )
-
-    GSC = 'GSC'
-    BRC = 'BRC'
-
-    sequencing_centre_choices = (
-        (GSC, 'Genome Science Centre'),
-        (BRC, 'Biomedical Research Centre'),
-    )
-
-    sequencing_centre = models.CharField(
-        max_length=50,
-        choices=sequencing_centre_choices,
-    )
-
-    sequencing_instrument = models.CharField(
-        blank=True,
-        null=True,
-        max_length=50,
-    )
-
-    PAIRED = 'P'
-    SINGLE = 'S'
-
-    read_type_choices = (
-        (PAIRED, 'Paired end tags'),
-        (SINGLE, 'Single end tags')
-    )
-
-    read_type = models.CharField(
-        max_length=50,
-        choices=read_type_choices,
-    )
-
-    def __unicode__(self):
-        if self.lane_number == '':
-            return '{}_{}'.format(self.sequencing_centre, self.flowcell_id)
-        else:
-            return '{}_{}_{}'.format(self.sequencing_centre, self.flowcell_id, self.lane_number)
-
-    class Meta:
-        unique_together = ('flowcell_id', 'lane_number')
-
-
 class SequencingLane(models.Model):
     """
     Lane of Illumina Sequencing.
@@ -283,42 +224,6 @@ class SequencingLane(models.Model):
 
     class Meta:
         unique_together = ('flowcell_id', 'lane_number', 'dna_library')
-
-
-class ReadGroup(models.Model):
-    """
-    Group of reads from a specific sample, library, lane and index sequence.
-    """
-
-    history = HistoricalRecords()
-
-    sample = models.ForeignKey(
-        Sample,
-        on_delete=models.CASCADE,
-    )
-
-    dna_library = models.ForeignKey(
-        DNALibrary,
-        on_delete=models.CASCADE,
-    )
-
-    index_sequence = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-    )
-
-    sequence_lane = models.ForeignKey(
-        SequenceLane,
-        on_delete=models.CASCADE,
-    )
-
-    sequencing_library_id = create_id_field(
-        null=True,
-    )
-
-    class Meta:
-        unique_together = ('sample', 'dna_library', 'index_sequence', 'sequence_lane')
 
 
 class FileResource(models.Model):
@@ -494,67 +399,6 @@ class SequenceDataset(models.Model):
                 file_resource__sequencedataset=self)
             .values_list('storage__name', flat=True)
             .distinct())
-
-
-class BamFile(AbstractDataSet):
-    """
-    Base class of bam files.
-    """
-
-    history = HistoricalRecords()
-
-    HG19 = 'HG19'
-    HG18 = 'HG18'
-    UNALIGNED = 'UNALIGNED'
-    UNUSABLE = 'UNUSABLE'
-
-    reference_genome_choices = (
-        (HG19, 'Human Genome 19'),
-        (HG18, 'Human Genome 18'),
-        (UNALIGNED, 'Not aligned to a reference'),
-        (UNUSABLE, 'Alignments are not usable'),
-    )
-
-    reference_genome = models.CharField(
-        max_length=50,
-        default=UNALIGNED,
-    )
-
-    aligner = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        default=None,
-    )
-
-    bam_file = models.OneToOneField(
-        FileResource,
-        on_delete=models.CASCADE,
-        related_name='bam_file',
-    )
-
-    bam_index_file = models.ForeignKey(
-        FileResource,
-        on_delete=models.SET_NULL,
-        related_name='bam_index_file',
-        null=True,
-    )
-
-    dataset_type_name = 'BAM'
-
-    def get_file_resources(self):
-        if self.bam_index_file is None:
-            return [self.bam_file]
-        else:
-            return [self.bam_file, self.bam_index_file]
-
-    def __str__(self):
-        return "BamFile ID: {}".format(self.id)
-
-    def get_name(self):
-        lib = unicode(self.library)
-        # sample = unicode(self.sample)
-        return '_'.join([lib, str(self.id)])
 
 
 class Storage(PolymorphicModel):

@@ -13,7 +13,7 @@ from django.db import transaction
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
 
-from .models import Sample, AbstractDataSet, FileTransfer, FileResource, SequenceLane, DNALibrary, Tag, GscWgsBamQuery, GscDlpPairedFastqQuery, BRCFastqImport, ImportDlpBam, ServerStorage, Storage
+import tantalus.models
 import tantalus.tasks
 
 
@@ -22,7 +22,7 @@ import tantalus.tasks
 #---------------------------
 class SampleForm(forms.ModelForm):
     class Meta:
-        model = Sample
+        model = tantalus.models.Sample
         fields = "__all__"
 
 
@@ -70,20 +70,20 @@ class DatasetSearchForm(forms.Form):
     )
 
     dataset_type = forms.MultipleChoiceField(
-        choices=tuple([(c.__name__, c.__name__) for c in AbstractDataSet.__subclasses__()]),
+        choices=tantalus.models.SequenceDataset.dataset_type_choices,
         label="Dataset type",
         required=False,
         help_text="Type of files to process",
         widget=forms.widgets.CheckboxSelectMultiple()
     )
     storages = forms.MultipleChoiceField(
-        choices=tuple([(s.name, s.name) for s in Storage.objects.all()]),
+        choices=tuple([(s.name, s.name) for s in tantalus.models.Storage.objects.all()]),
         required=False,
         help_text="Only look for files that are present in the selected storage.",
         widget=forms.widgets.CheckboxSelectMultiple(),
     )
     compression_schemes = forms.MultipleChoiceField(
-        choices=FileResource.compression_choices,
+        choices=tantalus.models.FileResource.compression_choices,
         required=False,
         help_text="Only look for files with given compression schemes.",
         widget=forms.widgets.CheckboxSelectMultiple(),
@@ -96,14 +96,14 @@ class DatasetSearchForm(forms.Form):
     )
 
     sequencing_center = forms.ChoiceField(
-        choices=(('', '---'),) + SequenceLane.sequencing_centre_choices,
+        choices=(('', '---'),) + tantalus.models.SequencingLane.sequencing_centre_choices,
         label="Sequencing center",
         required=False,
         help_text="Sequencing center that the data was obtained from"
     )
 
     sequencing_instrument = forms.ChoiceField(
-        choices=(('', '---'),) + tuple(map(lambda x: (x[0], x[0]), list(SequenceLane.objects.all().values_list('sequencing_instrument').distinct()))),
+        choices=(('', '---'),) + tuple(map(lambda x: (x[0], x[0]), list(tantalus.models.SequencingLane.objects.all().values_list('sequencing_instrument').distinct()))),
         label="Sequencing instrument",
         required=False,
     )
@@ -118,13 +118,13 @@ class DatasetSearchForm(forms.Form):
     )
 
     library_type = forms.ChoiceField(
-        choices=(('', '---'),) + DNALibrary.library_type_choices,
+        choices=(('', '---'),) + tantalus.models.DNALibrary.library_type_choices,
         label="Library type",
         required=False,
     )
 
     index_format = forms.ChoiceField(
-        choices=(('', '---'),) + DNALibrary.index_format_choices,
+        choices=(('', '---'),) + tantalus.models.DNALibrary.index_format_choices,
         label="Index format",
         required=False,
     )
@@ -139,7 +139,7 @@ class DatasetSearchForm(forms.Form):
         tags = self.cleaned_data['tagged_with']
         if tags:
             tags_list = [tag.strip() for tag in tags.split(",")]
-            results = AbstractDataSet.objects.all()
+            results = tantalus.models.AbstractDataSet.objects.all()
             for tag in tags_list:
                 if not results.filter(tags__name=tag).exists():
                     raise forms.ValidationError("Filter for the following tags together resulted in 0 results: {}".format(
@@ -152,7 +152,7 @@ class DatasetSearchForm(forms.Form):
         if sample:
             no_match_samples = []
             for samp in sample.split():
-                if not AbstractDataSet.objects.filter(read_groups__sample__sample_id=samp).exists():
+                if not tantalus.models.AbstractDataSet.objects.filter(read_groups__sample__sample_id=samp).exists():
                     no_match_samples.append(samp)
             if no_match_samples != []:
                 raise forms.ValidationError("Filter for the following sample resulted in 0 results: {}".format(
@@ -165,7 +165,7 @@ class DatasetSearchForm(forms.Form):
         if library:
             no_match_list = []
             for lib in library.split():
-                if not AbstractDataSet.objects.filter(read_groups__dna_library__library_id=lib).exists():
+                if not tantalus.models.AbstractDataSet.objects.filter(read_groups__dna_library__library_id=lib).exists():
                     no_match_list.append(lib)
 
             if no_match_list:
@@ -182,12 +182,12 @@ class DatasetSearchForm(forms.Form):
                 if "_" in flowcell_lane:
                     # parse out flowcell ID and lane number, assumed to be separated by an underscore
                     flowcell, lane_number = flowcell_lane.split("_", 1)
-                    if not AbstractDataSet.objects.filter(
+                    if not tantalus.models.AbstractDataSet.objects.filter(
                             read_groups__sequence_lane__flowcell_id=flowcell, read_groups__sequence_lane__lane_number=lane_number).exists():
                         no_match_list.append(flowcell_lane)
                 else:
                     # no lane number included
-                    if not AbstractDataSet.objects.filter(read_groups__sequence_lane__flowcell_id=flowcell_lane).exists():
+                    if not tantalus.models.AbstractDataSet.objects.filter(read_groups__sequence_lane__flowcell_id=flowcell_lane).exists():
                         no_match_list.append(flowcell_lane)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following flowcell lane resulted in 0 results: {}".format(
@@ -200,7 +200,7 @@ class DatasetSearchForm(forms.Form):
         if sequencing_library_id_field:
             no_match_list = []
             for sequencing_library in sequencing_library_id_field.split():
-                if not AbstractDataSet.objects.filter(read_groups__sequencing_library_id=sequencing_library).exists():
+                if not tantalus.models.AbstractDataSet.objects.filter(read_groups__sequencing_library_id=sequencing_library).exists():
                     no_match_list.append(sequencing_library)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following sequencing library resulted in 0 results: {}".format(
@@ -251,7 +251,7 @@ class DatasetSearchForm(forms.Form):
             min_num_read_groups = self.cleaned_data['min_num_read_groups']
 
 
-        results = AbstractDataSet.objects.all()
+        results = tantalus.models.AbstractDataSet.objects.all()
 
         # TODO: add prefetch related
 
@@ -325,13 +325,13 @@ class DatasetTagForm(forms.Form):
         super(DatasetTagForm, self).__init__(*args, **kwargs)
 
         if datasets:
-            self.models_to_tag = AbstractDataSet.objects.filter(pk__in=datasets)
+            self.models_to_tag = tantalus.models.AbstractDataSet.objects.filter(pk__in=datasets)
         else:
-            self.models_to_tag = AbstractDataSet.objects.all()
+            self.models_to_tag = tantalus.models.AbstractDataSet.objects.all()
 
     def add_dataset_tags(self):
         tag_name = self.cleaned_data['tag_name']
-        tag, created = Tag.objects.get_or_create(name=tag_name)
+        tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
         tag.abstractdataset_set.clear()
         tag.abstractdataset_set.add(*self.models_to_tag)
 
@@ -356,12 +356,12 @@ class FileTransferCreateForm(SimpleTaskCreateForm):
     task_type = tantalus.tasks.transfer_files_task
 
     class Meta:
-        model = FileTransfer
+        model = tantalus.models.FileTransfer
         fields = ('name', 'tag_name', 'from_storage', 'to_storage')
 
     def clean_tag_name(self):
         tag_name = self.cleaned_data['tag_name'].strip()
-        datasets = AbstractDataSet.objects.filter(tags__name=tag_name)
+        datasets = tantalus.models.AbstractDataSet.objects.filter(tags__name=tag_name)
         if len(datasets) == 0:
             raise forms.ValidationError('no datasets with tag {}'.format(tag_name))
         return tag_name
@@ -389,7 +389,7 @@ class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
         return self.cleaned_data['library_ids'].split()
 
     class Meta:
-        model = GscWgsBamQuery
+        model = tantalus.models.GscWgsBamQuery
         fields = ('library_ids', 'skip_file_import', 'skip_older_than')
 
 
@@ -399,7 +399,7 @@ class GscDlpPairedFastqQueryCreateForm(SimpleTaskCreateForm):
     task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
 
     class Meta:
-        model = GscDlpPairedFastqQuery
+        model = tantalus.models.GscDlpPairedFastqQuery
         fields = ('dlp_library_id', 'gsc_library_id')
 
 
@@ -409,7 +409,7 @@ class BRCFastqImportCreateForm(SimpleTaskCreateForm):
     task_type = tantalus.tasks.import_brc_fastqs_task
 
     class Meta:
-        model = BRCFastqImport
+        model = tantalus.models.BRCFastqImport
         fields = ('output_dir', 'storage', 'flowcell_id')
 
 
@@ -419,6 +419,6 @@ class ImportDlpBamCreateForm(SimpleTaskCreateForm):
     task_type = tantalus.tasks.import_dlp_bams_task
 
     class Meta:
-        model = ImportDlpBam
+        model = tantalus.models.ImportDlpBam
         fields = ('storage', 'bam_paths')
 
