@@ -158,22 +158,13 @@ class FileTransferRestart(APIView):
         return Response(serializer.data)
 
 
-class DatasetsTag(viewsets.ViewSet):
+class DatasetsTag(viewsets.ModelViewSet):
     """
     To tag datasets in this endpoint, use the following JSON format to POST:
-        { "tag": "test_api_tag", "datasets": [1, 2, 3, 4] }
+        { "name": "test_api_tag", "datasets": [1, 2, 3, 4] }
     """
-    def list(self, request, format=None):
-        tags = tantalus.models.Tag.objects.all().values_list('name', flat=True).distinct()
-        tags = map(str, tags)
-        data = {'tags': tags}
-        return Response(data)
-
-    def create(self, request, format=None):
-        serializer = tantalus.api.serializers.DatasetTagSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=201)
+    queryset = tantalus.models.Tag.objects.all()
+    serializer_class = tantalus.api.serializers.DatasetTagSerializer
 
 
 # TODO: move this
