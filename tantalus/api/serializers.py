@@ -235,10 +235,11 @@ class ImportDlpBamSerializer(SimpleTaskSerializer):
 
 class DatasetTagSerializer(serializers.ModelSerializer):
     """Serializer for tags."""
-    datasets = serializers.PrimaryKeyRelatedField(
+    abstractdataset_set = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=tantalus.models.AbstractDataSet.objects.all(),)
 
     class Meta:
         model = tantalus.models.Tag
-        fields = ('id', 'name', 'datasets')
+        fields = ('id', 'name', 'abstractdataset_set')
+
