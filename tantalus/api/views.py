@@ -32,6 +32,7 @@ class FileResourceViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileResourceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileResourceSerializer
+    filter_fields = ('id',)
 
 
 class DNALibraryViewSet(OwnerEditModelViewSet):
@@ -82,7 +83,7 @@ class FileInstanceViewSet(OwnerEditModelViewSet):
 class FileTransferViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.FileTransfer.objects.all()
     serializer_class = tantalus.api.serializers.FileTransferSerializer
-    filter_fields = ('name',)
+    filter_fields = ('name', 'id',)
 
 
 class MD5CheckViewSet(viewsets.ModelViewSet):
@@ -93,6 +94,7 @@ class MD5CheckViewSet(viewsets.ModelViewSet):
 class BRCImportFastqsViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.BRCFastqImport.objects.all()
     serializer_class = tantalus.api.serializers.ImportBRCFastqsSerializer
+    filter_fields = ('id',)
 
 
 class QueryGscWgsBamsViewSet(viewsets.ModelViewSet):
@@ -103,12 +105,13 @@ class QueryGscWgsBamsViewSet(viewsets.ModelViewSet):
 class QueryGscDlpPairedFastqsViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.GscDlpPairedFastqQuery.objects.all()
     serializer_class = tantalus.api.serializers.QueryGscDlpPairedFastqsSerializer
-    filter_fields = ('dlp_library_id',)
+    filter_fields = ('dlp_library_id', 'id',)
 
 
 class ImportDlpBamViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.ImportDlpBam.objects.all()
     serializer_class = tantalus.api.serializers.ImportDlpBamSerializer
+    filter_fields = ('id',)
 
 
 class FileTransferRestart(APIView):
