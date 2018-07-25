@@ -139,7 +139,7 @@ class DatasetSearchForm(forms.Form):
         tags = self.cleaned_data['tagged_with']
         if tags:
             tags_list = [tag.strip() for tag in tags.split(",")]
-            results = tantalus.models.AbstractDataSet.objects.all()
+            results = tantalus.models.SequenceDataset.objects.all()
             for tag in tags_list:
                 if not results.filter(tags__name=tag).exists():
                     raise forms.ValidationError("Filter for the following tags together resulted in 0 results: {}".format(
@@ -152,7 +152,7 @@ class DatasetSearchForm(forms.Form):
         if sample:
             no_match_samples = []
             for samp in sample.split():
-                if not tantalus.models.AbstractDataSet.objects.filter(read_groups__sample__sample_id=samp).exists():
+                if not tantalus.models.SequenceDataset.objects.filter(sample__sample_id=samp).exists():
                     no_match_samples.append(samp)
             if no_match_samples != []:
                 raise forms.ValidationError("Filter for the following sample resulted in 0 results: {}".format(
@@ -165,7 +165,7 @@ class DatasetSearchForm(forms.Form):
         if library:
             no_match_list = []
             for lib in library.split():
-                if not tantalus.models.AbstractDataSet.objects.filter(read_groups__dna_library__library_id=lib).exists():
+                if not tantalus.models.SequenceDataset.objects.filter(library__library_id=lib).exists():
                     no_match_list.append(lib)
 
             if no_match_list:
@@ -182,12 +182,12 @@ class DatasetSearchForm(forms.Form):
                 if "_" in flowcell_lane:
                     # parse out flowcell ID and lane number, assumed to be separated by an underscore
                     flowcell, lane_number = flowcell_lane.split("_", 1)
-                    if not tantalus.models.AbstractDataSet.objects.filter(
-                            read_groups__sequence_lane__flowcell_id=flowcell, read_groups__sequence_lane__lane_number=lane_number).exists():
+                    if not tantalus.models.SequenceDataset.objects.filter(
+                        sequence_lane__flowcell_id=flowcell,sequence_lane__lane_number=lane_number).exists():
                         no_match_list.append(flowcell_lane)
                 else:
                     # no lane number included
-                    if not tantalus.models.AbstractDataSet.objects.filter(read_groups__sequence_lane__flowcell_id=flowcell_lane).exists():
+                    if not tantalus.models.SequenceDataset.objects.filter(sequence_lane__flowcell_id=flowcell_lane).exists():
                         no_match_list.append(flowcell_lane)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following flowcell lane resulted in 0 results: {}".format(
@@ -200,7 +200,7 @@ class DatasetSearchForm(forms.Form):
         if sequencing_library_id_field:
             no_match_list = []
             for sequencing_library in sequencing_library_id_field.split():
-                if not tantalus.models.AbstractDataSet.objects.filter(read_groups__sequencing_library_id=sequencing_library).exists():
+                if not tantalus.models.SequenceDataset.objects.filter(sequencing_library_id=sequencing_library).exists():
                     no_match_list.append(sequencing_library)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following sequencing library resulted in 0 results: {}".format(
@@ -251,7 +251,7 @@ class DatasetSearchForm(forms.Form):
             min_num_read_groups = self.cleaned_data['min_num_read_groups']
 
 
-        results = tantalus.models.AbstractDataSet.objects.all()
+        results = tantalus.models.SequenceDataset.objects.all()
 
         # TODO: add prefetch related
 
@@ -262,14 +262,10 @@ class DatasetSearchForm(forms.Form):
                 results = results.filter(tags__name=tag).exclude(tags__name__in=exclude_list)
 
         if sample:
-            results = results.filter(read_groups__sample__sample_id__in=sample.split())
+            results = results.filter(sample__sample_id__in=sample.split())
 
         if dataset_type:
-            query = Q()
-            for d_type in dataset_type:
-                temp_query = {"{}__isnull".format(d_type.lower()): False}
-                query = query | Q(**temp_query)
-            results = results.filter(query)
+            results = results.filter(dataset_type__in=dataset_type)
 
         if storages:
             results = results.filter(file_resources__fileinstance__storage__name__in=storages)
@@ -278,25 +274,25 @@ class DatasetSearchForm(forms.Form):
             results = results.filter(file_resources__compression__in=compression_schemes)
 
         if library:
-            results = results.filter(read_groups__dna_library__library_id__in=library.split())
+            results = results.filter(library__library_id__in=library.split())
 
         if sequencing_center:
-            results = results.filter(read_groups__sequence_lane__sequencing_centre=sequencing_center)
+            results = results.filter(sequence_lanes__sequencing_centre=sequencing_center)
 
         if sequencing_instrument:
-            results = results.filter(read_groups__sequence_lane__sequencing_instrument=sequencing_instrument)
+            results = results.filter(sequence_lanes__sequencing_instrument=sequencing_instrument)
 
         if sequencing_library_id:
-            results = results.filter(read_groups__sequencing_library_id__in=sequencing_library_id.split())
+            results = results.filter(sequence_lanes__library_id__in=sequencing_library_id.split())
 
         if library_type:
-            results = results.filter(read_groups__dna_library__library_type=library_type)
+            results = results.filter(library__library_type=library_type)
 
         if index_format:
-            results = results.filter(read_groups__dna_library__index_format=index_format)
+            results = results.filter(library__index_format=index_format)
 
         if min_num_read_groups is not None:
-            results = results.annotate(num_read_groups=Count('read_groups')).filter(num_read_groups__gte=min_num_read_groups)
+            results = results.annotate(sequence_lane__lane_number=Count('sequence_lanes__lane_number')).filter(sequence_lane__lane_number__gte=min_num_read_groups)
 
         if flowcell_id_and_lane:
             query = Q()
@@ -304,9 +300,9 @@ class DatasetSearchForm(forms.Form):
                 if "_" in flowcell_lane:
                     # parse out flowcell ID and lane number, assumed to be separated by an underscore
                     flowcell, lane_number = flowcell_lane.split("_", 1)
-                    q = Q(read_groups__sequence_lane__flowcell_id=flowcell, read_groups__sequence_lane__lane_number=lane_number)
+                    q = Q(sequence_lane__flowcell_id=flowcell, sequence_lane__lane_number=lane_number)
                 else:
-                    q = Q(read_groups__sequence_lane__flowcell_id=flowcell_lane)
+                    q = Q(sequence_lane__flowcell_id=flowcell_lane)
                 query = query | q
             results = results.filter(query)
 
@@ -325,9 +321,9 @@ class DatasetTagForm(forms.Form):
         super(DatasetTagForm, self).__init__(*args, **kwargs)
 
         if datasets:
-            self.models_to_tag = tantalus.models.AbstractDataSet.objects.filter(pk__in=datasets)
+            self.models_to_tag = tantalus.models.SequenceDataset.objects.filter(pk__in=datasets)
         else:
-            self.models_to_tag = tantalus.models.AbstractDataSet.objects.all()
+            self.models_to_tag = tantalus.models.SequenceDataset.objects.all()
 
     def add_dataset_tags(self):
         tag_name = self.cleaned_data['tag_name']

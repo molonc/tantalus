@@ -654,7 +654,6 @@ class DatasetListJSON(BaseDatatableView):
         """
 
         if not self.pre_camel_case_notation:
-            return qs
             # get global search value
             search = self._querydict.get('search[value]', None)
             col_data = self.extract_datatables_column_data()
@@ -666,13 +665,13 @@ class DatasetListJSON(BaseDatatableView):
                         q |= Q(tags__name__startswith=search)
 
                     elif col['name'] == 'sample_id':
-                        q |= Q(read_groups__sample__sample_id__startswith=search)
+                        q |= Q(sample__sample_id__startswith=search)
 
                     elif col['name'] == 'library_id':
-                        q |= Q(read_groups__dna_library__library_id__startswith=search)
+                        q |= Q(library__library_id__startswith=search)
 
                     elif col['name'] == 'library_type':
-                        q |= Q(read_groups__dna_library__library_type__startswith=search)
+                        q |= Q(library__library_type__startswith=search)
 
                     # standard search for simple . lookups across models
                     else:
