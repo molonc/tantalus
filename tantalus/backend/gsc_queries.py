@@ -408,10 +408,12 @@ filename_pattern_map = {
     '_1_*.concat_chastity_passed.fastq.gz': (1, True),
     '_1_chastity_passed.fastq.gz': (1, True),
     '_1_chastity_failed.fastq.gz': (1, False),
+    '_1_*bp.concat.fastq.gz': (1, True),
     '_2.fastq.gz': (2, True),
     '_2_*.concat_chastity_passed.fastq.gz': (2, True),
     '_2_chastity_passed.fastq.gz': (2, True),
     '_2_chastity_failed.fastq.gz': (2, False),
+    '_2_*bp.concat.fastq.gz': (2, True),
 }
 
 
