@@ -674,10 +674,10 @@ class FileTransfer(SimpleTask):
     )
 
     def get_count_total(self):
-        return AbstractDataSet.objects.filter(tags__name=self.tag_name).count()
+        return SequenceDataset.objects.filter(tags__name=self.tag_name).count()
 
     def get_count_finished(self):
-        return AbstractDataSet.objects.filter(tags__name=self.tag_name, file_resources__fileinstance__storage=self.to_storage).distinct().count()
+        return SequenceDataset.objects.filter(tags__name=self.tag_name, file_resources__fileinstance__storage=self.to_storage).distinct().count()
 
     def get_queue_name(self):
         if self.to_storage.has_transfer_queue:
