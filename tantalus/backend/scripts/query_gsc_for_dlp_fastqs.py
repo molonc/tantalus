@@ -9,10 +9,12 @@ import json
 
 from django.core.serializers.json import DjangoJSONEncoder
 from tantalus.backend.colossus import *
+import tantalus.backend.gsc
+import tantalus.backend.dlp
 
 
 solexa_run_type_map = {
-    'Paired': 'PAIRED'}
+    'Paired': 'P'}
 
 
 def reverse_complement(sequence):
@@ -81,10 +83,12 @@ filename_pattern_map = {
     '_1_*.concat_chastity_passed.fastq.gz': (1, True),
     '_1_chastity_passed.fastq.gz': (1, True),
     '_1_chastity_failed.fastq.gz': (1, False),
+    '_1_*bp.concat.fastq.gz': (1, True),
     '_2.fastq.gz': (2, True),
     '_2_*.concat_chastity_passed.fastq.gz': (2, True),
     '_2_chastity_passed.fastq.gz': (2, True),
     '_2_chastity_failed.fastq.gz': (2, False),
+    '_2_*bp.concat.fastq.gz': (2, True),
 }
 
 
@@ -96,11 +100,9 @@ def query_gsc_dlp_paired_fastqs(json_filename, dlp_library_id, gsc_library_id):
 
     gsc_api = tantalus.backend.gsc.GSCAPI()
 
-    json_list = []
-
     fastq_infos = gsc_api.query('fastq?parent_library={}'.format(gsc_library_id))
 
-    paired_fastq_infos = collections.defaultdict(dict)
+    fastq_file_info = []
 
     for fastq_info in fastq_infos:
         if fastq_info['status'] != 'production':
@@ -110,10 +112,11 @@ def query_gsc_dlp_paired_fastqs(json_filename, dlp_library_id, gsc_library_id):
             continue
 
         fastq_path = fastq_info['data_path']
-        flowcell_code = fastq_info['libcore']['run']['flowcell']['lims_flowcell_code']
+        flowcell_id = fastq_info['libcore']['run']['flowcell']['lims_flowcell_code']
         lane_number = fastq_info['libcore']['run']['lane_number']
         sequencing_instrument = tantalus.backend.gsc.get_sequencing_instrument(fastq_info['libcore']['run']['machine'])
         solexa_run_type = fastq_info['libcore']['run']['solexarun_type']
+        read_type = solexa_run_type_map[solexa_run_type]
 
         primer_id = fastq_info['libcore']['primer_id']
         primer_info = gsc_api.query('primer/{}'.format(primer_id))
@@ -121,7 +124,7 @@ def query_gsc_dlp_paired_fastqs(json_filename, dlp_library_id, gsc_library_id):
 
         print 'loading fastq', fastq_info['id'], 'index', raw_index_sequence, fastq_path
 
-        flowcell_lane = flowcell_code
+        flowcell_lane = flowcell_id
         if lane_number is not None:
             flowcell_lane = flowcell_lane + '_' + str(lane_number)
 
@@ -152,75 +155,34 @@ def query_gsc_dlp_paired_fastqs(json_filename, dlp_library_id, gsc_library_id):
             raise Exception('unable to find index {} for flowcell lane {} for library {}'.format(
                 index_sequence, flowcell_lane, dlp_library_id))
 
-        sample = dict(
+        fastq_file_info.append(dict(
+            dataset_type='FQ',
             sample_id=cell_sample_id,
-        )
-
-        library = dict(
             library_id=dlp_library_id,
-            library_type='SINGLE_CELL_WGS',
-            index_format='DUAL_INDEX',
-        )
-
-        lane = dict(
-            flowcell_id=flowcell_code,
-            lane_number=lane_number,
-            sequencing_centre='GSC',
-            sequencing_instrument=sequencing_instrument,
-            read_type=solexa_run_type_map[solexa_run_type],
-        )
-
-        read_group = dict(
-            sample=sample,
-            dna_library=library,
-            index_sequence=index_sequence,
-            sequence_lane=lane,
-            sequencing_library_id=gsc_library_id,
-        )
-
-        fastq_file = dict(
+            library_type='SC_WGS',
+            index_format='D',
+            sequence_lanes=[dict(
+                flowcell_id=flowcell_id,
+                lane_number=lane_number,
+                sequencing_centre='GSC',
+                sequencing_instrument=sequencing_instrument,
+                read_type=read_type,
+            )],
             size=os.path.getsize(fastq_path),
             created=pd.Timestamp(time.ctime(os.path.getmtime(fastq_path)), tz='Canada/Pacific'),
             file_type='FQ',
             read_end=read_end,
+            index_sequence=index_sequence,
             compression='GZIP',
             filename=fastq_filename,
-        )
-
-        fastq_instance = dict(
-            storage=storage,
-            file_resource=fastq_file,
             filename_override=fastq_filename_override,
-            model='FileInstance',
-        )
+        ))
 
-        json_list.append(fastq_instance)
+    storage_name = 'gsc'
 
-        fastq_id = (index_sequence, flowcell_code, lane_number)
+    tantalus.backend.dlp.fastq_paired_end_check(fastq_file_info)
 
-        if read_end in paired_fastq_infos[fastq_id]:
-            raise Exception('duplicate fastq {} end {} for {}'.format(read_end, fastq_info['id'], fastq_id))
-
-        paired_fastq_infos[fastq_id][read_end] = {
-            'fastq_file':fastq_file,
-            'read_group':read_group,
-        }
-
-    for fastq_id, paired_fastq_info in paired_fastq_infos.iteritems():
-        if set(paired_fastq_info.keys()) != set([1, 2]):
-            raise Exception('expected read end 1, 2 for {}, got {}'.format(fastq_id, paired_fastq_info.keys()))
-
-        if paired_fastq_info[1]['read_group'].items() != paired_fastq_info[2]['read_group'].items():
-            raise Exception('expected same lane for {}'.format(fastq_id))
-
-        fastq_dataset = dict(
-            reads_1_file=paired_fastq_info[1]['fastq_file'],
-            reads_2_file=paired_fastq_info[2]['fastq_file'],
-            read_groups=[paired_fastq_info[1]['read_group']],
-            model='PairedEndFastqFiles',
-        )
-
-        json_list.append(fastq_dataset)
+    json_list = tantalus.backend.dlp.create_sequence_dataset_models(fastq_file_info, storage_name)
 
     with open(json_filename, 'w') as f:
         json.dump(json_list, f, indent=4, sort_keys=True, cls=DjangoJSONEncoder)

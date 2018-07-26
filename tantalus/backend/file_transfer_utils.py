@@ -368,8 +368,8 @@ def transfer_files(file_transfer, temp_directory):
     # Lock transfer to specific storage by creating
     # reserved file instances
     file_instances = []
-    for dataset in AbstractDataSet.objects.filter(tags__name=tag_name):
-        file_resources = dataset.get_file_resources()
+    for dataset in SequenceDataset.objects.filter(tags__name=tag_name):
+        file_resources = dataset.file_resources.all()
 
         for file_resource in file_resources:
             # Check for an existing file instance at destination

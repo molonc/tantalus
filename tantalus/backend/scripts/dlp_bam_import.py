@@ -67,8 +67,13 @@ def get_bam_header_blob(blob_service, container_name, blob_name):
     return pysam.AlignmentFile(blob_url).header
 
 
-def get_bam_read_groups(header):
+def get_bam_header_info(header):
     index_info = {}
+
+    sample_ids = set()
+    library_ids = set()
+    index_sequences = set()
+    sequence_lanes = list()
 
     for read_group in header['RG']:
         cell_id = read_group['SM']
@@ -80,26 +85,36 @@ def get_bam_read_groups(header):
 
         index_sequence = index_info[library_id][cell_id]
 
-        flowcell_code = flowcell_lane.split('_')[0]
+        flowcell_id = flowcell_lane.split('_')[0]
         lane_number = ''
         if '_' in flowcell_lane:
             lane_number = flowcell_lane.split('_')[1]
 
-        sample = dict(sample_id=sample_id)
-        library = dict(library_id=library_id)
         sequence_lane = dict(
-            flowcell_id=flowcell_code,
+            flowcell_id=flowcell_id,
             lane_number=lane_number,
         )
 
-        read_group = dict(
-            sample=sample,
-            dna_library=library,
-            index_sequence=index_sequence,
-            sequence_lane=sequence_lane,
-        )
+        sample_ids.add(sample_id)
+        library_ids.add(library_id)
+        index_sequences.add(index_sequence)
+        sequence_lanes.append(sequence_lane)
 
-        yield read_group
+    if len(sample_ids) > 1:
+        raise Exception('multiple sample ids {}'.format(sample_ids))
+
+    if len(library_ids) > 1:
+        raise Exception('multiple library ids {}'.format(library_ids))
+
+    if len(index_sequences) > 1:
+        raise Exception('multiple index_sequences {}'.format(index_sequences))
+
+    return {
+        'sample_id': sample_ids.pop(),
+        'library_id': library_ids.pop(),
+        'index_sequence': index_sequences.pop(),
+        'sequence_lanes': sequence_lanes,
+    }
 
 
 def get_size_file(filename):
@@ -127,18 +142,20 @@ def import_dlp_realign_bams(json_filename, storage_name, storage_type, bam_filen
 
     if storage_type == 'blob':
         for bam_filename in bam_filenames:
-            metadata.extend(import_dlp_realign_bam_blob(storage_name, bam_filename, kwargs['blob_container_name']))
+            metadata.extend(import_dlp_realign_bam_blob(bam_filename, kwargs['blob_container_name']))
     elif storage_type == 'server':
         for bam_filename in bam_filenames:
-            metadata.extend(import_dlp_realign_bam_server(storage_name, bam_filename, kwargs['server_storage_directory']))
+            metadata.extend(import_dlp_realign_bam_server(bam_filename))
     else:
         raise ValueError('unsupported storage type {}'.format(storage_type))
 
+    json_list = tantalus.backend.dlp.create_sequence_dataset_models(metadata, storage_name)
+
     with open(json_filename, 'w') as f:
-        json.dump(metadata, f, indent=4, sort_keys=True, cls=DjangoJSONEncoder)
+        json.dump(json_list, f, indent=4, sort_keys=True, cls=DjangoJSONEncoder)
 
 
-def import_dlp_realign_bam_blob(storage_name, bam_filename, container_name):
+def import_dlp_realign_bam_blob(bam_filename, container_name):
     # Assumption: bam filename is prefixed by container name
     bam_filename = bam_filename.strip('/')
     if not bam_filename.startswith(container_name + '/'):
@@ -158,103 +175,68 @@ def import_dlp_realign_bam_blob(storage_name, bam_filename, container_name):
         'filename': bam_filename,
         'size': get_size_blob(blob_service, container_name, bam_filename),
         'created': get_created_time_blob(blob_service, container_name, bam_filename),
+        'file_type': 'BAM',
     }
 
     bai_info = {
         'filename': bai_filename,
         'size': get_size_blob(blob_service, container_name, bai_filename),
         'created': get_created_time_blob(blob_service, container_name, bai_filename),
+        'file_type': 'BAI',
     }
 
-    storage = dict(
-        name=storage_name,
-    )
+    return [
+        create_file_metadata(bam_info, bam_header),
+        create_file_metadata(bai_info, bam_header),
+    ]
 
-    return import_dlp_realign_bam(storage, bam_info, bai_info, bam_header)
 
-
-def import_dlp_realign_bam_server(storage_name, bam_filepath, storage_directory):
-    if not bam_filepath.startswith(storage_directory):
-        raise Exception('bam filename {} should have storage directory {} as prefix'.format(
-            bam_filepath, storage_directory))
-
-    bam_filename = bam_filepath[len(storage_directory):].lstrip('/')
-
-    bai_filepath = bam_filepath + '.bai'
+def import_dlp_realign_bam_server(bam_filename):
     bai_filename = bam_filename + '.bai'
 
-    bam_header = get_bam_header_file(bam_filepath)
+    bam_header = get_bam_header_file(bam_filename)
 
     bam_info = {
         'filename': bam_filename,
-        'size': get_size_file(bam_filepath),
-        'created': get_created_time_file(bam_filepath),
+        'size': get_size_file(bam_filename),
+        'created': get_created_time_file(bam_filename),
+        'file_type': 'BAM',
     }
 
     bai_info = {
         'filename': bai_filename,
-        'size': get_size_file(bai_filepath),
-        'created': get_created_time_file(bai_filepath),
+        'size': get_size_file(bai_filename),
+        'created': get_created_time_file(bai_filename),
+        'file_type': 'BAI',
     }
 
-    storage = dict(
-        name=storage_name,
-    )
-
-    return import_dlp_realign_bam(storage, bam_info, bai_info, bam_header)
-
-
-def import_dlp_realign_bam(storage, bam_info, bai_info, bam_header):
-    ref_genome = get_bam_ref_genome(bam_header)
-    aligner_name = get_bam_aligner_name(bam_header)
-
-    bam_resource = dict(
-        size=bam_info['size'],
-        created=bam_info['created'],
-        file_type='BAM',
-        read_end=None,
-        compression='UNCOMPRESSED',
-        filename=bam_info['filename'],
-    )
-
-    bam_instance = dict(
-        storage=storage,
-        file_resource=bam_resource,
-    )
-
-    bai_resource = dict(
-        size=bai_info['size'],
-        created=bai_info['created'],
-        file_type='BAI',
-        read_end=None,
-        compression='UNCOMPRESSED',
-        filename=bai_info['filename'],
-    )
-
-    bai_instance = dict(
-        storage=storage,
-        file_resource=bai_resource,
-    )
-
-    bam_file = dict(
-        bam_file=bam_resource,
-        bam_index_file=bai_resource,
-        reference_genome=ref_genome,
-        aligner=aligner_name,
-        read_groups=list(get_bam_read_groups(bam_header)),
-    )
-
-    bam_file['model'] = 'BamFile'
-    bam_instance['model'] = 'FileInstance'
-    bai_instance['model'] = 'FileInstance'
-
-    metadata = [
-        bam_file,
-        bam_instance,
-        bai_instance,
+    return [
+        create_file_metadata(bam_info, bam_header),
+        create_file_metadata(bai_info, bam_header),
     ]
 
-    return metadata
+
+def create_file_metadata(file_info, bam_header):
+    ref_genome = get_bam_ref_genome(bam_header)
+    aligner_name = get_bam_aligner_name(bam_header)
+    bam_header_info = get_bam_header_info(bam_header)
+
+    return dict(
+        dataset_type='BAM',
+        sample_id=bam_header_info['sample_id'],
+        library_id=bam_header_info['library_id'],
+        library_type='SC_WGS',
+        index_format='D',
+        sequence_lanes=bam_header_info['sequence_lanes'],
+        ref_genome=ref_genome,
+        aligner_name=aligner_name,
+        file_type=file_info['file_type'],
+        size=file_info['size'],
+        created=file_info['created'],
+        index_sequence=bam_header_info['index_sequence'],
+        compression='UNCOMPRESSED',
+        filename=file_info['filename'],
+    )
 
 
 if __name__ == '__main__':

@@ -1,5 +1,4 @@
 import argparse
-import hashlib
 import collections
 import django
 import time
@@ -10,13 +9,14 @@ import pandas as pd
 from django.core.serializers.json import DjangoJSONEncoder
 
 from tantalus.backend.colossus import *
+import tantalus.backend.dlp
 
 
 # Hard coded BRC details
 BRC_INSTRUMENT = "NextSeq550"
 BRC_INDEX_FORMAT = "D"
-BRC_LIBRARY_TYPE = 'SINGLE_CELL_WGS'
-BRC_READ_TYPE = 'PAIRED'
+BRC_LIBRARY_TYPE = 'SC_WGS'
+BRC_READ_TYPE = 'P'
 BRC_SEQ_CENTRE = 'BRC'
 
 
@@ -48,9 +48,11 @@ def load_brc_fastqs(json_filename, flowcell_id, storage_name, storage_directory,
     if not os.path.isdir(output_dir):
         raise Exception("output directory {} not a directory".format(output_dir))
 
-    fastq_info = get_fastq_info(output_dir)
+    fastq_file_info = get_fastq_info(output_dir, flowcell_id, storage_directory)
 
-    json_list = create_models(fastq_info, flowcell_id, storage_name, storage_directory)
+    tantalus.backend.dlp.fastq_paired_end_check(fastq_file_info)
+
+    json_list = tantalus.backend.dlp.create_sequence_dataset_models(fastq_file_info, storage_name)
 
     with open(json_filename, 'w') as f:
         json.dump(json_list, f, indent=4, sort_keys=True, cls=DjangoJSONEncoder)
@@ -64,28 +66,28 @@ def _update_info(info, key, value):
         info[key] = value
 
 
-def get_fastq_info(output_dir):
+def get_fastq_info(output_dir, flowcell_id, storage_directory):
     """ Retrieve fastq filenames and metadata from output directory.
     """
-    fastq_filenames = os.listdir(output_dir)
+    filenames = os.listdir(output_dir)
 
     # Filter for gzipped fastq files
-    fastq_filenames = filter(lambda x: ".fastq.gz" in x, fastq_filenames)
+    filenames = filter(lambda x: ".fastq.gz" in x, filenames)
 
     # Remove undetermined fastqs
-    fastq_filenames = filter(lambda x: "Undetermined" not in x, fastq_filenames)
+    filenames = filter(lambda x: "Undetermined" not in x, filenames)
 
     # Check that the path actually has fastq files
-    if len(fastq_filenames) == 0:
+    if len(filenames) == 0:
         raise Exception("no fastq files in output directory {}".format(output_dir))
 
     # Cell info keyed by dlp library id
     cell_info = {}
 
     # Fastq filenames and info keyed by fastq id, read end
-    fastq_info = {}
+    fastq_file_info = []
 
-    for filename in fastq_filenames:
+    for filename in filenames:
         match = re.match("^([a-zA-Z0-9]+)-([a-zA-Z0-9]+)-R(\\d+)-C(\\d+)_S(\\d+)(_L(\\d+))?_R([12])_001.fastq.gz$", filename)
 
         if match is None:
@@ -108,104 +110,37 @@ def get_fastq_info(output_dir):
         index_sequence = cell_info[library_id][row, column]['index_sequence']
         sample_id = cell_info[library_id][row, column]['sample_id']
 
-        fastq_id = (primary_sample_id, library_id, row, column, lane_number)
+        fastq_path = os.path.join(output_dir, filename)
 
-        if fastq_id not in fastq_info:
-            fastq_info[fastq_id] = {}
-            fastq_info[fastq_id]['filepaths'] = {}
+        if not fastq_path.startswith(storage_directory):
+            raise Exception('file {} expected in directory {}'.format(
+                fastq_path, storage_directory))
+        fastq_filename = fastq_path.replace(storage_directory, '')
+        fastq_filename = filename.lstrip('/')
 
-        if read_end in fastq_info[fastq_id]['filepaths']:
-            raise Exception('found duplicate for filename {}'.format(filename))
-
-        fastq_info[fastq_id]['filepaths'][read_end] = os.path.join(output_dir, filename)
-
-        try:
-            _update_info(fastq_info[fastq_id], 'library_id', library_id)
-            _update_info(fastq_info[fastq_id], 'lane_number', lane_number)
-            _update_info(fastq_info[fastq_id], 'index_sequence', index_sequence)
-            _update_info(fastq_info[fastq_id], 'sample_id', sample_id)
-        except ValueError as e:
-            raise Exception('file {} has different metadata from matching pair: ' + str(e))
-
-    return fastq_info
-
-
-def create_models(fastq_info, flowcell_id, storage_name, storage_directory):
-    """ Create models for paired fastqs.
-    """
-
-    storage = dict(
-        name=storage_name,
-    )
-
-    json_list = []
-
-    for fastq_id, info in fastq_info.iteritems():
-        sample = dict(
-            sample_id=info['sample_id'],
-        )
-
-        dna_library = dict(
-            library_id=info['library_id'],
-            index_format=BRC_INDEX_FORMAT,
+        fastq_file_info.append(dict(
+            dataset_type='FQ',
+            sample_id=sample_id,
+            library_id=library_id,
             library_type=BRC_LIBRARY_TYPE,
-        )
+            index_format=BRC_INDEX_FORMAT,
+            sequence_lanes=[dict(
+                flowcell_id=flowcell_id,
+                lane_number=lane_number,
+                sequencing_centre=BRC_SEQ_CENTRE,
+                sequencing_instrument=BRC_INSTRUMENT,
+                read_type=BRC_READ_TYPE,
+            )],
+            size=os.path.getsize(fastq_path),
+            created=pd.Timestamp(time.ctime(os.path.getmtime(fastq_path)), tz='Canada/Pacific'),
+            file_type='FQ',
+            read_end=read_end,
+            index_sequence=index_sequence,
+            compression='GZIP',
+            filename=fastq_filename,
+        ))
 
-        sequence_lane = dict(
-            flowcell_id=flowcell_id,
-            lane_number=info['lane_number'],
-            read_type=BRC_READ_TYPE,
-            sequencing_centre=BRC_SEQ_CENTRE,
-            sequencing_instrument=BRC_INSTRUMENT,
-        )
-
-        read_group = dict(
-            sample=sample,
-            dna_library=dna_library,
-            index_sequence=info['index_sequence'],
-            sequence_lane=sequence_lane,
-            sequencing_library_id=info['library_id'],
-        )
-
-        read_end_file_resources = {}
-
-        for read_end, filepath in info['filepaths'].iteritems():
-            if not filepath.startswith(storage_directory):
-                raise Exception('file {} expected in directory {}'.format(
-                    filepath, storage_directory))
-            filename = filepath.replace(storage_directory, '')
-            filename = filename.lstrip('/')
-
-            file_resource = dict(
-                size=os.path.getsize(filepath),
-                created=pd.Timestamp(time.ctime(os.path.getmtime(filepath)), tz='Canada/Pacific'),
-                file_type='FQ',
-                read_end=read_end,
-                compression='GZIP',
-                filename=filename,
-            )
-
-            file_instance = dict(
-                storage=storage,
-                file_resource=file_resource,
-                filename_override='',
-                model='FileInstance',
-            )
-
-            json_list.append(file_instance)
-
-            read_end_file_resources[read_end] = file_resource
-
-        fastq_dataset = dict(
-            reads_1_file=read_end_file_resources[1],
-            reads_2_file=read_end_file_resources[2],
-            read_groups=[read_group],
-            model='PairedEndFastqFiles',
-        )
-
-        json_list.append(fastq_dataset)
-
-    return json_list
+    return fastq_file_info
 
 
 if __name__ == '__main__':

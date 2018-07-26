@@ -32,21 +32,21 @@ class FileResourceViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileResourceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileResourceSerializer
-    filter_fields = ('id',)
+    filter_fields = ('id', 'filename')
 
 
 class DNALibraryViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.DNALibrary.objects.all()
     serializer_class_readonly = tantalus.api.serializers.DNALibrarySerializer
     serializer_class_readwrite = tantalus.api.serializers.DNALibrarySerializer
-    filter_fields = ('library_id',)
+    filter_fields = ('id', 'library_id')
 
 
 class SequencingLaneViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.SequencingLane.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequencingLaneSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequencingLaneSerializer
-    filter_fields = ('flowcell_id', 'lane_number', 'library_id')
+    filter_fields = ('id', 'dna_library_id', 'flowcell_id', 'lane_number')
 
 
 class SequenceDatasetViewSet(OwnerEditModelViewSet):

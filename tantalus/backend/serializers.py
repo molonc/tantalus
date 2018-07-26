@@ -9,170 +9,139 @@ from tantalus.utils import start_md5_checks
 import tantalus.models
 
 
-# class GetCreateModelSerializer(serializers.ModelSerializer):
-#     def is_valid(self, raise_exception=False):
-#         if hasattr(self, 'initial_data'):
-#             # If we are instantiating with data={something}
-#             try:
-#                 # Try to get or create the object in question
-#                 obj, created = self.Meta.model.objects.get_or_create(**self.initial_data)
-#                 self.instance = obj
-#                 return True
-#             except django.core.exceptions.MultipleObjectsReturned:
-#                 # Except not finding the object or the data being ambiguous
-#                 # for defining it. Then validate the data as usual
-#                 return super(GetCreateModelSerializer, self).is_valid(raise_exception)
-#             else:
-#                 # If the object is found add it to the serializer. Then
-#                 # validate the data as usual
-#                 self.instance = obj
-#                 return super(GetCreateModelSerializer, self).is_valid(raise_exception)
-#         else:
-#             # If the Serializer was instantiated with just an object, and no
-#             # data={something} proceed as usual 
-#             return super(GetCreateModelSerializer, self).is_valid(raise_exception)
-# 
-# 
-# class SampleSerializer(GetCreateModelSerializer):
-#     class Meta:
-#         model = tantalus.models.Sample
-#         fields = ('sample_id', )
-# 
-# 
-# def get_or_create_serialize_sample(data):
-#     sample_serializer = SampleSerializer(data=data)
-#     sample_serializer.is_valid(raise_exception=True)
-#     return sample_serializer.instance.id
-# 
-# 
-# class DNALibrarySerializer(GetCreateModelSerializer):
-#     class Meta:
-#         model = tantalus.models.DNALibrary
-#         fields = ('library_id', 'library_type', 'index_format')
-# 
-# 
-# def get_or_create_serialize_dna_library(data):
-#     dna_library_serializer = DNALibrarySerializer(data=data)
-#     dna_library_serializer.is_valid(raise_exception=True)
-#     return dna_library_serializer.instance.id
-# 
-# 
-# class FileResourceSerializer(GetCreateModelSerializer):
-#     class Meta:
-#         model = tantalus.models.FileResource
-#         fields = ('size', 'created', 'file_type', 'read_end', 'compression', 'filename')
-# 
-# 
-# def get_or_create_serialize_file_resource(data):
-#     file_resource_serializer = FileResourceSerializer(data=data)
-#     file_resource_serializer.is_valid(raise_exception=True)
-#     return file_resource_serializer.instance.id
-# 
-# 
-# class SequencingLaneSerializer(GetCreateModelSerializer):
-#     class Meta:
-#         model = tantalus.models.SequencingLane
-#         fields = ('flowcell_id', 'lane_number', 'sequencing_centre', 'sequencing_instrument', 'read_type')
-# 
-# 
-# def get_or_create_serialize_sequence_lane(data):
-#     sequence_lane_serializer = SequencingLaneSerializer(data=data)
-#     sequence_lane_serializer.is_valid(raise_exception=True)
-#     return sequence_lane_serializer.instance.id
-# 
-# 
-# class FileInstanceSerializer(GetCreateModelSerializer):
-#     class Meta:
-#         model = tantalus.models.FileInstance
-#         fields = ('storage_id', 'file_resource_id', 'filename_override')
-# 
-# 
-# def get_or_create_serialize_file_instance(data):
-#     data['storage_id'] = tantalus.models.Storage.objects.get(**data.pop('storage')).id
-#     data['file_resource_id'] = get_or_create_serialize_file_resource(data.pop('file_resource'))
-# 
-#     file_instance_serializer = FileInstanceSerializer(data=data)
-#     file_instance_serializer.is_valid(raise_exception=True)
-#     return file_instance_serializer.instance.id
-# 
-# 
-# class ReadGroupSerializer(GetCreateModelSerializer):
-#     class Meta:
-#         model = tantalus.models.ReadGroup
-#         fields = ('sample_id', 'dna_library_id', 'index_sequence', 'sequence_lane_id', 'sequencing_library_id')
-# 
-# 
-# def get_or_create_serialize_read_group(data):
-#     data['sample_id'] = get_or_create_serialize_sample(data.pop('sample'))
-#     data['dna_library_id'] = get_or_create_serialize_dna_library(data.pop('dna_library'))
-#     data['sequence_lane_id'] = get_or_create_serialize_sequence_lane(data.pop('sequence_lane'))
-# 
-#     read_group_serializer = ReadGroupSerializer(data=data)
-#     read_group_serializer.is_valid(raise_exception=True)
-#     return read_group_serializer.instance.id
-# 
-# 
-# class BamFileSerializer(GetCreateModelSerializer):
-#     class Meta:
-#         model = tantalus.models.BamFile
-#         fields = ('bam_file_id', 'bam_index_file_id', 'reference_genome', 'aligner')
-# 
-# 
-# def get_or_create_serialize_bam_file(data):
-#     data['bam_file_id'] = get_or_create_serialize_file_resource(data.pop('bam_file'))
-# 
-#     if data.get('bam_index_file') is not None:
-#         data['bam_index_file_id'] = get_or_create_serialize_file_resource(data.pop('bam_index_file'))
-# 
-#     read_groups = data.pop('read_groups')
-#     bam_file_serializer = BamFileSerializer(data=data)
-#     bam_file_serializer.is_valid(raise_exception=True)
-# 
-#     for read_group in read_groups:
-#         bam_file_serializer.instance.read_groups.add(get_or_create_serialize_read_group(read_group))
-# 
-#     return bam_file_serializer.instance.id
-# 
-# 
-# class PairedEndFastqFilesSerializer(GetCreateModelSerializer):
-#     class Meta:
-#         model = tantalus.models.PairedEndFastqFiles
-#         fields = ('reads_1_file_id', 'reads_2_file_id', 'reference_genome', 'aligner')
-# 
-# 
-# def get_or_create_serialize_fastq_files(data):
-#     data['reads_1_file'] = get_or_create_serialize_file_resource(data.pop('reads_1_file'))
-#     data['reads_2_file'] = get_or_create_serialize_file_resource(data.pop('reads_2_file'))
-# 
-#     read_groups = data.pop('read_groups')
-#     fastq_files_serializer = PairedEndFastqFilesSerializer(data=data)
-#     fastq_files_serializer.is_valid(raise_exception=True)
-# 
-#     for read_group in read_groups:
-#         fastq_files_serializer.instance.read_groups.add(get_or_create_serialize_read_group(read_group))
-# 
-#     return fastq_files_serializer.instance.id
-# 
-# 
-# def read_models(json_data_filename):
-#     with open(json_data_filename) as f:
-#         json_list = JSONParser().parse(f)
-# 
-#     with django.db.transaction.atomic():
-#         for dictionary in json_list:
-#             if dictionary['model'] == 'FileInstance':
-#                 dictionary.pop('model')
-#                 get_or_create_serialize_file_instance(dictionary)
-# 
-#             elif dictionary['model'] == 'BamFile':
-#                 dictionary.pop('model')
-#                 get_or_create_serialize_bam_file(dictionary)
-# 
-#             elif dictionary['model'] == 'ReadGroup':
-#                 dictionary.pop('model')
-#                 get_or_create_serialize_read_group(dictionary)
-# 
-#             else:
-#                 raise ValueError('model type {} not supported'.format(dictionary['model']))
-# 
-# 
+class GetCreateModelSerializer(serializers.ModelSerializer):
+    def is_valid(self, raise_exception=False):
+        if hasattr(self, 'initial_data'):
+            # If we are instantiating with data={something}
+            try:
+                # Try to get or create the object in question
+                obj, created = self.Meta.model.objects.get_or_create(**self.initial_data)
+                self.instance = obj
+                return True
+            except django.core.exceptions.MultipleObjectsReturned:
+                # Except not finding the object or the data being ambiguous
+                # for defining it. Then validate the data as usual
+                return super(GetCreateModelSerializer, self).is_valid(raise_exception)
+            else:
+                # If the object is found add it to the serializer. Then
+                # validate the data as usual
+                self.instance = obj
+                return super(GetCreateModelSerializer, self).is_valid(raise_exception)
+        else:
+            # If the Serializer was instantiated with just an object, and no
+            # data={something} proceed as usual 
+            return super(GetCreateModelSerializer, self).is_valid(raise_exception)
+
+
+class SampleSerializer(GetCreateModelSerializer):
+    class Meta:
+        model = tantalus.models.Sample
+        fields = ('sample_id', )
+
+
+def get_or_create_serialize_sample(data):
+    sample_serializer = SampleSerializer(data=data)
+    sample_serializer.is_valid(raise_exception=True)
+    return sample_serializer.instance.id
+
+
+class DNALibrarySerializer(GetCreateModelSerializer):
+    class Meta:
+        model = tantalus.models.DNALibrary
+        fields = ('library_id', 'library_type', 'index_format')
+
+
+def get_or_create_serialize_dna_library(data):
+    dna_library_serializer = DNALibrarySerializer(data=data)
+    dna_library_serializer.is_valid(raise_exception=True)
+    return dna_library_serializer.instance.id
+
+
+class FileResourceSerializer(GetCreateModelSerializer):
+    class Meta:
+        model = tantalus.models.FileResource
+        fields = ('size', 'created', 'file_type', 'read_end', 'compression', 'filename')
+
+
+def get_or_create_serialize_file_resource(data):
+    file_resource_serializer = FileResourceSerializer(data=data)
+    file_resource_serializer.is_valid(raise_exception=True)
+    return file_resource_serializer.instance.id
+
+
+class SequencingLaneSerializer(GetCreateModelSerializer):
+    class Meta:
+        model = tantalus.models.SequencingLane
+        fields = ('flowcell_id', 'lane_number', 'dna_library_id', 'sequencing_centre', 'sequencing_instrument', 'read_type')
+
+
+def get_or_create_serialize_sequence_lane(data):
+    data['dna_library_id'] = tantalus.models.DNALibrary.objects.get(**data.pop('dna_library')).id
+
+    sequence_lane_serializer = SequencingLaneSerializer(data=data)
+    sequence_lane_serializer.is_valid(raise_exception=True)
+    return sequence_lane_serializer.instance.id
+
+
+class FileInstanceSerializer(GetCreateModelSerializer):
+    class Meta:
+        model = tantalus.models.FileInstance
+        fields = ('storage_id', 'file_resource_id', 'filename_override')
+
+
+def get_or_create_serialize_file_instance(data):
+    data['storage_id'] = tantalus.models.Storage.objects.get(**data.pop('storage')).id
+    data['file_resource_id'] = get_or_create_serialize_file_resource(data.pop('file_resource'))
+
+    file_instance_serializer = FileInstanceSerializer(data=data)
+    file_instance_serializer.is_valid(raise_exception=True)
+    return file_instance_serializer.instance.id
+
+
+class SequenceDatasetSerializer(GetCreateModelSerializer):
+    class Meta:
+        model = tantalus.models.SequenceDataset
+        fields = ('name', 'dataset_type', 'sample', 'library', 'file_resources', 'sequence_lanes')
+        
+
+def get_or_create_serialize_sequence_dataset(data):
+    data['sample_id'] = get_or_create_serialize_sample(data.pop('sample'))
+    data['library_id'] = get_or_create_serialize_dna_library(data.pop('library'))
+
+    file_resources = data.pop('file_resources')
+    sequence_lanes = data.pop('sequence_lanes')
+
+    sequence_dataset_serializer = SequenceDatasetSerializer(data=data)
+    sequence_dataset_serializer.is_valid(raise_exception=True)
+
+    for file_resource in file_resources:
+        sequence_dataset_serializer.instance.file_resources.add(get_or_create_serialize_file_resource(file_resource))
+
+    for sequence_lane in sequence_lanes:
+        sequence_dataset_serializer.instance.sequence_lanes.add(get_or_create_serialize_sequence_lane(sequence_lane))
+
+    return sequence_dataset_serializer.instance.id
+
+
+def read_models(json_data_filename):
+    with open(json_data_filename) as f:
+        json_list = JSONParser().parse(f)
+
+    with django.db.transaction.atomic():
+        for dictionary in json_list:
+            if dictionary['model'] == 'FileInstance':
+                dictionary.pop('model')
+                get_or_create_serialize_file_instance(dictionary)
+
+            elif dictionary['model'] == 'SequenceDataset':
+                dictionary.pop('model')
+                get_or_create_serialize_sequence_dataset(dictionary)
+
+            elif dictionary['model'] == 'SequenceLane':
+                dictionary.pop('model')
+                get_or_create_serialize_sequence_lane(dictionary)
+
+            else:
+                raise ValueError('model type {} not supported'.format(dictionary['model']))
+
+

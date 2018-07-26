@@ -8,6 +8,7 @@ from datetime import datetime
 from django.core.serializers.json import DjangoJSONEncoder
 
 import tantalus.backend.gsc
+import tantalus.backend.utils
 
 
 def convert_time(a):
@@ -47,26 +48,26 @@ def get_merge_bam_path(library_type, data_path, library_name, num_lanes, compres
     return bam_path
 
 lane_bam_path_templates = {
-    'WGS': '{data_path}/{flowcell_code}_{lane_number}.bam',
-    'RNASEQ': '{data_path}/{flowcell_code}_{lane_number}_withJunctionsOnGenome_dupsFlagged.bam',
+    'WGS': '{data_path}/{flowcell_id}_{lane_number}.bam',
+    'RNASEQ': '{data_path}/{flowcell_id}_{lane_number}_withJunctionsOnGenome_dupsFlagged.bam',
 }
 
 multiplexed_lane_bam_path_templates = {
-    'WGS': '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}.bam',
-    'RNASEQ': '{data_path}/{flowcell_code}_{lane_number}_{adapter_index_sequence}_withJunctionsOnGenome_dupsFlagged.bam',
+    'WGS': '{data_path}/{flowcell_id}_{lane_number}_{adapter_index_sequence}.bam',
+    'RNASEQ': '{data_path}/{flowcell_id}_{lane_number}_{adapter_index_sequence}_withJunctionsOnGenome_dupsFlagged.bam',
 }
 
-def get_lane_bam_path(library_type, data_path, flowcell_code, lane_number, adapter_index_sequence=None, compression=None):
+def get_lane_bam_path(library_type, data_path, flowcell_id, lane_number, adapter_index_sequence=None, compression=None):
     if adapter_index_sequence is not None:
         bam_path = multiplexed_lane_bam_path_templates[library_type].format(
             data_path=data_path,
-            flowcell_code=flowcell_code,
+            flowcell_id=flowcell_id,
             lane_number=lane_number,
             adapter_index_sequence=adapter_index_sequence)
     else:
         bam_path = lane_bam_path_templates[library_type].format(
             data_path=data_path,
-            flowcell_code=flowcell_code,
+            flowcell_id=flowcell_id,
             lane_number=lane_number)
     if compression is not None:
         bam_path = add_compression_suffix(bam_path, compression)
@@ -149,14 +150,25 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos, is_s
     else:
         bai_file = None
 
+    dataset_name = 'BAM-{}-{}-{} ({})'.format(
+        sample['sample_id'],
+        library['library_type'],
+        library['library_id'],
+        tantalus.backend.utils.get_lanes_str(lane_infos),
+    )
+
     # If the bam file is compressed, store the file under the BamFile's
     # bam_spec_file column. Otherwise, use the bam_file column.
     bam_dataset = dict(
-        bam_file=bam_file,
-        bam_index_file=bai_file,
-        read_groups=[],
-        model='BamFile',
+        name=dataset_name,
+        dataset_type='BAM',
+        sample=sample,
+        library=library,
+        sequence_lanes=[],
+        file_resources=[bam_file, bai_file],
+        model='SequenceDataset',
     )
+
     json_list.append(bam_dataset)
 
     reference_genomes = set()
@@ -164,21 +176,14 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos, is_s
 
     for lane_info in lane_infos:
         lane = dict(
-            flowcell_id=lane_info['flowcell_code'],
+            flowcell_id=lane_info['flowcell_id'],
             lane_number=lane_info['lane_number'],
             sequencing_centre='GSC',
             sequencing_instrument=lane_info['sequencing_instrument'],
             read_type=lane_info['read_type'],
-        )
-
-        read_group = dict(
-            sample=sample,
             dna_library=library,
-            index_sequence=lane_info['adapter_index_sequence'],
-            sequence_lane=lane,
-            sequencing_library_id=library_name,
         )
-        bam_dataset['read_groups'].append(read_group)
+        bam_dataset['sequence_lanes'].append(lane)
 
         reference_genomes.add(lane_info['reference_genome'])
         aligners.add(lane_info['aligner'])
@@ -192,28 +197,20 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos, is_s
     return json_list
 
 
-def add_gsc_bam_read_groups(sample, library, lane_infos):
+def add_gsc_bam_lanes(sample, library, lane_infos):
     json_list = []
 
     for lane_info in lane_infos:
         lane = dict(
-            flowcell_id=lane_info['flowcell_code'],
+            flowcell_id=lane_info['flowcell_id'],
             lane_number=lane_info['lane_number'],
             sequencing_centre='GSC',
             sequencing_instrument=lane_info['sequencing_instrument'],
             read_type=lane_info['read_type'],
-        )
-
-        read_group = dict(
-            sample=sample,
             dna_library=library,
-            index_sequence=lane_info['adapter_index_sequence'],
-            sequence_lane=lane,
-            sequencing_library_id=library['library_id'],
-            model='ReadGroup',
         )
 
-        json_list.append(read_group)
+        json_list.append(lane)
 
     return json_list
 
@@ -299,13 +296,13 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
                     reference_genome = libcore['lims_genome_reference']['path']
                     aligner = libcore['analysis_software']['name']
                     flowcell_info = gsc_api.query('flowcell/{}'.format(flowcell_id))
-                    flowcell_code = flowcell_info['lims_flowcell_code']
+                    flowcell_id = flowcell_info['lims_flowcell_code']
                     adapter_index_sequence = libcore['libcore']['primer']['adapter_index_sequence']
 
-                    merged_lanes.add((flowcell_code, lane_number, adapter_index_sequence))
+                    merged_lanes.add((flowcell_id, lane_number, adapter_index_sequence))
 
                     lane_info = dict(
-                        flowcell_code=flowcell_code,
+                        flowcell_id=flowcell_id,
                         lane_number=lane_number,
                         adapter_index_sequence=adapter_index_sequence,
                         sequencing_instrument=sequencing_instrument,
@@ -317,7 +314,7 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
                     lane_infos.append(lane_info)
 
                 if skip_file_import:
-                    json_list += add_gsc_bam_read_groups(sample, library, lane_infos)
+                    json_list += add_gsc_bam_lanes(sample, library, lane_infos)
 
                 else:
                     if data_path is None:
@@ -375,14 +372,14 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
                     print Exception('data path is None')
 
                 flowcell_info = gsc_api.query('flowcell/{}'.format(flowcell_id))
-                flowcell_code = flowcell_info['lims_flowcell_code']
+                flowcell_id = flowcell_info['lims_flowcell_code']
 
                 # Skip lanes that are part of merged BAMs
-                if (flowcell_code, lane_number, adapter_index_sequence) in merged_lanes:
+                if (flowcell_id, lane_number, adapter_index_sequence) in merged_lanes:
                     continue
 
                 lane_infos = [dict(
-                    flowcell_code=flowcell_code,
+                    flowcell_id=flowcell_id,
                     lane_number=lane_number,
                     adapter_index_sequence=adapter_index_sequence,
                     sequencing_instrument=sequencing_instrument,
@@ -392,20 +389,20 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
                 )]
 
                 if skip_file_import:
-                    json_list += add_gsc_bam_read_groups(sample, library, lane_infos)
+                    json_list += add_gsc_bam_lanes(sample, library, lane_infos)
 
                 else:
                     bam_path = get_lane_bam_path(
                         library_type=library_type,
                         data_path=data_path,
-                        flowcell_code=flowcell_code,
+                        flowcell_id=flowcell_id,
                         lane_number=lane_number,
                         adapter_index_sequence=adapter_index_sequence)
 
                     bam_spec_path = get_lane_bam_path(
                         library_type=library_type,
                         data_path=data_path,
-                        flowcell_code=flowcell_code,
+                        flowcell_id=flowcell_id,
                         lane_number=lane_number,
                         adapter_index_sequence=adapter_index_sequence,
                         compression='spec')
