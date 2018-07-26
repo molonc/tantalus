@@ -9,59 +9,41 @@
     <div class="container" style="padding:0; margin-bottom:5px;">
     </div>
     <div class="container" style="background-color:#F5F5F5;">
-        <table class="table-condensed">
-            <tr>
-                <td class="td_name">File Resources: </td>
-                <td>
-                    {% for sequence_file_resource in object.sequence_file_resources.all %}
-                        {{ sequence_file_resource.file_resource.filename }}<br/>
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <td class="td_name">Library: </td>
-                <td>
-                    {{ object.library }}
-                </td>
-            </tr>
-            <tr>
-                <td class="td_name">Samples: </td>
-                <td>
-                    <a href="{% url 'sample-detail' object.sample.id %}">{{ object.sample.sample_id }} </a>
-                </td>
-            </tr>
-            <tr>
-                <td valign="top" class="td_name">Available on: </td>
-                <td>
-                    {% for s in storages  %}
-                        {% if s.get_storage_directory %}
-                          <h5 style="color: #212121" align="left" > {{ s.name }} - <i>{{ s.server_ip }}</i> </h5>
-                                {% for file_resource in object.asdf %}
-                                    {% for i in file_resource.fileinstance_set.all %}
-                                        {% if i.storage|stringformat:"s" == s.name|stringformat:"s" %}
-                                            {{ i.get_filepath }}
-                                        {% endif %}
-                                    {% endfor %}
-                                {% endfor %}
-                        {% else %}
-                          <h5 style="color: #212121" align="left" > Storage account:{{ s.storage_account }} | Container:{{ s.storage_container }}</h5>
-                            {% for file_resource in object.asdf %}
-                                {{ file_resource.filename }}<br/>
-                            {% endfor %}
-                        {% endif %}
-                        <br>
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <td class="td_name">Tags: </td>
-                <td>
-                {%  for tag in object.tags.all %}
-                    <p><a href="{% url 'tag-detail' tag.id %}">{{tag.name}}</a></p>
-                {% endfor %}
-            </tr>
-        </table>
+        {% if object %}
+            <h5>Sample ID-{{object.sample}} &nbsp; &nbsp; Library ID-{{object.library.library_id}}</h5>
+            <div class="table-responsive">
+                <table id="datatable" class="table table-striped" style="display:none;">
+                    <thead>
+                    <tr>
+                            <th>File name</th>
+                            <th>File Type</th>
+                            <th>Index Sequence</th>
+                            <th>Read End</th>
+                            <th>Region</th>
+                            <th>Size</th>
+                            <th>Storage</th>
+                            <th>Owner</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <br/>
+                        {% for file in object.file_resources.all %}
+                            <tr>
+                                <td>{{file.filename}}</td>
+                                <td>{{file.file_type}}</td>
+                                <td>{{file.index_sequence}}</td>
+                                <td>{{file.read_end}}</td>
+                                <td>{{file.genome_region}}</td>
+                                <td>{{file.get_file_size}}</td>
+                                <td>{{storages|join:", "}}</td>
+                                <td>{{file.owner.username}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No file resources yet.</i></h5>
+        {% endif %}
     </div>
-
-
 {% endblock %}

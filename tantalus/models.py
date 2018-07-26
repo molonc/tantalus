@@ -335,6 +335,10 @@ class FileResource(models.Model):
             self.UNCOMPRESSED: '',
         }[self.compression]
 
+    def get_file_size(self):
+        size_mb = str("{:,}".format(self.size / 1000000)) + " MB"
+        return size_mb
+
 
 class SequenceDataset(models.Model):
     """

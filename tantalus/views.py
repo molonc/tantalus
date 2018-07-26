@@ -716,11 +716,8 @@ class DatasetDetail(DetailView):
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
         context = super(DatasetDetail, self).get_context_data(**kwargs)
-        storage_ids = list(tantalus.models.FileInstance.objects.filter(
-                file_resource__sequencefileresource__sequencedataset=self.object)
-            .values_list('storage', flat=True)
-            .distinct())
-        context['storages'] = [tantalus.models.Storage.objects.get(id=i) for i in storage_ids]
+        storage_ids = self.object.get_storage_names()
+        context['storages'] = storage_ids
         return context
 
 
