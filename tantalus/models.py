@@ -464,6 +464,8 @@ class ServerStorage(Storage):
     Server file storage for sequence data files.
     """
 
+    storage_type = 'server'
+
     history = HistoricalRecords()
 
     server_ip = models.CharField(
@@ -527,6 +529,8 @@ class AzureBlobStorage(Storage):
     """
     Azure blob storage for sequence files.
     """
+
+    storage_type = 'blob'
 
     history = HistoricalRecords()
 
@@ -606,6 +610,11 @@ class SimpleTask(models.Model):
     """
     Base model for task run with celery.
     """
+
+    name = models.CharField(
+        max_length=50,
+        unique=False,
+    )
 
     running = models.BooleanField(default=False)
     finished = models.BooleanField(default=False)

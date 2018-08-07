@@ -27,24 +27,26 @@ class StorageSerializer(serializers.ModelSerializer):
 
 class ServerStorageSerializer(serializers.ModelSerializer):
     storage_directory = serializers.SerializerMethodField()
+    storage_type = serializers.CharField(read_only=True)
 
     def get_storage_directory(self, obj):
         return obj.get_storage_directory()
 
     class Meta:
         model = tantalus.models.ServerStorage
-        fields = ('id', 'name', 'storage_directory')
+        fields = ('id', 'storage_type', 'name', 'storage_directory')
 
 
 class AzureBlobStorageSerializer(serializers.ModelSerializer):
     storage_container = serializers.SerializerMethodField()
+    storage_type = serializers.CharField(read_only=True)
 
     def get_storage_container(self, obj):
         return obj.get_storage_container()
 
     class Meta:
         model = tantalus.models.AzureBlobStorage
-        fields = ('id', 'name', 'storage_account', 'storage_container')
+        fields = ('id', 'storage_type', 'name', 'storage_account', 'storage_container')
 
 
 class FileInstanceSerializer(serializers.ModelSerializer):
@@ -104,6 +106,7 @@ class SequenceDatasetSerializerRead(serializers.ModelSerializer):
 
 
 class SimpleTaskSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
     running = serializers.BooleanField(read_only=True)
     finished = serializers.BooleanField(read_only=True)
     success = serializers.BooleanField(read_only=True)

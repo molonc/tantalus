@@ -94,24 +94,25 @@ class MD5CheckViewSet(viewsets.ModelViewSet):
 class BRCImportFastqsViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.BRCFastqImport.objects.all()
     serializer_class = tantalus.api.serializers.ImportBRCFastqsSerializer
-    filter_fields = ('id',)
+    filter_fields = ('id', 'name')
 
 
 class QueryGscWgsBamsViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.GscWgsBamQuery.objects.all()
     serializer_class = tantalus.api.serializers.QueryGscWgsBamsSerializer
+    filter_fields = ('id', 'name')
 
 
 class QueryGscDlpPairedFastqsViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.GscDlpPairedFastqQuery.objects.all()
     serializer_class = tantalus.api.serializers.QueryGscDlpPairedFastqsSerializer
-    filter_fields = ('dlp_library_id', 'id',)
+    filter_fields = ('dlp_library_id', 'id', 'name')
 
 
 class ImportDlpBamViewSet(viewsets.ModelViewSet):
     queryset = tantalus.models.ImportDlpBam.objects.all()
     serializer_class = tantalus.api.serializers.ImportDlpBamSerializer
-    filter_fields = ('id',)
+    filter_fields = ('id', 'name')
 
 
 class FileTransferRestart(APIView):
