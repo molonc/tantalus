@@ -106,7 +106,7 @@ class SequenceDatasetSerializerRead(serializers.ModelSerializer):
 
 
 class SimpleTaskSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(read_only=True)
+    name = serializers.CharField()
     running = serializers.BooleanField(read_only=True)
     finished = serializers.BooleanField(read_only=True)
     success = serializers.BooleanField(read_only=True)

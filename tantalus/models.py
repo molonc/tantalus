@@ -667,11 +667,6 @@ class FileTransfer(SimpleTask):
 
     task_name = 'transfer_files'
 
-    name = models.CharField(
-        max_length=50,
-        unique=True,
-    )
-
     tag_name = models.CharField(
         max_length=50,
     )
