@@ -759,6 +759,12 @@ class GscWgsBamQuery(SimpleTask):
         null=True,
     )
 
+    tag_name = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+
     def get_queue_name(self):
         return get_object_or_404(ServerStorage, name='gsc').get_db_queue_name()
 

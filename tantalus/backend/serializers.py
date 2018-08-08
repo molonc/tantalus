@@ -120,14 +120,17 @@ def get_or_create_serialize_sequence_dataset(data):
     for sequence_lane in sequence_lanes:
         sequence_dataset_serializer.instance.sequence_lanes.add(get_or_create_serialize_sequence_lane(sequence_lane))
 
-    return sequence_dataset_serializer.instance.id
+    return sequence_dataset_serializer.instance
 
 
-def read_models(json_data_filename):
+def read_models(json_data_filename, tag_name=None):
     with open(json_data_filename) as f:
         json_list = JSONParser().parse(f)
 
     with django.db.transaction.atomic():
+        tag = None
+        if tag_name:
+            tag = tantalus.models.Tag.objects.get_or_create(name=tag_name)
         for dictionary in json_list:
             if dictionary['model'] == 'FileInstance':
                 dictionary.pop('model')
@@ -135,7 +138,9 @@ def read_models(json_data_filename):
 
             elif dictionary['model'] == 'SequenceDataset':
                 dictionary.pop('model')
-                get_or_create_serialize_sequence_dataset(dictionary)
+                dataset = get_or_create_serialize_sequence_dataset(dictionary)
+                if tag:
+                    dataset.tags.add(tag)
 
             elif dictionary['model'] == 'SequenceLane':
                 dictionary.pop('model')

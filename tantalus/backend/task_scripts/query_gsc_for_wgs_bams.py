@@ -26,8 +26,8 @@ def query_gsc_wgs_bams(query_info, temp_directory):
     cmd.extend(query_info.library_ids)
 
     subprocess.check_call(cmd)
-    
-    tantalus.backend.serializers.read_models(json_data_filename)
+
+    tantalus.backend.serializers.read_models(json_data_filename, query_info.tag_name)
 
 
 if __name__ == '__main__':
