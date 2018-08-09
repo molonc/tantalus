@@ -386,7 +386,7 @@ class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
 
     class Meta:
         model = tantalus.models.GscWgsBamQuery
-        fields = ('library_ids', 'skip_file_import', 'skip_older_than')
+        fields = ('library_ids', 'tag_name', 'skip_file_import', 'skip_older_than')
 
 
 class GscDlpPairedFastqQueryCreateForm(SimpleTaskCreateForm):
