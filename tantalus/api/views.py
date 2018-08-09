@@ -141,6 +141,7 @@ class DatasetsTag(viewsets.ModelViewSet):
     """
     queryset = tantalus.models.Tag.objects.all()
     serializer_class = tantalus.api.serializers.DatasetTagSerializer
+    filter_fields = ('name',)
 
 
 # TODO: move this
