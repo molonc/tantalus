@@ -130,7 +130,7 @@ def read_models(json_data_filename, tag_name=None):
     with django.db.transaction.atomic():
         tag = None
         if tag_name:
-            tag = tantalus.models.Tag.objects.get_or_create(name=tag_name)
+            tag, _ = tantalus.models.Tag.objects.get_or_create(name=tag_name)
         for dictionary in json_list:
             if dictionary['model'] == 'FileInstance':
                 dictionary.pop('model')
