@@ -357,7 +357,7 @@ class FileTransferCreateForm(SimpleTaskCreateForm):
 
     def clean_tag_name(self):
         tag_name = self.cleaned_data['tag_name'].strip()
-        datasets = tantalus.models.AbstractDataSet.objects.filter(tags__name=tag_name)
+        datasets = tantalus.models.SequenceDataset.objects.filter(tags__name=tag_name)
         if len(datasets) == 0:
             raise forms.ValidationError('no datasets with tag {}'.format(tag_name))
         return tag_name
