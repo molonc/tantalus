@@ -277,21 +277,6 @@ class FileResource(models.Model):
         choices=file_type_choices,
     )
 
-    read_end = models.PositiveSmallIntegerField(
-        null=True,
-    )
-
-    genome_region = models.CharField(
-        max_length=50,
-        null=True,
-    )
-
-    index_sequence = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-    )
-
     GZIP = 'GZIP'
     BZIP2 = 'BZIP2'
     SPEC = 'SPEC'
@@ -338,6 +323,39 @@ class FileResource(models.Model):
     def get_file_size(self):
         size_mb = str("{:,}".format(self.size / 1000000)) + " MB"
         return size_mb
+
+
+class SequenceFileInfo(models.Model):
+    """
+    Sequence data file.
+    """
+
+    history = HistoricalRecords()
+
+    file_resource = models.OneToOneField(
+        FileResource,
+    )
+
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    read_end = models.PositiveSmallIntegerField(
+        null=True,
+    )
+
+    genome_region = models.CharField(
+        max_length=50,
+        null=True,
+    )
+
+    index_sequence = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+    )
 
 
 class SequenceDataset(models.Model):
