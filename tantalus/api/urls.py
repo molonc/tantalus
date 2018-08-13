@@ -25,6 +25,8 @@ router.register(r'brc_import_fastqs', views.BRCImportFastqsViewSet)
 router.register(r'import_dlp_bam', views.ImportDlpBamViewSet)
 router.register(r'generic_task_types', generictask_api_views.GenericTaskTypeViewSet)
 router.register(r'generic_task_instances', generictask_api_views.GenericTaskInstanceViewSet)
+router.register(r'results', views.ResultDatasetsViewSet)
+router.register(r'analysis', views.AnalysisViewSet)
 
 # Schema for Swagger API
 schema_view = get_schema_view(

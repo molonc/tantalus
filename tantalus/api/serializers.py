@@ -215,3 +215,14 @@ class DatasetTagSerializer(serializers.ModelSerializer):
         model = tantalus.models.Tag
         fields = ('id', 'name', 'sequencedataset_set')
 
+
+class ResultDatasetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.ResultsDataset
+        fields = '__all__'
+
+
+class AnalysisSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.Analysis
+        fields = '__all__'

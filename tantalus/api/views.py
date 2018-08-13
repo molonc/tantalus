@@ -171,3 +171,15 @@ class AddDataView(viewsets.ViewSet):
                     raise ValueError('model type {} not supported'.format(dictionary['model']))
 
             return Response('success', status=201)
+
+
+class ResultDatasetsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = tantalus.models.ResultsDataset.objects.all()
+    serializer_class = tantalus.api.serializers.ResultDatasetSerializer
+    filter_fields = ('id', 'owner', 'name', 'samples', 'analysis')
+
+
+class AnalysisViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = tantalus.models.Analysis.objects.all()
+    serializer_class = tantalus.api.serializers.AnalysisSerializer
+    filter_fields = ('id', 'name', 'jira_ticket', 'last_updated')

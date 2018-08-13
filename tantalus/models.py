@@ -509,6 +509,9 @@ class Analysis(models.Model):
         FileResource,
     )
 
+    def __unicode__(self):
+        return '{}'.format(self.name)
+
 
 class ResultsDataset(models.Model):
     """
@@ -550,6 +553,9 @@ class ResultsDataset(models.Model):
     file_resources = models.ManyToManyField(
         FileResource,
     )
+
+    def __unicode__(self):
+        return '{}'.format(self.name)
 
 
 class Storage(PolymorphicModel):
