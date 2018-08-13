@@ -6,6 +6,7 @@ import django.contrib.postgres.fields
 from django.db import models
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from simple_history.models import HistoricalRecords
 from polymorphic.models import PolymorphicModel
 import account.models
@@ -409,6 +410,11 @@ class SequenceDataset(models.Model):
         SequencingLane,
     )
 
+    analysis = models.ForeignKey(
+        'Analysis',
+        null=True,
+    )
+
     HG19 = 'HG19'
     HG18 = 'HG18'
     UNALIGNED = 'UNALIGNED'
@@ -446,6 +452,104 @@ class SequenceDataset(models.Model):
                 file_resource__sequencedataset=self)
             .values_list('storage__name', flat=True)
             .distinct())
+
+
+class Analysis(models.Model):
+    """
+    Analysis/workflow details
+    """
+
+    history = HistoricalRecords()
+
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+    )
+
+    jira_ticket = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+
+    input_datasets = models.ManyToManyField(
+        'SequenceDataset',
+        related_name='inputdatasets',
+    )
+
+    input_results = models.ManyToManyField(
+        'ResultsDataset',
+        related_name='inputresults',
+    )
+
+    last_updated = models.DateTimeField(
+        null=True,
+        default=timezone.now,
+    )
+
+    status = models.CharField(
+        max_length=50,
+        blank=False,
+        null=False,
+        default="Unknown",
+    )
+
+    args = django.contrib.postgres.fields.JSONField(
+        null=True,
+        blank=True,
+    )
+
+    logs = models.ManyToManyField(
+        FileResource,
+    )
+
+
+class ResultsDataset(models.Model):
+    """
+    Generalized results class.
+    """
+
+    history = HistoricalRecords()
+
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+    )
+
+    results_type = models.CharField(
+        max_length=50,
+        null=False,
+    )
+
+    results_version = models.CharField(
+        max_length=50,
+        null=False,
+    )
+
+    analysis = models.ForeignKey(
+        Analysis,
+        null=False,
+    )
+
+    samples = models.ManyToManyField(
+        Sample,
+    )
+
+    file_resources = models.ManyToManyField(
+        FileResource,
+    )
 
 
 class Storage(PolymorphicModel):
