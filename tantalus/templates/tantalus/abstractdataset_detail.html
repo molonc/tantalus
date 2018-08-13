@@ -31,9 +31,9 @@
                             <tr>
                                 <td>{{file.filename}}</td>
                                 <td>{{file.file_type}}</td>
-                                <td>{{file.index_sequence}}</td>
-                                <td>{{file.read_end}}</td>
-                                <td>{{file.genome_region}}</td>
+                                <td>{{file.sequencefileinfo.index_sequence}}</td>
+                                <td>{{file.sequencefileinfo.read_end}}</td>
+                                <td>{{file.sequencefileinfo.genome_region}}</td>
                                 <td>{{file.get_file_size}}</td>
                                 <td>{{storages|join:", "}}</td>
                                 <td>{{file.owner.username}}</td>
