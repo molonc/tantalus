@@ -472,6 +472,8 @@ class Analysis(models.Model):
         unique=True,
     )
 
+    tags = models.ManyToManyField(Tag)
+
     jira_ticket = models.CharField(
         max_length=50,
         blank=True,
@@ -530,6 +532,8 @@ class ResultsDataset(models.Model):
         max_length=200,
         unique=True,
     )
+
+    tags = models.ManyToManyField(Tag)
 
     results_type = models.CharField(
         max_length=50,
