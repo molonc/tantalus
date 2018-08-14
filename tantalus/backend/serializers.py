@@ -64,9 +64,30 @@ class FileResourceSerializer(GetCreateModelSerializer):
 
 
 def get_or_create_serialize_file_resource(data):
+    sequence_file_info = None
+    if 'sequencefileinfo' in data:
+        sequence_file_info = data.pop('sequencefileinfo')
+
     file_resource_serializer = FileResourceSerializer(data=data)
     file_resource_serializer.is_valid(raise_exception=True)
+
+    if sequence_file_info is not None:
+        sequence_file_info['file_resource_id'] = file_resource_serializer.instance.id
+        get_or_create_serialize_sequence_file_info(sequence_file_info)
+
     return file_resource_serializer.instance.id
+
+
+class SequenceFileInfoSerializer(GetCreateModelSerializer):
+    class Meta:
+        model = tantalus.models.SequenceFileInfo
+        fields = ('file_resource', 'read_end', 'index_sequence', 'region')
+
+
+def get_or_create_serialize_sequence_file_info(data):
+    sequence_file_info_serializer = SequenceFileInfoSerializer(data=data)
+    sequence_file_info_serializer.is_valid(raise_exception=True)
+    return sequence_file_info_serializer.instance.id
 
 
 class SequencingLaneSerializer(GetCreateModelSerializer):

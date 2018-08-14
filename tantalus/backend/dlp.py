@@ -93,17 +93,21 @@ def create_sequence_dataset_models(file_info, storage_name):
                 sequence_lane['dna_library'] = library
                 sequence_dataset['sequence_lanes'].append(sequence_lane)
 
+            sequence_file_info = dict(
+                index_sequence=info['index_sequence'],
+            )
+
+            if 'read_end' in info:
+                sequence_file_info['read_end'] = info['read_end']
+
             file_resource = dict(
                 size=info['size'],
                 created=info['created'],
                 file_type=info['file_type'],
                 compression=info['compression'],
                 filename=info['filename'],
-                index_sequence=info['index_sequence'],
+                sequencefileinfo=sequence_file_info,
             )
-
-            if 'read_end' in info:
-                file_resource['read_end'] = info['read_end']
 
             sequence_dataset['file_resources'].append(file_resource)
 
