@@ -8,6 +8,7 @@ from drf_yasg import openapi
 router = routers.DefaultRouter()
 router.register(r'sample', views.SampleViewSet)
 router.register(r'file_resource', views.FileResourceViewSet)
+router.register(r'sequence_file_info', views.SequenceFileInfoViewSet)
 router.register(r'dna_library', views.DNALibraryViewSet)
 router.register(r'sequencing_lane', views.SequencingLaneViewSet)
 router.register(r'sequence_dataset', views.SequenceDatasetViewSet)

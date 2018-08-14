@@ -35,6 +35,13 @@ class FileResourceViewSet(OwnerEditModelViewSet):
     filter_fields = ('id', 'filename')
 
 
+class SequenceFileInfoViewSet(OwnerEditModelViewSet):
+    queryset = tantalus.models.SequenceFileInfo.objects.all()
+    serializer_class_readonly = tantalus.api.serializers.SequenceFileInfoSerializer
+    serializer_class_readwrite = tantalus.api.serializers.SequenceFileInfoSerializer
+    filter_fields = ('id',)
+
+
 class DNALibraryViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.DNALibrary.objects.all()
     serializer_class_readonly = tantalus.api.serializers.DNALibrarySerializer
@@ -173,13 +180,15 @@ class AddDataView(viewsets.ViewSet):
             return Response('success', status=201)
 
 
-class ResultDatasetsViewSet(viewsets.ReadOnlyModelViewSet):
+class ResultDatasetsViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.ResultsDataset.objects.all()
-    serializer_class = tantalus.api.serializers.ResultDatasetSerializer
+    serializer_class_readonly = tantalus.api.serializers.ResultDatasetSerializer
+    serializer_class_readwrite = tantalus.api.serializers.ResultDatasetSerializer
     filter_fields = ('id', 'owner', 'name', 'samples', 'analysis')
 
 
-class AnalysisViewSet(viewsets.ReadOnlyModelViewSet):
+class AnalysisViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.Analysis.objects.all()
-    serializer_class = tantalus.api.serializers.AnalysisSerializer
+    serializer_class_readonly = tantalus.api.serializers.AnalysisSerializer
+    serializer_class_readwrite = tantalus.api.serializers.AnalysisSerializer
     filter_fields = ('id', 'name', 'jira_ticket', 'last_updated')
