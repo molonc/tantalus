@@ -26,7 +26,7 @@
                             <tr>
                                 <td><a href="{% url 'tag-detail' tag.id %}">{{tag.name}}</a></td>
                                 <td>
-                                    {{tag.abstractdataset_set.values|length}}
+                                    {{ tag.count_datasets }}
                                 </td>
                                 <td>
                                 <a href="{% url 'tag-delete' pk=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>

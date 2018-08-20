@@ -32,6 +32,16 @@ class Tag(models.Model):
     def __unicode__(self):
         return self.name
 
+    def count_datasets(self):
+        """Count the number of datasets associated with this tag.
+
+        For now I'm not including tagged analyses in this count.
+        """
+        sequence_dataset_count = self.sequencedataset_set.count()
+        results_dataset_count = self.resultsdataset_set.count()
+
+        return sequence_dataset_count + results_dataset_count
+
 
 class Project(models.Model):
     """
