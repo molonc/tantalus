@@ -156,28 +156,43 @@ from tantalus.backend.serializers import *
 
 class AddDataView(viewsets.ViewSet):
     def create(self, request, format=None):
+        """Create model entries from request data.
+
+        This expects the request data to be in the form
+
+        {"tag": "tag name", # or null
+         "model_dictionaries": [{ ... }, { ... }, ... ]
+        }
+
+        The model_dictionaries array of dictionaries is complicated.
+        Easiest way to get a handle on it is to trace through this
+        function and the get_or_create_serialize*.
+        """
         with django.db.transaction.atomic():
-            for dictionary in request.data:
+            tag = None
+
+            if request.data['tag']:
+                tag, _ = tantalus.models.Tag.objects.get_or_create(name=request.data['tag'])
+
+            for dictionary in request.data['model_dictionaries']:
                 if dictionary['model'] == 'FileInstance':
                     dictionary.pop('model')
                     get_or_create_serialize_file_instance(dictionary)
 
-                elif dictionary['model'] == 'BamFile':
+                elif dictionary['model'] == 'SequenceDataset':
                     dictionary.pop('model')
-                    get_or_create_serialize_bam_file(dictionary)
+                    dataset = get_or_create_serialize_sequence_dataset(dictionary)
+                    if tag:
+                        dataset.tags.add(tag)
 
-                elif dictionary['model'] == 'PairedEndFastqFiles':
+                elif dictionary['model'] == 'SequenceLane':
                     dictionary.pop('model')
-                    get_or_create_serialize_fastq_files(dictionary)
-
-                elif dictionary['model'] == 'ReadGroup':
-                    dictionary.pop('model')
-                    get_or_create_serialize_read_group(dictionary)
+                    get_or_create_serialize_sequence_lane(dictionary)
 
                 else:
                     raise ValueError('model type {} not supported'.format(dictionary['model']))
 
-            return Response('success', status=201)
+        return Response('success', status=201)
 
 
 class ResultDatasetsViewSet(OwnerEditModelViewSet):
