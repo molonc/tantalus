@@ -114,8 +114,17 @@ def get_or_create_serialize_file_instance(data):
     data['storage_id'] = tantalus.models.Storage.objects.get(**data.pop('storage')).id
     data['file_resource_id'] = get_or_create_serialize_file_resource(data.pop('file_resource'))
 
+    # HACK: allow update of filename_override
+    filename_override = data.pop('filename_override', None)
+
     file_instance_serializer = FileInstanceSerializer(data=data)
     file_instance_serializer.is_valid(raise_exception=True)
+
+    # HACK: allow update of filename_override
+    if filename_override is not None:
+        file_instance_serializer.instance.filename_override = filename_override
+        file_instance_serializer.instance.save()
+
     return file_instance_serializer.instance.id
 
 

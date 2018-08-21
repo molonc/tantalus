@@ -114,9 +114,9 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos, is_s
         size=os.path.getsize(bam_path),
         created=pd.Timestamp(time.ctime(os.path.getmtime(bam_path)), tz='Canada/Pacific'),
         file_type='BAM',
-        read_end=None,
         compression='SPEC' if is_spec else 'UNCOMPRESSED',
         filename=bam_filename,
+        sequencefileinfo={},
     )
 
     bam_instance = dict(
@@ -134,9 +134,9 @@ def add_gsc_wgs_bam_dataset(bam_path, storage, sample, library, lane_infos, is_s
             size=os.path.getsize(bai_path),
             created=pd.Timestamp(time.ctime(os.path.getmtime(bai_path)), tz='Canada/Pacific'),
             file_type='BAI',
-            read_end=None,
             compression='UNCOMPRESSED',
             filename=bai_filename,
+            sequencefileinfo={},
         )
 
         bai_instance = dict(
@@ -208,6 +208,7 @@ def add_gsc_bam_lanes(sample, library, lane_infos):
             sequencing_instrument=lane_info['sequencing_instrument'],
             read_type=lane_info['read_type'],
             dna_library=library,
+            model='SequenceLane',
         )
 
         json_list.append(lane)
@@ -260,7 +261,7 @@ def query_gsc_library(json_filename, libraries, skip_file_import=False, skip_old
                 index_format='N',
             )
 
-            merge_infos = gsc_api.query('merge?library={}'.format(library_name))
+            merge_infos = gsc_api.query('merge?library={}&production=True'.format(library_name))
 
             # Keep track of lanes that are in merged BAMs so that we
             # can exclude them from the lane specific BAMs we add to
