@@ -985,7 +985,7 @@ def get_library_stats(filetype, storages_dict):
             # I'm not exactly sure why this is so, without it, filter
             # picks up a ton of duplicates. Very strange.
             matching_files = tantalus.models.FileResource.objects.filter(
-                abstractdataset__read_groups__dna_library__library_type=lib_type).filter(
+                sequencedataset__library__library_type=lib_type).filter(
                 fileinstance__storage__name__in=storages).distinct()
 
             if filetype == 'BAM':
