@@ -2,7 +2,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-import django_filters
+from django_filters import rest_framework as filters
 import tantalus.models
 import tantalus.api.serializers
 import tantalus.tasks
@@ -22,10 +22,28 @@ class OwnerEditModelViewSet(viewsets.ModelViewSet):
         return self.serializer_class_readwrite
 
 
+class SampleFilter(filters.FilterSet):
+    """Support specific filters for Samples."""
+
+    class Meta:
+        model = tantalus.models.Sample
+        fields = {
+            'id': ['exact', 'in'],
+            'sample_id': ['exact', 'in'],
+            'sequencedataset__id': ['exact', 'in', 'isnull'],
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(SampleFilter, self).__init__(*args, **kwargs)
+        self.filters['sequencedataset__id'].label = 'Has SequenceDataset'
+        self.filters['sequencedataset__id__in'].label = 'Has SequenceDataset in'
+        self.filters['sequencedataset__id__isnull'].label = 'Has no SequenceDatasets'
+
+
 class SampleViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
-    filter_fields = ('sample_id',)
+    filter_class = SampleFilter
 
 
 class FileResourceViewSet(OwnerEditModelViewSet):
