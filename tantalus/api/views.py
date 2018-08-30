@@ -10,6 +10,37 @@ from tantalus.api.permissions import IsOwnerOrReadOnly
 from rest_framework import permissions
 
 
+class RestrictedQueryMixin(object):
+    """Cause view to fail on invalid filter query parameter.
+
+    Thanks to rrauenza on Stack Overflow for their post here:
+    https://stackoverflow.com/questions/27182527/how-can-i-stop-django-rest-framework-to-show-all-records-if-query-parameter-is-w/50957733#50957733
+    """
+    def get_queryset(self):
+        paging = set(['limit', 'offset', 'page', 'page_size'])
+
+        qs = super(RestrictedQueryMixin, self).get_queryset()
+
+        if hasattr(self, 'filter_fields') and hasattr(self, 'filter_class'):
+            raise RuntimeError("%s has both filter_fields and filter_class" % self)
+
+        if hasattr(self, 'filter_class'):
+            filter_class = getattr(self, 'filter_class', None)
+            filters = set(filter_class.get_filters().keys())
+        elif hasattr(self, 'filter_fields'):
+            filters = set(getattr(self, 'filter_fields', []))
+        else:
+            filters = set()
+
+        for key in self.request.GET.keys():
+            if key in paging:
+                continue
+            if key not in filters:
+                return qs.none()
+
+        return qs
+
+
 class OwnerEditModelViewSet(viewsets.ModelViewSet):
     permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
@@ -40,34 +71,34 @@ class SampleFilter(filters.FilterSet):
         self.filters['sequencedataset__id__isnull'].label = 'Has no SequenceDatasets'
 
 
-class SampleViewSet(viewsets.ReadOnlyModelViewSet):
+class SampleViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_class = SampleFilter
 
 
-class FileResourceViewSet(OwnerEditModelViewSet):
+class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileResourceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileResourceSerializer
     filter_fields = ('id', 'filename')
 
 
-class SequenceFileInfoViewSet(OwnerEditModelViewSet):
+class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.SequenceFileInfo.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequenceFileInfoSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequenceFileInfoSerializer
     filter_fields = ('id',)
 
 
-class DNALibraryViewSet(OwnerEditModelViewSet):
+class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.DNALibrary.objects.all()
     serializer_class_readonly = tantalus.api.serializers.DNALibrarySerializer
     serializer_class_readwrite = tantalus.api.serializers.DNALibrarySerializer
     filter_fields = ('id', 'library_id')
 
 
-class SequencingLaneViewSet(OwnerEditModelViewSet):
+class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.SequencingLane.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequencingLaneSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequencingLaneSerializer
@@ -81,13 +112,13 @@ class SequenceDatasetViewSet(OwnerEditModelViewSet):
     filter_fields = ('library__library_id', 'sample__sample_id',)
 
 
-class StorageViewSet(viewsets.ReadOnlyModelViewSet):
+class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.Storage.objects.all()
     serializer_class = tantalus.api.serializers.StorageSerializer
     filter_fields = ('name',)
 
 
-class ServerStorageViewSet(viewsets.ReadOnlyModelViewSet):
+class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.ServerStorage.objects.all()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
     filter_fields = ('name',)
@@ -98,14 +129,14 @@ class AzureBlobStorageViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
 
 
-class FileInstanceViewSet(OwnerEditModelViewSet):
+class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.FileInstance.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileInstanceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileInstanceSerializer
     filter_fields = ('storage__name',)
 
 
-class FileTransferViewSet(viewsets.ModelViewSet):
+class FileTransferViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.FileTransfer.objects.all()
     serializer_class = tantalus.api.serializers.FileTransferSerializer
     filter_fields = ('name', 'id',)
@@ -116,25 +147,25 @@ class MD5CheckViewSet(viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.MD5CheckSerializer
 
 
-class BRCImportFastqsViewSet(viewsets.ModelViewSet):
+class BRCImportFastqsViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.BRCFastqImport.objects.all()
     serializer_class = tantalus.api.serializers.ImportBRCFastqsSerializer
     filter_fields = ('id', 'name')
 
 
-class QueryGscWgsBamsViewSet(viewsets.ModelViewSet):
+class QueryGscWgsBamsViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.GscWgsBamQuery.objects.all()
     serializer_class = tantalus.api.serializers.QueryGscWgsBamsSerializer
     filter_fields = ('id', 'name')
 
 
-class QueryGscDlpPairedFastqsViewSet(viewsets.ModelViewSet):
+class QueryGscDlpPairedFastqsViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.GscDlpPairedFastqQuery.objects.all()
     serializer_class = tantalus.api.serializers.QueryGscDlpPairedFastqsSerializer
     filter_fields = ('dlp_library_id', 'id', 'name')
 
 
-class ImportDlpBamViewSet(viewsets.ModelViewSet):
+class ImportDlpBamViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.ImportDlpBam.objects.all()
     serializer_class = tantalus.api.serializers.ImportDlpBamSerializer
     filter_fields = ('id', 'name')
@@ -159,7 +190,7 @@ class FileTransferRestart(APIView):
         return Response(serializer.data)
 
 
-class DatasetsTag(viewsets.ModelViewSet):
+class DatasetsTag(RestrictedQueryMixin, viewsets.ModelViewSet):
     """
     To tag datasets in this endpoint, use the following JSON format to POST:
         { "name": "test_api_tag", "sequencedataset_set": [1, 2, 3, 4] }
@@ -213,14 +244,14 @@ class AddDataView(viewsets.ViewSet):
         return Response('success', status=201)
 
 
-class ResultDatasetsViewSet(OwnerEditModelViewSet):
+class ResultDatasetsViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.ResultsDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.ResultDatasetSerializer
     serializer_class_readwrite = tantalus.api.serializers.ResultDatasetSerializer
     filter_fields = ('id', 'owner', 'name', 'samples', 'analysis')
 
 
-class AnalysisViewSet(OwnerEditModelViewSet):
+class AnalysisViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.Analysis.objects.all()
     serializer_class_readonly = tantalus.api.serializers.AnalysisSerializer
     serializer_class_readwrite = tantalus.api.serializers.AnalysisSerializer
