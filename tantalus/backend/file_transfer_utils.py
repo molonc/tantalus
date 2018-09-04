@@ -6,6 +6,7 @@ import subprocess
 import sys
 import os
 import logging
+import traceback
 
 from tantalus.models import *
 from tantalus.exceptions.file_transfer_exceptions import *
@@ -149,7 +150,7 @@ class AzureTransfer(object):
             cloud_blobname,
             local_filepath,
             progress_callback=TransferProgress().print_progress,
-            max_connections=1)
+            max_connections=16)
 
         os.chmod(local_filepath, 0444)
 
@@ -192,7 +193,7 @@ class AzureTransfer(object):
             cloud_blobname,
             local_filepath,
             progress_callback=TransferProgress().print_progress,
-            max_connections=1,
+            max_connections=16,
             timeout=10*60*64)
 
 
@@ -413,6 +414,17 @@ def transfer_files(file_transfer, temp_directory):
     # Create each file on success
     for file_instance in file_instances:
         print 'starting transfer of {} to {}'.format(file_instance.file_resource.filename, to_storage.name)
-        f_transfer(file_instance, to_storage)
+        success = False
+        for retry in range(3):
+            try:
+                f_transfer(file_instance, to_storage)
+                success = True
+                break
+            except:
+                print 'transfer failed'
+                traceback.print_exc()
+        if not success:
+            raise Exception('failed all retry attempts')
         FileInstance.objects.create(file_resource=file_instance.file_resource, storage=to_storage)
         print 'finished transfer of {} to {}'.format(file_instance.file_resource.filename, to_storage.name)
+
