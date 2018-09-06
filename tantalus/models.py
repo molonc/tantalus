@@ -482,7 +482,10 @@ class Analysis(models.Model):
         unique=True,
     )
 
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(
+        Tag,
+        blank=True,
+    )
 
     jira_ticket = models.CharField(
         max_length=50,
@@ -493,11 +496,13 @@ class Analysis(models.Model):
     input_datasets = models.ManyToManyField(
         'SequenceDataset',
         related_name='inputdatasets',
+        blank=True,
     )
 
     input_results = models.ManyToManyField(
         'ResultsDataset',
         related_name='inputresults',
+        blank=True,
     )
 
     last_updated = models.DateTimeField(
@@ -519,6 +524,7 @@ class Analysis(models.Model):
 
     logs = models.ManyToManyField(
         FileResource,
+        blank=True,
     )
 
     def __unicode__(self):
