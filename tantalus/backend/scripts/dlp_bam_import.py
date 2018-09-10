@@ -9,7 +9,7 @@ import azure.storage.blob
 import pandas as pd
 from django.core.serializers.json import DjangoJSONEncoder
 from tantalus.backend.colossus import *
-
+from tantalus.backend.dlp import *
 
 def get_bam_ref_genome(bam_header):
     for pg in bam_header['PG']:
