@@ -30,7 +30,7 @@
                         {% for file in object.file_resources.all %}
                             <tr>
                                 <td>{{file.filename}}</td>
-                                <td>{{file.file_type}}</td>
+                                <td>{{file.file_type.name}}</td>
                                 <td>{{file.sequencefileinfo.index_sequence}}</td>
                                 <td>{{file.sequencefileinfo.read_end}}</td>
                                 <td>{{file.sequencefileinfo.genome_region}}</td>
