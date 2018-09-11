@@ -60,10 +60,12 @@ def get_or_create_serialize_dna_library(data):
 class FileResourceSerializer(GetCreateModelSerializer):
     class Meta:
         model = tantalus.models.FileResource
-        fields = ('size', 'created', 'file_type', 'read_end', 'compression', 'filename')
+        fields = ('size', 'created', 'read_end', 'compression', 'filename')
 
 
 def get_or_create_serialize_file_resource(data):
+    data['file_type'] = tantalus.models.FileType.objects.get(name=data['file_type'])
+
     sequence_file_info = None
     if 'sequencefileinfo' in data:
         sequence_file_info = data.pop('sequencefileinfo')
