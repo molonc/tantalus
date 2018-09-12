@@ -109,19 +109,19 @@ class SequenceDatasetViewSet(OwnerEditModelViewSet):
     queryset = tantalus.models.SequenceDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
-    filter_fields = ('library__library_id', 'sample__sample_id',)
+    filter_fields = ('id', 'library__library_id', 'sample__sample_id',)
 
 
 class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.Storage.objects.all()
     serializer_class = tantalus.api.serializers.StorageSerializer
-    filter_fields = ('name',)
+    filter_fields = ('id', 'name',)
 
 
 class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.ServerStorage.objects.all()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
-    filter_fields = ('name',)
+    filter_fields = ('id', 'name',)
 
 
 class AzureBlobStorageViewSet(viewsets.ReadOnlyModelViewSet):
@@ -133,13 +133,13 @@ class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.FileInstance.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileInstanceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileInstanceSerializer
-    filter_fields = ('storage__name',)
+    filter_fields = ('id', 'storage__name',)
 
 
 class FileTransferViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.FileTransfer.objects.all()
     serializer_class = tantalus.api.serializers.FileTransferSerializer
-    filter_fields = ('name', 'id',)
+    filter_fields = ('id', 'name')
 
 
 class MD5CheckViewSet(viewsets.ModelViewSet):
