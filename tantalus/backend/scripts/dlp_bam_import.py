@@ -149,7 +149,7 @@ def import_dlp_realign_bams(json_filename, storage_name, storage_type, bam_filen
     else:
         raise ValueError('unsupported storage type {}'.format(storage_type))
 
-    json_list = tantalus.backend.dlp.create_sequence_dataset_models(metadata, storage_name)
+    json_list = create_sequence_dataset_models(metadata, storage_name)
 
     with open(json_filename, 'w') as f:
         json.dump(json_list, f, indent=4, sort_keys=True, cls=DjangoJSONEncoder)
