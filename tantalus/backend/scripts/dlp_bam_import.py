@@ -8,7 +8,6 @@ import json
 import azure.storage.blob
 import pandas as pd
 from django.core.serializers.json import DjangoJSONEncoder
-from tantalus.backend.colossus import *
 from tantalus.backend.dlp import *
 
 def get_bam_ref_genome(bam_header):
@@ -31,21 +30,6 @@ def get_bam_aligner_name(bam_header):
                 return 'bwa_mem'
 
     raise Exception('no aligner name found')
-
-
-def query_colossus_dlp_index_info(library_id):
-    sublibraries = get_colossus_sublibraries_from_library_id(library_id)
-
-    cell_indices = {}
-    for sublib in sublibraries:
-        sample_id = sublib['sample_id']['sample_id']
-        row = 'R{:02}'.format(sublib['row'])
-        col = 'C{:02}'.format(sublib['column'])
-        cell_id = '-'.join([sample_id, library_id, row, col])
-        index_sequence = sublib['primer_i7'] + '-' + sublib['primer_i5']
-        cell_indices[cell_id] = index_sequence
-
-    return cell_indices
 
 
 def get_bam_header_file(filename):
@@ -80,10 +64,7 @@ def get_bam_header_info(header):
         flowcell_lane = read_group['PU']
         sample_id, library_id, row, col = cell_id.split('-')
 
-        if library_id not in index_info:
-            index_info[library_id] = query_colossus_dlp_index_info(library_id)
-
-        index_sequence = index_info[library_id][cell_id]
+        index_sequence = read_group['KS']
 
         flowcell_id = flowcell_lane.split('_')[0]
         lane_number = ''
