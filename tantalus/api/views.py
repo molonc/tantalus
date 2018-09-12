@@ -1,13 +1,14 @@
+from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
 from rest_framework import viewsets, mixins
-from rest_framework.views import APIView
+from rest_framework import permissions
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from django_filters import rest_framework as filters
-import tantalus.models
-import tantalus.api.serializers
-import tantalus.tasks
+from rest_framework.views import APIView
 from tantalus.api.permissions import IsOwnerOrReadOnly
-from rest_framework import permissions
+import tantalus.api.serializers
+import tantalus.models
+import tantalus.tasks
 
 
 class RestrictedQueryMixin(object):
@@ -110,6 +111,15 @@ class SequenceDatasetViewSet(OwnerEditModelViewSet):
     serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
     filter_fields = ('id', 'library__library_id', 'sample__sample_id',)
+
+    def destroy(self, request, pk=None):
+        """Delete all associated file resources too."""
+        # Delete the file resources
+        this_dataset = get_object_or_404(self.queryset, pk=pk)
+        this_dataset.file_resources.all().delete()
+
+        # Call the parent constructor
+        super(SequenceDatasetViewSet, self).destroy(request, pk)
 
 
 class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
@@ -249,6 +259,15 @@ class ResultDatasetsViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     serializer_class_readonly = tantalus.api.serializers.ResultDatasetSerializer
     serializer_class_readwrite = tantalus.api.serializers.ResultDatasetSerializer
     filter_fields = ('id', 'owner', 'name', 'samples', 'analysis')
+
+    def destroy(self, request, pk=None):
+        """Delete all associated file resources too."""
+        # Delete the file resources
+        this_dataset = get_object_or_404(self.queryset, pk=pk)
+        this_dataset.file_resources.all().delete()
+
+        # Call the parent constructor
+        super(ResultDatasetsViewSet, self).destroy(request, pk)
 
 
 class AnalysisViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
