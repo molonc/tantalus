@@ -558,7 +558,10 @@ class ResultsDataset(models.Model):
         unique=True,
     )
 
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(
+        Tag,
+        blank=True,
+    )
 
     results_type = models.CharField(
         max_length=50,
