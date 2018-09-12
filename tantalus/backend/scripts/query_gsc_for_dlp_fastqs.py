@@ -92,13 +92,27 @@ filename_pattern_map = {
 }
 
 
-def query_gsc_dlp_paired_fastqs(json_filename, dlp_library_id, gsc_library_id):
+def query_gsc_dlp_paired_fastqs(json_filename, dlp_library_id):
     storage = dict(name='gsc')
 
+    primary_sample_id = query_libraries_by_library_id(dlp_library_id)['sample']['sample_id']
     cell_samples = query_colossus_dlp_cell_info(dlp_library_id)
     rev_comp_overrides = query_colossus_dlp_rev_comp_override(dlp_library_id)
 
+    external_identifier = '{}_{}'.format(primary_sample_id, dlp_library_id)
+
     gsc_api = tantalus.backend.gsc.GSCAPI()
+
+    library_infos = gsc_api.query('library?external_identifier={}'.format(external_identifier))
+
+    if len(library_infos) == 0:
+        raise Exception('no libraries with external_identifier {} in gsc api'.format(external_identifier))
+    elif len(library_infos) > 1:
+        raise Exception('multiple libraries with external_identifier {} in gsc api'.format(external_identifier))
+
+    library_info = library_infos[0]
+
+    gsc_library_id = library_info['name']
 
     fastq_infos = gsc_api.query('fastq?parent_library={}'.format(gsc_library_id))
 
@@ -166,6 +180,7 @@ def query_gsc_dlp_paired_fastqs(json_filename, dlp_library_id, gsc_library_id):
                 lane_number=lane_number,
                 sequencing_centre='GSC',
                 sequencing_instrument=sequencing_instrument,
+                sequencing_library_id=gsc_library_id,
                 read_type=read_type,
             )],
             size=os.path.getsize(fastq_path),
@@ -196,5 +211,5 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     query_gsc_dlp_paired_fastqs(args['json_data'],
-        args['dlp_library_id'], args['gsc_library_id'])
+        args['dlp_library_id'])
 
