@@ -817,16 +817,13 @@ def dataset_set_to_CSV(request):
 
     # Functions to get dataset attributes. These need to return strings.
     def get_dataset_samples(instance):
-        samples = instance.get_samples()
-        return ','.join([sample.sample_id for sample in samples])
+        return instance.get_samples()
 
     def get_dataset_libraries(instance):
-        libraries = instance.get_libraries()
-        return ','.join(libraries)
+        return instance.get_libraries()
 
     def get_dataset_library_type(instance):
-        library_types = instance.get_library_type()
-        return ','.join(library_types)
+        return instance.get_library_type()
 
     def get_dataset_tags(instance):
         tags = instance.tags.all().values_list('name', flat=True)
@@ -836,6 +833,11 @@ def dataset_set_to_CSV(request):
         storages = instance.get_storage_names()
         return ','.join(storages)
 
+    def get_dataset_type(instance):
+        return instance.get_dataset_type_name()
+
+    def get_num_read(instance):
+        return str(instance.get_num_total_sequencing_lanes())
 
     # Title and lambda function dictionary for dataset attributes used
     # for CSV header row. Each attribute has a title, used for the CSV
@@ -845,7 +847,7 @@ def dataset_set_to_CSV(request):
             'pk': {'title': 'Dataset PK',
                    'function': lambda x: x.pk},
             'type': {'title': 'Type',
-                     'function': lambda x: x.dataset_type_name},
+                     'function': get_dataset_type},
             'samples': {'title': 'Samples',
                         'function': get_dataset_samples},
             'libraries': {'title': 'Libraries',
@@ -853,7 +855,7 @@ def dataset_set_to_CSV(request):
             'library type': {'title': 'Library Type',
                              'function': get_dataset_library_type},
             'num read groups': {'title': 'Number of Read Groups',
-                                'function': lambda x: x.read_groups.count()},
+                                'function': get_num_read},
             'tags': {'title': 'Tags',
                      'function': get_dataset_tags},
             'storages': {'title': 'Storages',

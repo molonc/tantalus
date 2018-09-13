@@ -472,6 +472,18 @@ class SequenceDataset(models.Model):
             .values_list('storage__name', flat=True)
             .distinct())
 
+    def get_dataset_type_name(self):
+        return self.dataset_type
+
+    def get_samples(self):
+        return self.sample.sample_id
+
+    def get_libraries(self):
+        return self.library.library_id
+
+    def get_library_type(self):
+        return self.library.library_type
+
 
 class Analysis(models.Model):
     """
