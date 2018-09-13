@@ -620,8 +620,8 @@ class DatasetListJSON(BaseDatatableView):
             return row.dataset_type
 
         if column == 'sample_id':
-            return row.sample.sample_id
-
+            sample_link = (reverse('sample-detail', args=(row.sample.id,)))
+            return "<a href=" + sample_link + ">" + row.sample.sample_id + "</a>"
         if column == 'library_id':
             return row.library.library_id
 
