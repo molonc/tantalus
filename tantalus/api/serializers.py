@@ -46,7 +46,20 @@ class AzureBlobStorageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = tantalus.models.AzureBlobStorage
-        fields = ('id', 'storage_type', 'name', 'storage_account', 'storage_container')
+        fields = (
+            'id',
+            'storage_type',
+            'name',
+            'storage_account',
+            'storage_container',
+            'credentials',
+        )
+
+
+class AzureBlobCredentialsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.AzureBlobCredentials
+        fields = '__all__'
 
 
 class FileInstanceSerializer(serializers.ModelSerializer):

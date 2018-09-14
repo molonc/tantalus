@@ -139,6 +139,12 @@ class AzureBlobStorageViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
 
 
+class AzureBlobCredentialsViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (IsAdminUser,)
+    queryset = tantalus.models.AzureBlobCredentials.objects.all()
+    serializer_class = tantalus.api.serializers.AzureBlobCredentialsSerializer
+
+
 class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.FileInstance.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileInstanceSerializerRead
