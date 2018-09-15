@@ -1,3 +1,4 @@
+from django.db import models
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework import viewsets, mixins
@@ -146,11 +147,30 @@ class AzureBlobCredentialsViewSet(viewsets.ReadOnlyModelViewSet):
     filter_fields = ('id',)
 
 
+class FileInstanceFilter(filters.FilterSet):
+    """Support specific filters for file instances."""
+
+    class Meta:
+        model = tantalus.models.FileInstance
+        fields = {
+            'id': ['exact'],
+            'storage__name': ['exact'],
+            'file_resource': ['exact'],
+            'owner': ['exact'],
+            'storage': ['exact'],
+        }
+        filter_overrides = {
+            models.ForeignKey: {
+                'filter_class': filters.CharFilter,
+            }
+        }
+
+
 class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.FileInstance.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileInstanceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileInstanceSerializer
-    filter_fields = ('id', 'storage__name',)
+    filter_class = FileInstanceFilter
 
 
 class FileTransferViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
