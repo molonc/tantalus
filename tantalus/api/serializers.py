@@ -108,7 +108,7 @@ class FileResourceSerializer(serializers.ModelSerializer):
 
 
 class FileResourceSerializerRead(serializers.ModelSerializer):
-    file_instances = FileInstanceSerializer(source='fileinstance_set', many=True, read_only=True)
+    file_instances = FileInstanceSerializerRead(source='fileinstance_set', many=True, read_only=True)
     sequencefileinfo = SequenceFileInfoSerializer(read_only=True)
     file_type = FileTypeField()
     class Meta:
