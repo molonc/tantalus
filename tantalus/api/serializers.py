@@ -135,6 +135,8 @@ class SequenceDatasetSerializer(serializers.ModelSerializer):
 
 
 class SequenceDatasetSerializerRead(serializers.ModelSerializer):
+    sample = SampleSerializer()
+    library = DNALibrarySerializer()
     sequence_lanes = SequencingLaneSerializer(many=True)
     class Meta:
         model = tantalus.models.SequenceDataset
