@@ -83,7 +83,7 @@ class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileResourceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileResourceSerializer
-    filter_fields = ('id', 'filename', 'sequencedataset__name')
+    filter_fields = ('id', 'filename', 'sequencedataset__name', 'sequencedataset__id')
 
 
 class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
