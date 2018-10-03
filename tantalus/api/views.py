@@ -104,7 +104,7 @@ class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.SequencingLane.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequencingLaneSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequencingLaneSerializer
-    filter_fields = ('id', 'dna_library_id', 'flowcell_id', 'lane_number')
+    filter_fields = ('id', 'dna_library_id', 'dna_library__library_id', 'flowcell_id', 'lane_number')
 
 
 class SequenceDatasetViewSet(OwnerEditModelViewSet):
