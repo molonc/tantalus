@@ -86,11 +86,28 @@ class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     filter_fields = ('id', 'filename', 'sequencedataset__name', 'sequencedataset__id')
 
 
+class SequenceFileInfoFilter(filters.FilterSet):
+    """Support specific filters for sequence file infos."""
+
+    class Meta:
+        model = tantalus.models.SequenceFileInfo
+        fields = {
+            'id': ['exact'],
+            'file_resource': ['exact'],
+            'index_sequence': ['exact'],
+        }
+        filter_overrides = {
+            models.OneToOneField: {
+                'filter_class': filters.CharFilter,
+            }
+        }
+
+
 class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.SequenceFileInfo.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequenceFileInfoSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequenceFileInfoSerializer
-    filter_fields = ('id',)
+    filter_class = SequenceFileInfoFilter
 
 
 class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
