@@ -396,7 +396,10 @@ class SequenceDataset(models.Model):
         unique=True,
     )
 
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(
+        Tag,
+        blank=True,
+    )
 
     BAM = 'BAM'
     FQ = 'FQ'
