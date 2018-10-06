@@ -1,0 +1,11 @@
+{% extends "rest_framework/base.html" %}
+
+{% load staticfiles %}
+
+{% block title %}{% if name %}{{ name }} – {% endif %}Tantalus{% endblock %}
+
+{% block branding %}
+    <a class='navbar-brand' rel="nofollow" href='{% url "home" %}'>
+        Tantalus
+    </a>
+{% endblock %}
