@@ -45,8 +45,7 @@ class RestrictedQueryMixin(object):
 
 class OwnerEditModelViewSet(viewsets.ModelViewSet):
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly,
-        IsOwnerOrReadOnly,)
+        permissions.IsAuthenticatedOrReadOnly,)
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
     def get_serializer_class(self):
@@ -121,7 +120,7 @@ class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.SequencingLane.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequencingLaneSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequencingLaneSerializer
-    filter_fields = ('id', 'dna_library_id', 'dna_library__library_id', 'flowcell_id', 'lane_number', 'sequencing_library_id')
+    filter_fields = ('id', 'dna_library_id', 'dna_library__library_id', 'flowcell_id', 'lane_number', 'sequencing_library_id', 'read_type', 'dna_library')
 
 
 class SequenceDatasetViewSet(OwnerEditModelViewSet):
