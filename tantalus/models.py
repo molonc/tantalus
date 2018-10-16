@@ -664,8 +664,8 @@ class ServerStorage(Storage):
     )
 
     def get_storage_directory(self):
-        if not django.conf.settings.IS_PRODUCTION and not self.read_only:
-            return self.storage_directory.rstrip('/') + '_test'
+        """Keep this for backwards-compatibility."""
+        # TODO(mwiens91): kill this method at some point
         return self.storage_directory
 
     def get_md5_queue_name(self):
@@ -726,8 +726,6 @@ class AzureBlobStorage(Storage):
     )
 
     def get_storage_container(self):
-        if not django.conf.settings.IS_PRODUCTION:
-            return self.storage_container + '-test'
         return self.storage_container
 
     def get_filepath(self, file_resource):
