@@ -96,7 +96,10 @@ class Sample(models.Model):
         null=True
     )
 
-    projects = models.ManyToManyField(Project)
+    projects = models.ManyToManyField(
+        Project,
+        null=True,
+    )
 
 
     def __unicode__(self):
