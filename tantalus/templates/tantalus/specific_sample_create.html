@@ -7,29 +7,29 @@
 
 {% block body %}
     <div class="container graybg">
-        <form action="{% url 'sample-add' %}" method="POST">
+        <form action="{% url 'specific-sample-add' patient_id %}" method="POST">
             {% csrf_token %}
             <fieldset>
                 <legend>Add a single sample</legend>
                 <table class="table-condensed">
                     <thead>
-                    {{form}}
+                        {% for field in form %}
+                        <tr>
+                            <th>
+                                {{field.label}}
+                            </th>
+                            <td>
+                                {{field}}
+                                {% if field.name == "sample_id" %}
+                                    <p> Append an extension to the Patient ID to create an unique Sample ID</p>
+                                {% endif%}
+                            </td>
+                        </tr>
+                        {% endfor %}
                     </thead>
                 </table>
             	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
             </fieldset>
-        </form><br>
-        <form action="{% url 'sample-add' %}" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <fieldset>
-            <legend>Or, upload an Excel file</legend>
-	            <table class="table-condensed">
-	                <thead>
-	                {{multi_form}}
-	                </thead>
-	            </table>
-	            <input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">	
-         	</fieldset>
         </form><br>
         <fieldset>
             <legend></legend>

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import os
 import django
 import django.contrib.postgres.fields
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
@@ -61,8 +62,24 @@ class Patient(models.Model):
     """
     Patient model
     """
-    patient_id = models.CharField(unique=True,max_length=120,null=True)
+    patient_id = models.CharField(
+        unique=True,
+        max_length=120,
+        null=True
+    )
 
+    external_patient_id = models.CharField(
+        unique=True,
+        max_length=120,
+        null=True
+    )
+
+
+    def get_absolute_url(self):
+        return reverse("patient-list")
+
+    def __str__(self):
+        return self.patient_id
 
 
 class Sample(models.Model):
@@ -78,6 +95,16 @@ class Sample(models.Model):
         max_length=240,
         null=True,
         blank=True
+    )
+
+    submitter = models.CharField(
+        max_length=240,
+        null=True,
+    )
+
+    collaborator = models.CharField(
+        max_length=240,
+        null=True,
     )
 
     tissue = models.CharField(
@@ -102,7 +129,6 @@ class Sample(models.Model):
         blank=True,
     )
 
-
     def __unicode__(self):
         return self.sample_id
 
@@ -111,6 +137,9 @@ class Sample(models.Model):
 
     def get_patient_name(self):
         return self.patient_id
+
+    def get_submissions(self):
+        return self.submission_set.all()
 
 
 class DNALibrary(models.Model):
@@ -1060,3 +1089,6 @@ class Submission(models.Model):
         null=True,
         default=None
     )
+
+    def get_absolute_url(self):
+        return reverse("submissions-list")

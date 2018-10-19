@@ -1,5 +1,6 @@
 import os
 import datetime
+import pandas as pd
 
 #===========================
 # Django imports
@@ -12,9 +13,37 @@ from django import forms
 from django.db import transaction
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ValidationError
 
 import tantalus.models
 import tantalus.tasks
+
+from openpyxl import load_workbook
+
+
+class PatientForm(forms.ModelForm):
+    class Meta:
+        model = tantalus.models.Patient
+        fields = [
+            'patient_id',
+            'external_patient_id',
+        ]
+
+
+class SubmissionForm(forms.ModelForm):
+    class Meta:
+        model = tantalus.models.Submission
+        fields = [
+            'sample',
+            'sow',
+            'submission_date',
+            'submitted_by',
+            'lanes_sequenced',
+            'updated_goal',
+            'payment',
+            'data_path',
+            'library_type',
+        ]
 
 
 #===========================
@@ -23,26 +52,48 @@ import tantalus.tasks
 class SampleForm(forms.ModelForm):
     class Meta:
         model = tantalus.models.Sample
-        fields = "__all__"
+        fields = [
+            'sample_id',
+            'collab_sample_id',
+            'submitter',
+            'collaborator',
+            'tissue',
+            'note',
+            'patient_id',
+            'projects',
+        ]
 
 
-class MultipleSamplesForm(forms.Form):
-    samples = forms.CharField(
-        label="Sample(s)",
-        required=False,
-        help_text="A white space separated list of sample IDs. Eg. SA928",
-        widget=forms.widgets.Textarea
-    )
+class UploadSampleForm(forms.Form):
+    samples_excel_file = forms.FileField(label='Select an Excel(xlsx) File', widget=forms.FileInput(attrs={'accept': ".xlsx"}))
 
-    def clean(self):
-        samples = self.get_sample_ids()
-        if len(samples) == 0:
-            raise forms.ValidationError('no samples')
+    def clean_file(self):
+        file = self.cleaned_data.get("samples_excel_file", False)
+        return file
 
-    def get_sample_ids(self):
-        if 'samples' not in self.cleaned_data:
-            return []
-        return self.cleaned_data['samples'].split()
+    def get_sample_data(self):
+        # TODO: return dataframe here
+        workbook = load_workbook(self.clean_file())
+        sheet = workbook.active
+
+        temp_dict = {}
+
+        header_row = list(sheet.rows)[0]
+
+        for index in range(0, len(header_row)):
+            count = 0
+            column_data_list = []
+
+            for cell in list(sheet.columns)[index]:
+                if(count == 0):
+                    count+=1
+                    continue
+                column_data_list.append(cell.value)
+            temp_dict[header_row[index].value.encode('utf-8').strip().lower()] = column_data_list
+
+        df = pd.DataFrame(data=temp_dict)
+        return df
+
 
 
 class DatasetSearchForm(forms.Form):

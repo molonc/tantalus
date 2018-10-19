@@ -28,9 +28,61 @@ import tantalus.tasks
 import tantalus.forms
 
 
+@Render("tantalus/patient_list.html")
+def patient_list(request):
+    patients = tantalus.models.Patient.objects.all().order_by('patient_id')
+    context = {
+        'patients': patients
+    }
+    return context
+
+
+class PatientDetail(DetailView):
+
+    model = tantalus.models.Patient
+    template_name = "tantalus/patient_detail.html"
+
+    def get_context_data(self, **kwargs):
+        # TODO: add other fields to the view?
+        context = super(PatientDetail, self).get_context_data(**kwargs)
+
+        sample_set = self.object.sample_set.all()
+        sample_list = []
+        sample_url = []
+
+        for sample in sample_set:
+            sample_list.append([sample.sample_id.encode('utf-8'), sample.get_absolute_url() + str(sample.id)])
+
+        self.object.patient_id = self.object.patient_id.encode('utf-8')
+
+        context['sample_list'] = sample_list
+        context['samples'] = sample_set
+
+        return context
+
+
+@Render("tantalus/submission_list.html")
+def submission_list(request):
+    submissions = tantalus.models.Submission.objects.all().order_by('id')
+    context = {
+        'submissions': submissions
+    }
+    return context
+
+
+class SubmissionDetail(DetailView):
+
+    model = tantalus.models.Submission
+    template_name = "tantalus/submission_detail.html"
+
+    def get_context_data(self, **kwargs):
+        # TODO: add other fields to the view?
+        context = super(SubmissionDetail, self).get_context_data(**kwargs)
+        return context
+
+
 @Render("tantalus/sample_list.html")
 def sample_list(request):
-
     """
     List of samples.
     """
@@ -48,12 +100,27 @@ class SampleDetail(DetailView):
     model = tantalus.models.Sample
     template_name = "tantalus/sample_detail.html"
 
-    def get_context_data(self, object):
-        instance = get_object_or_404(tantalus.models.Sample, pk=object.id)
+    def get_context_data(self, **kwargs):
+        # TODO: add other fields to the view?
+        context = super(SampleDetail, self).get_context_data(**kwargs)
 
-        context = {
-            'form': tantalus.forms.SampleForm(instance=instance),
-        }
+        submission_set = self.object.submission_set.all()
+        project_set = self.object.projects.all()
+        project_list = []
+        submission_list = []
+
+        for submission in submission_set:
+            submission_list.append(submission.id)
+
+        for project in project_set:    
+            project_list.append(project.__unicode__())
+
+        try:
+            context['patient_url'] = self.object.patient_id.get_absolute_url() + str(self.object.patient_id.id)
+        except:
+            context['patient_url'] = None
+        context['submission_ids'] = submission_list
+        context['project_list'] = project_list
         return context
 
 
@@ -492,8 +559,72 @@ class ImportDlpBamStopView(SimpleTaskStopView):
 
 
 @method_decorator(login_required, name='dispatch')
-class SampleCreate(TemplateView):
+class PatientCreate(TemplateView):
+    """
+    tantalus.models.Sample create page.
+    """
 
+    template_name = "tantalus/patient_create.html"
+
+    def get_context_and_render(self, request, form, pk=None):
+        context = {
+            'pk':pk,
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        form = tantalus.forms.PatientForm()
+        return self.get_context_and_render(request, form)
+
+    def post(self, request, *args, **kwargs):
+        form = tantalus.forms.PatientForm(request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save()
+            msg = "Successfully created the tantalus.models.Patient."
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            msg = "Failed to create the sample. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form)
+
+@method_decorator(login_required, name='dispatch')
+class SubmissionCreate(TemplateView):
+    """
+    tantalus.models.Sample create page.
+    """
+
+    template_name = "tantalus/submission_create.html"
+
+    def get_context_and_render(self, request, form, pk=None):
+        context = {
+            'pk':pk,
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        form = tantalus.forms.SubmissionForm()
+        return self.get_context_and_render(request, form)
+
+    def post(self, request, *args, **kwargs):
+        form = tantalus.forms.SubmissionForm(request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save()
+            msg = "Successfully created the tantalus.models.Submission."
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            msg = "Failed to create the sample. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form)
+
+
+@method_decorator(login_required, name='dispatch')
+class SampleCreate(TemplateView):
     """
     tantalus.models.Sample create page.
     """
@@ -504,35 +635,111 @@ class SampleCreate(TemplateView):
         context = {
             'pk':pk,
             'form': form,
-            'multi_form': multi_form
+            'multi_form': multi_form,
         }
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
         form = tantalus.forms.SampleForm()
-        multi_form = tantalus.forms.MultipleSamplesForm()
+        multi_form = tantalus.forms.UploadSampleForm()
         return self.get_context_and_render(request, form, multi_form)
 
     def post(self, request, *args, **kwargs):
         form = tantalus.forms.SampleForm(request.POST)
-        multi_form = tantalus.forms.MultipleSamplesForm(request.POST, request.FILES)
+        multi_form = tantalus.forms.UploadSampleForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            instance = form.save()
+            msg = "Successfully created the tantalus.models.Sample."
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        elif multi_form.is_valid():
+            samples_df = multi_form.get_sample_data()
+            form_headers = list(samples_df)
+
+            if("sample_id" not in form_headers):
+                msg = "Failed to create the sample. Spreadsheet must have a Sample_ID header."
+                messages.error(request, msg)
+                return self.get_context_and_render(request, form, multi_form)
+
+            for idx, sample_row in samples_df.iterrows():
+                row = sample_row.tolist()
+                sample_dict = {
+                    'sample_id': None, 
+                    'collab_sample_id': None, 
+                    'submitter': None, 
+                    'collaborator': None, 
+                    'tissue': None, 
+                    'note': None, 
+                    'patient_id': None,
+                    'projects': None, 
+                }
+                for index in range(0, len(list(samples_df))):
+                    if(form_headers[index] == 'patient id'):
+                        patient_set = tantalus.models.Patient.objects.filter(patient_id=row[index].encode('utf-8'))
+                        #There should be only 1 Patient returned in the patient_set, but break anyways to be safe
+                        for patient in patient_set:
+                            sample_dict[form_headers[index].replace(' ', '_')] = patient
+                            break
+                    elif(form_headers[index] == 'projects'):
+                        sample_dict[form_headers[index].replace(' ', '_')] = str(row[index]).encode('utf-8').split(', ')
+                    else:
+                        sample_dict[form_headers[index].replace(' ', '_')] = row[index].encode('utf-8')
+
+                sample_created, created = tantalus.models.Sample.objects.get_or_create(
+                        sample_id=sample_dict['sample_id'],
+                        collab_sample_id=sample_dict['collab_sample_id'],
+                        submitter=sample_dict['submitter'],
+                        collaborator=sample_dict['collaborator'],
+                        tissue=sample_dict['tissue'],
+                        note=sample_dict['note'],
+                        patient_id=sample_dict['patient_id'],
+                    )
+                if created:
+                    sample_created.save()
+                    sample_created.projects = sample_dict['projects']
+            return HttpResponseRedirect(sample_created.get_absolute_url())
+        else:
+            msg = "Failed to create the sample. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form, multi_form)
+
+
+@method_decorator(login_required, name='dispatch')
+class SpecificSampleCreate(TemplateView):
+    """
+    tantalus.models.Sample create page.
+    """
+
+    template_name = "tantalus/specific_sample_create.html"
+
+    def get_context_and_render(self, request, form, patient_id, pk=None):
+        context = {
+            'pk':pk,
+            'form': form,
+            'patient_id': patient_id,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        patient_id = kwargs.get('patient_id').encode('utf-8')
+        form = tantalus.forms.SampleForm(initial={'sample_id': patient_id, 'patient_id': patient_id})
+        return self.get_context_and_render(request, form, patient_id)
+
+    def post(self, request, *args, **kwargs):
+        form = tantalus.forms.SampleForm(request.POST)
+
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
             msg = "Successfully created the tantalus.models.Sample."
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
-        elif multi_form.is_valid():
-            sample_ids = multi_form.get_sample_ids()
-            for sample_id in sample_ids:
-                sample, created = tantalus.models.Sample.objects.get_or_create(sample_id=sample_id)
-                if created:
-                    sample.save()
-            return HttpResponseRedirect(sample.get_absolute_url())
         else:
             msg = "Failed to create the sample. Please fix the errors below."
             messages.error(request, msg)
-            return self.get_context_and_render(request, form, multi_form)
+            patient_id = kwargs.get('patient_id').encode('utf-8')
+            return self.get_context_and_render(request, form, patient_id)
 
 
 @Render("tantalus/tag_list.html")
@@ -588,7 +795,6 @@ class TagDatasetDelete(View):
 
 
 class DatasetListJSON(BaseDatatableView):
-
     """
     Class used as AJAX data source through the ajax option in the abstractdataset_list template.
     This enables server-side processing of the data used in the javascript DataTables.

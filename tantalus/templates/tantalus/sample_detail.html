@@ -9,19 +9,45 @@
     <div class="container" style="padding:0; margin-bottom:5px;">
     </div>
     <div class="container" style="background-color:#F5F5F5;">
-        <table class="table-condensed">
-            <thead>
-                {% for field in form %}
-                    <th>{{field.label}}</th>
-                {% endfor %}
-            </thead>
-            <tbody>
-                <tr>
-                    {% for field in form %}
-                        <td>{{field.value}}</td>
-                    {% endfor %}
-                </tr>
-            </tbody>
-        </table>
+        {% if object %}
+            <h5>Sample ID-{{object.sample_id}}</h5>
+            <div class="table-responsive">
+                <table id="datatable" class="table table-striped" style="display:none;">
+                    <thead>
+                    <tr>
+                            <th>Sample ID</th>
+                            <th>Collab Sample ID</th>
+                            <th>Submitter</th>
+                            <th>Collaborator</th>
+                            <th>Tissue</th>
+                            <th>Note</th>
+                            <th>Patient ID</th>
+                            <th>Projects</th>
+                            <th>Submission IDs</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <br/>
+                            <tr>
+                                <td>{{object.sample_id}}</td>
+                                <td>{{object.collab_sample_id}}</td>
+                                <td>{{object.submitter}}</td>
+                                <td>{{object.collaborator}}</td>
+                                <td>{{object.tissue}}</td>
+                                <td>{{object.note}}</td>
+                                {% if patient_url %}
+                                    <td><a href='{{patient_url}}'>{{object.patient_id.patient_id}}</a></td>
+                                {% else %}
+                                    <td>{{object.patient_id.patient_id}}</td>
+                                {% endif %}
+                                <td>{{project_list|join:", "}}</td>
+                                <td>{{submission_ids|join:", "}}</td>
+                            </tr>
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No Sample Details yet.</i></h5>
+        {% endif %}
     </div>
 {% endblock %}

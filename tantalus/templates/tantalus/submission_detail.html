@@ -1,0 +1,49 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Submission Detail
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+    </div>
+    <div class="container" style="background-color:#F5F5F5;">
+        {% if object %}
+            <h5>Submission ID-{{object.id}}</h5>
+            <div class="table-responsive">
+                <table id="datatable" class="table table-striped" style="display:none;">
+                    <thead>
+                    <tr>
+                            <th>Sample ID</th>
+                            <th>SOW</th>
+                            <th>Submission Date</th>
+                            <th>Submitted By</th>
+                            <th>Lanes Sequenced</th>
+                            <th>Updated Goal</th>
+                            <th>Payment</th>
+                            <th>Data Path</th>
+                            <th>Library Type</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <br/>
+                            <tr>
+                                <td>{{object.sample}}</td>
+                                <td>{{object.sow}}</td>
+                                <td>{{object.submission_date}}</td>
+                                <td>{{object.submitted_by}}</td>
+                                <td>{{object.lanes_sequenced}}</td>
+                                <td>{{object.updated_goal}}</td>
+                                <td>{{object.payment}}</td>
+                                <td>{{object.data_path}}</td>
+                                <td>{{object.library_type}}</td>
+                            </tr>
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No Submission Details yet.</i></h5>
+        {% endif %}
+    </div>
+{% endblock %}

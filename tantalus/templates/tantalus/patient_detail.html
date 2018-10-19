@@ -2,26 +2,29 @@
 {% load staticfiles %}
 
 {% block title %}
-    Samples
+    Patient Detail
 {% endblock %}
 
 {% block body %}
     <div class="container" style="padding:0; margin-bottom:5px;">
-        <h4 style="float:left;">Select a sample to view its details</h4>
-        <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'sample-add' %}">Add Sample</a>
+        {% if object %}
+        <h4 style="float:left;">Patient ID: {{object.patient_id}}  ----- Patient External ID: {{object.external_patient_id}}</h4>
+        <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'specific-sample-add' object.patient_id %}">Add Sample</a>
+        {% endif %}
     </div>
     <div class="container" style="background-color:#F5F5F5;">
-        {% if samples %}
+        {% if object %}
+            <h4>Samples Related to Patient</h4>
             <div class="table-responsive">
                 <table id="datatable" class="table table-striped" style="display:none;">
                     <thead>
-                        <tr>
+                    <tr>
                             <th>Primary Sample ID</th>
                             <th>Collaborator Sample ID</th>
                             <th>Submitter</th>
                             <th>Collaborator</th>
                             <th>Tissue</th>
-                        </tr>
+                    </tr>
                     </thead>
                     <tbody>
                         <br/>
@@ -38,7 +41,7 @@
                 </table>
             </div>
         {% else %}
-            <h5><i class="text-warning">No samples yet.</i></h>
+            <h5><i class="text-warning">No Patient Details yet.</i></h5>
         {% endif %}
     </div>
 {% endblock %}

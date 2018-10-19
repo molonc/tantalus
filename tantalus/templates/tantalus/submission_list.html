@@ -1,0 +1,42 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Submissions
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">Select a submission to view its details</h4>
+    </div>
+    <div class="container" style="background-color:#F5F5F5;">
+        {% if submissions %}
+            <div class="table-responsive">
+                <table id="datatable" class="table table-striped" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Submission ID</th>
+                            <th>Sample</th>
+                            <th>Submission Date</th>
+                            <th>Submitted By </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <br/>
+                        {% for submission in submissions %}
+                            <tr>
+                                <td><a href="{% url 'submission-detail' submission.id %}">{{submission.id}}</a></td>
+                                <td>{{submission.sample}}</td>
+                                <td>{{submission.submission_date}}</td>
+                                <td>{{submission.submitted_by}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <h5><i class="text-warning">No Submissions yet.</i></h>
+        {% endif %}
+    </div>
+{% endblock %}
