@@ -83,6 +83,8 @@ protocol_id_map = {
     96: 'EXOME',
     80: 'RNASEQ',
     137: 'RNASEQ',
+    178: 'WGS',
+    179: 'WGS',
 }
 
 solexa_run_type_map = {
