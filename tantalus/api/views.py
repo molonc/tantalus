@@ -72,7 +72,7 @@ class SampleFilter(filters.FilterSet):
         self.filters['sequencedataset__id__isnull'].label = 'Has no SequenceDatasets'
 
 
-class SampleViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
+class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_class = SampleFilter
