@@ -135,11 +135,38 @@ class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     )
 
 
+class SequenceDatasetFilter(filters.FilterSet):
+    """Support specific filters for sequence datasets."""
+
+    class Meta:
+        model = tantalus.models.SequenceDataset
+        fields = {
+            'id': ['exact'],
+            'name': ['exact'],
+            'library__library_id': ['exact'],
+            'sample__sample_id': ['exact'],
+            'tags__name': ['exact'],
+            'sequence_lanes__flowcell_id': ['exact'],
+            'dataset_type': ['exact'],
+            'aligner': ['exact'],
+            'reference_genome': ['exact'],
+            'analysis': ['exact'],
+            'analysis__name': ['exact'],
+            'analysis__jira_ticket': ['exact'],
+            'file_resources__filename': ['exact'],
+        }
+        filter_overrides = {
+            models.ForeignKey: {
+                'filter_class': filters.CharFilter,
+            }
+        }
+
+
 class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.SequenceDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
-    filter_fields = ('id', 'name', 'library__library_id', 'sample__sample_id', 'tags__name', 'sequence_lanes__flowcell_id', 'dataset_type', 'aligner', 'reference_genome', 'analysis', 'file_resources__filename')
+    filter_class = SequenceDatasetFilter
 
     def destroy(self, request, pk=None):
         """Delete all associated file resources too."""
