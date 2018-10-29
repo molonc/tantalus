@@ -26,23 +26,29 @@ class StorageSerializer(serializers.ModelSerializer):
 
 
 class ServerStorageSerializer(serializers.ModelSerializer):
-    storage_directory = serializers.SerializerMethodField()
+    prefix = serializers.SerializerMethodField()
     storage_type = serializers.CharField(read_only=True)
 
-    def get_storage_directory(self, obj):
-        return obj.get_storage_directory()
+    def get_prefix(self, obj):
+        return obj.get_prefix()
 
     class Meta:
         model = tantalus.models.ServerStorage
-        fields = ('id', 'storage_type', 'name', 'storage_directory')
+        fields = (
+            'id',
+            'storage_type',
+            'name',
+            'storage_directory',
+            'prefix',
+        )
 
 
 class AzureBlobStorageSerializer(serializers.ModelSerializer):
-    storage_container = serializers.SerializerMethodField()
+    prefix = serializers.SerializerMethodField()
     storage_type = serializers.CharField(read_only=True)
 
-    def get_storage_container(self, obj):
-        return obj.get_storage_container()
+    def get_prefix(self, obj):
+        return obj.get_prefix()
 
     class Meta:
         model = tantalus.models.AzureBlobStorage
@@ -52,6 +58,7 @@ class AzureBlobStorageSerializer(serializers.ModelSerializer):
             'name',
             'storage_account',
             'storage_container',
+            'prefix',
             'credentials',
         )
 

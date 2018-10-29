@@ -127,7 +127,7 @@ class AzureTransfer(object):
 
         cloud_filepath = file_instance.get_filepath()
         cloud_container, cloud_blobname = cloud_filepath.split('/', 1)
-        assert cloud_container == file_instance.storage.get_storage_container()
+        assert cloud_container == file_instance.storage.storage_container
         local_filepath = to_storage.get_filepath(file_instance.file_resource)
 
         make_dirs(os.path.dirname(local_filepath))
@@ -170,7 +170,7 @@ class AzureTransfer(object):
         local_filepath = file_instance.get_filepath()
         cloud_filepath = to_storage.get_filepath(file_instance.file_resource)
         cloud_container, cloud_blobname = cloud_filepath.split('/', 1)
-        assert cloud_container == to_storage.get_storage_container()
+        assert cloud_container == to_storage.storage_container
 
         if not os.path.isfile(local_filepath):
             error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
@@ -217,7 +217,7 @@ def blob_to_blob_transfer_closure(source_account, destination_account):
     # can read its private files
     shared_access_sig = (
         source_account.generate_container_shared_access_signature(
-            container_name = source_account.get_storage_container(),
+            container_name = source_account.storage_container,
             permission=ContainerPermissions.READ,
             expiry=(datetime.datetime.utcnow()
                     + datetime.timedelta(hours=200)),))
@@ -232,7 +232,7 @@ def blob_to_blob_transfer_closure(source_account, destination_account):
         # Copypasta validation from AzureTransfer.download_from_blob
         source_filepath = source_file.get_filepath()
         source_container, blobname = cloud_filepath.split('/', 1)
-        assert source_container == source_file.storage.get_storage_container()
+        assert source_container == source_file.storage.storage_container
 
         if not source_storage.exists(source_container, blobname):
             error_message = "source file {filepath} does not exist on {storage} for file instance with pk: {pk}".format(
@@ -242,14 +242,14 @@ def blob_to_blob_transfer_closure(source_account, destination_account):
             raise FileDoesNotExist(error_message)
 
         # Copypasta validation from AzureTransfer.upload_to_blob
-        if destination_storage.exists(destination_account.get_storage_container(), blobname):
+        if destination_storage.exists(destination_account.storage_container, blobname):
             # Check if the file already exist. If the file does already
             # exist, don't re-transfer this file. If the file does exist
             # but has a different size, then raise an exception.
 
             # Size check
             destination_blob_size = destination_storage.get_blob_properties(
-                container_name=destination_account.get_storage_container(),
+                container_name=destination_account.storage_container,
                 blob_name=blobname,)
 
             if source_file.size == destination_blob_size:
@@ -265,12 +265,12 @@ def blob_to_blob_transfer_closure(source_account, destination_account):
 
         # Finally, transfer the file between the blobs
         source_sas_url = source_storage.make_blob_url(
-            container_name=source_file.storage.get_storage_container(),
+            container_name=source_file.storage.storage_container,
             blob_name=blobname,
             sas_token=shared_access_sig)
 
         destination_storage.copy_blob(
-            container_name=destination_account.get_storage_container(),
+            container_name=destination_account.storage_container,
             blob_name=blobname,
             copy_source=source_sas_url)
 

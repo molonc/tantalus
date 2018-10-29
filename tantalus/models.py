@@ -666,9 +666,7 @@ class ServerStorage(Storage):
         default=True,
     )
 
-    def get_storage_directory(self):
-        """Keep this for backwards-compatibility."""
-        # TODO(mwiens91): kill this method at some point
+    def get_prefix(self):
         return self.storage_directory
 
     def get_md5_queue_name(self):
@@ -679,7 +677,7 @@ class ServerStorage(Storage):
 
     def get_filepath(self, file_resource):
         return os.path.join(
-            str(self.get_storage_directory()),
+            str(self.storage_directory),
             file_resource.filename.strip('/'))
 
     @property
@@ -728,8 +726,8 @@ class AzureBlobStorage(Storage):
         on_delete=models.CASCADE,
     )
 
-    def get_storage_container(self):
-        return self.storage_container
+    def get_prefix(self):
+        return '/'.join([self.storage_account, self.storage_container])
 
     def get_filepath(self, file_resource):
         # strip the slash, otherwise this creates an additional
