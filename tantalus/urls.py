@@ -91,6 +91,7 @@ urlpatterns = [
     url(r'^datasets/tag$', tantalus.views.DatasetTag.as_view(), name='dataset-tag'),
     url(r'^datasets/tag/csv$', tantalus.views.dataset_set_to_CSV, name='dataset-tag-csv'),
     url(r'^datasets/search$', tantalus.views.DatasetSearch.as_view(), name='dataset-search'),
+    url(r'^datasets/delete/(?P<pk>\d+)$', tantalus.views.DatasetDelete.as_view(), name='dataset-delete'),
     url(r'^data_stats$', tantalus.views.DataStatsView.as_view(), name='data-stats'),
     url(r'^$', tantalus.views.HomeView.as_view(), name='home'),
 ]

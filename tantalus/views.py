@@ -721,6 +721,20 @@ class DatasetDetail(DetailView):
         return context
 
 
+@method_decorator(login_required, name='dispatch')
+class DatasetDelete(View):
+    """
+    tantalus.models.SequenceDataset delete page.
+    """
+    def get(self, request, pk):
+        dataset = get_object_or_404(tantalus.models.SequenceDataset, pk=pk)
+        dataset.file_resources.all().delete()
+        dataset.delete()
+        msg = "Successfully removed datasest"
+        messages.success(request, msg)
+        return HttpResponseRedirect(reverse('dataset-list'))
+
+
 class DatasetSearch(FormView):
 
     form_class = tantalus.forms.DatasetSearchForm
