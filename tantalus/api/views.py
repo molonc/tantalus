@@ -1,6 +1,7 @@
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
+import rest_framework.exceptions
 from rest_framework import viewsets, mixins
 from rest_framework import permissions
 from rest_framework.permissions import IsAdminUser
@@ -38,7 +39,8 @@ class RestrictedQueryMixin(object):
             if key in paging:
                 continue
             if key not in filters:
-                return qs.none()
+                raise rest_framework.exceptions.APIException(
+                    'no filter %s' % key)
 
         return qs
 
@@ -133,7 +135,7 @@ class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     )
 
 
-class SequenceDatasetViewSet(OwnerEditModelViewSet):
+class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.SequenceDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
@@ -161,12 +163,12 @@ class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     filter_fields = ('id', 'name',)
 
 
-class AzureBlobStorageViewSet(viewsets.ReadOnlyModelViewSet):
+class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.AzureBlobStorage.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
 
 
-class AzureBlobCredentialsViewSet(viewsets.ReadOnlyModelViewSet):
+class AzureBlobCredentialsViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAdminUser,)
     queryset = tantalus.models.AzureBlobCredentials.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobCredentialsSerializer
