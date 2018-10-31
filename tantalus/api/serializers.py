@@ -242,6 +242,12 @@ class ImportDlpBamSerializer(SimpleTaskSerializer):
         return instance
 
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.Tag
+        fields = ('id', 'name')
+
+
 class DatasetTagSerializer(serializers.ModelSerializer):
     """Serializer for tags."""
     sequencedataset_set = serializers.PrimaryKeyRelatedField(
