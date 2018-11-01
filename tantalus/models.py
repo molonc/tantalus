@@ -7,6 +7,7 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db.models import Max
 from simple_history.models import HistoricalRecords
 from polymorphic.models import PolymorphicModel
 import account.models
@@ -491,6 +492,9 @@ class SequenceDataset(models.Model):
 
     def get_library_type(self):
         return self.library.library_type
+
+    def get_created_time(self):
+        return self.file_resources.all().aggregate(Max('created'))['created__max']
 
     def __str__(self):
         return self.name
