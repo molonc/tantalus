@@ -7,11 +7,13 @@
 
 {% block body %}
     <div class="container" style="padding:0; margin-bottom:5px;">
+         <a class="btn btn-danger btn-sm" style="float:right; margin-top:5px;" href="{% url 'dataset-delete' pk=object.id %}">Delete dataset</a>
     </div>
     <div class="container" style="background-color:#F5F5F5;">
         {% if object %}
-            <h5>Sample ID-{{object.sample}} &nbsp; &nbsp; Library ID-{{object.library.library_id}}</h5>
-            <a href="{% url 'dataset-delete' pk=object.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
+            <h4>Sample ID-{{object.sample}} &nbsp; &nbsp; Library ID-{{object.library.library_id}}</h4>
+
+
             <div class="table-responsive">
                 <table id="datatable" class="table table-striped" style="display:none;">
                     <thead>
