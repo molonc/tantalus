@@ -442,12 +442,14 @@ class SequenceDataset(models.Model):
 
     HG19 = 'HG19'
     HG18 = 'HG18'
+    MM10 = 'MM10'
     UNALIGNED = 'UNALIGNED'
     UNUSABLE = 'UNUSABLE'
 
     reference_genome_choices = (
         (HG19, 'Human Genome 19'),
         (HG18, 'Human Genome 18'),
+        (MM10, 'Mouse Genome 10'),
         (UNALIGNED, 'Not aligned to a reference'),
         (UNUSABLE, 'Alignments are not usable'),
     )
@@ -489,6 +491,9 @@ class SequenceDataset(models.Model):
 
     def get_library_type(self):
         return self.library.library_type
+
+    def __str__(self):
+        return self.name
 
 
 class Analysis(models.Model):
