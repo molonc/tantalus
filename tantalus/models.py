@@ -316,6 +316,7 @@ class FileResource(models.Model):
     compression = models.CharField(
         max_length=50,
         choices=compression_choices,
+        default=UNCOMPRESSED,
     )
 
     filename = models.CharField(
