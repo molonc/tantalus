@@ -139,7 +139,7 @@ class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.SequenceDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
-    filter_fields = ('id', 'name', 'library__library_id', 'sample__sample_id', 'tags__name', 'sequence_lanes__flowcell_id', 'dataset_type', 'aligner', 'reference_genome', 'analysis')
+    filter_fields = ('id', 'name', 'library__library_id', 'sample__sample_id', 'tags__name', 'sequence_lanes__flowcell_id', 'dataset_type', 'aligner', 'reference_genome', 'analysis', 'file_resources__filename')
 
     def destroy(self, request, pk=None):
         """Delete all associated file resources too."""
