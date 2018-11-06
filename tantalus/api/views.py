@@ -148,7 +148,7 @@ class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
         this_dataset.file_resources.all().delete()
 
         # Call the parent constructor
-        super(SequenceDatasetViewSet, self).destroy(request, pk)
+        return super(SequenceDatasetViewSet, self).destroy(request, pk)
 
 
 class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
