@@ -169,7 +169,6 @@ class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSe
 
 
 class AzureBlobCredentialsViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
-    permission_classes = (IsAdminUser,)
     queryset = tantalus.models.AzureBlobCredentials.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobCredentialsSerializer
     filter_fields = ('id',)
