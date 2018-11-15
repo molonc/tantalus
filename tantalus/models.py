@@ -99,7 +99,7 @@ class Sample(models.Model):
 
     projects = models.ManyToManyField(
         Project,
-        null=True,
+        blank=True,
     )
 
 
