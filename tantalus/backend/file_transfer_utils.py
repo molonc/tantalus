@@ -140,6 +140,9 @@ class AzureTransfer(object):
             raise FileDoesNotExist(error_message)
 
         if os.path.isfile(local_filepath):
+            if self._check_file_same_blob(file_instance.file_resource, cloud_container, cloud_blobname):
+                return
+
             error_message = "target file {filepath} already exists on {storage}".format(
                 filepath=local_filepath,
                 storage=to_storage.name)
@@ -316,7 +319,7 @@ def rsync_file(file_instance, to_storage):
     make_dirs(os.path.dirname(local_filepath))
 
     subprocess_cmd = [
-        'rsync',
+        '/ssd/nvme0/amcpherson/miniconda2/envs/rsync/bin/rsync',
         '--progress',
         # '--info=progress2',
         '--chmod=D555',
@@ -425,6 +428,6 @@ def transfer_files(file_transfer, temp_directory):
                 traceback.print_exc()
         if not success:
             raise Exception('failed all retry attempts')
-        FileInstance.objects.create(file_resource=file_instance.file_resource, storage=to_storage)
+        FileInstance.objects.get_or_create(file_resource=file_instance.file_resource, storage=to_storage)
         print 'finished transfer of {} to {}'.format(file_instance.file_resource.filename, to_storage.name)
 
