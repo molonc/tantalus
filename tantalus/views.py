@@ -1086,7 +1086,5 @@ class HomeView(TemplateView):
             'gsc_dlp_paired_fastq_query_count': tantalus.models.GscDlpPairedFastqQuery.objects.all().count(),
             'gsc_wgs_bam_query_count': tantalus.models.GscWgsBamQuery.objects.all().count(),
             'import_dlp_bam_count': tantalus.models.ImportDlpBam.objects.all().count(),
-            'generic_task_instance_count': tantalus.generictask_models.GenericTaskInstance.objects.all().count(),
-            'generic_task_type_count': tantalus.generictask_models.GenericTaskType.objects.all().count(),
         }
         return context

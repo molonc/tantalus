@@ -1,7 +1,6 @@
 from django.conf.urls import url, include
 from rest_framework import routers, permissions
 from tantalus.api import views
-from tantalus.api import generictask_api_views
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
@@ -25,8 +24,6 @@ router.register(r'query_gsc_wgs_bams', views.QueryGscWgsBamsViewSet)
 router.register(r'query_gsc_dlp_paired_fastqs', views.QueryGscDlpPairedFastqsViewSet)
 router.register(r'brc_import_fastqs', views.BRCImportFastqsViewSet)
 router.register(r'import_dlp_bam', views.ImportDlpBamViewSet)
-router.register(r'generic_task_types', generictask_api_views.GenericTaskTypeViewSet)
-router.register(r'generic_task_instances', generictask_api_views.GenericTaskInstanceViewSet)
 router.register(r'results', views.ResultDatasetsViewSet)
 router.register(r'analysis', views.AnalysisViewSet)
 
