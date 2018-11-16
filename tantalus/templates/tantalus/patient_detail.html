@@ -6,42 +6,51 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container" style="padding:0; margin-bottom:5px;">
+    <div class="container detail-container" style="background-color:#F5F5F5;">
         {% if object %}
-        <h4 style="float:left;">Patient ID: {{object.patient_id}}  ----- Patient External ID: {{object.external_patient_id}}</h4>
-        <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'specific-sample-add' object.patient_id %}">Add Sample</a>
-        {% endif %}
-    </div>
-    <div class="container" style="background-color:#F5F5F5;">
-        {% if object %}
-            <h4>Samples Related to Patient</h4>
-            <div class="table-responsive">
-                <table id="datatable" class="table table-striped" style="display:none;">
-                    <thead>
-                    <tr>
-                            <th>Primary Sample ID</th>
-                            <th>Collaborator Sample ID</th>
-                            <th>Submitter</th>
-                            <th>Collaborator</th>
-                            <th>Tissue</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        <br/>
-                        {% for sample in samples %}
-                            <tr>
-                                <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
-                                <td>{{sample.collab_sample_id}}</td>
-                                <td>{{sample.submitter}}</td>
-                                <td>{{sample.collaborator}}</td>
-                                <td>{{sample.tissue}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <table class="table-condensed">
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Patient ID</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.patient_id}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">External Patient ID</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.external_patient_id}}</td>
+                </tr>
+            </table>
         {% else %}
             <h5><i class="text-warning">No Patient Details yet.</i></h5>
         {% endif %}
+    </div>
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0;">
+        <h4> Samples Related to this Patient</h4>
+        <div class="table-responsive">
+            <table class="table-striped table-bordered">
+                <thead>
+                    <th>Sample ID</th>
+                    <th>Collab Sample ID</th>
+                    <th>Submitter</th>
+                    <th>Collaborator</th>
+                    <th>Tissue</th>
+                    <th>Note</th>
+                    <th>Projects</th>
+                    <th>Submission IDs</th>
+                </thead>
+                <tbody>
+                    {% for sample in samples %}
+                        <tr>
+                            <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
+                            <td>{{sample.collab_sample_id}}</td>
+                            <td>{{sample.submitter}}</td>
+                            <td>{{sample.collaborator}}</td>
+                            <td>{{sample.tissue}}</td>
+                            <td>{{sample.note}}</td>
+                            <td>{{sample.projects_list|join:", "}}</td>
+                            <td>{{sample.submission_list|join:", "}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 {% endblock %}

@@ -51,9 +51,19 @@ class PatientDetail(DetailView):
         sample_url = []
 
         for sample in sample_set:
+            projects_list = []
+            submission_list = []
+            projects = sample.projects.all()
+            for project in projects:
+                projects_list.append(project.__unicode__())
+            for submission in sample.submission_set.all():
+                submission_list.append(submission.id)
+            sample.projects_list = projects_list
+            sample.submission_list = submission_list
             sample_list.append([sample.sample_id.encode('utf-8'), sample.get_absolute_url() + str(sample.id)])
 
         self.object.patient_id = self.object.patient_id.encode('utf-8')
+
 
         context['sample_list'] = sample_list
         context['samples'] = sample_set
@@ -78,6 +88,8 @@ class SubmissionDetail(DetailView):
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
         context = super(SubmissionDetail, self).get_context_data(**kwargs)
+        sample_object = tantalus.models.Sample.objects.get(pk=self.object.sample_id)
+        context['sample_url'] = sample_object.get_absolute_url() + str(self.object.sample.id)
         return context
 
 
@@ -107,10 +119,6 @@ class SampleDetail(DetailView):
         submission_set = self.object.submission_set.all()
         project_set = self.object.projects.all()
         project_list = []
-        submission_list = []
-
-        for submission in submission_set:
-            submission_list.append(submission.id)
 
         for project in project_set:    
             project_list.append(project.__unicode__())
@@ -119,8 +127,8 @@ class SampleDetail(DetailView):
             context['patient_url'] = self.object.patient_id.get_absolute_url() + str(self.object.patient_id.id)
         except:
             context['patient_url'] = None
-        context['submission_ids'] = submission_list
         context['project_list'] = project_list
+        context['submission_set'] = submission_set
         return context
 
 

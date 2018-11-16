@@ -6,44 +6,51 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container" style="padding:0; margin-bottom:5px;">
-    </div>
-    <div class="container" style="background-color:#F5F5F5;">
+    <div class="container detail-container" style="background-color:#F5F5F5;">
         {% if object %}
-            <h5>Submission ID-{{object.id}}</h5>
-            <div class="table-responsive">
-                <table id="datatable" class="table table-striped" style="display:none;">
-                    <thead>
-                    <tr>
-                            <th>Sample ID</th>
-                            <th>SOW</th>
-                            <th>Submission Date</th>
-                            <th>Submitted By</th>
-                            <th>Lanes Sequenced</th>
-                            <th>Updated Goal</th>
-                            <th>Payment</th>
-                            <th>Data Path</th>
-                            <th>Library Type</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        <br/>
-                            <tr>
-                                <td>{{object.sample}}</td>
-                                <td>{{object.sow}}</td>
-                                <td>{{object.submission_date}}</td>
-                                <td>{{object.submitted_by}}</td>
-                                <td>{{object.lanes_sequenced}}</td>
-                                <td>{{object.updated_goal}}</td>
-                                <td>{{object.payment}}</td>
-                                <td>{{object.data_path}}</td>
-                                <td>{{object.library_type}}</td>
-                            </tr>
-                    </tbody>
-                </table>
-            </div>
+            <table class="table-condensed">
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Submission ID</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.id}}</td>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Sample ID</th>
+                    <td style="padding: 0; padding-left: 35px;"><a href='{{sample_url}}'>{{object.sample.sample_id}}</a></td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">SOW</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.sow}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Submission Date</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.submission_date}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Submitted By</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.submitted_by}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Lanes Sequenced</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.lanes_sequenced}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Updated Goal</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.updated_goal}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Library Type</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.library_type}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Payment</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.payment}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Data Path</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.data_path}}</td>
+                </tr>
+            </table>
         {% else %}
-            <h5><i class="text-warning">No Submission Details yet.</i></h5>
+            <h5><i class="text-warning">No Sample Details yet.</i></h5>
         {% endif %}
     </div>
 {% endblock %}
