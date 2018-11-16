@@ -248,10 +248,12 @@ class TagSerializer(serializers.ModelSerializer):
     """Serializer for tags."""
     sequencedataset_set = serializers.PrimaryKeyRelatedField(
         many=True,
+        allow_null=True,
         queryset=tantalus.models.SequenceDataset.objects.all(),)
 
     resultsdataset_set = serializers.PrimaryKeyRelatedField(
         many=True,
+        allow_null=True,
         queryset=tantalus.models.ResultsDataset.objects.all(),)
 
     class Meta:
