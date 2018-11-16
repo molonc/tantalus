@@ -6,46 +6,50 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container" style="padding:0; margin-bottom:5px;">
-    </div>
-    <div class="container" style="background-color:#F5F5F5;">
+    <div class="container detail-container" style="background-color:#F5F5F5;">
         {% if object %}
-            <h5>Sample ID-{{object.sample_id}}</h5>
-            <div class="table-responsive">
-                <table id="datatable" class="table table-striped" style="display:none;">
-                    <thead>
-                    <tr>
-                            <th>Sample ID</th>
-                            <th>Collab Sample ID</th>
-                            <th>Submitter</th>
-                            <th>Collaborator</th>
-                            <th>Tissue</th>
-                            <th>Note</th>
-                            <th>Patient ID</th>
-                            <th>Projects</th>
-                            <th>Submission IDs</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        <br/>
-                            <tr>
-                                <td>{{object.sample_id}}</td>
-                                <td>{{object.collab_sample_id}}</td>
-                                <td>{{object.submitter}}</td>
-                                <td>{{object.collaborator}}</td>
-                                <td>{{object.tissue}}</td>
-                                <td>{{object.note}}</td>
-                                {% if patient_url %}
-                                    <td><a href='{{patient_url}}'>{{object.patient_id.patient_id}}</a></td>
-                                {% else %}
-                                    <td>{{object.patient_id.patient_id}}</td>
-                                {% endif %}
-                                <td>{{project_list|join:", "}}</td>
-                                <td>{{submission_ids|join:", "}}</td>
-                            </tr>
-                    </tbody>
-                </table>
-            </div>
+            <table class="table-condensed">
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Sample ID</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.sample_id}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Collab Sample ID</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.collab_sample_id}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Submitter</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.submitter}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Collaborator</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.collaborator}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Tissue</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.tissue}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Note</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.note}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Patient ID</th>
+                    {% if patient_url %}
+                        <td style="padding: 0; padding-left: 35px;"><a href='{{patient_url}}'>{{object.patient_id.patient_id}}</a></td>
+                    {% else %}
+                        <td style="padding: 0; padding-left: 35px;">{{object.patient_id.patient_id}}</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Projects</th>
+                    <td style="padding: 0; padding-left: 35px;">{{project_list|join:", "}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Submission IDs</th>
+                    <td style="padding: 0; padding-left: 35px;">{{submission_ids|join:", "}}</td>
+                </tr>
+            </table>
         {% else %}
             <h5><i class="text-warning">No Sample Details yet.</i></h5>
         {% endif %}
