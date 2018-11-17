@@ -1293,7 +1293,9 @@ class HomeView(TemplateView):
         context = {
             'dataset_bam_count': tantalus.models.SequenceDataset.objects.filter(dataset_type='BAM').count(),
             'dataset_fastq_count': tantalus.models.SequenceDataset.objects.filter(dataset_type='FQ').count(),
+            'patient_count': tantalus.models.Patient.objects.all().count(),
             'sample_count': tantalus.models.Sample.objects.all().count(),
+            'submission_count': tantalus.models.Submission.objects.all().count(),
             'tag_count': tantalus.models.Tag.objects.all().count(),
             'brc_fastq_import_count': tantalus.models.BRCFastqImport.objects.all().count(),
             'file_transfer_count': tantalus.models.FileTransfer.objects.all().count(),

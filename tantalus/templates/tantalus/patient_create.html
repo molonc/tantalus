@@ -10,7 +10,7 @@
         <form action="{% url 'patient-add' %}" method="POST">
             {% csrf_token %}
             <fieldset>
-                <legend>Add a single submission</legend>
+                <legend>Add a single Patient</legend>
                 <table class="table-condensed">
                     <thead>
                     {{form}}

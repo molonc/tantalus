@@ -46,6 +46,13 @@
                     <span class="icon-bar"></span>
                 </button>
                 <a class="navbar-brand" style="color:white;" href="{% url 'home' %}"><i class="fa fa-home" aria-hidden="true"></i> Tantalus</a>
+            </div>
+             <div class="collapse navbar-collapse" id="collapse-icon">
+                <ul class="nav navbar-nav navbar-right">
+                    <a class="navbar-brand" style="color: white;" href="{% url 'admin:index' %}">Admin</a>
+                    <a class="navbar-brand" style="color: white;" href="{% url 'api:api-root' %}">API</a>
+                    <a class="navbar-brand" style="color: white;" href="{% url 'api:schema-redoc' %}">API Reference</a>
+                </ul>
             </div>            
         </div>
     </nav><br>
