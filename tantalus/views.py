@@ -132,6 +132,21 @@ class SampleDetail(DetailView):
         return context
 
 
+@Render("tantalus/result_list.html")
+def result_list(request):
+    results = tantalus.models.ResultsDataset.objects.all().order_by('id')
+    print(list(results))
+    context = {
+        'results': results
+    }
+    return context
+
+
+class ResultDetail(DetailView):
+    model = tantalus.models.ResultsDataset
+    template_name = "tantalus/result_detail.html"
+
+
 class SimpleTaskListView(TemplateView):
 
     template_name = 'tantalus/simpletask_list.html'

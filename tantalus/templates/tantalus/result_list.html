@@ -1,0 +1,46 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Results
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="background-color:#F5F5F5;">
+        {% if results %}
+            <div class="table-responsive">
+                <table id="datatable" class="table table-striped" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Owner</th>
+                            <th>Name</th>
+                            <th>Tags</th>
+                            <th>Results Type</th>
+                            <th>Results Version</th>
+                            <th>Analysis</th>
+                            <th>Samples</th>
+                            <th>File Resources</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <br/>
+                        {% for result in results %}
+                            <tr>
+                            	<td>{{result.owner}}</td>
+                            	<td>{{result.name}}</td>
+                            	<td>{{result.tags}}</td>
+                            	<td>{{result.results_type}}</td>
+                            	<td>{{result.results_version}}</td>
+                            	<td>{{result.analysis}}</td>
+                            	<td>{{result.samples}}</td>
+                            	<td>{{result.file_resources}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No Results yet.</i></h>
+        {% endif %}
+    </div>
+{% endblock %}
