@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container detail-container" style="background-color:#F5F5F5;">
+    <div class="container detail-container" style="background-color:#F5F5F5; padding-bottom: 15px;">
         {% if object %}
         	<h4>Result Detail</h4>
             <table class="table-condensed">
@@ -36,7 +36,7 @@
         {% endif %}
     </div>
 
-    <div class="container detail-container" style="background-color:#F5F5F5;">
+    <div class="container detail-container" style="background-color: #FFF3E0; padding-bottom: 15px;">
         {% if object %}
         	<h4>Analysis Related to Result Detail</h4>
             <table class="table-condensed">
@@ -66,7 +66,7 @@
         {% endif %}
     </div>
 
-    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0;">
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 15px;">
         <h4> Samples Related to this Results Dataset</h4>
         <div class="table-responsive">
             <table class="table-striped table-bordered">
@@ -104,7 +104,7 @@
         </div>
     </div>
 
-    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0;">
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 15px;">
         <h4>Input Datasets for this Results Dataset</h4>
         <div class="table-responsive">
             <table class="table-striped table-bordered">
@@ -135,4 +135,5 @@
             </table>
         </div>
     </div>
+    <br>
 {% endblock %}
