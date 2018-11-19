@@ -38,7 +38,7 @@
                     {% if patient_url %}
                         <td style="padding: 0; padding-left: 35px;"><a href='{{patient_url}}'>{{object.patient_id.patient_id}}</a></td>
                     {% else %}
-                        <td style="padding: 0; padding-left: 35px;">{{object.patient_id.patient_id}}</td>
+                        <td style="padding: 0; padding-left: 35px;">No Patient Associated</td>
                     {% endif %}
                 </tr>
                 <tr>
@@ -51,36 +51,40 @@
         {% endif %}
     </div>
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0;">
-        <h4> Submissions Related to this Sample</h4>
-        <div class="table-responsive">
-            <table class="table-striped table-bordered">
-                <thead>
-                    <th>Submission ID</th>
-                    <th>SOW</th>
-                    <th>Submission Date</th>
-                    <th>Submitted By</th>
-                    <th>Lanes Sequenced</th>
-                    <th>Updated Goal</th>
-                    <th>Payment</th>
-                    <th>Data Path</th>
-                    <th>Library Type</th>
-                </thead>
-                <tbody>
-                    {% for submission in submission_set %}
-                        <tr>
-                            <td><a href="{% url 'submission-detail' submission.id %}">{{submission.id}}</a></td>
-                            <td>{{submission.sow}}</td>
-                            <td>{{submission.submission_date}}</td>
-                            <td>{{submission.submitted_by}}</td>
-                            <td>{{submission.lanes_sequenced}}</td>
-                            <td>{{submission.updated_goal}}</td>
-                            <td>{{submission.payment}}</td>
-                            <td>{{submission.data_path}}</td>
-                            <td>{{submission.library_type}}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        {% if submission_set %}
+            <h4> Submissions Related to this Sample</h4>
+            <div class="table-responsive">
+                <table class="table-striped table-bordered">
+                    <thead>
+                        <th>Submission ID</th>
+                        <th>SOW</th>
+                        <th>Submission Date</th>
+                        <th>Submitted By</th>
+                        <th>Lanes Sequenced</th>
+                        <th>Updated Goal</th>
+                        <th>Payment</th>
+                        <th>Data Path</th>
+                        <th>Library Type</th>
+                    </thead>
+                    <tbody>
+                        {% for submission in submission_set %}
+                            <tr>
+                                <td><a href="{% url 'submission-detail' submission.id %}">{{submission.id}}</a></td>
+                                <td>{{submission.sow}}</td>
+                                <td>{{submission.submission_date}}</td>
+                                <td>{{submission.submitted_by}}</td>
+                                <td>{{submission.lanes_sequenced}}</td>
+                                <td>{{submission.updated_goal}}</td>
+                                <td>{{submission.payment}}</td>
+                                <td>{{submission.data_path}}</td>
+                                <td>{{submission.library_type}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No Submissions associated with this Sample yet.</i></h5>
+        {% endif %}
     </div>
 {% endblock %}

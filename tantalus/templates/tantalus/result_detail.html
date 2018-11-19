@@ -1,1 +1,138 @@
-<p>hi</p>
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Result Detail
+{% endblock %}
+
+{% block body %}
+    <div class="container detail-container" style="background-color:#F5F5F5;">
+        {% if object %}
+        	<h4>Result Detail</h4>
+            <table class="table-condensed">
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Results ID</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.id}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Results Owner</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.owner}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Results Name</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.name}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Results Type</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.results_type}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Results Version</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.results_version}}</td>
+                </tr>
+            </table>
+        {% else %}
+            <h5><i class="text-warning">No Results Dataset Details yet.</i></h5>
+        {% endif %}
+    </div>
+
+    <div class="container detail-container" style="background-color:#F5F5F5;">
+        {% if object %}
+        	<h4>Analysis Related to Result Detail</h4>
+            <table class="table-condensed">
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Analysis ID</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.analysis.id}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Analysis Name</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.analysis.name}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Jira Ticket</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.analysis.jira_ticket}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Last Updated</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.analysis.last_updated}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Status</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.analysis.status}}</td>
+                </tr>
+            </table>
+        {% else %}
+            <h5><i class="text-warning">No Results Dataset Details yet.</i></h5>
+        {% endif %}
+    </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0;">
+        <h4> Samples Related to this Results Dataset</h4>
+        <div class="table-responsive">
+            <table class="table-striped table-bordered">
+                <thead>
+                    <th>Sample ID</th>
+                    <th>Patient</th>
+                    <th>Collab Sample ID</th>
+                    <th>Submitter</th>
+                    <th>Collaborator</th>
+                    <th>Tissue</th>
+                    <th>Note</th>
+                    <th>Projects</th>
+                    <th>Submission IDs</th>
+                </thead>
+                <tbody>
+                    {% for sample in samples %}
+                        <tr>
+                            <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
+                            {% if sample.patient_id %}
+                            	<td><a href="{% url 'patient-detail' sample.patient_id.id %}">{{sample.patient_id.patient_id}}</a></td>
+                            {% else %}
+                            	<td>No Patient associated</td>
+                            {% endif %}
+                            <td>{{sample.collab_sample_id}}</td>
+                            <td>{{sample.submitter}}</td>
+                            <td>{{sample.collaborator}}</td>
+                            <td>{{sample.tissue}}</td>
+                            <td>{{sample.note}}</td>
+                            <td>{{sample.projects_list|join:", "}}</td>
+                            <td>{{sample.submission_list|join:", "}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0;">
+        <h4>Input Datasets for this Results Dataset</h4>
+        <div class="table-responsive">
+            <table class="table-striped table-bordered">
+                <thead>
+                	<th>Dataset ID</th>
+                    <th>Dataset Owner</th>
+                    <th>Dataset Name</th>
+                    <th>Dataset Type</th>
+                    <th>Sample</th>
+                    <th>Library</th>
+                    <th>Reference Genome</th>
+                    <th>Aligner</th>
+                </thead>
+                <tbody>
+                    {% for dataset in input_datasets %}
+                        <tr>
+                            <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.id}}</a></td>
+                            <td>{{dataset.owner}}</td>
+                            <td>{{dataset.name}}</td>
+                            <td>{{dataset.dataset_type}}</td>
+                            <td>{{dataset.sample.sample_id}}</td>
+                            <td>{{dataset.library.library_id}}</td>
+                            <td>{{dataset.reference_genome}}</td>
+                            <td>{{dataset.aligner}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

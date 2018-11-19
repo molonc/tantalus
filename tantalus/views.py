@@ -135,7 +135,7 @@ class SampleDetail(DetailView):
 @Render("tantalus/result_list.html")
 def result_list(request):
     results = tantalus.models.ResultsDataset.objects.all().order_by('id')
-    print(list(results))
+
     context = {
         'results': results
     }
@@ -146,6 +146,27 @@ class ResultDetail(DetailView):
     model = tantalus.models.ResultsDataset
     template_name = "tantalus/result_detail.html"
 
+    def get_context_data(self, **kwargs):
+        # TODO: add other fields to the view?
+        context = super(ResultDetail, self).get_context_data(**kwargs)
+        sample_list = list(self.object.samples.all())
+
+        for sample in sample_list:
+            projects_list = []
+            submission_list = []
+            for project in sample.projects.all():
+                projects_list.append(project.__unicode__())
+            sample.projects_list = projects_list
+
+            for submission in sample.submission_set.all():
+                submission_list.append(submission.id)
+            sample.submission_list = submission_list
+
+        analysis = list(tantalus.models.Analysis.objects.filter(id=(self.object.analysis.id)))[0]
+        context['input_datasets'] = analysis.input_datasets.all()
+
+        context['samples'] = sample_list
+        return context
 
 class SimpleTaskListView(TemplateView):
 
