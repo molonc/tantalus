@@ -401,8 +401,7 @@ class SequenceFileInfo(models.Model):
         null=True,
     )
 
-    genome_region = models.CharField(
-        max_length=50,
+    genome_region = models.TextField(
         null=True,
     )
 
