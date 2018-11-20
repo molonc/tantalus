@@ -328,4 +328,4 @@ class AnalysisViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.Analysis.objects.all()
     serializer_class_readonly = tantalus.api.serializers.AnalysisSerializer
     serializer_class_readwrite = tantalus.api.serializers.AnalysisSerializer
-    filter_fields = ('id', 'name', 'jira_ticket', 'last_updated')
+    filter_fields = ('id', 'name', 'version', 'jira_ticket', 'last_updated')

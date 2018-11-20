@@ -6,6 +6,7 @@ import django.contrib.postgres.fields
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.core.urlresolvers import reverse
+from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import Max
@@ -530,6 +531,13 @@ class SequenceDataset(models.Model):
         return self.name
 
 
+# Validator for analysis version
+analysis_version_validator = RegexValidator(
+    regex=r"v\d+\.\d+\.\d+",
+    message=' must be in "v<MAJOR>.<MINOR>.<PATCH>"; for example, "v0.0.1"',
+)
+
+
 class Analysis(models.Model):
     """
     Analysis/workflow details
@@ -546,6 +554,11 @@ class Analysis(models.Model):
     name = models.CharField(
         max_length=200,
         unique=True,
+    )
+
+    version = models.CharField(
+        max_length=200,
+        validators=[analysis_version_validator,],
     )
 
     tags = models.ManyToManyField(
