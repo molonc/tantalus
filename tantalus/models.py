@@ -308,6 +308,11 @@ class FileResource(models.Model):
     File resource.
     """
 
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        help_text="When the file resource was last updated.",
+    )
+
     history = HistoricalRecords()
 
     owner = models.ForeignKey(
@@ -418,6 +423,11 @@ class SequenceDataset(models.Model):
     """
 
     history = HistoricalRecords()
+
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        help_text="When the dataset was last updated.",
+    )
 
     owner = models.ForeignKey(
         account.models.User,
