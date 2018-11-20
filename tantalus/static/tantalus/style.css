@@ -195,3 +195,7 @@ a.back-to-top {
 .detail-container:nth-child(even) {
     background-color: #f7f7f7;
 }
+
+tr.home-page-row>td {
+    height: 3em;
+}
