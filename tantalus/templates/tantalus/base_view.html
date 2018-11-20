@@ -101,13 +101,17 @@
 
     {% block body %}{% endblock %}
 
-    <script type="text/javascript">
-        $(document).ready(function(){
-            $("#datatable").DataTable({
-                "order": [[0, "desc"]]
+    {# Customize the DataTables script(s) as necessary #}
+    {% block datatables_script %}
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $("#datatable").DataTable({
+                    "order": [[0, "desc"]]
+                });
             });
             $("#datatable").show();
-        });
-   </script>
+        </script>
+    {% endblock %}
+
 </body>
 </html>

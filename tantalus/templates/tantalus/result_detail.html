@@ -69,7 +69,7 @@
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 15px;">
         <h4> Samples Related to this Results Dataset</h4>
         <div class="table-responsive">
-            <table class="table-striped table-bordered">
+            <table id="related-samples-datatable" class="table-striped table-bordered">
                 <thead>
                     <th>Sample ID</th>
                     <th>Patient</th>
@@ -107,7 +107,7 @@
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 15px;">
         <h4>Input Datasets for this Results Dataset</h4>
         <div class="table-responsive">
-            <table class="table-striped table-bordered">
+            <table id="input-datasets-datatable" class="table-striped table-bordered">
                 <thead>
                 	<th>Dataset ID</th>
                     <th>Dataset Owner</th>
@@ -136,4 +136,17 @@
         </div>
     </div>
     <br>
+{% endblock %}
+
+{% block datatables_script %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#related-samples-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+            $("#input-datasets-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+        });
+    </script>
 {% endblock %}
