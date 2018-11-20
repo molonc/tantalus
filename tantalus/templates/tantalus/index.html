@@ -23,7 +23,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td><a href="{%url 'patient-list' %}">Patients</a><i class="counter">{{patient_count}}</i></td>
+                    <td><a href="{%url 'patient-list' %}">Patients</a> <i class="counter">{{patient_count}}</i></td>
                     <td>
                         <p style="float:right;">
                         <a href="{% url 'patient-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
@@ -37,14 +37,14 @@
                     </td>
                 </tr>
                 <tr>
-                    <td><a href="{% url 'submissions-list' %}">Submissions</a><i class="counter">{{submission_count}}</i></td>
+                    <td><a href="{% url 'submissions-list' %}">Submissions</a> <i class="counter">{{submission_count}}</i></td>
                     <td>
                         <p style="float:right;">
                         <a href="{% url 'submission-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
                     </td>
                 </tr>
                 <tr>
-                    <td><a href="{% url 'result-list' %}">Result Datasets</a><i class="counter">{{result_count}}</i></td>
+                    <td><a href="{% url 'result-list' %}">Result Datasets</a> <i class="counter">{{result_count}}</i></td>
                 </tr>
                 <tr>
                     <td><a href="{% url 'tag-list' %}">Tags</a> <i class="counter">{{tag_count}}</i></td>
