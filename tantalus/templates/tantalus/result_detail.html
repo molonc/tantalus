@@ -6,29 +6,29 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container detail-container" style="background-color:#F5F5F5; padding-bottom: 15px;">
+    <div class="container detail-container" style="padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
         	<h4>Result Detail</h4>
             <table class="table-condensed">
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Results ID</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.id}}</td>
+                    <th class="custom-table-header">Results ID</th>
+                    <td class="custom-table-detail">{{object.id}}</td>
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Results Owner</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.owner}}</td>
+                    <th class="custom-table-header">Results Owner</th>
+                    <td class="custom-table-detail">{{object.owner}}</td>
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Results Name</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.name}}</td>
+                    <th class="custom-table-header">Results Name</th>
+                    <td class="custom-table-detail">{{object.name}}</td>
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Results Type</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.results_type}}</td>
+                    <th class="custom-table-header">Results Type</th>
+                    <td class="custom-table-detail">{{object.results_type}}</td>
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Results Version</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.results_version}}</td>
+                    <th class="custom-table-header">Results Version</th>
+                    <td class="custom-table-detail">{{object.results_version}}</td>
                 </tr>
             </table>
         {% else %}
@@ -36,29 +36,29 @@
         {% endif %}
     </div>
 
-    <div class="container detail-container" style="background-color: #FFF3E0; padding-bottom: 15px;">
+    <div class="container detail-container" style="padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
             <h4>Related Analyses</h4>
             <table class="table-condensed">
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Analysis ID</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.analysis.id}}</td>
+                    <th class="custom-table-header">Analysis ID</th>
+                    <td class="custom-table-detail"><a href="{% url 'analysis-detail' object.analysis.id %}">{{object.analysis.id}}</td>
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Analysis Name</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.analysis.name}}</td>
+                    <th class="custom-table-header">Analysis Name</th>
+                    <td class="custom-table-detail">{{object.analysis.name}}</td>
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Jira Ticket</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.analysis.jira_ticket}}</td>
+                    <th class="custom-table-header">Jira Ticket</th>
+                    <td class="custom-table-detail">{{object.analysis.jira_ticket}}</td>
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Last Updated</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.analysis.last_updated}}</td>
+                    <th class="custom-table-header">Last Updated</th>
+                    <td class="custom-table-detail">{{object.analysis.last_updated}}</td>
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Status</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.analysis.status}}</td>
+                    <th class="custom-table-header">Status</th>
+                    <td class="custom-table-detail">{{object.analysis.status}}</td>
                 </tr>
             </table>
         {% else %}
@@ -66,7 +66,7 @@
         {% endif %}
     </div>
 
-    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 15px;">
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         <h4>Related Samples</h4>
         <div class="table-responsive">
             <table id="related-samples-datatable" class="table-striped table-bordered">
@@ -104,7 +104,7 @@
         </div>
     </div>
 
-    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 15px;">
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         <h4>Input Datasets</h4>
         <div class="table-responsive">
             <table id="input-datasets-datatable" class="table-striped table-bordered">

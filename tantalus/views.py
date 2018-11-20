@@ -168,6 +168,29 @@ class ResultDetail(DetailView):
         context['samples'] = sample_list
         return context
 
+
+@Render("tantalus/analysis_list.html")
+def analysis_list(request):
+    analyses = tantalus.models.Analysis.objects.all().order_by('id')
+
+    context = {
+        'analyses': analyses
+    }
+    return context
+
+
+class AnalysisDetail(DetailView):
+    model = tantalus.models.Analysis
+    template_name = "tantalus/analysis_detail.html"
+
+    def get_context_data(self, **kwargs):
+        # TODO: add other fields to the view?
+        context = super(AnalysisDetail, self).get_context_data(**kwargs)
+        context['input_datasets'] = self.object.input_datasets.all()
+        context['input_results'] = self.object.input_results.all()
+        return context
+
+
 class SimpleTaskListView(TemplateView):
 
     template_name = 'tantalus/simpletask_list.html'
@@ -1333,6 +1356,7 @@ class HomeView(TemplateView):
             'sample_count': tantalus.models.Sample.objects.all().count(),
             'submission_count': tantalus.models.Submission.objects.all().count(),
             'result_count': tantalus.models.ResultsDataset.objects.all().count(),
+            'analysis_count': tantalus.models.Analysis.objects.all().count(),
             'tag_count': tantalus.models.Tag.objects.all().count(),
             'brc_fastq_import_count': tantalus.models.BRCFastqImport.objects.all().count(),
             'file_transfer_count': tantalus.models.FileTransfer.objects.all().count(),

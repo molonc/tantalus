@@ -188,6 +188,18 @@ a.back-to-top {
     border-radius: 30px;
 }
 
+/* Analysis/Results Table Spacing */
+.table-condensed > tbody > tr > th.custom-table-header {
+    padding: 0;
+    padding-top: 0.5em;
+}
+
+.table-condensed > tbody > tr > td.custom-table-detail {
+    padding: 0; 
+    padding-left: 5em;
+}
+
+
 .detail-container:nth-child(odd) {
     background-color: #FFF3E0;
 }

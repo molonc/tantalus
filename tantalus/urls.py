@@ -89,5 +89,7 @@ urlpatterns = [
     url(r'^submissions/create$', tantalus.views.SubmissionCreate.as_view(), name='submission-add'),
     url(r'^results/$', tantalus.views.result_list, name='result-list'),
     url(r'^results/(?P<pk>\d+)$', tantalus.views.ResultDetail.as_view(), name='result-detail'),
+    url(r'^analyses/$', tantalus.views.analysis_list, name='analysis-list'),
+    url(r'^analyses/(?P<pk>\d+)$', tantalus.views.AnalysisDetail.as_view(), name='analysis-detail'),   
     url(r'^$', tantalus.views.HomeView.as_view(), name='home'),
 ]
