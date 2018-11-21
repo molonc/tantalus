@@ -92,6 +92,7 @@ class FileResourceFilter(BaseFilterSet):
             "filename": ["exact"],
             "sequencedataset__name": ["exact"],
             "sequencedataset__id": ["exact"],
+            "sequencefileinfo__index_sequence": ["exact"],
         }
 
 
