@@ -9,6 +9,21 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from tantalus.api.permissions import IsOwnerOrReadOnly
 import tantalus.api.serializers
+from tantalus.api.filters import (
+    AnalysisFilter,
+    AzureBlobCredentialsFilter,
+    DNALibraryFilter,
+    FileInstanceFilter,
+    FileResourceFilter,
+    ResultsDatasetFilter,
+    SampleFilter,
+    SequenceDatasetFilter,
+    SequenceFileInfoFilter,
+    SequencingLaneFilter,
+    ServerStorageFilter,
+    StorageFilter,
+    TagFilter,
+)
 import tantalus.models
 import tantalus.tasks
 
@@ -56,24 +71,6 @@ class OwnerEditModelViewSet(viewsets.ModelViewSet):
         return self.serializer_class_readwrite
 
 
-class SampleFilter(filters.FilterSet):
-    """Support specific filters for Samples."""
-
-    class Meta:
-        model = tantalus.models.Sample
-        fields = {
-            'id': ['exact', 'in'],
-            'sample_id': ['exact', 'in'],
-            'sequencedataset__id': ['exact', 'in', 'isnull'],
-        }
-
-    def __init__(self, *args, **kwargs):
-        super(SampleFilter, self).__init__(*args, **kwargs)
-        self.filters['sequencedataset__id'].label = 'Has SequenceDataset'
-        self.filters['sequencedataset__id__in'].label = 'Has SequenceDataset in'
-        self.filters['sequencedataset__id__isnull'].label = 'Has no SequenceDatasets'
-
-
 class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
@@ -84,24 +81,7 @@ class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileResourceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileResourceSerializer
-    filter_fields = ('id', 'filename', 'sequencedataset__name', 'sequencedataset__id')
-
-
-class SequenceFileInfoFilter(filters.FilterSet):
-    """Support specific filters for sequence file infos."""
-
-    class Meta:
-        model = tantalus.models.SequenceFileInfo
-        fields = {
-            'id': ['exact'],
-            'file_resource': ['exact'],
-            'index_sequence': ['exact'],
-        }
-        filter_overrides = {
-            models.OneToOneField: {
-                'filter_class': filters.CharFilter,
-            }
-        }
+    filter_class = FileResourceFilter
 
 
 class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
@@ -115,51 +95,14 @@ class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.DNALibrary.objects.all()
     serializer_class_readonly = tantalus.api.serializers.DNALibrarySerializer
     serializer_class_readwrite = tantalus.api.serializers.DNALibrarySerializer
-    filter_fields = ('id', 'library_id')
+    filter_class = DNALibraryFilter
 
 
 class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.SequencingLane.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequencingLaneSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequencingLaneSerializer
-    filter_fields = (
-        'id',
-        'dna_library_id',
-        'dna_library__library_id',
-        'flowcell_id',
-        'lane_number',
-        'sequencing_library_id',
-        'read_type',
-        'dna_library',
-        'sequencing_centre',
-    )
-
-
-class SequenceDatasetFilter(filters.FilterSet):
-    """Support specific filters for sequence datasets."""
-
-    class Meta:
-        model = tantalus.models.SequenceDataset
-        fields = {
-            'id': ['exact'],
-            'name': ['exact'],
-            'library__library_id': ['exact'],
-            'sample__sample_id': ['exact'],
-            'tags__name': ['exact'],
-            'sequence_lanes__flowcell_id': ['exact'],
-            'dataset_type': ['exact'],
-            'aligner': ['exact'],
-            'reference_genome': ['exact'],
-            'analysis': ['exact'],
-            'analysis__name': ['exact'],
-            'analysis__jira_ticket': ['exact'],
-            'file_resources__filename': ['exact'],
-        }
-        filter_overrides = {
-            models.ForeignKey: {
-                'filter_class': filters.CharFilter,
-            }
-        }
+    filter_class = SequencingLaneFilter
 
 
 class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
@@ -181,13 +124,13 @@ class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.Storage.objects.all()
     serializer_class = tantalus.api.serializers.StorageSerializer
-    filter_fields = ('id', 'name',)
+    filter_class = StorageFilter
 
 
 class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.ServerStorage.objects.all()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
-    filter_fields = ('id', 'name',)
+    filter_class = ServerStorageFilter
 
 
 class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
@@ -198,26 +141,7 @@ class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSe
 class AzureBlobCredentialsViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.AzureBlobCredentials.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobCredentialsSerializer
-    filter_fields = ('id',)
-
-
-class FileInstanceFilter(filters.FilterSet):
-    """Support specific filters for file instances."""
-
-    class Meta:
-        model = tantalus.models.FileInstance
-        fields = {
-            'id': ['exact'],
-            'storage__name': ['exact'],
-            'file_resource': ['exact'],
-            'owner': ['exact'],
-            'storage': ['exact'],
-        }
-        filter_overrides = {
-            models.ForeignKey: {
-                'filter_class': filters.CharFilter,
-            }
-        }
+    filter_class = AzureBlobCredentialsFilter
 
 
 class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
@@ -288,7 +212,7 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
     """
     queryset = tantalus.models.Tag.objects.all()
     serializer_class = tantalus.api.serializers.TagSerializer
-    filter_fields = ('name',)
+    filter_class = TagFilter
 
 
 # TODO: move this
@@ -339,7 +263,7 @@ class ResultDatasetsViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.ResultsDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.ResultDatasetSerializer
     serializer_class_readwrite = tantalus.api.serializers.ResultDatasetSerializer
-    filter_fields = ('id', 'owner', 'name', 'samples', 'analysis')
+    filter_class = ResultsDatasetFilter
 
     def destroy(self, request, pk=None):
         """Delete all associated file resources too."""
@@ -355,4 +279,4 @@ class AnalysisViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     queryset = tantalus.models.Analysis.objects.all()
     serializer_class_readonly = tantalus.api.serializers.AnalysisSerializer
     serializer_class_readwrite = tantalus.api.serializers.AnalysisSerializer
-    filter_fields = ('id', 'name', 'version', 'jira_ticket', 'last_updated')
+    filter_class = AnalysisFilter
