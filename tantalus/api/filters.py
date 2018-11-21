@@ -85,6 +85,12 @@ class FileInstanceFilter(BaseFilterSet):
 class FileResourceFilter(BaseFilterSet):
     """Filters for file resources."""
 
+    def __init__(self, *args, **kwargs):
+        """Take care of filter names that render poorly."""
+        super(FileResourceFilter, self).__init__(*args, **kwargs)
+        self.filters["sequencedataset__id"].label = "Has SequenceDataset ID"
+        self.filters["sequencedataset__name"].label = "Has SequenceDataset name"
+
     class Meta(BaseFilterSet.Meta):
         model = FileResource
         fields = {
@@ -114,6 +120,7 @@ class SampleFilter(BaseFilterSet):
     """Filters for samples."""
 
     def __init__(self, *args, **kwargs):
+        """Take care of filter names that render poorly."""
         super(SampleFilter, self).__init__(*args, **kwargs)
         self.filters["sequencedataset__id"].label = "Has SequenceDataset"
         self.filters["sequencedataset__id__in"].label = "Has SequenceDataset in"
