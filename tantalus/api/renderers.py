@@ -1,8 +1,23 @@
-from rest_framework.renderers import BrowsableAPIRenderer
+from rest_framework import serializers
+from rest_framework.renderers import BrowsableAPIRenderer, HTMLFormRenderer
 
 
-class BrowsableAPIRendererWithoutForms(BrowsableAPIRenderer):
-    """Renders the browsable api, but excludes the forms."""
+class HTMLFormRendererImproved(HTMLFormRenderer):
+    """Never renders select boxes for related fields."""
 
-    def get_rendered_html_form(self, data, view, method, request):
-        return None
+    def __init__(self):
+        """Use text inputs for related fields."""
+        self.default_style[serializers.RelatedField] = {
+            "base_template": "input.html",
+            "input_type": "text",
+        }
+        self.default_style[serializers.ManyRelatedField] = {
+            "base_template": "input.html",
+            "input_type": "text",
+        }
+
+
+class BrowsableAPIRendererImproved(BrowsableAPIRenderer):
+    """Use an improved form renderer."""
+
+    form_renderer_class = HTMLFormRendererImproved

@@ -161,7 +161,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-        'tantalus.api.renderers.BrowsableAPIRendererWithoutForms',
+        'tantalus.api.renderers.BrowsableAPIRendererImproved',
     ),
 }
 
