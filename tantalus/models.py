@@ -497,7 +497,8 @@ class SequenceDataset(models.Model):
 
     reference_genome = models.CharField(
         max_length=50,
-        choices=reference_genome_choices,
+        # TODO: foreign key or update choices
+        #choices=reference_genome_choices,
         default=UNALIGNED,
     )
 
