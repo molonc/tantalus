@@ -49,7 +49,12 @@ class AnalysisFilter(BaseFilterSet):
 
     class Meta(BaseFilterSet.Meta):
         model = Analysis
-        fields = {"id": ["exact"], "version": ["exact"], "jira_ticket": ["exact"]}
+        fields = {
+            "id": ["exact"],
+            "name": ["exact"],
+            "version": ["exact"],
+            "jira_ticket": ["exact"],
+        }
 
 
 class AzureBlobCredentialsFilter(BaseFilterSet):
