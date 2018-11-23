@@ -38,11 +38,8 @@ class SubmissionForm(forms.ModelForm):
             'sow',
             'submission_date',
             'submitted_by',
-            'lanes_sequenced',
-            'updated_goal',
-            'payment',
-            'data_path',
             'library_type',
+            'coverage',
         ]
 
 
@@ -54,7 +51,7 @@ class SampleForm(forms.ModelForm):
         model = tantalus.models.Sample
         fields = [
             'sample_id',
-            'collab_sample_id',
+            'external_sample_id',
             'submitter',
             'collaborator',
             'tissue',
@@ -95,6 +92,14 @@ class UploadSampleForm(forms.Form):
         return df
 
 
+class ExternalIDSearcherForm(forms.Form):
+    external_id_column = forms.CharField(widget=forms.Textarea, label='Paste in an Excel Column of External Sample IDs')
+
+    def clean_file(self):
+        clean_data = self.cleaned_data.get(external_id_column)
+        external_id_list = clean_data.split('\n')
+        print(external_id_list)
+        return external_id_list
 
 class DatasetSearchForm(forms.Form):
     tagged_with = forms.CharField(

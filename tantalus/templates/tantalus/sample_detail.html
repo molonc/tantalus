@@ -6,16 +6,17 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container detail-container" style="background-color:#F5F5F5;">
+    <div class="container detail-container" style="background-color:#F5F5F5; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
             <table class="table-condensed">
                 <tr>
                     <th style="padding: 0; padding-top: 4px;">Sample ID</th>
                     <td style="padding: 0; padding-left: 35px;">{{object.sample_id}}</td>
+                    <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'specific-submission-add' object.id %}">Add Submission(s) to This Sample</a>
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Collab Sample ID</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.collab_sample_id}}</td>
+                    <th style="padding: 0; padding-top: 4px;">External Sample ID</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.external_sample_id}}</td>
                 </tr>
                 <tr>
                     <th style="padding: 0; padding-top: 4px;">Submitter</th>
@@ -50,7 +51,7 @@
             <h5><i class="text-warning">No Sample Details yet.</i></h5>
         {% endif %}
     </div>
-    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0;">
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if submission_set %}
             <h4>Related Submissions</h4>
             <div class="table-responsive">

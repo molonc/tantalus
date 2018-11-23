@@ -19,6 +19,8 @@ from django.template.defaulttags import register
 import csv
 import json
 import os
+from datetime import date
+from sets import Set
 
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT
@@ -26,6 +28,53 @@ from misc.helpers import Render
 import tantalus.models
 import tantalus.tasks
 import tantalus.forms
+
+
+class ExternalIDSearch(TemplateView):
+
+    search_template_name = "tantalus/external_id_search.html"
+    result_template_name = "tantalus/external_id_results.html"
+
+    def get_context_and_render(self, request, form):
+        context = {
+            'form': form,
+        }
+        return render(request, self.search_template_name, context)
+
+    def render_results(self, request, sample_list, wrong_sample_list, multiple_sample_list):
+        context = {
+            'samples': sample_list,
+            'multiple_samples': multiple_sample_list,
+            'wrong_ids': wrong_sample_list,
+        }
+        return render(request, self.result_template_name, context)
+
+    def get(self, request):
+        form = tantalus.forms.ExternalIDSearcherForm()
+        return self.get_context_and_render(request, form)
+
+    def post(self, request):
+        form = tantalus.forms.ExternalIDSearcherForm(request.POST)
+        if form.is_valid():
+            sample_list = []
+            multiple_sample_list = []
+            wrong_sample_list = []
+            external_id_list = Set(form.cleaned_data['external_id_column'].encode('ascii','ignore').splitlines())
+
+            for external_id in external_id_list:
+                if(tantalus.models.Sample.objects.filter(external_sample_id=external_id).count() == 1):
+                    sample_list.append(list(tantalus.models.Sample.objects.filter(external_sample_id=external_id))[0])
+                elif(tantalus.models.Sample.objects.filter(external_sample_id=external_id).count() > 1):
+                    for sample in tantalus.models.Sample.objects.filter(external_sample_id=external_id):
+                        multiple_sample_list.append(sample)
+                else:
+                    wrong_sample_list.append(external_id)
+
+            return self.render_results(request, sample_list, wrong_sample_list, multiple_sample_list)
+        else:
+            msg = "Failed to create search query. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form)
 
 
 @Render("tantalus/patient_list.html")
@@ -653,9 +702,10 @@ class PatientCreate(TemplateView):
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
         else:
-            msg = "Failed to create the sample. Please fix the errors below."
+            msg = "Failed to create the Patient. Please fix the errors below."
             messages.error(request, msg)
             return self.get_context_and_render(request, form)
+
 
 @method_decorator(login_required, name='dispatch')
 class SubmissionCreate(TemplateView):
@@ -673,8 +723,46 @@ class SubmissionCreate(TemplateView):
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
-        form = tantalus.forms.SubmissionForm()
+        today = date.today().strftime('%B %d, %Y')
+        form = tantalus.forms.SubmissionForm(initial={'submission_date': today, 'submitted_by': request.user})
         return self.get_context_and_render(request, form)
+
+    def post(self, request, *args, **kwargs):
+        form = tantalus.forms.SubmissionForm(request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save()
+            msg = "Successfully created the tantalus.models.Submission."
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            msg = "Failed to create the sample. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form)
+
+
+@method_decorator(login_required, name='dispatch')
+class SpecificSubmissionCreate(TemplateView):
+    """
+    tantalus.models.Sample create page.
+    """
+
+    template_name = "tantalus/submission_create.html"
+
+    def get_context_and_render(self, request, sample_pk, form, pk=None):
+        context = {
+            'pk':pk,
+            'form': form,
+            'sample_pk': sample_pk,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        today = date.today().strftime('%B %d, %Y')
+        sample = get_object_or_404(tantalus.models.Sample,pk=kwargs['sample_pk'])
+        print(sample.sample_id)
+        form = tantalus.forms.SubmissionForm(initial={'submission_date': today, 'submitted_by': request.user, 'sample': sample})
+        return self.get_context_and_render(request, kwargs['sample_pk'], form)
 
     def post(self, request, *args, **kwargs):
         form = tantalus.forms.SubmissionForm(request.POST)

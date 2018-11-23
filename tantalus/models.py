@@ -92,7 +92,7 @@ class Sample(models.Model):
 
     sample_id = create_id_field(unique=True)
 
-    collab_sample_id = models.CharField(
+    external_sample_id = models.CharField(
         max_length=240,
         null=True,
         blank=True
@@ -1093,6 +1093,10 @@ class Submission(models.Model):
         null=True
     )
 
+    coverage = models.IntegerField(
+        default=0
+    )
+
     updated_goal = models.IntegerField(
         blank=True,
         null=True
@@ -1110,11 +1114,40 @@ class Submission(models.Model):
         default=None
     )
 
+    EXOME = 'EXOME'
+    WGS = 'WGS'
+    RNASEQ = 'RNASEQ'
+    SINGLE_CELL_WGS = 'SC_WGS'
+    SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
+    EXCAP = 'EXCAP'
+    BISULFITE = 'BISULFITE'
+    CHIP = 'CHIP'
+    MRE = 'MRE'
+    MIRNA = 'MIRNA'
+    MEDIP = 'MEDIP'
+    DNA_AMPLICON = 'DNA_AMPLICON'
+
+    library_type_choices = (
+        (EXOME, 'Bulk Whole Exome Sequence'),
+        (WGS, 'Bulk Whole Genome Sequence'),
+        (RNASEQ, 'Bulk RNA-Seq'),
+        (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
+        (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
+        (EXCAP,'Exon Capture'),
+        (MIRNA,'micro RNA'),
+        (BISULFITE,'Bisulfite'),
+        (CHIP,'Chromatin Immunoprecipitation'),
+        (MRE,'Methylation sensitive restriction enzyme sequencing'),
+        (MEDIP,'Methylated DNA immunoprecipitation'),
+        (DNA_AMPLICON,'Targetted DNA Amplicon Sequence')
+    )
+
     library_type = models.CharField(
         max_length=240,
         blank=True,
         null=True,
-        default=None
+        default=None,
+        choices=library_type_choices
     )
 
     def get_absolute_url(self):

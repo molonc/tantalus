@@ -1,0 +1,28 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    External ID Search
+{% endblock %}
+
+{% block body %}
+    <div class="container graybg">
+        <form action="{% url 'external-id-search' %}" method="POST">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Search for Sample IDs by their External ID</legend>
+                <table class="table-condensed">
+                    <thead>
+                    {{form}}
+                    </thead>
+                </table>
+            	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Search">
+            </fieldset>
+        </form><br>
+        <fieldset>
+            <legend></legend>
+                <a class="btn btn-default btn-sm" style="float:right; margin-top:5px;" href="{% url 'home' %}">Cancel</a>
+        </fieldset>
+        <br>
+    </div>
+{% endblock %}

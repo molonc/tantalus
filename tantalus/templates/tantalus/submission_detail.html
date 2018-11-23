@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container detail-container" style="background-color:#F5F5F5;">
+    <div class="container detail-container" style="background-color:#F5F5F5; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
             <table class="table-condensed">
                 <tr>
@@ -29,28 +29,12 @@
                     <td style="padding: 0; padding-left: 35px;">{{object.submitted_by}}</td>
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Lanes Sequenced</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.lanes_sequenced}}</td>
-                </tr>
-                <tr>
-                    <th style="padding: 0; padding-top: 4px;">Updated Goal</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.updated_goal}}</td>
-                </tr>
-                <tr>
                     <th style="padding: 0; padding-top: 4px;">Library Type</th>
                     <td style="padding: 0; padding-left: 35px;">{{object.library_type}}</td>
                 </tr>
-                <tr>
-                    <th style="padding: 0; padding-top: 4px;">Payment</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.payment}}</td>
-                </tr>
-                <tr>
-                    <th style="padding: 0; padding-top: 4px;">Data Path</th>
-                    <td style="padding: 0; padding-left: 35px;">{{object.data_path}}</td>
-                </tr>
             </table>
         {% else %}
-            <h5><i class="text-warning">No Sample Details yet.</i></h5>
+            <h5><i class="text-warning">No Submission Details yet.</i></h5>
         {% endif %}
     </div>
 {% endblock %}

@@ -6,23 +6,45 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container graybg">
-        <form action="{% url 'submission-add' %}" method="POST">
-            {% csrf_token %}
+    {% if sample_pk %}
+        <div class="container graybg">
+            <form action="{% url 'specific-submission-add' sample_pk %}" method="POST">
+                {% csrf_token %}
+                <fieldset>
+                    <legend>Add a single submission</legend>
+                    <table class="table-condensed">
+                        <thead>
+                        {{form}}
+                        </thead>
+                    </table>
+                	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
+                </fieldset>
+            </form><br>
             <fieldset>
-                <legend>Add a single submission</legend>
-                <table class="table-condensed">
-                    <thead>
-                    {{form}}
-                    </thead>
-                </table>
-            	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
+                <legend></legend>
+                    <a class="btn btn-default btn-sm" style="float:right; margin-top:5px;" href="{% url 'submissions-list' %}">Cancel</a>
             </fieldset>
-        </form><br>
-        <fieldset>
-            <legend></legend>
-                <a class="btn btn-default btn-sm" style="float:right; margin-top:5px;" href="{% url 'submissions-list' %}">Cancel</a>
-        </fieldset>
-        <br>
-    </div>
+            <br>
+        </div>
+    {% else %}
+        <div class="container graybg">
+            <form action="{% url 'submission-add' %}" method="POST">
+                {% csrf_token %}
+                <fieldset>
+                    <legend>Add a single submission</legend>
+                    <table class="table-condensed">
+                        <thead>
+                        {{form}}
+                        </thead>
+                    </table>
+                    <input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
+                </fieldset>
+            </form><br>
+            <fieldset>
+                <legend></legend>
+                    <a class="btn btn-default btn-sm" style="float:right; margin-top:5px;" href="{% url 'submissions-list' %}">Cancel</a>
+            </fieldset>
+            <br>
+        </div>
+    {% endif %}        
 {% endblock %}

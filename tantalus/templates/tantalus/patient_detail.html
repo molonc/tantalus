@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container detail-container" style="background-color:#F5F5F5;">
+    <div class="container detail-container" style="background-color:#F5F5F5; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
             <table class="table-condensed">
                 <tr>
@@ -22,14 +22,14 @@
             <h5><i class="text-warning">No Patient Details yet.</i></h5>
         {% endif %}
     </div>
-    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0;">
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if samples %}
             <h4>Related Samples</h4>
             <div class="table-responsive">
                 <table id="datatable" class="table-striped table-bordered">
                     <thead>
                         <th>Sample ID</th>
-                        <th>Collab Sample ID</th>
+                        <th>External Sample ID</th>
                         <th>Submitter</th>
                         <th>Collaborator</th>
                         <th>Tissue</th>
@@ -41,7 +41,7 @@
                         {% for sample in samples %}
                             <tr>
                                 <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
-                                <td>{{sample.collab_sample_id}}</td>
+                                <td>{{sample.external_sample_id}}</td>
                                 <td>{{sample.submitter}}</td>
                                 <td>{{sample.collaborator}}</td>
                                 <td>{{sample.tissue}}</td>
