@@ -1,5 +1,6 @@
 import os
 import datetime
+import json
 import pandas as pd
 
 #===========================
@@ -62,35 +63,128 @@ class SampleForm(forms.ModelForm):
 
 
 class UploadSampleForm(forms.Form):
-    samples_excel_file = forms.FileField(label='Select an Excel(xlsx) File', widget=forms.FileInput(attrs={'accept': ".xlsx"}))
+    samples_excel_file = forms.FileField(label='Select an Excel File', widget=forms.FileInput(attrs={'accept': [".xlsx", ".xls"]}))
 
-    def clean_file(self):
-        file = self.cleaned_data.get("samples_excel_file", False)
-        return file
-
-    def get_sample_data(self):
-        # TODO: return dataframe here
-        workbook = load_workbook(self.clean_file())
+    def clean_samples_excel_file(self):
+        excel_file = self.cleaned_data.get("samples_excel_file", False)
+        workbook = load_workbook(excel_file)
         sheet = workbook.active
 
         temp_dict = {}
+        sheet_rows = list(sheet.rows)
+        header_row = []
+        for cell in sheet_rows[0]:
+            header_row.append(cell.value.encode('utf-8'))
 
-        header_row = list(sheet.rows)[0]
+        try:
+            external_patient_id_index = header_row.index('External Patient ID')
+            external_sample_id_index = header_row.index('External Sample ID')
+            patient_id_index = header_row.index('Patient ID')
+            suffix_index = header_row.index('Suffix')
+        except:
+            raise ValidationError('Header Row Labels not configured properly')
+
+        sheet_rows.pop(0)
 
         for index in range(0, len(header_row)):
-            count = 0
             column_data_list = []
-
             for cell in list(sheet.columns)[index]:
-                if(count == 0):
-                    count+=1
-                    continue
                 column_data_list.append(cell.value)
-            temp_dict[header_row[index].value.encode('utf-8').strip().lower()] = column_data_list
+            #Remove header column entry from column_data_list
+            column_data_list.pop(0)
+            temp_dict[header_row[index]] = column_data_list
 
         df = pd.DataFrame(data=temp_dict)
+
+        for idx, sample_row in df.iterrows():
+            if(pd.isnull(sample_row[external_sample_id_index])):
+                raise ValidationError('External Sample ID field cannot be Null on row {}'.format(idx + 2))
+            #If both fields are null, raise error
+            if(pd.isnull(sample_row[external_patient_id_index]) and pd.isnull(sample_row[patient_id_index])):
+                raise ValidationError('Both External Patient ID and Patient ID field cannot be Null on row {}'.format(idx + 2))
+            #If only external_patient_id is null, look up patient with patient_id
+            elif(pd.isnull(sample_row[external_patient_id_index])):
+                try:
+                    patient = tantalus.models.Patient.objects.get(patient_id=sample_row[patient_id_index])
+                except:
+                    raise ValidationError('Patient not found with given Patient ID on row {} (No External Patient ID provided)'.format(
+                        sample_row[patient_id_index],
+                        idx + 2))
+                #If given suffix and patient_id match with an existing sample in tantalus, throw error
+                if(sample_row[suffix_index] is None):
+                    new_sample_id = patient.patient_id
+                else:
+                    new_sample_id = sample_row[patient_id_index] + sample_row[suffix_index]
+                try:
+                    sample = tantalus.models.Sample.objects.get(sample_id=new_sample_id)
+                except:
+                    continue
+                raise ValidationError('Sample already exists for Patient ID {} and Suffix {} on row {}'.format(
+                    sample_row[patient_id_index],
+                    sample_row[suffix_index],
+                    idx + 2
+                    ))
+
+            elif(pd.isnull(sample_row[patient_id_index])):
+                try:
+                    patient = tantalus.models.Patient.objects.get(external_patient_id=sample_row[external_patient_id_index])
+                except:
+                    raise ValidationError('Patient not found with given External Patient ID on row {} (No Patient ID provided)'.format(
+                        sample_row[external_patient_id_index],
+                        idx + 2))
+
+                if(sample_row[suffix_index] is None):
+                    new_sample_id = patient.patient_id
+                else:
+                    new_sample_id = patient.patient_id + sample_row[suffix_index]
+                try:
+                    sample = tantalus.models.Sample.objects.get(sample_id=new_sample_id)
+                except:
+                    continue
+                raise ValidationError('Sample already exists for Patient ID {} and Suffix {} on row {}'.format(
+                    patient.patient_id,
+                    sample_row[suffix_index],
+                    idx + 2
+                    ))
+
+                    
+            else:
+                try:
+                    patient = tantalus.models.Patient.objects.get(external_patient_id=sample_row[external_patient_id_index], patient_id=sample_row[patient_id_index])
+                except:
+                    raise ValidationError('Patient not found with given External Patient ID {} and Patient ID {} on row {}'.format(
+                        sample_row[external_patient_id_index],
+                        sample_row[patient_id_index],
+                        idx + 2))         
+
+                if(sample_row[suffix_index] is None):
+                    new_sample_id = patient.patient_id
+                else:
+                    new_sample_id = sample_row[patient_id_index] + sample_row[suffix_index]
+                try:
+                    sample = tantalus.models.Sample.objects.get(sample_id=new_sample_id)
+                except:
+                    continue
+                raise ValidationError('Sample already exists for Patient ID {} and Suffix {} on row {}'.format(
+                    sample_row[patient_id_index],
+                    sample_row[suffix_index],
+                    idx + 2
+                    ))
+
         return df
 
+    def get_sample_data(self):
+        # TODO: return dataframe here
+        return self.cleaned_data['samples_excel_file']
+
+
+class ExternalIDSearcherForm(forms.Form):
+    external_id_column = forms.CharField(widget=forms.Textarea, label='Paste in an Excel Column of External Sample IDs')
+
+    def clean_file(self):
+        clean_data = self.cleaned_data.get(external_id_column)
+        external_id_list = clean_data.split('\n')
+        return external_id_list
 
 class ExternalIDSearcherForm(forms.Form):
     external_id_column = forms.CharField(widget=forms.Textarea, label='Paste in an Excel Column of External Sample IDs')

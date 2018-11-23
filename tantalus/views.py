@@ -21,6 +21,9 @@ import json
 import os
 from datetime import date
 from sets import Set
+import pandas as pd
+from StringIO import StringIO
+import xlsxwriter
 
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT
@@ -810,49 +813,33 @@ class SampleCreate(TemplateView):
             return HttpResponseRedirect(instance.get_absolute_url())
         elif multi_form.is_valid():
             samples_df = multi_form.get_sample_data()
-            form_headers = list(samples_df)
 
-            if("sample_id" not in form_headers):
-                msg = "Failed to create the sample. Spreadsheet must have a Sample_ID header."
-                messages.error(request, msg)
-                return self.get_context_and_render(request, form, multi_form)
+            form_headers = samples_df.columns.tolist()
+
+            external_patient_id_index = form_headers.index('External Patient ID')
+            external_sample_id_index = form_headers.index('External Sample ID')
+            patient_id_index = form_headers.index('Patient ID')
+            suffix_index = form_headers.index('Suffix')            
 
             for idx, sample_row in samples_df.iterrows():
-                row = sample_row.tolist()
-                sample_dict = {
-                    'sample_id': None, 
-                    'collab_sample_id': None, 
-                    'submitter': None, 
-                    'collaborator': None, 
-                    'tissue': None, 
-                    'note': None, 
-                    'patient_id': None,
-                    'projects': None, 
-                }
-                for index in range(0, len(list(samples_df))):
-                    if(form_headers[index] == 'patient id'):
-                        patient_set = tantalus.models.Patient.objects.filter(patient_id=row[index].encode('utf-8'))
-                        #There should be only 1 Patient returned in the patient_set, but break anyways to be safe
-                        for patient in patient_set:
-                            sample_dict[form_headers[index].replace(' ', '_')] = patient
-                            break
-                    elif(form_headers[index] == 'projects'):
-                        sample_dict[form_headers[index].replace(' ', '_')] = str(row[index]).encode('utf-8').split(', ')
-                    else:
-                        sample_dict[form_headers[index].replace(' ', '_')] = row[index].encode('utf-8')
+                if(pd.isnull(sample_row[patient_id_index])):
+                    patient = tantalus.models.Patient.objects.get(external_patient_id=sample_row[external_patient_id_index])
+                else:
+                    patient = tantalus.models.Patient.objects.get(patient_id=sample_row[patient_id_index])
+                if(sample_row[suffix_index] is None):
+                    sample_id = patient.patient_id
+                else:
+                    sample_id = patient.patient_id + sample_row[suffix_index]
+                external_sample_id = sample_row[external_sample_id_index]
 
+                #Allow more fields in the future?
                 sample_created, created = tantalus.models.Sample.objects.get_or_create(
-                        sample_id=sample_dict['sample_id'],
-                        collab_sample_id=sample_dict['collab_sample_id'],
-                        submitter=sample_dict['submitter'],
-                        collaborator=sample_dict['collaborator'],
-                        tissue=sample_dict['tissue'],
-                        note=sample_dict['note'],
-                        patient_id=sample_dict['patient_id'],
+                        sample_id=sample_id,
+                        external_sample_id=external_sample_id,
+                        patient_id=patient,
                     )
                 if created:
                     sample_created.save()
-                    sample_created.projects = sample_dict['projects']
             return HttpResponseRedirect(sample_created.get_absolute_url())
         else:
             msg = "Failed to create the sample. Please fix the errors below."
@@ -895,6 +882,20 @@ class SpecificSampleCreate(TemplateView):
             messages.error(request, msg)
             patient_id = kwargs.get('patient_id').encode('utf-8')
             return self.get_context_and_render(request, form, patient_id)
+
+
+def export_sample_create_template(request):
+    header_dict = {
+        'External Patient ID': [],
+        'Patient ID': [],
+        'External Sample ID': [],
+        'Suffix': [],
+    }
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="header-template.csv"'
+    df = pd.DataFrame(header_dict)
+    df.to_csv(response, index=False)
+    return response
 
 
 @Render("tantalus/tag_list.html")

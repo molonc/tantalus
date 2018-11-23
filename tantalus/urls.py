@@ -69,6 +69,7 @@ urlpatterns = [
     url(r'^samples/create$', tantalus.views.SampleCreate.as_view(), name='sample-add'),
     url(r'^samples/create/(?P<patient_id>.{1,20})$', tantalus.views.SpecificSampleCreate.as_view(), name='specific-sample-add'),
     url(r'^samples/(?P<pk>\d+)$', tantalus.views.SampleDetail.as_view(), name='sample-detail'),
+    url(r'^export-sample-create-template/$', tantalus.views.export_sample_create_template, name='export-sample-create-template'),
     url(r'^tags/$', tantalus.views.tag_list, name='tag-list'),
     url(r'^tags/detail/(?P<pk>\d+)$', tantalus.views.TagDetail.as_view(), name='tag-detail'),
     url(r'^tags/detail/(?P<pk>\d+)/delete/(?P<pk_2>[0-9]+)$', tantalus.views.TagDatasetDelete.as_view(), name='tag-dataset-delete'),
