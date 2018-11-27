@@ -302,6 +302,10 @@ class FileType(models.Model):
         blank=True,
     )
 
+    def __str__(self):
+        """String representation of file type."""
+        return "%s (%s)" % (self.name, self.extension)
+
 
 class FileResource(models.Model):
     """
