@@ -239,11 +239,11 @@ class DatasetSearchForm(forms.Form):
                     # parse out flowcell ID and lane number, assumed to be separated by an underscore
                     flowcell, lane_number = flowcell_lane.split("_", 1)
                     if not tantalus.models.SequenceDataset.objects.filter(
-                        sequence_lane__flowcell_id=flowcell,sequence_lane__lane_number=lane_number).exists():
+                        sequence_lanes__flowcell_id=flowcell,sequence_lanes__lane_number=lane_number).exists():
                         no_match_list.append(flowcell_lane)
                 else:
                     # no lane number included
-                    if not tantalus.models.SequenceDataset.objects.filter(sequence_lane__flowcell_id=flowcell_lane).exists():
+                    if not tantalus.models.SequenceDataset.objects.filter(sequence_lanes__flowcell_id=flowcell_lane).exists():
                         no_match_list.append(flowcell_lane)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following flowcell lane resulted in 0 results: {}".format(
@@ -348,7 +348,7 @@ class DatasetSearchForm(forms.Form):
             results = results.filter(library__index_format=index_format)
 
         if min_num_read_groups is not None:
-            results = results.annotate(sequence_lane__lane_number=Count('sequence_lanes__lane_number')).filter(sequence_lane__lane_number__gte=min_num_read_groups)
+            results = results.annotate(sequence_lanes__lane_number=Count('sequence_lanes__lane_number')).filter(sequence_lanes__lane_number__gte=min_num_read_groups)
 
         if flowcell_id_and_lane:
             query = Q()
@@ -356,9 +356,9 @@ class DatasetSearchForm(forms.Form):
                 if "_" in flowcell_lane:
                     # parse out flowcell ID and lane number, assumed to be separated by an underscore
                     flowcell, lane_number = flowcell_lane.split("_", 1)
-                    q = Q(sequence_lane__flowcell_id=flowcell, sequence_lane__lane_number=lane_number)
+                    q = Q(sequence_lanes__flowcell_id=flowcell, sequence_lanes__lane_number=lane_number)
                 else:
-                    q = Q(sequence_lane__flowcell_id=flowcell_lane)
+                    q = Q(sequence_lanes__flowcell_id=flowcell_lane)
                 query = query | q
             results = results.filter(query)
 
