@@ -1202,15 +1202,15 @@ def get_storage_stats(storages=['all']):
 
     # Find info on number of files
     num_bams = file_resources.filter(
-        file_type=tantalus.models.FileResource.BAM).filter(
+        file_type=tantalus.models.FileType.objects.get(name="BAM")).filter(
         ~Q(compression='SPEC')).count()
     num_specs = file_resources.filter(
-        file_type=tantalus.models.FileResource.BAM).filter(
+        file_type=tantalus.models.FileType.objects.get(name="BAM")).filter(
         compression='SPEC').count()
     num_bais = file_resources.filter(
-        file_type=tantalus.models.FileResource.BAI).count()
+        file_type=tantalus.models.FileType.objects.get(name="BAI")).count()
     num_fastqs = file_resources.filter(
-        file_type=tantalus.models.FileResource.FQ).count()
+        file_type=tantalus.models.FileType.objects.get(name="FQ")).count()
 
     # Get the size of all storages
     storage_size = file_resources.aggregate(Sum('size'))
@@ -1279,10 +1279,14 @@ def get_library_stats(filetype, storages_dict):
 
             if filetype == 'BAM':
                 # Get all the matching BAM files
-                matching_files = matching_files.filter(file_type=tantalus.models.FileResource.BAM)
+                matching_files = matching_files.filter(
+                    file_type=tantalus.models.FileType.objects.get(name="BAM")
+                )
             else:
                 # Get all the matching FASTQ files
-                matching_files = matching_files.filter(file_type=tantalus.models.FileResource.FQ)
+                matching_files = matching_files.filter(
+                    file_type=tantalus.models.FileType.objects.get(name="FQ")
+                )
 
             # Compute results - first the number of files- Add field skip_file_import to gscwgsbamquery
             number = matching_files.count()
