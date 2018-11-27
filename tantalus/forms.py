@@ -256,7 +256,7 @@ class DatasetSearchForm(forms.Form):
         if sequencing_library_id_field:
             no_match_list = []
             for sequencing_library in sequencing_library_id_field.split():
-                if not tantalus.models.SequenceDataset.objects.filter(sequencing_library_id=sequencing_library).exists():
+                if not tantalus.models.SequenceDataset.objects.filter(library__library_id=sequencing_library).exists():
                     no_match_list.append(sequencing_library)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following sequencing library resulted in 0 results: {}".format(
@@ -339,7 +339,7 @@ class DatasetSearchForm(forms.Form):
             results = results.filter(sequence_lanes__sequencing_instrument=sequencing_instrument)
 
         if sequencing_library_id:
-            results = results.filter(sequence_lanes__library_id__in=sequencing_library_id.split())
+            results = results.filter(library__library_id__in=sequencing_library_id.split())
 
         if library_type:
             results = results.filter(library__library_type=library_type)
