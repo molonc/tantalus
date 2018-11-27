@@ -127,18 +127,18 @@ class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     filter_class = StorageFilter
 
 
-class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
+class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.ServerStorage.objects.all()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
     filter_class = ServerStorageFilter
 
 
-class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
+class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.AzureBlobStorage.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
 
 
-class AzureBlobCredentialsViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
+class AzureBlobCredentialsViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.AzureBlobCredentials.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobCredentialsSerializer
     filter_class = AzureBlobCredentialsFilter
