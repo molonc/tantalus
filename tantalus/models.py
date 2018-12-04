@@ -420,6 +420,34 @@ class SequenceFileInfo(models.Model):
         null=True,
     )
 
+class ReferenceGenome(models.Model):
+    """
+    Lookup table for the SequenceDataset.reference_genome field
+    """
+
+    history = HistoricalRecords()
+
+    #HG19 = 'HG19'
+    #HG18 = 'HG18'
+    #MM10 = 'MM10'
+    #UNALIGNED = 'UNALIGNED'
+    #UNUSABLE = 'UNUSABLE'
+    #
+    #reference_genome_choices = (
+    #    (HG19, 'Human Genome 19'),
+    #    (HG18, 'Human Genome 18'),
+    #    (MM10, 'Mouse Genome 10'),
+    #    (UNALIGNED, 'Not aligned to a reference'),
+    #    (UNUSABLE, 'Alignments are not usable'),
+    #)
+
+    reference_genome = models.CharField(
+        max_length=50,
+        null=True,
+        unique=True,
+        #default=UNALIGNED, #not necessary
+    )
+
 
 class SequenceDataset(models.Model):
     """
@@ -499,11 +527,17 @@ class SequenceDataset(models.Model):
         (UNUSABLE, 'Alignments are not usable'),
     )
 
-    reference_genome = models.CharField(
-        max_length=50,
-        # TODO: foreign key or update choices
-        #choices=reference_genome_choices,
-        default=UNALIGNED,
+    #temp = models.CharField(
+    #    max_length=50,
+    #    # TODO: foreign key or update choices
+    #    #choices=reference_genome_choices,
+    #    default=UNALIGNED,
+    #)
+
+    reference_genome = models.ForeignKey(
+        ReferenceGenome,
+        on_delete=models.CASCADE,
+        null=True,
     )
 
     aligner = models.CharField(

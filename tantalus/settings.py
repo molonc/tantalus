@@ -96,7 +96,8 @@ DATABASES = {
         'NAME': os.environ.get('TANTALUS_POSTGRESQL_NAME'),
         'USER': os.environ.get('TANTALUS_POSTGRESQL_USER'),
         'PASSWORD': os.environ.get('TANTALUS_POSTGRESQL_PASSWORD'),
-        'HOST': '10.9.215.82',
+        #'HOST': '10.9.215.82',
+        'HOST': '127.0.0.1',
         'PORT': '5432',
         'TEST': {
             'NAME': 'tantalus_test'
