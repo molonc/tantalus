@@ -1,4 +1,4 @@
-from django.core.urlresolvers import reverse, reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
@@ -20,9 +20,8 @@ import csv
 import json
 import os
 from datetime import date
-from sets import Set
 import pandas as pd
-from StringIO import StringIO
+from io import StringIO
 import xlsxwriter
 
 from tantalus.utils import read_excel_sheets
@@ -62,7 +61,7 @@ class ExternalIDSearch(TemplateView):
             sample_list = []
             multiple_sample_list = []
             wrong_sample_list = []
-            external_id_list = Set(form.cleaned_data['external_id_column'].encode('ascii','ignore').splitlines())
+            external_id_list = set(form.cleaned_data['external_id_column'].encode('ascii','ignore').splitlines())
 
             for external_id in external_id_list:
                 if(tantalus.models.Sample.objects.filter(external_sample_id=external_id).count() == 1):
@@ -107,14 +106,15 @@ class PatientDetail(DetailView):
             submission_list = []
             projects = sample.projects.all()
             for project in projects:
-                projects_list.append(project.__unicode__())
+                projects_list.append(project.__str__())
             for submission in sample.submission_set.all():
                 submission_list.append(submission.id)
             sample.projects_list = projects_list
             sample.submission_list = submission_list
-            sample_list.append([sample.sample_id.encode('utf-8'), sample.get_absolute_url() + str(sample.id)])
+            sample_list.append([sample.sample_id, sample.get_absolute_url() + str(sample.id)])
 
-        self.object.patient_id = self.object.patient_id.encode('utf-8')
+        #self.object.patient_id = self.object.patient_id
+        print((self.object.patient_id))
 
 
         context['sample_list'] = sample_list
@@ -173,7 +173,7 @@ class SampleDetail(DetailView):
         project_list = []
 
         for project in project_set:    
-            project_list.append(project.__unicode__())
+            project_list.append(project.__str__())
 
         try:
             context['patient_url'] = self.object.patient_id.get_absolute_url() + str(self.object.patient_id.id)
@@ -207,7 +207,7 @@ class ResultDetail(DetailView):
             projects_list = []
             submission_list = []
             for project in sample.projects.all():
-                projects_list.append(project.__unicode__())
+                projects_list.append(project.__str__())
             sample.projects_list = projects_list
 
             for submission in sample.submission_set.all():
@@ -991,8 +991,7 @@ class DatasetListJSON(BaseDatatableView):
             return row.sequence_lanes.count()
 
         if column == 'tags':
-            tags_string =  map(str, row.tags.all().values_list('name', flat=True))
-            return tags_string
+            return list(map(str, row.tags.all().values_list('name', flat=True)))
 
         if column == 'storages':
             return list(row.get_storage_names())
@@ -1428,7 +1427,7 @@ class DataStatsView(TemplateView):
 
         context = {
             'storage_stats': sorted(storage_stats.iteritems(),
-                                            key=lambda (x, y): y['storage_size'],
+                                            key=lambda x, y: y['storage_size'],
                                             reverse=True),
             'locations_list': sorted(['all', 'azure', 'gsc', 'rocks', 'shahlab']),
             'bam_library_stats': sorted(bam_dict.iteritems()),
