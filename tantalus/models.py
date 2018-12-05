@@ -870,6 +870,44 @@ class Sow(models.Model):
     def __str__(self):
         return self.name
 
+class LibraryType(models.Model):
+
+    EXOME = 'EXOME'
+    WGS = 'WGS'
+    RNASEQ = 'RNASEQ'
+    SINGLE_CELL_WGS = 'SC_WGS'
+    SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
+    EXCAP = 'EXCAP'
+    BISULFITE = 'BISULFITE'
+    CHIP = 'CHIP'
+    MRE = 'MRE'
+    MIRNA = 'MIRNA'
+    MEDIP = 'MEDIP'
+    DNA_AMPLICON = 'DNA_AMPLICON'
+
+    library_type_choices = (
+        (EXOME, 'Bulk Whole Exome Sequence'),
+        (WGS, 'Bulk Whole Genome Sequence'),
+        (RNASEQ, 'Bulk RNA-Seq'),
+        (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
+        (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
+        (EXCAP,'Exon Capture'),
+        (MIRNA,'micro RNA'),
+        (BISULFITE,'Bisulfite'),
+        (CHIP,'Chromatin Immunoprecipitation'),
+        (MRE,'Methylation sensitive restriction enzyme sequencing'),
+        (MEDIP,'Methylated DNA immunoprecipitation'),
+        (DNA_AMPLICON,'Targetted DNA Amplicon Sequence')
+    )
+
+    library_type = models.CharField(
+        max_length=240,
+        blank=True,
+        null=True,
+        default=None,
+        choices=library_type_choices
+    )
+
 
 class Submission(models.Model):
     """
@@ -918,40 +956,10 @@ class Submission(models.Model):
         default=None
     )
 
-    EXOME = 'EXOME'
-    WGS = 'WGS'
-    RNASEQ = 'RNASEQ'
-    SINGLE_CELL_WGS = 'SC_WGS'
-    SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
-    EXCAP = 'EXCAP'
-    BISULFITE = 'BISULFITE'
-    CHIP = 'CHIP'
-    MRE = 'MRE'
-    MIRNA = 'MIRNA'
-    MEDIP = 'MEDIP'
-    DNA_AMPLICON = 'DNA_AMPLICON'
-
-    library_type_choices = (
-        (EXOME, 'Bulk Whole Exome Sequence'),
-        (WGS, 'Bulk Whole Genome Sequence'),
-        (RNASEQ, 'Bulk RNA-Seq'),
-        (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
-        (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
-        (EXCAP,'Exon Capture'),
-        (MIRNA,'micro RNA'),
-        (BISULFITE,'Bisulfite'),
-        (CHIP,'Chromatin Immunoprecipitation'),
-        (MRE,'Methylation sensitive restriction enzyme sequencing'),
-        (MEDIP,'Methylated DNA immunoprecipitation'),
-        (DNA_AMPLICON,'Targetted DNA Amplicon Sequence')
-    )
-
-    library_type = models.CharField(
-        max_length=240,
-        blank=True,
-        null=True,
-        default=None,
-        choices=library_type_choices
+    library_type = models.ForeignKey(
+        LibraryType,
+        on_delete=models.CASCADE,
+        null=True
     )
 
     def get_absolute_url(self):
