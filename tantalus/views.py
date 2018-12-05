@@ -213,7 +213,7 @@ class ResultDetail(DetailView):
 
         analysis = list(tantalus.models.Analysis.objects.filter(id=(self.object.analysis.id)))[0]
         context['input_datasets'] = analysis.input_datasets.all()
-
+        context['file_resources'] = list(self.object.file_resources.all())
         context['samples'] = sample_list
         return context
 

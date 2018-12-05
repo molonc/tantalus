@@ -135,6 +135,34 @@
             </table>
         </div>
     </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        <h4>File Resources</h4>
+        <div class="table-responsive">
+            <table id="file-resources-datatable" class="table-striped table-bordered">
+                <thead>
+                    <th>ID</th>
+                    <th>File Name</th>
+                    <th>Owner</th>
+                    <th>Created</th>
+                    <th>Last Updated</th>
+                    <th>Compression</th>
+                </thead>
+                <tbody>
+                    {% for file in file_resources %}
+                        <tr>
+                            <td>{{file.id}}</td>
+                            <td>{{file.filename}}</td>
+                            <td>{{file.owner}}</td>
+                            <td>{{file.created}}</td>
+                            <td>{{file.last_updated}}</td>
+                            <td>{{file.compression}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
     <br>
 {% endblock %}
 
@@ -145,6 +173,9 @@
                 "order": [[0, "desc"]]
             });
             $("#input-datasets-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+            $("#file-resources-datatable").DataTable({
                 "order": [[0, "desc"]]
             });
         });
