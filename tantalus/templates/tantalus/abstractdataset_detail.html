@@ -6,18 +6,103 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container" style="padding:0; margin-bottom:5px;">
-         <a class="btn btn-danger btn-sm" style="float:right; margin-top:5px;" href="{% url 'dataset-delete' pk=object.id %}">Delete dataset</a>
-    </div>
-    <div class="container" style="background-color:#F5F5F5;">
+    <div class="container detail-container" style="padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
-            <h4>Sample ID-{{object.sample}} &nbsp; &nbsp; Library ID-{{object.library.library_id}}</h4>
+            <a class="btn btn-danger btn-sm" style="float:right; margin-top:5px;" href="{% url 'dataset-delete' pk=object.id %}">Delete dataset</a>
+            <table class="table-condensed">
+                <tr>
+                    <th class="custom-table-header">Dataset Name</th>
+                    <td class="custom-table-detail">{{object.name}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Dataset Type</th>
+                    <td class="custom-table-detail">{{object.dataset_type}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Sample ID</th>
+                    <td class="custom-table-detail"><a href="{% url 'sample-detail' object.sample.id %}">{{object.sample}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Library ID</th>
+                    <td class="custom-table-detail">{{object.library.library_id}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Reference Genome</th>
+                    <td class="custom-table-detail">{{object.reference_genome}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Aligner</th>
+                    <td class="custom-table-detail">{{object.aligner}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Owner</th>
+                    <td class="custom-table-detail">{{object.owner}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Last Updated</th>
+                    <td class="custom-table-detail">{{object.last_updated}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Genome Region</th>
+                    <td class="custom-table-detail">{{object.genome_region}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Read End</th>
+                    <td class="custom-table-detail">{{object.read_end}}</td>
+                </tr>
+            </table>
+        {% else %}
+            <h5><i class="text-warning">No Sequence Dataset Details yet.</i></h5>
+        {% endif %}
+    </div>
 
-
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if object %}
+            <h4>Lanes</h4>
             <div class="table-responsive">
-                <table id="datatable" class="table table-striped" style="display:none;">
+                <table id="lane-datatable" class="table-striped table-bordered">
                     <thead>
-                    <tr>
+                        <tr>
+                            <th>Flowcell ID</th>
+                            <th>Lane Number</th>
+                            <th>DNA Library</th>
+                            <th>Owner</th>
+                            <th>Sequencing Center</th>
+                            <th>Sequencing Instrument</th>
+                            <th>Sequencing Library ID</th>
+                            <th>Read Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <br/>
+                        {% for lane in object.sequence_lanes.all %}
+                            <tr>
+                                <td>{{lane.flowcell_id}}</td>
+                                <td>{{lane.lane_number}}</td>
+                                <td>{{lane.dna_library}}</td>
+                                <td>{{lane.owner}}</td>
+                                <td>{{lane.sequencing_center}}</td>
+                                <td>{{lane.sequencing_instrument}}</td>
+                                <td>{{lane.sequencing_library_id}}</td>
+                                <td>{{lane.read_type}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No Lanes yet.</i></h5>
+        {% endif %}
+    </div>
+
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if object %}
+            <h4>File Resources</h4>
+            <div class="table-responsive">
+                <table id="file-resource-datatable" class="table-striped table-bordered">
+                    <thead>
+                        <tr>
                             <th>File name</th>
                             <th>File Type</th>
                             <th>Index Sequence</th>
@@ -26,7 +111,7 @@
                             <th>Size</th>
                             <th>Storage</th>
                             <th>Owner</th>
-                    </tr>
+                        </tr>
                     </thead>
                     <tbody>
                         <br/>
@@ -49,4 +134,17 @@
             <h5><i class="text-warning">No file resources yet.</i></h5>
         {% endif %}
     </div>
+{% endblock %}
+
+{% block datatables_script %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#lane-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+            $("#file-resource-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+        });
+    </script>
 {% endblock %}

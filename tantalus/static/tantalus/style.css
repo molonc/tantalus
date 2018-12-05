@@ -197,14 +197,11 @@ a.back-to-top {
 .table-condensed > tbody > tr > td.custom-table-detail {
     padding: 0; 
     padding-left: 5em;
+    padding-top: 0.5em;
 }
 
 
-.detail-container:nth-child(odd) {
-    background-color: #FFF3E0;
-}
-
-.detail-container:nth-child(even) {
+.detail-container {
     background-color: #f7f7f7;
 }
 
