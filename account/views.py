@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from misc.helpers import Render
@@ -42,18 +42,18 @@ def login_view(request):
         user, res = user_authenticate(username, password)
         if res == 'active':
             login(request, user)
-            print "%s, successully logged in." % username
+            print("%s, successully logged in." % username)
             if next_url:
                 return HttpResponseRedirect(next_url)
             else:
                 return HttpResponseRedirect(reverse("home"))
         elif res == 'inactive':
             msg = "This account has been disabled."
-            print msg
+            print(msg)
             messages.error(request, msg)
         else:
             msg = "The username and/or password were incorrect."
-            print msg
+            print(msg)
             messages.error(request, msg)
 
     contex = {
@@ -68,7 +68,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     msg = "Successfully logged out."
-    print msg
+    print(msg)
     messages.success(request, msg)
     return HttpResponseRedirect(reverse("home"))
 
@@ -95,16 +95,16 @@ def password_update(request):
                 user.save()
                 login(request, user)
                 msg = "Successfully changed the password!"
-                print msg
+                print(msg)
                 messages.success(request, msg)
                 return HttpResponseRedirect(reverse("home"))
             elif res == 'inactive':
                 msg = "This account has been disabled."
-                print msg
+                print(msg)
                 messages.error(request, msg)
             else:
                 msg = "The current password was incorrect."
-                print msg
+                print(msg)
                 messages.error(request, msg)
 
     contex = {}
