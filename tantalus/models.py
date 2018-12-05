@@ -5,7 +5,7 @@ import django
 import django.contrib.postgres.fields
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -62,7 +62,7 @@ class Project(models.Model):
 
     name =  models.CharField(unique=True,max_length=255)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -138,7 +138,7 @@ class Sample(models.Model):
         blank=True,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.sample_id
 
     def get_absolute_url(self):
@@ -346,6 +346,7 @@ class FileResource(models.Model):
     file_type = models.ForeignKey(
         FileType,
         null=True,
+        on_delete=models.CASCADE,
     )
 
     GZIP = 'GZIP'
@@ -406,6 +407,7 @@ class SequenceFileInfo(models.Model):
 
     file_resource = models.OneToOneField(
         FileResource,
+        on_delete=models.CASCADE,
     )
 
     owner = models.ForeignKey(
@@ -474,10 +476,12 @@ class SequenceDataset(models.Model):
 
     sample = models.ForeignKey(
         Sample,
+        on_delete=models.CASCADE,
     )
 
     library = models.ForeignKey(
         DNALibrary,
+        on_delete=models.CASCADE,
     )
 
     file_resources = models.ManyToManyField(
@@ -491,6 +495,7 @@ class SequenceDataset(models.Model):
     analysis = models.ForeignKey(
         'Analysis',
         null=True,
+        on_delete=models.CASCADE,
     )
 
     HG19 = 'HG19'
@@ -668,6 +673,7 @@ class ResultsDataset(models.Model):
     analysis = models.ForeignKey(
         Analysis,
         null=False,
+        on_delete=models.CASCADE,
     )
 
     samples = models.ManyToManyField(
@@ -847,7 +853,7 @@ class Sow(models.Model):
     # Unique on name
     name = models.CharField(max_length=50,unique=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
