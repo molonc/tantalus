@@ -1,0 +1,28 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Edit Patient
+{% endblock %}
+
+{% block body %}
+    <div class="container graybg">
+        <form action="{% url 'patient-edit' pk=pk %}" method="POST">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Edit Patient</legend>
+                <table class="table-condensed">
+                    <thead>
+                    {{form}}
+                    </thead>
+                </table>
+            	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Confirm">
+            </fieldset>
+        </form><br>
+        <fieldset>
+            <legend></legend>
+                <a class="btn btn-default btn-sm" style="float:right; margin-top:5px;" href="{% url 'patient-detail' pk=pk %}">Cancel</a>
+        </fieldset>
+        <br>
+    </div>
+{% endblock %}
