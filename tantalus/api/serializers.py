@@ -104,7 +104,8 @@ class FileTypeField(serializers.Field):
     def to_representation(self, obj):
         return obj.name
     def to_internal_value(self, data):
-        return tantalus.models.FileType.objects.get(name=data)
+        file_type, created = tantalus.models.FileType.objects.get_or_create(name=data)
+        return file_type
 
 
 class FileResourceSerializer(serializers.ModelSerializer):
