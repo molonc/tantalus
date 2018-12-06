@@ -16,7 +16,8 @@
                     <thead>
                         <tr>
                             <th>Tag name</th>
-                            <th>Num Datasets</th>
+                            <th>Number of Sequence Datasets</th>
+                            <th>Number of Result Datasets</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -25,9 +26,8 @@
                         {% for tag in tags %}
                             <tr>
                                 <td><a href="{% url 'tag-detail' tag.id %}">{{tag.name}}</a></td>
-                                <td>
-                                    {{ tag.count_datasets }}
-                                </td>
+                                <td>{{tag.count_sequence_datasets}}</td>
+                                <td> {{tag.count_result_datasets}}
                                 <td>
                                 <a href="{% url 'tag-delete' pk=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
                                 </td>
