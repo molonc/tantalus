@@ -208,7 +208,8 @@ class FileTransferRestart(APIView):
 class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
     """
     To tag datasets in this endpoint, use the following JSON format to POST:
-        { "name": "test_api_tag", "sequencedataset_set": [1, 2, 3, 4] }
+        { "name": "test_api_tag", "sequencedataset_set": [1, 2, 3, 4], "resultsdataset_set": [9, 10] }
+    Note that a post will update an existing tag by adding it to the given datasets
     """
     queryset = tantalus.models.Tag.objects.all()
     serializer_class = tantalus.api.serializers.TagSerializer

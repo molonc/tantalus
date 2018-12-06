@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from rest_framework import serializers
 
 import tantalus.models
@@ -246,7 +247,10 @@ class ImportDlpBamSerializer(SimpleTaskSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
-    """Serializer for tags."""
+    """ Serializer for tags.
+    Note that this serializer will always update by
+    adding the tag to the given datasets.
+    """
     sequencedataset_set = serializers.PrimaryKeyRelatedField(
         many=True,
         allow_null=True,
@@ -262,6 +266,25 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.Tag
         fields = ('id', 'name', 'sequencedataset_set', 'resultsdataset_set')
+
+    def is_valid(self, raise_exception=False):
+        if hasattr(self, 'initial_data'):
+            try:
+                obj = tantalus.models.Tag.objects.get(name=self.initial_data['name'])
+            except (ObjectDoesNotExist, MultipleObjectsReturned):
+                return super(TagSerializer, self).is_valid(raise_exception)
+            else:
+                self.instance = obj
+                return super(TagSerializer, self).is_valid(raise_exception)
+        else:
+            return super(TagSerializer, self).is_valid(raise_exception)
+
+    def update(self, instance, validated_data):
+        for sequencedataset in validated_data.get('sequencedataset_set', ()):
+            sequencedataset.tags.add(instance)
+        for resultsdataset in validated_data.get('resultsdataset_set', ()):
+            resultsdataset.tags.add(instance)
+        return instance
 
 
 class ResultDatasetSerializer(serializers.ModelSerializer):
