@@ -6,32 +6,109 @@
 {% endblock %}
 
 {% block body %}
-     <div class="container" style="padding:0; margin-bottom:5px;">
-        <h4 style="float:left;">Name: {{ tag.name }}</h4>
-     </div>
-     <div class="container" style="padding:0; margin-bottom:5px;">
-        <h4 style="float:left;">Datasets:</h4>
-     </div>
-    <div class="container" style="background-color:#F5F5F5;">
-    <table id="datatable" class="table table-striped" style="display:none;">
-        <thead>
+
+    <div class="container detail-container" style="background-color:#F5F5F5; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if tag %}
+            <table class="table-condensed">
                 <tr>
-                    <th>Dataset ID</th>
-                    <th>Is Complete</th>
-                    <th></th>
+                    <th style="padding: 0; padding-top: 4px;">Tag Name</th>
+                    <td style="padding: 0; padding-left: 35px;">{{tag.name}}</td>
                 </tr>
-        </thead>
-        <tbody>
-            {% for dataset in datasets %}
-            <tr>
-                <td>{{ dataset.id }}</td>
-                <td>{{ dataset.get_is_complete }}</td>
-                <td>
-                    <a href="{% url 'tag-dataset-delete' pk=dataset.id pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Number of Sequence Datasets</th>
+                    <td style="padding: 0; padding-left: 35px;">{{tag.count_sequence_datasets}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Number of Results Datasets</th>
+                    <td style="padding: 0; padding-left: 35px;">{{tag.count_result_datasets}}</td>
+                </tr>
+            </table>
+        {% else %}
+            <h5><i class="text-warning">No Tag Details yet.</i></h5>
+        {% endif %}
     </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if sequence_datasets %}
+            <h4>Sequence Datasets</h4>
+            <div class="table-responsive">
+                <table id="sequence-dataset-datatable" class="table-striped table-bordered">
+                    <thead>
+                        <th>Dataset ID</th>
+                        <th>Dataset Name</th>
+                        <th>Type</th>
+                        <th>Samples</th>
+                        <th>Libraries</th>
+                        <th>Library Type</th>
+                        <th>Is Complete</th>
+                        <th></th>
+                    </thead>
+                    <tbody>
+                        {% for dataset in sequence_datasets %}
+                            <tr>
+                                <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.id}}</a></td>
+                                <td>{{dataset.name}}</td>
+                                <td>{{dataset.dataset_type}}</td>
+                                <td><a href="{% url 'sample-detail' dataset.sample.id %}">{{dataset.sample.sample_id}}</a></td>
+                                <td>{{dataset.library.library_id}}</td>
+                                <td>{{dataset.library.library_type}}</td>
+                                <td>{{dataset.get_is_complete}}</td>
+                                <td>
+                                    <a href="{% url 'tag-dataset-delete' pk=dataset.id pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No Sequence Datasets associated with this Tag yet.</i></h5>
+        {% endif %}
+    </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if results %}
+            <h4>Results</h4>
+            <div class="table-responsive">
+                <table id="results-datatable" class="table-striped table-bordered">
+                    <thead>
+                        <th>Result ID</th>
+                        <th>Result Owner</th>
+                        <th>Result Name</th>
+                        <th>Result Type</th>                     
+                        <th>Result Version</th>
+                        <th>Result Analysis</th>
+                    </thead>
+                    <tbody>
+                        {% for result in results %}
+                            <tr>
+                                <td><a href="{% url 'result-detail' result.id %}">{{result.id}}</a></td>
+                                <td>{{result.owner}}</td>
+                                <td>{{result.name}}</td>
+                                <td>{{result.results_type}}</td>
+                                <td>{{result.results_version}}</td>
+                                <td><a href="{% url 'analysis-detail' result.analysis.id %}">{{result.analysis.name}}</a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No Results associated with this Tag yet.</i></h5>
+        {% endif %}
+    </div>
+
+{% endblock %}
+
+{% block datatables_script %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#sequence-datasets-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+            $("#results-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+        });
+    </script>
 {% endblock %}

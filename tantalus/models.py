@@ -45,6 +45,14 @@ class Tag(models.Model):
 
         return sequence_dataset_count + results_dataset_count
 
+    def count_sequence_datasets(self):
+
+        return self.sequencedataset_set.count()
+
+    def count_result_datasets(self):
+
+        return self.resultsdataset_set.count()
+
 
 class Project(models.Model):
     """

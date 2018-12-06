@@ -997,10 +997,12 @@ class TagDetail(DetailView):
 
     def get_context_data(self, object):
         tag = get_object_or_404(tantalus.models.Tag, pk=object.id)
-        datasets = tag.sequencedataset_set.all()
+        sequence_datasets = tag.sequencedataset_set.all()
+        results = tag.resultsdataset_set.all()
         context = {
             'tag': tag,
-            'datasets':datasets,
+            'sequence_datasets': sequence_datasets,
+            'results': results,
         }
         return context
 
