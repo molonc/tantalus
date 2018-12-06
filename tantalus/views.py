@@ -15,6 +15,7 @@ from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.defaulttags import register
+from django.forms import ModelForm
 
 import csv
 import json
@@ -680,7 +681,7 @@ class ImportDlpBamStopView(SimpleTaskStopView):
 @method_decorator(login_required, name='dispatch')
 class PatientCreate(TemplateView):
     """
-    tantalus.models.Sample create page.
+    tantalus.models.Patient create page.
     """
 
     template_name = "tantalus/patient_create.html"
@@ -708,6 +709,40 @@ class PatientCreate(TemplateView):
             msg = "Failed to create the Patient. Please fix the errors below."
             messages.error(request, msg)
             return self.get_context_and_render(request, form)
+
+
+@method_decorator(login_required, name='dispatch')
+class PatientEdit(TemplateView):
+
+    template_name = "tantalus/patient_edit.html"
+
+    def get_context_and_render(self, request, form, pk=None):
+        context = {
+            'pk':pk,
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        patient_pk = kwargs['pk']
+        patient = tantalus.models.Patient.objects.get(id=patient_pk)
+        form = tantalus.forms.PatientForm(instance=patient)
+        return self.get_context_and_render(request, form, patient_pk)
+
+    def post(self, request, *args, **kwargs):
+        patient_pk = kwargs['pk']
+        patient = tantalus.models.Patient.objects.get(id=patient_pk)
+        form = tantalus.forms.PatientForm(request.POST, instance=patient)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save()
+            msg = "Successfully edited Patient {}.".format(patient.patient_id)
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            msg = "Failed to edit the Patient. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form, patient_pk)
 
 
 @method_decorator(login_required, name='dispatch')
@@ -882,6 +917,40 @@ class SpecificSampleCreate(TemplateView):
             messages.error(request, msg)
             patient_id = kwargs.get('patient_id').encode('utf-8')
             return self.get_context_and_render(request, form, patient_id)
+
+
+@method_decorator(login_required, name='dispatch')
+class SampleEdit(TemplateView):
+
+    template_name = "tantalus/sample_edit.html"
+
+    def get_context_and_render(self, request, form, pk=None):
+        context = {
+            'pk':pk,
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        sample_pk = kwargs['pk']
+        sample = tantalus.models.Sample.objects.get(id=sample_pk)
+        form = tantalus.forms.SampleForm(instance=sample)
+        return self.get_context_and_render(request, form, sample_pk)
+
+    def post(self, request, *args, **kwargs):
+        sample_pk = kwargs['pk']
+        sample = tantalus.models.Sample.objects.get(id=sample_pk)
+        form = tantalus.forms.SampleForm(request.POST, instance=sample)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save()
+            msg = "Successfully edited Sample {}.".format(sample.sample_id)
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            msg = "Failed to edit the Sample. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form, sample_pk)
 
 
 def export_sample_create_template(request):

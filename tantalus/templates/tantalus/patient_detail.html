@@ -3,12 +3,12 @@
 
 {% block title %}
     Patient Detail
-     <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'specific-sample-add' object.patient_id %}">Add Sample to this Patient</a>
 {% endblock %}
 
 {% block body %}
     <div class="container detail-container" style="background-color:#F5F5F5; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
+            <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'patient-edit' pk=object.id %}">Edit Patient</a>
             <table class="table-condensed">
                 <tr>
                     <th style="padding: 0; padding-top: 4px;">Patient ID</th>
@@ -24,6 +24,7 @@
         {% endif %}
     </div>
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'specific-sample-add' object.patient_id %}">Add Sample to this Patient</a>
         {% if samples %}
             <h4>Related Samples</h4>
             <div class="table-responsive">
