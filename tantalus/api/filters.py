@@ -118,6 +118,7 @@ class ResultsDatasetFilter(filters.FilterSet):
             "name": ["exact"],
             "samples": ["exact"],
             "analysis": ["exact"],
+            "file_resources__filename": ["exact"],
         }
 
 
