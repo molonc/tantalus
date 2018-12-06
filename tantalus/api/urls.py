@@ -14,21 +14,11 @@ router.register(r'sample', views.SampleViewSet)
 router.register(r'sequence_file_info', views.SequenceFileInfoViewSet)
 router.register(r'sequencing_lane', views.SequencingLaneViewSet)
 router.register(r'sequence_dataset', views.SequenceDatasetViewSet)
-router.register(r'sequence_dataset_add', views.AddDataView, base_name='add')
-router.register(r'sequence_dataset_tag', views.Tag)
 router.register(r'storage', views.StorageViewSet)
 router.register(r'storage_server', views.ServerStorageViewSet)
 router.register(r'storage_azure_blob', views.AzureBlobStorageViewSet)
 router.register(r'storage_azure_blob_credentials', views.AzureBlobCredentialsViewSet)
 router.register(r'tag', views.Tag)
-
-# Route deprecated tasks after everything else
-router.register(r'brc_import_fastqs', views.BRCImportFastqsViewSet)
-router.register(r'file_transfer', views.FileTransferViewSet)
-router.register(r'import_dlp_bam', views.ImportDlpBamViewSet)
-router.register(r'md5_check', views.MD5CheckViewSet)
-router.register(r'query_gsc_dlp_paired_fastqs', views.QueryGscDlpPairedFastqsViewSet)
-router.register(r'query_gsc_wgs_bams', views.QueryGscWgsBamsViewSet)
 
 # Schema for Swagger API
 schema_view = get_schema_view(
@@ -48,5 +38,4 @@ urlpatterns = [
     url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=None), name='schema-swagger-ui'),
     url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=None), name='schema-redoc'),
     url(r'^', include(router.urls)),
-    url(r'^file_transfer/restart/(?P<pk>\d+)$', views.FileTransferRestart.as_view(), name='filetransfer-restart'),
 ]

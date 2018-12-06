@@ -4,7 +4,6 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from rest_framework import serializers
 
 import tantalus.models
-import tantalus.tasks
 
 
 class SampleSerializer(serializers.ModelSerializer):
@@ -151,99 +150,6 @@ class SequenceDatasetSerializerRead(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.SequenceDataset
         fields = '__all__'
-
-
-class SimpleTaskSerializer(serializers.ModelSerializer):
-    name = serializers.CharField()
-    running = serializers.BooleanField(read_only=True)
-    finished = serializers.BooleanField(read_only=True)
-    success = serializers.BooleanField(read_only=True)
-    state = serializers.CharField(read_only=True)
-
-
-class FileTransferSerializer(SimpleTaskSerializer):
-    class Meta:
-        model = tantalus.models.FileTransfer
-        fields = '__all__'
-    def create(self, validated_data):
-        with transaction.atomic():
-            instance = self.Meta.model(**validated_data)
-            instance.full_clean()
-            instance.save()
-            transaction.on_commit(lambda: tantalus.tasks.transfer_files_task.apply_async(
-                args=(instance.id,),
-                queue=instance.get_queue_name()))
-        return instance
-
-
-class ImportBRCFastqsSerializer(SimpleTaskSerializer):
-    class Meta:
-        model = tantalus.models.BRCFastqImport
-        fields = '__all__'
-    def create(self, validated_data):
-        instance = tantalus.models.BRCFastqImport(**validated_data)
-        instance.full_clean()
-        instance.save()
-        tantalus.tasks.import_brc_fastqs_task.apply_async(
-            args=(instance.id,),
-            queue=instance.storage.get_db_queue_name())
-        return instance
-
-
-class MD5CheckSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = tantalus.models.MD5Check
-        fields = '__all__'
-
-
-class QueryGscSerializer(SimpleTaskSerializer):
-    def create(self, validated_data):
-        storage = get_object_or_404(tantalus.models.ServerStorage, name='gsc')
-        instance = self.Meta.model(**validated_data)
-        instance.full_clean()
-        instance.save()
-        self.celery_task.apply_async(
-            args=(instance.id,),
-            queue=storage.get_db_queue_name())
-        return instance
-
-
-class QueryGscWgsBamsSerializer(QueryGscSerializer):
-    celery_task = tantalus.tasks.query_gsc_wgs_bams_task
-    class Meta:
-        model = tantalus.models.GscWgsBamQuery
-        fields = '__all__'
-
-
-class QueryGscDlpPairedFastqsSerializer(QueryGscSerializer):
-    celery_task = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
-    class Meta:
-        model = tantalus.models.GscDlpPairedFastqQuery
-        fields = '__all__'
-
-
-class ImportDlpBamSerializer(SimpleTaskSerializer):
-    celery_task = tantalus.tasks.import_dlp_bams_task
-    class Meta:
-        model = tantalus.models.ImportDlpBam
-        fields = '__all__'
-    def update(self, instance, validated_data):
-        self.Meta.model.objects.update_or_create(id=instance.id, **validated_data)
-        instance.full_clean()
-        instance.save()
-        self.celery_task.apply_async(
-            args=(instance.id,),
-            queue=instance.get_queue_name())
-        return instance
-    def create(self, validated_data):
-        instance = self.Meta.model(**validated_data)
-        instance.full_clean()
-        instance.save()
-        self.celery_task.apply_async(
-            args=(instance.id,),
-            queue=instance.get_queue_name())
-        return instance
-
 
 
 class TagSerializer(serializers.ModelSerializer):

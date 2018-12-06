@@ -4,11 +4,3 @@ Group
 Permission
 ContentType
 *Session*
-*Query*
-*Generic*
-SimpleTask
-FileTransfer
-BRCFastqImport
-ImportDlpBam
-MD5Check
-ReservedFileInstance

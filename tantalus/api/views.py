@@ -25,7 +25,6 @@ from tantalus.api.filters import (
     TagFilter,
 )
 import tantalus.models
-import tantalus.tasks
 
 
 class RestrictedQueryMixin(object):
@@ -151,60 +150,6 @@ class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     filter_class = FileInstanceFilter
 
 
-class FileTransferViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    queryset = tantalus.models.FileTransfer.objects.all()
-    serializer_class = tantalus.api.serializers.FileTransferSerializer
-    filter_fields = ('id', 'name')
-
-
-class MD5CheckViewSet(viewsets.ModelViewSet):
-    queryset = tantalus.models.MD5Check.objects.all()
-    serializer_class = tantalus.api.serializers.MD5CheckSerializer
-
-
-class BRCImportFastqsViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    queryset = tantalus.models.BRCFastqImport.objects.all()
-    serializer_class = tantalus.api.serializers.ImportBRCFastqsSerializer
-    filter_fields = ('id', 'name')
-
-
-class QueryGscWgsBamsViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    queryset = tantalus.models.GscWgsBamQuery.objects.all()
-    serializer_class = tantalus.api.serializers.QueryGscWgsBamsSerializer
-    filter_fields = ('id', 'name')
-
-
-class QueryGscDlpPairedFastqsViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    queryset = tantalus.models.GscDlpPairedFastqQuery.objects.all()
-    serializer_class = tantalus.api.serializers.QueryGscDlpPairedFastqsSerializer
-    filter_fields = ('dlp_library_id', 'id', 'name')
-
-
-class ImportDlpBamViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    queryset = tantalus.models.ImportDlpBam.objects.all()
-    serializer_class = tantalus.api.serializers.ImportDlpBamSerializer
-    filter_fields = ('id', 'name')
-
-
-class FileTransferRestart(APIView):
-    def get(self, request, pk, format=None):
-        transfer = tantalus.models.FileTransfer.objects.get(pk=pk)
-        serializer = tantalus.api.serializers.FileTransferSerializer(transfer)
-        return Response(serializer.data)
-
-    def post(self, request, pk, format=None):
-        transfer = tantalus.models.FileTransfer.objects.get(pk=pk)
-        if not transfer.running:
-            transfer.state = 'transfer files queued'
-            transfer.finished = False
-            transfer.save()
-            tantalus.tasks.transfer_files_task.apply_async(
-                args=(transfer.id,),
-                queue=transfer.get_queue_name())
-        serializer = tantalus.api.serializers.FileTransferSerializer(transfer)
-        return Response(serializer.data)
-
-
 class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
     """
     To tag datasets in this endpoint, use the following JSON format to POST:
@@ -214,50 +159,6 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.Tag.objects.all()
     serializer_class = tantalus.api.serializers.TagSerializer
     filter_class = TagFilter
-
-
-# TODO: move this
-from tantalus.backend.serializers import *
-
-class AddDataView(viewsets.ViewSet):
-    def create(self, request, format=None):
-        """Create model entries from request data.
-
-        This expects the request data to be in the form
-
-        {"tag": "tag name", # or null
-         "model_dictionaries": [{ ... }, { ... }, ... ]
-        }
-
-        The model_dictionaries array of dictionaries is complicated.
-        Easiest way to get a handle on it is to trace through this
-        function and the get_or_create_serialize*.
-        """
-        with django.db.transaction.atomic():
-            tag = None
-
-            if request.data['tag']:
-                tag, _ = tantalus.models.Tag.objects.get_or_create(name=request.data['tag'])
-
-            for dictionary in request.data['model_dictionaries']:
-                if dictionary['model'] == 'FileInstance':
-                    dictionary.pop('model')
-                    get_or_create_serialize_file_instance(dictionary)
-
-                elif dictionary['model'] == 'SequenceDataset':
-                    dictionary.pop('model')
-                    dataset = get_or_create_serialize_sequence_dataset(dictionary)
-                    if tag:
-                        dataset.tags.add(tag)
-
-                elif dictionary['model'] == 'SequenceLane':
-                    dictionary.pop('model')
-                    get_or_create_serialize_sequence_lane(dictionary)
-
-                else:
-                    raise ValueError('model type {} not supported'.format(dictionary['model']))
-
-        return Response('success', status=201)
 
 
 class ResultDatasetsViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):

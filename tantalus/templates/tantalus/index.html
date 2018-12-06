@@ -65,46 +65,4 @@
             </tbody>
         </table>
     </div>
-    <div class="container" style="margin-top: 0.69em; border:solid 1px #E0E0E0; border-radius: 3px; padding-top: 0.69em; padding-bottom: 1.2em;">
-        <h4>Tasks [deprecated]</h4>
-        <table class="table-striped" style="width:100%;">
-            <tbody>
-                <tr>
-                    <td><a href="{% url 'brcfastqimport-list' %}">BRC Fastq Imports</a> <i class="counter">{{brc_fastq_import_count}}</i></td>
-                    <td>
-                        <p style="float:right;">
-                        <a href="{% url 'brcfastqimport-create' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
-                    </td>
-                </tr>
-                <tr>
-                    <td><a href="{% url 'filetransfer-list' %}">File Transfers</a> <i class="counter">{{file_transfer_count}}</i></td>
-                    <td>
-                        <p style="float:right;">
-                        <a href="{% url 'filetransfer-create' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
-                    </td>
-                </tr>
-                <tr>
-                    <td><a href="{% url 'gscdlppairedfastqquery-list' %}">GSC DLP Paired Fastq Queries</a> <i class="counter">{{gsc_dlp_paired_fastq_query_count}}</i></td>
-                    <td>
-                        <p style="float:right;">
-                        <a href="{% url 'gscdlppairedfastqquery-create' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
-                    </td>
-                </tr>
-                <tr>
-                    <td><a href="{% url 'gscwgsbamquery-list' %}">GSC WGS Bam Queries</a> <i class="counter">{{gsc_wgs_bam_query_count}}</i></td>
-                    <td>
-                        <p style="float:right;">
-                        <a href="{% url 'gscwgsbamquery-create' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
-                    </td>
-                </tr>
-                <tr>
-                    <td><a href="{% url 'importdlpbam-list' %}">Import DLP BAMs</a> <i class="counter">{{import_dlp_bam_count}}</i></td>
-                    <td>
-                        <p style="float:right;">
-                        <a href="{% url 'importdlpbam-create' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
 {% endblock %}

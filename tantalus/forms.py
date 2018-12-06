@@ -17,7 +17,6 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 
 import tantalus.models
-import tantalus.tasks
 
 from openpyxl import load_workbook
 
@@ -480,91 +479,4 @@ class DatasetTagForm(forms.Form):
         tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
         tag.sequencedataset_set.clear()
         tag.sequencedataset_set.add(*self.models_to_tag)
-
-
-class SimpleTaskCreateForm(forms.ModelForm):
-
-    class Meta:
-        abstract = True
-
-    def save(self):
-        super(SimpleTaskCreateForm, self).save()
-        self.instance.state = self.instance.task_name.replace('_', ' ') + ' queued'
-        self.task_type.apply_async(
-            args=(self.instance.id,),
-            queue=self.instance.get_queue_name())
-        return self.instance
-
-
-class FileTransferCreateForm(SimpleTaskCreateForm):
-
-    task_name = 'transfer files'
-    task_type = tantalus.tasks.transfer_files_task
-
-    class Meta:
-        model = tantalus.models.FileTransfer
-        fields = ('name', 'tag_name', 'from_storage', 'to_storage')
-
-    def clean_tag_name(self):
-        tag_name = self.cleaned_data['tag_name'].strip()
-        datasets = tantalus.models.SequenceDataset.objects.filter(tags__name=tag_name)
-        if len(datasets) == 0:
-            raise forms.ValidationError('no datasets with tag {}'.format(tag_name))
-        return tag_name
-
-
-class GscWgsBamQueryCreateForm(SimpleTaskCreateForm):
-    
-    task_name = 'query GSC for WGS BAMs'
-    task_type = tantalus.tasks.query_gsc_wgs_bams_task
-
-    library_ids = forms.CharField(
-        label="Library ids",
-        required=False,
-        help_text="A white space separated list of library IDs. Eg. A90652A",
-        widget=forms.widgets.Textarea
-    )
-
-    skip_older_than = forms.DateField(
-        widget=forms.SelectDateWidget(years=range(2000, datetime.datetime.now().timetuple()[0] + 1)),
-        initial=None,
-        required=False,
-    )
-
-    def clean_library_ids(self):
-        return self.cleaned_data['library_ids'].split()
-
-    class Meta:
-        model = tantalus.models.GscWgsBamQuery
-        fields = ('library_ids', 'tag_name', 'skip_file_import', 'skip_older_than')
-
-
-class GscDlpPairedFastqQueryCreateForm(SimpleTaskCreateForm):
-
-    task_name = 'query GSC for DLP fastqs'
-    task_type = tantalus.tasks.query_gsc_dlp_paired_fastqs_task
-
-    class Meta:
-        model = tantalus.models.GscDlpPairedFastqQuery
-        fields = ('dlp_library_id', 'gsc_library_id')
-
-
-class BRCFastqImportCreateForm(SimpleTaskCreateForm):
-
-    task_name = 'import brc fastqs into tantalus'
-    task_type = tantalus.tasks.import_brc_fastqs_task
-
-    class Meta:
-        model = tantalus.models.BRCFastqImport
-        fields = ('output_dir', 'storage', 'flowcell_id')
-
-
-class ImportDlpBamCreateForm(SimpleTaskCreateForm):
-
-    task_name = 'import dlp bams into tantalus'
-    task_type = tantalus.tasks.import_dlp_bams_task
-
-    class Meta:
-        model = tantalus.models.ImportDlpBam
-        fields = ('storage', 'bam_paths')
 
