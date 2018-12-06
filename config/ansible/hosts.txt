@@ -1,3 +1,0 @@
-thost05 queue_prefix=gsc
-shahlab15 queue_prefix=shahlab
-rocks queue_prefix=rocks ansible_python_interpreter=/share/lustre/amcpherson/anaconda/bin/python

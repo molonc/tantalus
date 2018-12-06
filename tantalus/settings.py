@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
-import socket
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -101,7 +100,6 @@ DATABASES = {
         'TEST': {
             'NAME': 'tantalus_test'
         }
-
     }
 }
 
@@ -165,28 +163,5 @@ REST_FRAMEWORK = {
     ),
 }
 
-# Celery settings
-RABBIT_IP = os.environ.get('TANTALUS_RABBIT_IP', '10.9.215.82')
-RABBIT_USER = os.environ.get('TANTALUS_RABBIT_USER', 'guest')
-RABBIT_PASSWORD = os.environ.get('TANTALUS_RABBIT_PASSWORD', 'guest')
-RABBIT_VHOST = os.environ.get('TANTALUS_RABBIT_VHOST', '')
-CELERY_BROKER_URL = 'amqp://{}:{}@{}:5672/{}'.format(RABBIT_USER, RABBIT_PASSWORD, RABBIT_IP, RABBIT_VHOST)
-
-#: Only add pickle to this list if your broker is secured
-#: from unwanted access (see userguide/security.html)
-CELERY_ACCEPT_CONTENT = ['json']
-# CELERY_RESULT_BACKEND = 'db+sqlite:///results.sqlite'
-CELERY_RESULT_BACKEND = 'rpc://'
-CELERY_TASK_SERIALIZER = 'json'
 LOGIN_URL = '/account/login'
-
-# GSC API settings
-GSC_API_USERNAME = os.environ.get('GSC_API_USERNAME')
-GSC_API_PASSWORD = os.environ.get('GSC_API_PASSWORD')
-
-# Colossus settings
-COLOSSUS_API_URL = os.environ.get('COLOSSUS_API_URL', 'http://colossus.bcgsc.ca/api/')
-
-# Task logs
-TASK_LOG_DIRECTORY = os.environ.get('TASK_LOG_DIRECTORY', '/tmp/')
 
