@@ -40,7 +40,6 @@ class ServerStorageSerializer(serializers.ModelSerializer):
             'name',
             'storage_directory',
             'prefix',
-            'queue_prefix',
         )
 
 

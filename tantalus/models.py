@@ -732,22 +732,12 @@ class ServerStorage(Storage):
         max_length=30,
     )
 
-    queue_prefix = models.CharField(
-        max_length=50,
-    )
-
     read_only = models.BooleanField(
         default=True,
     )
 
     def get_prefix(self):
         return self.storage_directory
-
-    def get_md5_queue_name(self):
-        return self.queue_prefix + '.md5'
-
-    def get_db_queue_name(self):
-        return self.queue_prefix + '.db'
 
     def get_filepath(self, file_resource):
         return os.path.join(
@@ -757,8 +747,6 @@ class ServerStorage(Storage):
     @property
     def is_read_only(self):
         return self.read_only
-
-    has_transfer_queue = True
 
     storage_type = 'server'
 
@@ -809,8 +797,6 @@ class AzureBlobStorage(Storage):
         blobname = file_resource.filename.strip('/')
         blobpath = '/'.join([self.storage_account, self.storage_container, blobname])
         return blobpath
-
-    has_transfer_queue = False
 
     storage_type = 'blob'
 
