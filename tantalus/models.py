@@ -684,6 +684,9 @@ class ResultsDataset(models.Model):
         FileResource,
     )
 
+    def get_absolute_url(self):
+        return reverse("result-detail", args=(self.id,))
+
     def __unicode__(self):
         return '{}'.format(self.name)
 

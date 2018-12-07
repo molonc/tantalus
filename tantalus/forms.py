@@ -477,8 +477,6 @@ class AddDatasetToTagForm(forms.Form):
         raise ValidationError('No Tag Found with that Name!')
 
 
-
-
 class DatasetTagForm(forms.Form):
     tag_name = forms.CharField(max_length=500)
     models_to_tag = None
