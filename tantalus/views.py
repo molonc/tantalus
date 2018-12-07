@@ -244,27 +244,17 @@ class ResultDetail(DetailView):
             messages.error(request, msg)
             return HttpResponseRedirect(result.get_absolute_url())
 
-    '''def get_context_data(self, **kwargs):
-        # TODO: add other fields to the view?
-        context = super(ResultDetail, self).get_context_data(**kwargs)
-        sample_list = list(self.object.samples.all())
 
-        for sample in sample_list:
-            projects_list = []
-            submission_list = []
-            for project in sample.projects.all():
-                projects_list.append(project.__unicode__())
-            sample.projects_list = projects_list
+@method_decorator(login_required, name='dispatch')
+class ResultTagDelete(View):
 
-            for submission in sample.submission_set.all():
-                submission_list.append(submission.id)
-            sample.submission_list = submission_list
-
-        analysis = list(tantalus.models.Analysis.objects.filter(id=(self.object.analysis.id)))[0]
-        context['input_datasets'] = analysis.input_datasets.all()
-        context['file_resources'] = list(self.object.file_resources.all())
-        context['samples'] = sample_list
-        return context'''
+    def get(self, request, pk,pk_2):
+        result = get_object_or_404(tantalus.models.ResultsDataset,pk=pk)
+        tag = get_object_or_404(tantalus.models.Tag,pk=pk_2)
+        tag.resultsdataset_set.remove(result)
+        msg = "Successfully removed datasest "
+        messages.success(request, msg)
+        return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
 
 @Render("tantalus/analysis_list.html")
