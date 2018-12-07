@@ -3,6 +3,7 @@
 
 {% block title %}
     Add Dataset
+   
 {% endblock %}
 
 {% block body %}
@@ -16,12 +17,8 @@
                     </thead>
                 </table>
             	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Edit">
+                <a class="btn btn-default btn-sm" href="{% url 'tag-detail' pk=pk %}">Cancel</a>
             </fieldset>
         </form>
-        <fieldset>
-            <legend></legend>
-                <a class="btn btn-default btn-sm" style="float:right; margin-top:5px;" href="{% url 'tag-detail' pk=pk %}">Cancel</a>
-        </fieldset>
-        <br>
     </div>
 {% endblock %}

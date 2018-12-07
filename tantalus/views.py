@@ -587,19 +587,6 @@ class AddDataSetToTag(View):
             msg = "Failed to add the Dataset"
             messages.error(request, msg)
             return self.get_context_and_render(request, form, tag_pk) 
-        '''tag_pk = kwargs['pk']
-        tag = tantalus.models.Tag.objects.get(id=tag_pk)
-        form = tantalus.forms.AddDatasetToTagForm(request.POST)
-        if form.is_valid():
-            instance = form.save(commit=False)
-            instance.save()
-            msg = "Successfully edited Sample {}.".format(sample.sample_id)
-            messages.success(request, msg)
-            return HttpResponseRedirect(instance.get_absolute_url())
-        else:
-            msg = "Failed to edit the Sample. Please fix the errors below."
-            messages.error(request, msg)
-            return self.get_context_and_render(request, form, sample_pk)'''   
 
 
 class TagDetail(DetailView):
