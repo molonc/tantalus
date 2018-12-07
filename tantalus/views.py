@@ -200,6 +200,7 @@ class ResultDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
+        tags_name_list = []
         context = super(ResultDetail, self).get_context_data(**kwargs)
         sample_list = list(self.object.samples.all())
 
@@ -218,7 +219,52 @@ class ResultDetail(DetailView):
         context['input_datasets'] = analysis.input_datasets.all()
         context['file_resources'] = list(self.object.file_resources.all())
         context['samples'] = sample_list
+
+        context['pk'] = kwargs['object'].id
+        context['form'] = tantalus.forms.AddDatasetToTagForm()
+        tags_list = list(kwargs['object'].tags.all())
+        for tag in tags_list:
+            tags_name_list.append(tag.name.strip())
+        context['tags_name_list'] = ', '.join(tags_name_list)
         return context
+
+    def post(self, request, *args, **kwargs):
+        result_pk = kwargs['pk']
+        result = tantalus.models.ResultsDataset.objects.get(id=result_pk)
+        form = tantalus.forms.AddDatasetToTagForm(request.POST)
+        if form.is_valid():
+            tag = form.cleaned_data['tag_name']
+            result.tags.add(tag)
+            result.save()
+            msg = "Successfully added Tag {} to this Result.".format(tag.name)
+            messages.success(request, msg)
+            return HttpResponseRedirect(result.get_absolute_url())
+        else:
+            msg = "Invalid Tag Name"
+            messages.error(request, msg)
+            return HttpResponseRedirect(result.get_absolute_url())
+
+    '''def get_context_data(self, **kwargs):
+        # TODO: add other fields to the view?
+        context = super(ResultDetail, self).get_context_data(**kwargs)
+        sample_list = list(self.object.samples.all())
+
+        for sample in sample_list:
+            projects_list = []
+            submission_list = []
+            for project in sample.projects.all():
+                projects_list.append(project.__unicode__())
+            sample.projects_list = projects_list
+
+            for submission in sample.submission_set.all():
+                submission_list.append(submission.id)
+            sample.submission_list = submission_list
+
+        analysis = list(tantalus.models.Analysis.objects.filter(id=(self.object.analysis.id)))[0]
+        context['input_datasets'] = analysis.input_datasets.all()
+        context['file_resources'] = list(self.object.file_resources.all())
+        context['samples'] = sample_list
+        return context'''
 
 
 @Render("tantalus/analysis_list.html")
