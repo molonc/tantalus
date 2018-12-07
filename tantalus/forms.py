@@ -185,14 +185,15 @@ class ExternalIDSearcherForm(forms.Form):
         external_id_list = clean_data.split('\n')
         return external_id_list
 
+
 class ExternalIDSearcherForm(forms.Form):
     external_id_column = forms.CharField(widget=forms.Textarea, label='Paste in an Excel Column of External Sample IDs')
 
     def clean_file(self):
         clean_data = self.cleaned_data.get(external_id_column)
         external_id_list = clean_data.split('\n')
-        print(external_id_list)
         return external_id_list
+
 
 class DatasetSearchForm(forms.Form):
     tagged_with = forms.CharField(
@@ -462,17 +463,18 @@ class DatasetSearchForm(forms.Form):
 
 class AddDatasetToTagForm(forms.Form):
 
-    dataset_ID = forms.CharField(max_length=10)
+    tag_name = forms.CharField(max_length=40)
 
-    def clean_dataset_ID(self):
-        dataset_id = self.cleaned_data.get("dataset_ID", False)
+    def clean_tag_name(self):
+        tag_name = self.cleaned_data.get("tag_name", False)
+        print(tag_name)
 
-        datasets = tantalus.models.SequenceDataset.objects.all().order_by('id')
+        tags = tantalus.models.Tag.objects.all().order_by('id')
 
-        for dataset in datasets:
-            if(dataset.id == int(dataset_id)):
-                return dataset_id
-        raise ValidationError('No Dataset Found with that ID!')
+        for tag in tags:
+            if(tag.name.strip() == tag_name.strip()):
+                return tag
+        raise ValidationError('No Tag Found with that Name!')
 
 
 
