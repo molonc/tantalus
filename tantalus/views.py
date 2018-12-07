@@ -639,6 +639,7 @@ class DatasetListJSON(BaseDatatableView):
             kwargs['datasets'] = dataset_pks
 
         self.kwargs = kwargs
+        print(super(DatasetListJSON, self).get_context_data(*args, **kwargs))
         return super(DatasetListJSON, self).get_context_data(*args, **kwargs)
 
     def get_initial_queryset(self):
@@ -746,10 +747,33 @@ class DatasetDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
+        tags_name_list = []
         context = super(DatasetDetail, self).get_context_data(**kwargs)
         storage_ids = self.object.get_storage_names()
         context['storages'] = storage_ids
+        context['pk'] = kwargs['object'].id
+        context['form'] = tantalus.forms.AddDatasetToTagForm()
+        tags_list = list(kwargs['object'].tags.all())
+        for tag in tags_list:
+            tags_name_list.append(tag.name.strip())
+        context['tags_name_list'] = ', '.join(tags_name_list)
         return context
+
+    def post(self, request, *args, **kwargs):
+        dataset_pk = kwargs['pk']
+        dataset = tantalus.models.SequenceDataset.objects.get(id=dataset_pk)
+        form = tantalus.forms.AddDatasetToTagForm(request.POST)
+        if form.is_valid():
+            tag = form.cleaned_data['tag_name']
+            dataset.tags.add(tag)
+            dataset.save()
+            msg = "Successfully added Tag {} to this Dataset.".format(tag.name)
+            messages.success(request, msg)
+            return HttpResponseRedirect(dataset.get_absolute_url())
+        else:
+            msg = "Invalid Tag Name"
+            messages.error(request, msg)
+            return HttpResponseRedirect(dataset.get_absolute_url())
 
 
 @method_decorator(login_required, name='dispatch')

@@ -42,11 +42,7 @@
         $(document).ready(function() {
             $('.dataset_datatable').DataTable({
                 columnDefs:[
-                    {"name": "id", "targets": "dataset_id", 
-                    "render": function (targets) {
-                        var url_block = "{% url 'dataset-detail' 0 %}".replace(/0/, targets.toString());
-                        return '<a href=' + url_block + '>' + targets + '</a>';
-                    }},
+                    {"name": "id", "targets": "dataset_id"},
                     {"name": "dataset_type", "targets": "dataset_type", "orderable": false, "searchable": false},
                     {"name": "sample_id", "targets": "dataset_sample_id", "orderable": false},
                     {"name": "library_id", "targets": "dataset_library_id", "orderable": false},
