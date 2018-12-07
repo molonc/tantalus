@@ -53,6 +53,9 @@ class Tag(models.Model):
 
         return self.resultsdataset_set.count()
 
+    def get_absolute_url(self):
+        return reverse("tag-detail", args=(self.id,))
+
 
 class Project(models.Model):
     """

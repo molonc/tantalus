@@ -460,6 +460,23 @@ class DatasetSearchForm(forms.Form):
         return list(results.values_list('id', flat=True))
 
 
+class AddDatasetToTagForm(forms.Form):
+
+    dataset_ID = forms.CharField(max_length=10)
+
+    def clean_dataset_ID(self):
+        dataset_id = self.cleaned_data.get("dataset_ID", False)
+
+        datasets = tantalus.models.SequenceDataset.objects.all().order_by('id')
+
+        for dataset in datasets:
+            if(dataset.id == int(dataset_id)):
+                return dataset_id
+        raise ValidationError('No Dataset Found with that ID!')
+
+
+
+
 class DatasetTagForm(forms.Form):
     tag_name = forms.CharField(max_length=500)
     models_to_tag = None

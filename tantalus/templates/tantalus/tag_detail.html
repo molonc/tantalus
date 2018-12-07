@@ -9,6 +9,7 @@
 
     <div class="container detail-container" style="background-color:#F5F5F5; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if tag %}
+            <a class="btn btn-primary btn-sm" style="float:right;" href="{% url 'add-dataset-to-tag' pk=tag.id %}">Add Dataset to Tag</a>
             <table class="table-condensed">
                 <tr>
                     <th style="padding: 0; padding-top: 4px;">Tag Name</th>
