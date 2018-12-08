@@ -788,10 +788,6 @@ class DatasetDetail(DetailView):
         context['storages'] = storage_ids
         context['pk'] = kwargs['object'].id
         context['form'] = tantalus.forms.AddDatasetToTagForm()
-        tags_list = list(kwargs['object'].tags.all())
-        for tag in tags_list:
-            tags_name_list.append(tag.name.strip())
-        context['tags_name_list'] = ', '.join(tags_name_list)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -799,7 +795,7 @@ class DatasetDetail(DetailView):
         dataset = tantalus.models.SequenceDataset.objects.get(id=dataset_pk)
         form = tantalus.forms.AddDatasetToTagForm(request.POST)
         if form.is_valid():
-            tag = form.cleaned_data['tag_name']
+            tag = form.cleaned_data['tag']
             dataset.tags.add(tag)
             dataset.save()
             msg = "Successfully added Tag {} to this Dataset.".format(tag.name)
