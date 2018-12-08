@@ -8,6 +8,7 @@
 {% block body %}
     <div class="container" style="padding:0; margin-bottom:5px;">
         <h4 style="float:left;">Select a Patient to view his/her details</h4>
+        <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'patient-add' %}">Add Patient</a>
     </div>
     <div class="container" style="background-color:#F5F5F5;">
         {% if patients %}
