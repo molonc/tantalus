@@ -74,16 +74,16 @@ def rename_datasets(apps, schema_editor):
             )
         if new_name in datasets:
             if get_created_time(dataset) > get_created_time(datasets[new_name]):
-                print 'a, deleting {} over {}'.format(
+                print('a, deleting {} over {}'.format(
                     datasets[new_name].file_resources.all()[0].filename,
-                    dataset.file_resources.all()[0].filename)
+                    dataset.file_resources.all()[0].filename))
                 datasets[new_name].file_resources.all().delete()
                 datasets[new_name].delete()
                 datasets[new_name] = dataset
             else:
-                print 'b, deleting {} over {}'.format(
+                print('b, deleting {} over {}'.format(
                     dataset.file_resources.all()[0].filename,
-                    datasets[new_name].file_resources.all()[0].filename)
+                    datasets[new_name].file_resources.all()[0].filename))
                 dataset.file_resources.all().delete()
                 dataset.delete()
                 dataset = datasets[new_name]

@@ -77,7 +77,7 @@ def migrate_to_new_models(apps, schema_editor):
 
     name_check = collections.defaultdict(list)
 
-    print 'non_sc_bams'
+    print('non_sc_bams')
     for bamfile in BamFile.objects.exclude(read_groups__dna_library__library_type='SC_WGS').distinct():
         samples = get_samples(bamfile)
         libraries = get_libraries(bamfile)
@@ -112,13 +112,13 @@ def migrate_to_new_models(apps, schema_editor):
 
         update_dataset_m2m(apps, bamfile, sequencedataset, library, add_index_sequence=False)
 
-    print 'sc_bams', BamFile.objects.filter(read_groups__dna_library__library_type='SC_WGS').distinct().count()
+    print('sc_bams', BamFile.objects.filter(read_groups__dna_library__library_type='SC_WGS').distinct().count())
     i = 0
     start_time = time.time()
     for bamfile in BamFile.objects.filter(read_groups__dna_library__library_type='SC_WGS').distinct():
         if i % 1000 == 0:
             elapsed_time = time.time() - start_time
-            print i, elapsed_time
+            print(i, elapsed_time)
         i += 1
 
         samples = get_samples(bamfile)
@@ -149,13 +149,13 @@ def migrate_to_new_models(apps, schema_editor):
 
         update_dataset_m2m(apps, bamfile, sequencedataset, library, add_index_sequence=True)
 
-    print 'fq', PairedEndFastqFiles.objects.filter(read_groups__dna_library__library_type='SC_WGS').distinct().count()
+    print('fq', PairedEndFastqFiles.objects.filter(read_groups__dna_library__library_type='SC_WGS').distinct().count())
     i = 0
     start_time = time.time()
     for fq in PairedEndFastqFiles.objects.filter(read_groups__dna_library__library_type='SC_WGS').distinct():
         if i % 1000 == 0:
             elapsed_time = time.time() - start_time
-            print i, elapsed_time
+            print(i, elapsed_time)
         i += 1
 
         samples = get_samples(fq)
