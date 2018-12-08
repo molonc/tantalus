@@ -274,6 +274,19 @@ class AnalysisDetail(DetailView):
         return context
 
 
+def export_patient_create_template(request):
+    header_dict = {
+        'Case ID': [],
+        'External Patient ID': [],
+        'Patient ID': [],
+    }
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="patient-header-template.csv"'
+    df = pd.DataFrame(header_dict)
+    df.to_csv(response, index=False)
+    return response
+
+
 @method_decorator(login_required, name='dispatch')
 class PatientCreate(TemplateView):
     """
@@ -282,29 +295,52 @@ class PatientCreate(TemplateView):
 
     template_name = "tantalus/patient_create.html"
 
-    def get_context_and_render(self, request, form, pk=None):
+    def get_context_and_render(self, request, form, multi_form, pk=None):
         context = {
             'pk':pk,
             'form': form,
+            'multi_form': multi_form
         }
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
         form = tantalus.forms.PatientForm()
-        return self.get_context_and_render(request, form)
+        multi_form = tantalus.forms.UploadPatientForm()
+        return self.get_context_and_render(request, form, multi_form)
 
     def post(self, request, *args, **kwargs):
         form = tantalus.forms.PatientForm(request.POST)
+        multi_form = tantalus.forms.UploadPatientForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
             msg = "Successfully created the tantalus.models.Patient."
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
+        if multi_form.is_valid():
+            patients_df = multi_form.get_patient_data()
+            form_headers = patients_df.columns.tolist()
+
+            external_patient_id_index = form_headers.index('External Patient ID')
+            patient_id_index = form_headers.index('Patient ID')
+            case_id_index = form_headers.index('Case ID')     
+
+            for idx, patient_row in patients_df.iterrows():
+                patient, created = tantalus.models.Patient.objects.get_or_create(patient_id=patient_row[patient_id_index])
+                if(created):
+                    patient.external_patient_id = patient_row[external_patient_id_index]
+                    patient.case_id = patient_row[case_id_index]
+                    patient.save()
+                else:    
+                    patient.external_patient_id = patient_row[external_patient_id_index]
+                    patient.case_id = patient_row[case_id_index]
+                    patient.save()
+
+            return HttpResponseRedirect(reverse('patient-list'))
         else:
             msg = "Failed to create the Patient. Please fix the errors below."
             messages.error(request, msg)
-            return self.get_context_and_render(request, form)
+            return self.get_context_and_render(request, form, multi_form)
 
 
 @method_decorator(login_required, name='dispatch')
