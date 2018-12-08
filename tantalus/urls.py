@@ -33,7 +33,6 @@ urlpatterns = [
     url(r'^export-sample-create-template/$', tantalus.views.export_sample_create_template, name='export-sample-create-template'),
     url(r'^tags/$', tantalus.views.tag_list, name='tag-list'),
     url(r'^tags/detail/(?P<pk>\d+)$', tantalus.views.TagDetail.as_view(), name='tag-detail'),
-    url(r'^tags/add_dataset/(?P<pk>\d+)$', tantalus.views.AddDataSetToTag.as_view(), name='add-dataset-to-tag'),
     url(r'^tags/detail/(?P<pk>\d+)/delete/(?P<pk_2>[0-9]+)$', tantalus.views.TagDatasetDelete.as_view(), name='tag-dataset-delete'),
     url(r'^tags/delete/(?P<pk>\d+)$', tantalus.views.TagDelete.as_view(), name='tag-delete'),
     url(r'^datasets/$', tantalus.views.DatasetList.as_view(), name='dataset-list'),

@@ -88,7 +88,6 @@ class Patient(models.Model):
 
 
     case_id = models.CharField(
-        unique=True,
         max_length=120,
         null=True
     )
