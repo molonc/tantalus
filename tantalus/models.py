@@ -53,6 +53,9 @@ class Tag(models.Model):
 
         return self.resultsdataset_set.count()
 
+    def get_absolute_url(self):
+        return reverse("tag-detail", args=(self.id,))
+
 
 class Project(models.Model):
     """
@@ -554,6 +557,9 @@ class SequenceDataset(models.Model):
     def get_created_time(self):
         return self.file_resources.all().aggregate(Max('created'))['created__max']
 
+    def get_absolute_url(self):
+        return reverse("dataset-detail", args=(self.id,))
+
     def __str__(self):
         return self.name
 
@@ -683,6 +689,9 @@ class ResultsDataset(models.Model):
     file_resources = models.ManyToManyField(
         FileResource,
     )
+
+    def get_absolute_url(self):
+        return reverse("result-detail", args=(self.id,))
 
     def __unicode__(self):
         return '{}'.format(self.name)

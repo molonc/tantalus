@@ -78,6 +78,7 @@
                         <th>Result Type</th>                     
                         <th>Result Version</th>
                         <th>Result Analysis</th>
+                        <td></td>
                     </thead>
                     <tbody>
                         {% for result in results %}
@@ -88,6 +89,9 @@
                                 <td>{{result.results_type}}</td>
                                 <td>{{result.results_version}}</td>
                                 <td><a href="{% url 'analysis-detail' result.analysis.id %}">{{result.analysis.name}}</a></td>
+                                <td>
+                                    <a href="{% url 'tag-results-delete' pk=result.id pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

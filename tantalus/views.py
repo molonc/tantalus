@@ -218,7 +218,37 @@ class ResultDetail(DetailView):
         context['input_datasets'] = analysis.input_datasets.all()
         context['file_resources'] = list(self.object.file_resources.all())
         context['samples'] = sample_list
+        context['pk'] = kwargs['object'].id
+        context['form'] = tantalus.forms.AddDatasetToTagForm()
         return context
+
+    def post(self, request, *args, **kwargs):
+        result_pk = kwargs['pk']
+        result = tantalus.models.ResultsDataset.objects.get(id=result_pk)
+        form = tantalus.forms.AddDatasetToTagForm(request.POST)
+        if form.is_valid():
+            tag = form.cleaned_data['tag']
+            result.tags.add(tag)
+            result.save()
+            msg = "Successfully added Tag {} to this Result.".format(tag.name)
+            messages.success(request, msg)
+            return HttpResponseRedirect(result.get_absolute_url())
+        else:
+            msg = "Invalid Tag Name"
+            messages.error(request, msg)
+            return HttpResponseRedirect(result.get_absolute_url())
+
+
+@method_decorator(login_required, name='dispatch')
+class TagResultsDelete(View):
+
+    def get(self, request, pk, pk_2):
+        result = get_object_or_404(tantalus.models.ResultsDataset, pk=pk)
+        tag = get_object_or_404(tantalus.models.Tag, pk=pk_2)
+        tag.resultsdataset_set.remove(result)
+        msg = "Successfully removed datasest "
+        messages.success(request, msg)
+        return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
 
 @Render("tantalus/analysis_list.html")
@@ -363,7 +393,6 @@ class SpecificSubmissionCreate(TemplateView):
     def get(self, request, *args, **kwargs):
         today = date.today().strftime('%B %d, %Y')
         sample = get_object_or_404(tantalus.models.Sample,pk=kwargs['sample_pk'])
-        print(sample.sample_id)
         form = tantalus.forms.SubmissionForm(initial={'submission_date': today, 'submitted_by': request.user, 'sample': sample})
         return self.get_context_and_render(request, kwargs['sample_pk'], form)
 
@@ -715,7 +744,25 @@ class DatasetDetail(DetailView):
         context = super(DatasetDetail, self).get_context_data(**kwargs)
         storage_ids = self.object.get_storage_names()
         context['storages'] = storage_ids
+        context['pk'] = kwargs['object'].id
+        context['form'] = tantalus.forms.AddDatasetToTagForm()
         return context
+
+    def post(self, request, *args, **kwargs):
+        dataset_pk = kwargs['pk']
+        dataset = tantalus.models.SequenceDataset.objects.get(id=dataset_pk)
+        form = tantalus.forms.AddDatasetToTagForm(request.POST)
+        if form.is_valid():
+            tag = form.cleaned_data['tag']
+            dataset.tags.add(tag)
+            dataset.save()
+            msg = "Successfully added Tag {} to this Dataset.".format(tag.name)
+            messages.success(request, msg)
+            return HttpResponseRedirect(dataset.get_absolute_url())
+        else:
+            msg = "Invalid Tag Name"
+            messages.error(request, msg)
+            return HttpResponseRedirect(dataset.get_absolute_url())
 
 
 @method_decorator(login_required, name='dispatch')

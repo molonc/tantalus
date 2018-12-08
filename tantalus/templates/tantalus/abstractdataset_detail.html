@@ -50,7 +50,27 @@
                     <th class="custom-table-header">Read End</th>
                     <td class="custom-table-detail">{{object.read_end}}</td>
                 </tr>
+                <tr>
+                    <th class="custom-table-header">Tags</th>
+                    <td class="custom-table-detail">
+                        {% for tag in object.tags.all %}
+                            <a href="{% url 'tag-detail' tag.id %}">{{tag}},
+                        {% endfor %}
+                    </td>
+                </tr>
             </table>
+            <form action="{% url 'dataset-detail' pk=pk %}" method="POST" style="margin-top: 1em;">
+                {% csrf_token %}
+                <fieldset>
+                    <table class="table-condensed">
+                        <h4>Associate a Tag with this Dataset</h4>
+                        <thead>
+                        {{form}}
+                        </thead>
+                    </table>
+                    <input class="btn btn-primary btn-sm" type="submit" name="create" value="Add Tag">
+                </fieldset>
+            </form>
         {% else %}
             <h5><i class="text-warning">No Sequence Dataset Details yet.</i></h5>
         {% endif %}

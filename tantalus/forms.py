@@ -185,14 +185,15 @@ class ExternalIDSearcherForm(forms.Form):
         external_id_list = clean_data.split('\n')
         return external_id_list
 
+
 class ExternalIDSearcherForm(forms.Form):
     external_id_column = forms.CharField(widget=forms.Textarea, label='Paste in an Excel Column of External Sample IDs')
 
     def clean_file(self):
         clean_data = self.cleaned_data.get(external_id_column)
         external_id_list = clean_data.split('\n')
-        print(external_id_list)
         return external_id_list
+
 
 class DatasetSearchForm(forms.Form):
     tagged_with = forms.CharField(
@@ -458,6 +459,16 @@ class DatasetSearchForm(forms.Form):
         results = results.distinct()
 
         return list(results.values_list('id', flat=True))
+
+
+class AddDatasetToTagForm(forms.Form):
+
+    tag = forms.CharField(max_length=40)
+
+    def clean_tag(self):
+        tag_name = self.cleaned_data.get("tag", False).strip()
+        tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
+        return tag
 
 
 class DatasetTagForm(forms.Form):
