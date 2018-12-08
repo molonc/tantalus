@@ -240,7 +240,7 @@ class ResultDetail(DetailView):
 
 
 @method_decorator(login_required, name='dispatch')
-class ResultTagDelete(View):
+class TagResultsDelete(View):
 
     def get(self, request, pk,pk_2):
         result = get_object_or_404(tantalus.models.ResultsDataset,pk=pk)
