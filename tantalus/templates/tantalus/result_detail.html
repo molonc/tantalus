@@ -32,7 +32,11 @@
                 </tr>
                 <tr>
                     <th class="custom-table-header">Tags</th>
-                    <td class="custom-table-detail">{{tags_name_list}}</td>
+                    <td class="custom-table-detail">
+                        {% for tag in object.tags.all %}
+                            <a href="{% url 'tag-detail' tag.id %}">{{tag}},
+                        {% endfor %}
+                    </td>
                 </tr>
             </table>
             <form action="{% url 'result-detail' pk=pk %}" method="POST" style="margin-top: 1em;">
