@@ -23,7 +23,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ.get('TANTALUS_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get('TANTALUS_DEBUG', False))
+debug_raw = os.environ.get('TANTALUS_DEBUG', 'False')
+DEBUG = True if debug_raw.lower() == 'true' else False
 
 # Safeguard to ensure production code is not run during development
 IS_PRODUCTION = (os.environ.get('TANTALUS_IS_PRODUCTION', '') == 'thisismostdefinitelyproduction')
