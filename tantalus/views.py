@@ -200,7 +200,6 @@ class ResultDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
-        tags_name_list = []
         context = super(ResultDetail, self).get_context_data(**kwargs)
         sample_list = list(self.object.samples.all())
 
@@ -222,10 +221,6 @@ class ResultDetail(DetailView):
 
         context['pk'] = kwargs['object'].id
         context['form'] = tantalus.forms.AddDatasetToTagForm()
-        tags_list = list(kwargs['object'].tags.all())
-        for tag in tags_list:
-            tags_name_list.append(tag.name.strip())
-        context['tags_name_list'] = ', '.join(tags_name_list)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -399,7 +394,6 @@ class SpecificSubmissionCreate(TemplateView):
     def get(self, request, *args, **kwargs):
         today = date.today().strftime('%B %d, %Y')
         sample = get_object_or_404(tantalus.models.Sample,pk=kwargs['sample_pk'])
-        print(sample.sample_id)
         form = tantalus.forms.SubmissionForm(initial={'submission_date': today, 'submitted_by': request.user, 'sample': sample})
         return self.get_context_and_render(request, kwargs['sample_pk'], form)
 
@@ -675,7 +669,6 @@ class DatasetListJSON(BaseDatatableView):
             kwargs['datasets'] = dataset_pks
 
         self.kwargs = kwargs
-        print(super(DatasetListJSON, self).get_context_data(*args, **kwargs))
         return super(DatasetListJSON, self).get_context_data(*args, **kwargs)
 
     def get_initial_queryset(self):
@@ -782,7 +775,6 @@ class DatasetDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
-        tags_name_list = []
         context = super(DatasetDetail, self).get_context_data(**kwargs)
         storage_ids = self.object.get_storage_names()
         context['storages'] = storage_ids
