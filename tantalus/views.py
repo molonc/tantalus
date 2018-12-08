@@ -233,7 +233,7 @@ class ResultDetail(DetailView):
         result = tantalus.models.ResultsDataset.objects.get(id=result_pk)
         form = tantalus.forms.AddDatasetToTagForm(request.POST)
         if form.is_valid():
-            tag = form.cleaned_data['tag_name']
+            tag = form.cleaned_data['tag']
             result.tags.add(tag)
             result.save()
             msg = "Successfully added Tag {} to this Result.".format(tag.name)
