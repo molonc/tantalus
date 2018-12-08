@@ -585,39 +585,6 @@ class TagDelete(View):
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('tag-list'))
 
-class AddDataSetToTag(View):
-
-    template_name = "tantalus/add_dataset_to_tag.html"
-
-    def get_context_and_render(self, request, form, pk=None):
-        context = {
-            'pk':pk,
-            'form': form,
-        }
-        return render(request, self.template_name, context)
-
-    def get(self, request, *args, **kwargs):
-        tag_pk = kwargs['pk']
-        form = tantalus.forms.AddDatasetToTagForm()
-        return self.get_context_and_render(request, form, tag_pk)
-
-    def post(self, request, *args, **kwargs):
-        tag_pk = kwargs['pk']
-        form = tantalus.forms.AddDatasetToTagForm(request.POST)
-        tag = tantalus.models.Tag.objects.get(id=tag_pk)
-        if form.is_valid():
-            dataset_pk = form.clean_dataset_ID()
-            dataset = tantalus.models.SequenceDataset.objects.get(id=dataset_pk)
-            dataset.tags.add(tag)
-            dataset.save()
-            msg = "Successfully added Dataset {}.".format(dataset_pk)
-            messages.success(request, msg)
-            return HttpResponseRedirect(tag.get_absolute_url())
-        else:
-            msg = "Failed to add the Dataset"
-            messages.error(request, msg)
-            return self.get_context_and_render(request, form, tag_pk) 
-
 
 class TagDetail(DetailView):
     model = tantalus.models.Tag
