@@ -218,7 +218,6 @@ class ResultDetail(DetailView):
         context['input_datasets'] = analysis.input_datasets.all()
         context['file_resources'] = list(self.object.file_resources.all())
         context['samples'] = sample_list
-
         context['pk'] = kwargs['object'].id
         context['form'] = tantalus.forms.AddDatasetToTagForm()
         return context
