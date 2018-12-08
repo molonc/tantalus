@@ -463,16 +463,12 @@ class DatasetSearchForm(forms.Form):
 
 class AddDatasetToTagForm(forms.Form):
 
-    tag_name = forms.CharField(max_length=40)
+    tag = forms.CharField(max_length=40)
 
-    def clean_tag_name(self):
-        tag_name = self.cleaned_data.get("tag_name", False).strip()
-
-        try:
-            tag = tantalus.models.Tag.objects.get(name=tag_name)
-            return tag
-        except:
-            raise ValidationError('No Tag Found with that Name!')
+    def clean_tag(self):
+        tag_name = self.cleaned_data.get("tag", False).strip()
+        tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
+        return tag
 
 
 class DatasetTagForm(forms.Form):
