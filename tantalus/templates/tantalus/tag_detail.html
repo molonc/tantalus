@@ -90,7 +90,7 @@
                                 <td>{{result.results_version}}</td>
                                 <td><a href="{% url 'analysis-detail' result.analysis.id %}">{{result.analysis.name}}</a></td>
                                 <td>
-                                    <a href="{% url 'result-tag-delete' pk=result.id pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
+                                    <a href="{% url 'tag-results-delete' pk=result.id pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
                                 </td>
                             </tr>
                         {% endfor %}

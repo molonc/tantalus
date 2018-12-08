@@ -245,7 +245,6 @@ class ResultDetail(DetailView):
         context['input_datasets'] = analysis.input_datasets.all()
         context['file_resources'] = list(self.object.file_resources.all())
         context['samples'] = sample_list
-
         context['pk'] = kwargs['object'].id
         context['form'] = tantalus.forms.AddDatasetToTagForm()
 
@@ -269,11 +268,12 @@ class ResultDetail(DetailView):
 
 
 @method_decorator(login_required, name='dispatch')
-class ResultTagDelete(View):
 
-    def get(self, request, pk,pk_2):
-        result = get_object_or_404(tantalus.models.ResultsDataset,pk=pk)
-        tag = get_object_or_404(tantalus.models.Tag,pk=pk_2)
+class TagResultsDelete(View):
+
+    def get(self, request, pk, pk_2):
+        result = get_object_or_404(tantalus.models.ResultsDataset, pk=pk)
+        tag = get_object_or_404(tantalus.models.Tag, pk=pk_2)
         tag.resultsdataset_set.remove(result)
         msg = "Successfully removed datasest "
         messages.success(request, msg)
