@@ -826,7 +826,6 @@ class DatasetDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
-        tags_name_list = []
         context = super(DatasetDetail, self).get_context_data(**kwargs)
         storage_ids = self.object.get_storage_names()
         context['storages'] = storage_ids
