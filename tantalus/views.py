@@ -115,8 +115,6 @@ class PatientDetail(DetailView):
             sample_list.append([sample.sample_id, sample.get_absolute_url() + str(sample.id)])
 
         #self.object.patient_id = self.object.patient_id
-        print((self.object.patient_id))
-
 
         context['sample_list'] = sample_list
         context['samples'] = sample_set
@@ -722,7 +720,6 @@ class DatasetListJSON(BaseDatatableView):
             kwargs['datasets'] = dataset_pks
 
         self.kwargs = kwargs
-        print(super(DatasetListJSON, self).get_context_data(*args, **kwargs))
         return super(DatasetListJSON, self).get_context_data(*args, **kwargs)
 
     def get_initial_queryset(self):
