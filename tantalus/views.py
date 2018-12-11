@@ -224,7 +224,6 @@ class ResultDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
-        tags_name_list = []
         context = super(ResultDetail, self).get_context_data(**kwargs)
         sample_list = list(self.object.samples.all())
 
@@ -746,7 +745,6 @@ class DatasetListJSON(BaseDatatableView):
             kwargs['datasets'] = dataset_pks
 
         self.kwargs = kwargs
-        print(super(DatasetListJSON, self).get_context_data(*args, **kwargs))
         return super(DatasetListJSON, self).get_context_data(*args, **kwargs)
 
     def get_initial_queryset(self):
@@ -853,7 +851,6 @@ class DatasetDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
-        tags_name_list = []
         context = super(DatasetDetail, self).get_context_data(**kwargs)
         storage_ids = self.object.get_storage_names()
         context['storages'] = storage_ids
