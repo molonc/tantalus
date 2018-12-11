@@ -62,7 +62,9 @@ class ExternalIDSearch(TemplateView):
             sample_list = []
             multiple_sample_list = []
             wrong_sample_list = []
+            passable_sample_list = []
             external_id_list = set(form.cleaned_data['external_id_column'].encode('ascii','ignore').splitlines())
+
 
             for external_id in external_id_list:
                 if(tantalus.models.Sample.objects.filter(external_sample_id=external_id).count() == 1):
@@ -73,11 +75,34 @@ class ExternalIDSearch(TemplateView):
                 else:
                     wrong_sample_list.append(external_id)
 
+            for sample in sample_list:
+                passable_sample_list.append({'id': sample.id, 'sample_id': sample.sample_id, 'external_sample_id': sample.external_sample_id})
+
+            request.session['sample_list'] = passable_sample_list
             return self.render_results(request, sample_list, wrong_sample_list, multiple_sample_list)
         else:
             msg = "Failed to create search query. Please fix the errors below."
             messages.error(request, msg)
             return self.get_context_and_render(request, form)
+
+
+def export_external_id_results(request):
+    header_dict = {
+        'ID': [],
+        'Sample ID': [],
+        'External Sample ID': [],
+    }
+
+    for sample in request.session['sample_list']:
+        header_dict['ID'].append(sample['id'])
+        header_dict['Sample ID'].append(sample['sample_id'])
+        header_dict['External Sample ID'].append(sample['external_sample_id'])
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="external-sample-id-matches.csv"'
+    df = pd.DataFrame(header_dict)
+    df.to_csv(response, index=False)
+    return response
 
 
 @Render("tantalus/patient_list.html")

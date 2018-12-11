@@ -27,6 +27,7 @@
                     </tbody>
                 </table>
             </div>
+            <a class="btn btn-primary btn-sm" href="{% url 'export-external-id-results' %}">Download Table as CSV</a> 
         {% else %}
             <h5><i class="text-warning">No Samples Found.</i></h5>
         {% endif %}
