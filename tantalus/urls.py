@@ -56,7 +56,6 @@ urlpatterns = [
     url(r'^submissions/create/(?P<sample_pk>.{1,20})$', tantalus.views.SpecificSubmissionCreate.as_view(), name='specific-submission-add'),
     url(r'^results/$', tantalus.views.result_list, name='result-list'),
     url(r'^results/(?P<pk>\d+)$', tantalus.views.ResultDetail.as_view(), name='result-detail'),
-    url(r'^results/(?P<pk>\d+)/delete/(?P<pk_2>[0-9]+)$', tantalus.views.ResultTagDelete.as_view(), name='result-tag-delete'),
     url(r'^analyses/$', tantalus.views.analysis_list, name='analysis-list'),
     url(r'^analyses/(?P<pk>\d+)$', tantalus.views.AnalysisDetail.as_view(), name='analysis-detail'),
     url(r'^externalidsearch/$', tantalus.views.ExternalIDSearch.as_view(), name='external-id-search'), 
