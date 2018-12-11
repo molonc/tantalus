@@ -16,6 +16,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.defaulttags import register
 from django.forms import ModelForm
+from django.forms.models import model_to_dict
 
 import csv
 import json
@@ -273,6 +274,19 @@ class AnalysisDetail(DetailView):
         return context
 
 
+def export_patient_create_template(request):
+    header_dict = {
+        'Case ID': [],
+        'External Patient ID': [],
+        'Patient ID': [],
+    }
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="patient-header-template.csv"'
+    df = pd.DataFrame(header_dict)
+    df.to_csv(response, index=False)
+    return response
+
+
 @method_decorator(login_required, name='dispatch')
 class PatientCreate(TemplateView):
     """
@@ -281,29 +295,102 @@ class PatientCreate(TemplateView):
 
     template_name = "tantalus/patient_create.html"
 
-    def get_context_and_render(self, request, form, pk=None):
+    def get_context_and_render(self, request, form, multi_form, pk=None):
         context = {
             'pk':pk,
             'form': form,
+            'multi_form': multi_form
         }
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
         form = tantalus.forms.PatientForm()
-        return self.get_context_and_render(request, form)
+        multi_form = tantalus.forms.UploadPatientForm()
+        return self.get_context_and_render(request, form, multi_form)
 
     def post(self, request, *args, **kwargs):
         form = tantalus.forms.PatientForm(request.POST)
+        multi_form = tantalus.forms.UploadPatientForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
-            msg = "Successfully created the tantalus.models.Patient."
+            msg = "Successfully created Patient {}.".format(instance.patient_id)
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
+        if multi_form.is_valid():
+            patients_df = multi_form.get_patient_data()
+            form_headers = patients_df.columns.tolist()
+
+            external_patient_id_index = form_headers.index('External Patient ID')
+            patient_id_index = form_headers.index('Patient ID')
+            case_id_index = form_headers.index('Case ID')
+
+            to_edit = []
+            for idx, patient_row in patients_df.iterrows():
+                patient, created = tantalus.models.Patient.objects.get_or_create(patient_id=patient_row[patient_id_index])
+                if(created):
+                    patient.external_patient_id = patient_row[external_patient_id_index]
+                    patient.case_id = patient_row[case_id_index]
+                else:
+                    patient.external_patient_id = patient_row[external_patient_id_index]
+                    patient.case_id = patient_row[case_id_index]
+                    to_edit.append(model_to_dict(patient))
+            if(len(to_edit) == 0):
+                msg = "Successfully created all Patients."
+                messages.success(request, msg)
+                return HttpResponseRedirect(reverse('patient-list'))
+            else:
+                msg = "Editing Existing Patient Data. Please Confirm Modifications."
+                messages.warning(request, msg)
+                request.session['to_edit'] = to_edit
+                return HttpResponseRedirect(reverse('confirm-patient-edit-from-create'))
         else:
             msg = "Failed to create the Patient. Please fix the errors below."
             messages.error(request, msg)
-            return self.get_context_and_render(request, form)
+            return self.get_context_and_render(request, form, multi_form)
+
+
+@method_decorator(login_required, name='dispatch')
+class ConfirmPatientEditFromCreate(TemplateView):
+    template_name = "tantalus/confirm_patient_edit.html"
+
+    def get_context_and_render(self, request, to_edit):
+        context = {
+            'patients_to_edit': to_edit,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        existing_patient_list = []
+        for patient in request.session['to_edit']:
+            existing_patient = tantalus.models.Patient.objects.get(patient_id=patient['patient_id'])
+            existing_patient.new_external_patient_id = patient['external_patient_id']
+            existing_patient.new_case_id = patient['case_id']
+
+            if(existing_patient.external_patient_id == existing_patient.new_external_patient_id and existing_patient.case_id == existing_patient.new_case_id):
+                continue
+            elif(existing_patient.external_patient_id == existing_patient.new_external_patient_id):
+                existing_patient.fields_changed = "Case ID Changed"
+            elif(existing_patient.case_id == existing_patient.new_case_id):
+                existing_patient.fields_changed = "External Patient ID Changed"
+            else:
+                existing_patient.fields_changed = "External Patient ID and Case ID Changed"
+
+            existing_patient_list.append(existing_patient)
+
+        return self.get_context_and_render(request, existing_patient_list)
+
+    def post(self, request, *args, **kwargs):
+
+        for patient in request.session['to_edit']:
+            existing_patient = tantalus.models.Patient.objects.get(patient_id=patient['patient_id'])
+            existing_patient.external_patient_id = patient['external_patient_id']
+            existing_patient.case_id = patient['case_id']
+            existing_patient.save()
+
+        msg = "Successfully modified and created all Patients."
+        messages.success(request, msg)
+        return HttpResponseRedirect(reverse('patient-list'))
 
 
 @method_decorator(login_required, name='dispatch')
@@ -635,6 +722,7 @@ class DatasetListJSON(BaseDatatableView):
             kwargs['datasets'] = dataset_pks
 
         self.kwargs = kwargs
+        print(super(DatasetListJSON, self).get_context_data(*args, **kwargs))
         return super(DatasetListJSON, self).get_context_data(*args, **kwargs)
 
     def get_initial_queryset(self):
@@ -741,6 +829,7 @@ class DatasetDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
+        tags_name_list = []
         context = super(DatasetDetail, self).get_context_data(**kwargs)
         storage_ids = self.object.get_storage_names()
         context['storages'] = storage_ids
