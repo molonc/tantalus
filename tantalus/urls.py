@@ -47,6 +47,7 @@ urlpatterns = [
     url(r'^patients/(?P<pk>\d+)$', tantalus.views.PatientDetail.as_view(), name='patient-detail'),
     url(r'^patients/edit/(?P<pk>\d+)$', tantalus.views.PatientEdit.as_view(), name='patient-edit'),
     url(r'^patients/create$', tantalus.views.PatientCreate.as_view(), name='patient-add'),
+    url(r'^patients/confirm-patient-edit-from-create$', tantalus.views.ConfirmPatientEditFromCreate.as_view(), name='confirm-patient-edit-from-create'),
     url(r'^export-patient-create-template/$', tantalus.views.export_patient_create_template, name='export-patient-create-template'),
     url(r'^submissions/$', tantalus.views.submission_list, name='submissions-list'),
     url(r'^submissions/(?P<pk>\d+)$', tantalus.views.SubmissionDetail.as_view(), name='submission-detail'),

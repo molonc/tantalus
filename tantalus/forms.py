@@ -26,6 +26,11 @@ class PatientForm(forms.ModelForm):
         model = tantalus.models.Patient
         fields = '__all__'
 
+    def clean_patient_id(self):
+        patient_id = self.cleaned_data.get('patient_id', False)
+        if(patient_id[:2] != "SA"):
+            raise ValidationError("Error!. Patient IDs must start with SA")        
+
 
 class UploadPatientForm(forms.Form):
     patients_excel_file = forms.FileField(label='Select an Excel File', widget=forms.FileInput(attrs={'accept': [".xlsx", ".xls"]}))
@@ -59,6 +64,11 @@ class UploadPatientForm(forms.Form):
             temp_dict[header_row[index]] = column_data_list
 
         df = pd.DataFrame(data=temp_dict)
+        form_headers = df.columns.tolist()
+        patient_id_index = form_headers.index('Patient ID')
+        for idx, patient_row in df.iterrows():
+            if(patient_row[patient_id_index][:2] != "SA"):
+                raise ValidationError("Error on Row {}. Patient IDs must start with SA and not be {}".format(idx + 2, patient_row[patient_id_index]))
         return df
 
     def get_patient_data(self):
