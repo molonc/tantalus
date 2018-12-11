@@ -65,7 +65,6 @@ class ExternalIDSearch(TemplateView):
             passable_sample_list = []
             external_id_list = set(form.cleaned_data['external_id_column'].encode('ascii','ignore').splitlines())
 
-
             for external_id in external_id_list:
                 if(tantalus.models.Sample.objects.filter(external_sample_id=external_id).count() == 1):
                     sample_list.append(list(tantalus.models.Sample.objects.filter(external_sample_id=external_id))[0])
