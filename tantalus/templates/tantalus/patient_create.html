@@ -19,6 +19,20 @@
             	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
             </fieldset>
         </form><br>
+        <form action="{% url 'patient-add' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <fieldset>
+            <legend>Or, upload an Excel file</legend>
+                <table class="table-condensed">
+                    <thead>
+                    {{multi_form}}
+                    </thead>
+                </table>
+                <input class="btn btn-primary btn-sm" style="margin-bottom: 1em;" type="submit" name="create" value="Upload File">
+                <br>
+                <a class="btn btn-primary btn-sm" href="{% url 'export-patient-create-template' %}">Download Header Template</a> 
+            </fieldset>
+        </form>
         <fieldset>
             <legend></legend>
                 <a class="btn btn-default btn-sm" style="float:right; margin-top:5px;" href="{% url 'patient-list' %}">Cancel</a>

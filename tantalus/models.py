@@ -87,6 +87,11 @@ class Patient(models.Model):
     )
 
 
+    case_id = models.CharField(
+        max_length=120,
+        null=True
+    )
+
     def get_absolute_url(self):
         return reverse("patient-list")
 

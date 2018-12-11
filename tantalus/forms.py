@@ -24,10 +24,55 @@ from openpyxl import load_workbook
 class PatientForm(forms.ModelForm):
     class Meta:
         model = tantalus.models.Patient
-        fields = [
-            'patient_id',
-            'external_patient_id',
-        ]
+        fields = '__all__'
+
+    def clean_patient_id(self):
+        patient_id = self.cleaned_data.get('patient_id', False)
+        if(patient_id[:2] != "SA"):
+            raise ValidationError("Error!. Patient IDs must start with SA")        
+
+
+class UploadPatientForm(forms.Form):
+    patients_excel_file = forms.FileField(label='Select an Excel File', widget=forms.FileInput(attrs={'accept': [".xlsx", ".xls"]}))
+
+    def clean_patients_excel_file(self):
+        excel_file = self.cleaned_data.get("patients_excel_file", False)
+        workbook = load_workbook(excel_file)
+        sheet = workbook.active
+
+        temp_dict = {}
+        sheet_rows = list(sheet.rows)
+        header_row = []
+        for cell in sheet_rows[0]:
+            header_row.append(cell.value.encode('utf-8'))
+
+        try:
+            external_patient_id_index = header_row.index('External Patient ID')
+            patient_id_index = header_row.index('Patient ID')
+            case_id_index = header_row.index('Case ID')
+        except:
+            raise ValidationError('Header Row Labels not configured properly')
+
+        sheet_rows.pop(0)
+
+        for index in range(0, len(header_row)):
+            column_data_list = []
+            for cell in list(sheet.columns)[index]:
+                column_data_list.append(cell.value)
+            #Remove header column entry from column_data_list
+            column_data_list.pop(0)
+            temp_dict[header_row[index]] = column_data_list
+
+        df = pd.DataFrame(data=temp_dict)
+        form_headers = df.columns.tolist()
+        patient_id_index = form_headers.index('Patient ID')
+        for idx, patient_row in df.iterrows():
+            if(patient_row[patient_id_index][:2] != "SA"):
+                raise ValidationError("Error on Row {}. Patient IDs must start with SA and not be {}".format(idx + 2, patient_row[patient_id_index]))
+        return df
+
+    def get_patient_data(self):
+        return self.cleaned_data['patients_excel_file']
 
 
 class SubmissionForm(forms.ModelForm):
