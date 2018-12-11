@@ -158,6 +158,19 @@ class Sample(models.Model):
     def get_submissions(self):
         return self.submission_set.all()
 
+class LibraryType(models.Model):
+    name = models.CharField(
+        max_length=240,
+        blank=True,
+        null=False,
+        unique=True
+    )
+
+    def __unicode__(self):
+        if (self.name): return self.name
+        #if (self.name): return {"id": self.id, "name": self.name}
+        return ''
+
 
 class DNALibrary(models.Model):
     """
@@ -174,37 +187,10 @@ class DNALibrary(models.Model):
 
     library_id = create_id_field(unique=True)
 
-    EXOME = 'EXOME'
-    WGS = 'WGS'
-    RNASEQ = 'RNASEQ'
-    SINGLE_CELL_WGS = 'SC_WGS'
-    SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
-    EXCAP = 'EXCAP'
-    BISULFITE = 'BISULFITE'
-    CHIP = 'CHIP'
-    MRE = 'MRE'
-    MIRNA = 'MIRNA'
-    MEDIP = 'MEDIP'
-    DNA_AMPLICON = 'DNA_AMPLICON'
-
-    library_type_choices = (
-        (EXOME, 'Bulk Whole Exome Sequence'),
-        (WGS, 'Bulk Whole Genome Sequence'),
-        (RNASEQ, 'Bulk RNA-Seq'),
-        (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
-        (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
-        (EXCAP,'Exon Capture'),
-        (MIRNA,'micro RNA'),
-        (BISULFITE,'Bisulfite'),
-        (CHIP,'Chromatin Immunoprecipitation'),
-        (MRE,'Methylation sensitive restriction enzyme sequencing'),
-        (MEDIP,'Methylated DNA immunoprecipitation'),
-        (DNA_AMPLICON,'Targetted DNA Amplicon Sequence')
-    )
-
-    library_type = models.CharField(
-        max_length=50,
-        choices=library_type_choices,
+    library_type = models.ForeignKey(
+        LibraryType,
+        on_delete=models.CASCADE,
+        null=True
     )
 
     SINGLE_INDEX = 'S'
@@ -869,45 +855,6 @@ class Sow(models.Model):
 
     def __str__(self):
         return self.name
-
-class LibraryType(models.Model):
-
-    EXOME = 'EXOME'
-    WGS = 'WGS'
-    RNASEQ = 'RNASEQ'
-    SINGLE_CELL_WGS = 'SC_WGS'
-    SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
-    EXCAP = 'EXCAP'
-    BISULFITE = 'BISULFITE'
-    CHIP = 'CHIP'
-    MRE = 'MRE'
-    MIRNA = 'MIRNA'
-    MEDIP = 'MEDIP'
-    DNA_AMPLICON = 'DNA_AMPLICON'
-
-    library_type_choices = (
-        (EXOME, 'Bulk Whole Exome Sequence'),
-        (WGS, 'Bulk Whole Genome Sequence'),
-        (RNASEQ, 'Bulk RNA-Seq'),
-        (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
-        (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
-        (EXCAP,'Exon Capture'),
-        (MIRNA,'micro RNA'),
-        (BISULFITE,'Bisulfite'),
-        (CHIP,'Chromatin Immunoprecipitation'),
-        (MRE,'Methylation sensitive restriction enzyme sequencing'),
-        (MEDIP,'Methylated DNA immunoprecipitation'),
-        (DNA_AMPLICON,'Targetted DNA Amplicon Sequence')
-    )
-
-    library_type = models.CharField(
-        max_length=240,
-        blank=True,
-        null=True,
-        default=None,
-        choices=library_type_choices
-    )
-
 
 class Submission(models.Model):
     """
