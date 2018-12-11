@@ -748,6 +748,7 @@ class DatasetListJSON(BaseDatatableView):
             kwargs['datasets'] = dataset_pks
 
         self.kwargs = kwargs
+        print(super(DatasetListJSON, self).get_context_data(*args, **kwargs))
         return super(DatasetListJSON, self).get_context_data(*args, **kwargs)
 
     def get_initial_queryset(self):
