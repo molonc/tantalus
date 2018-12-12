@@ -176,6 +176,12 @@ def sample_list(request):
 
     samples = tantalus.models.Sample.objects.all().order_by('sample_id')
 
+    projects = tantalus.models.Project.objects.all()
+
+    for project in projects:
+        project.name = project.name.encode('ascii', 'ignore')
+        project.save()
+
     context = {
         'samples': samples,
     }
