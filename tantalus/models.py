@@ -81,7 +81,6 @@ class Patient(models.Model):
     )
 
     external_patient_id = models.CharField(
-        unique=True,
         max_length=120,
         null=True
     )

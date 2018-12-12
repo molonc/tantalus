@@ -11,30 +11,58 @@
             {% csrf_token %}
             <fieldset>
                 <legend>Confirm Patients Edits</legend>
-                <table id="patient-edit-datatable" class="table-striped table-bordered">
-                    <thead>
-                        <th>Patient ID</th>
-                        <th>Current External Patient ID</th>
-                        <th>New External Patient ID</th>
-                        <th>Current Case ID</th>
-                        <th>New Case ID</th>
-                        <th>Fields Changed</th>
-                    </thead>
-                    <tbody>
-                        {% for patient in patients_to_edit %}
-                            <tr>
-                                <td>{{patient.patient_id}}</td>
-                                <td>{{patient.external_patient_id}}</td>
-                                <td>{{patient.new_external_patient_id}}</td>
-                                <td>{{patient.case_id}}</td>
-                                <td>{{patient.new_case_id}}</td>
-                                <td>{{patient.fields_changed}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                {% if patients_to_edit %}
+                    <table id="patient-edit-datatable" class="table-striped table-bordered">
+                        <thead>
+                            <th>Patient ID</th>
+                            <th>Current External Patient ID</th>
+                            <th>New External Patient ID</th>
+                            <th>Current Case ID</th>
+                            <th>New Case ID</th>
+                            <th>Fields Changed</th>
+                        </thead>
+                        <tbody>
+                            {% for patient in patients_to_edit %}
+                                <tr>
+                                    <td>{{patient.patient_id}}</td>
+                                    <td>{{patient.external_patient_id}}</td>
+                                    <td>{{patient.new_external_patient_id}}</td>
+                                    <td>{{patient.case_id}}</td>
+                                    <td>{{patient.new_case_id}}</td>
+                                    <td>{{patient.fields_changed}}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <h5><i class="text-warning">No Patients were Edited!</i></h5>
+                {% endif %}
+
+                <legend>Confirm Auto Generated Patient IDs</legend>
+                {% if auto_generate_patients %}
+                    <table id="patient-generate-datatable" class="table-striped table-bordered">
+                        <thead>
+                            <th>Auto Generated Patient ID</th>
+                            <th>External Patient ID</th>
+                            <th>Case ID</th>
+                        </thead>
+                        <tbody>
+                            {% for patient in auto_generated_patients %}
+                                <tr>
+                                    <td>{{patient.patient_id}}</td>
+                                    <td>{{patient.external_patient_id}}</td>
+                                    <td>{{patient.case_id}}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <h5><i class="text-warning">No Patient IDs were auto generated!</i></h5>
+                {% endif %}
+                
                 <br>
             	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Confirm">
+                <a class="btn btn-danger btn-sm" href="{% url 'patient-add' %}">Cancel</a> 
             </fieldset>
         </form>
     </div>
@@ -44,6 +72,9 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $("#patient-edit-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+            $("#patient-generate-datatable").DataTable({
                 "order": [[0, "desc"]]
             });
         });
