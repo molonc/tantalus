@@ -33,7 +33,7 @@ class PatientForm(forms.ModelForm):
         patient_id = self.cleaned_data.get('patient_id', False)
         if(patient_id[:2] != "SA"):
             raise ValidationError("Error!. Patient IDs must start with SA")
-        return patient_id        
+        return patient_id
 
 
 class UploadPatientForm(forms.Form):
