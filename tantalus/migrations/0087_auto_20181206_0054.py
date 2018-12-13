@@ -7,8 +7,10 @@ import django.db.models.deletion
 from django.core.exceptions import ObjectDoesNotExist
 
 
+#jira TANTA-2, TANTA-128, TANTA-151
+
 #original data does not restored after rollback of the migration
-#to fix it for debugging at the beginning run
+#to fix it for the debugging run at the beginning
 #create table tts as (select id, library_type val from tantalus_submission);
 #create table ttl as (select id, library_type val from tantalus_dnalibrary);
 #
