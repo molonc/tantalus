@@ -312,12 +312,20 @@ class DatasetSearchForm(forms.Form):
                   "For example, these are external library IDs given to us by the GSC, eg. PX0827",
         widget=forms.widgets.Textarea
     )
-
-    library_type = forms.ChoiceField(
-        choices=(('', '---'),) + tantalus.models.DNALibrary.library_type_choices,
+    
+    library_type = forms.ModelChoiceField(
+        #TANTA-128, TANTA-151
+        queryset=tantalus.models.LibraryType.objects.all(),
+        empty_label='---',
         label="Library type",
         required=False,
     )
+
+    #library_type = forms.ChoiceField(
+    #    choices=(('', '---'),) + tantalus.models.LibraryType.library_type_choices,
+    #    label="Library type",
+    #    required=False,
+    #)
 
     index_format = forms.ChoiceField(
         choices=(('', '---'),) + tantalus.models.DNALibrary.index_format_choices,

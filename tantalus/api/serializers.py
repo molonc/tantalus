@@ -125,7 +125,15 @@ class FileResourceSerializerRead(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class LibraryTypeField(serializers.ModelSerializer):
+    def to_representation(self, obj):
+        return obj.name
+    def to_internal_value(self, data):
+        return tantalus.models.LibraryType.objects.get(name=data)
+
+
 class DNALibrarySerializer(serializers.ModelSerializer):
+    library_type = LibraryTypeField()
     class Meta:
         model = tantalus.models.DNALibrary
         fields = '__all__'
