@@ -1242,9 +1242,3 @@ class HomeView(TemplateView):
         }
         return context
 
-class LibraryTypeList(ListView):
-    template_name='tantalus/librarytype_list.html'
-
-    model = tantalus.models.LibraryType
-    #task_model = tantalus.models.LibraryType
-    #queryset = tantalus.models.LibraryType.objects.all()
