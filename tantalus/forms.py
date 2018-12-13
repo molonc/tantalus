@@ -128,7 +128,7 @@ class SampleForm(forms.ModelForm):
             'sample_id',
             'external_sample_id',
             'submitter',
-            'collaborator',
+            'researcher',
             'tissue',
             'note',
             'patient_id',
@@ -155,6 +155,7 @@ class UploadSampleForm(forms.Form):
             external_sample_id_index = header_row.index('External Sample ID')
             patient_id_index = header_row.index('Patient ID')
             suffix_index = header_row.index('Suffix')
+            projects_index = header_row.index('Projects')
         except:
             raise ValidationError('Header Row Labels not configured properly')
 
@@ -170,7 +171,22 @@ class UploadSampleForm(forms.Form):
 
         df = pd.DataFrame(data=temp_dict)
 
+        #This list will be returned
+        #Each element is a list that contains the project models for a specific row in the dataframe
+        all_tantalus_projects = []
+
         for idx, sample_row in df.iterrows():
+            row_tantalus_projects = []
+            if(not pd.isnull(sample_row[projects_index])):
+                try:
+                    projects_list = sample_row[projects_index].encode('ascii', 'ignore').split(',')
+                    for project in projects_list:
+                        row_tantalus_projects.append(tantalus.models.Project.objects.get(name=project.lower().strip()))
+                except:
+                    raise ValidationError("Projects field is malformed on row {}. Make sure the project names are separated by commas and the project(s) exist".format(idx+  2))
+                    
+            all_tantalus_projects.append(row_tantalus_projects)
+
             if(pd.isnull(sample_row[external_sample_id_index])):
                 raise ValidationError('External Sample ID field cannot be Null on row {}'.format(idx + 2))
             #If both fields are null, raise error
@@ -245,7 +261,8 @@ class UploadSampleForm(forms.Form):
                     idx + 2
                     ))
 
-        return df
+        print(all_tantalus_projects)
+        return df, all_tantalus_projects
 
     def get_sample_data(self):
         # TODO: return dataframe here

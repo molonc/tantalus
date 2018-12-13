@@ -574,14 +574,18 @@ class SampleCreate(TemplateView):
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
         elif multi_form.is_valid():
-            samples_df = multi_form.get_sample_data()
+            samples_df, projects_list = multi_form.get_sample_data()
 
             form_headers = samples_df.columns.tolist()
 
             external_patient_id_index = form_headers.index('External Patient ID')
             external_sample_id_index = form_headers.index('External Sample ID')
             patient_id_index = form_headers.index('Patient ID')
-            suffix_index = form_headers.index('Suffix')            
+            suffix_index = form_headers.index('Suffix')
+            submitter_index = form_headers.index('Submitter')
+            researcher_index = form_headers.index('Researcher')
+            tissue_index = form_headers.index('Tissue')
+            note_index = form_headers.index('Note')            
 
             for idx, sample_row in samples_df.iterrows():
                 if(pd.isnull(sample_row[patient_id_index])):
@@ -592,6 +596,14 @@ class SampleCreate(TemplateView):
                     sample_id = patient.patient_id
                 else:
                     sample_id = patient.patient_id + sample_row[suffix_index]
+                if(pd.isnull(sample_row[submitter_index])):
+                    submitter = str(request.user)
+                else:
+                    submitter = sample_row[submitter_index]
+
+                researcher = sample_row[researcher_index]
+                tissue = sample_row[tissue_index]
+                note = sample_row[note_index]
                 external_sample_id = sample_row[external_sample_id_index]
 
                 #Allow more fields in the future?
@@ -599,9 +611,16 @@ class SampleCreate(TemplateView):
                         sample_id=sample_id,
                         external_sample_id=external_sample_id,
                         patient_id=patient,
-                    )
+                        submitter=submitter,
+                        researcher=researcher,
+                        tissue=tissue,
+                        note=note,
+                )
+                for project in projects_list[idx]:
+                    sample_created.projects.add(project)
                 if created:
                     sample_created.save()
+
             return HttpResponseRedirect(sample_created.get_absolute_url())
         else:
             msg = "Failed to create the sample. Please fix the errors below."
@@ -686,6 +705,11 @@ def export_sample_create_template(request):
         'Patient ID': [],
         'External Sample ID': [],
         'Suffix': [],
+        'Submitter': [],
+        'Researcher': [],
+        'Tissue': [],
+        'Note': [],
+        'Projects': [],
     }
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="header-template.csv"'

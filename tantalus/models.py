@@ -118,7 +118,7 @@ class Sample(models.Model):
         null=True,
     )
 
-    collaborator = models.CharField(
+    researcher = models.CharField(
         max_length=240,
         null=True,
     )

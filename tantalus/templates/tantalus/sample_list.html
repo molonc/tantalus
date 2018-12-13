@@ -16,10 +16,10 @@
                 <table id="datatable" class="table table-striped" style="display:none;">
                     <thead>
                         <tr>
-                            <th>Primary Sample ID</th>
+                            <th>Sample ID</th>
                             <th>External Sample ID</th>
                             <th>Submitter</th>
-                            <th>Collaborator</th>
+                            <th>Researcher</th>
                             <th>Tissue</th>
                         </tr>
                     </thead>
@@ -30,7 +30,7 @@
                                 <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
                                 <td>{{sample.external_sample_id}}</td>
                                 <td>{{sample.submitter}}</td>
-                                <td>{{sample.collaborator}}</td>
+                                <td>{{sample.researcher}}</td>
                                 <td>{{sample.tissue}}</td>
                             </tr>
                         {% endfor %}
