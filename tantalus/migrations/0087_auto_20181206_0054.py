@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.db.models.deletion
+from django.core.exceptions import ObjectDoesNotExist
 
 
 #original data does not restored after rollback of the migration
@@ -75,7 +76,7 @@ def migrate_data(apps,class_name):
             r.save()
             if (0 == (r.id % 113)):
                 print("----- %s; %s;" % (r.id,r.library_type.id))
-        except v.DoesNotExist:
+        except ObjectDoesNotExist:
             pass
 
 def migrate_submission(apps, schema_editor):
@@ -92,7 +93,7 @@ def do0(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tantalus', '0081_auto_20181204_2225'),
+        ('tantalus', '0084_patient_case_id'),
     ]
 
     # -- rename "library_type" to "xxtmp"

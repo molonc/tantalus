@@ -12,12 +12,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='historicalserverstorage',
-            name='queue_prefix',
-        ),
-        migrations.RemoveField(
-            model_name='serverstorage',
-            name='queue_prefix',
-        ),
+        #migrations.RemoveField(
+        #    model_name='historicalserverstorage',
+        #    name='queue_prefix',
+        #),
+        #migrations.RemoveField(
+        #    model_name='serverstorage',
+        #    name='queue_prefix',
+        #),
     ]
