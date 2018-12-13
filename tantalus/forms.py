@@ -184,7 +184,7 @@ class UploadSampleForm(forms.Form):
                         row_tantalus_projects.append(tantalus.models.Project.objects.get(name=project.lower().strip()))
                 except:
                     raise ValidationError("Projects field is malformed on row {}. Make sure the project names are separated by commas and the project(s) exist".format(idx+  2))
-                    
+
             all_tantalus_projects.append(row_tantalus_projects)
 
             if(pd.isnull(sample_row[external_sample_id_index])):
@@ -236,7 +236,6 @@ class UploadSampleForm(forms.Form):
                     sample_row[suffix_index],
                     idx + 2
                     ))
-
                     
             else:
                 try:
@@ -259,7 +258,7 @@ class UploadSampleForm(forms.Form):
                     sample_row[patient_id_index],
                     sample_row[suffix_index],
                     idx + 2
-                    ))
+                ))
 
         print(all_tantalus_projects)
         return df, all_tantalus_projects
