@@ -155,7 +155,7 @@ class SequenceDatasetFilter(filters.FilterSet):
             "sequence_lanes__flowcell_id": ["exact"],
             "dataset_type": ["exact"],
             "aligner": ["exact"],
-            "reference_genome": ["exact"],
+            "reference_genome__name": ["exact"],
             "analysis": ["exact"],
             "analysis__name": ["exact"],
             "analysis__jira_ticket": ["exact"],
