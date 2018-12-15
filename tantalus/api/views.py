@@ -15,6 +15,7 @@ from tantalus.api.filters import (
     DNALibraryFilter,
     FileInstanceFilter,
     FileResourceFilter,
+    FileTypeFilter,
     ResultsDatasetFilter,
     SampleFilter,
     SequenceDatasetFilter,
@@ -74,6 +75,12 @@ class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_class = SampleFilter
+
+
+class FileTypeViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
+    queryset = tantalus.models.FileType.objects.all()
+    serializer_class = tantalus.api.serializers.FileTypeSerializer
+    filter_class = FileTypeFilter
 
 
 class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
