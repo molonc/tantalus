@@ -14,7 +14,9 @@
                 {% if patients_to_edit %}
                     <table id="patient-edit-datatable" class="table-striped table-bordered">
                         <thead>
-                            <th>Patient ID</th>
+                            <th>SA ID</th>
+                            <th>Current Reference ID</th>
+                            <th>New Reference ID</th>
                             <th>Current External Patient ID</th>
                             <th>New External Patient ID</th>
                             <th>Current Case ID</th>
@@ -24,7 +26,9 @@
                         <tbody>
                             {% for patient in patients_to_edit %}
                                 <tr>
-                                    <td>{{patient.patient_id}}</td>
+                                    <td>{{patient.SA_id}}</td>
+                                    <td>{{patient.reference_id}}</td>
+                                    <td>{{patient.new_reference_id}}</td>
                                     <td>{{patient.external_patient_id}}</td>
                                     <td>{{patient.new_external_patient_id}}</td>
                                     <td>{{patient.case_id}}</td>
@@ -39,17 +43,19 @@
                 {% endif %}
 
                 <legend>Confirm Auto Generated Patient IDs</legend>
-                {% if auto_generate_patients %}
+                {% if auto_generated_patients %}
                     <table id="patient-generate-datatable" class="table-striped table-bordered">
                         <thead>
-                            <th>Auto Generated Patient ID</th>
+                            <th>Auto Generated SA ID</th>
+                            <th>Reference ID</th>
                             <th>External Patient ID</th>
                             <th>Case ID</th>
                         </thead>
                         <tbody>
                             {% for patient in auto_generated_patients %}
                                 <tr>
-                                    <td>{{patient.patient_id}}</td>
+                                    <td>{{patient.SA_id}}</td>
+                                    <td>{{patient.reference_id}}</td>
                                     <td>{{patient.external_patient_id}}</td>
                                     <td>{{patient.case_id}}</td>
                                 </tr>
@@ -57,7 +63,7 @@
                         </tbody>
                     </table>
                 {% else %}
-                    <h5><i class="text-warning">No Patient IDs were auto generated!</i></h5>
+                    <h5><i class="text-warning">No SA IDs were auto generated!</i></h5>
                 {% endif %}
                 
                 <br>

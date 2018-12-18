@@ -1,0 +1,153 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Confirm Samples to be Created
+{% endblock %}
+
+{% block body %}
+    <div class="container graybg">
+    	<form action="{% url 'confirm-samples-create' %}" method="POST">
+    		{% csrf_token %}
+			<fieldset>
+				<legend>Samples with Valid Reference ID</legend>
+				{% if samples_with_one_match %}
+					<table id="valid-samples-datatable" class="table-striped table-bordered">
+						<thead>
+						    <th>Sample ID</th>
+	        				<th>External Sample ID</th>
+	        				<th>Submitter</th>
+	        				<th>Researcher</th>
+	        				<th>Tissue</th>
+	        				<th>Note</th>
+	        				<th>SA ID</th>
+	        				<th>Projects</th>
+	        				<th>Confirm</th>
+						</thead>
+					    <tbody>
+					    	{% for sample in samples_with_one_match %}
+		    					<tr>
+		    						<td>{{sample.sample_id}}</td>
+		    						<td>{{sample.external_sample_id}}</td>
+		    						<td>{{sample.submitter}}</td>
+		    						<td>{{sample.researcher}}</td>
+		    						<td>{{sample.tissue}}</td>
+		    						<td>{{sample.note}}</td>
+		    						<td><a href="{% url 'patient-detail' sample.patient.id %}">{{sample.patient.SA_id}}</a></td>
+		    						<td>
+		    							{% for project in sample.projects %}
+                            				{{project}}, 
+                        				{% endfor %}
+		    						</td>
+		    						<td><input type="checkbox" name="confirm[]" value="{{forloop.counter0}}"></td>
+		    					</tr>
+		    				{% endfor %}
+	        			</tbody>
+					</table>
+				{% else %}
+                    <h5><i class="text-warning">No Samples with valid reference IDs</i></h5>
+                {% endif %}
+				<br>
+				<legend>Samples with No Reference IDs Found</legend>
+				{% if samples_with_no_match %}
+					<table id="no-samples-datatable" class="table-striped table-bordered">
+						<thead>
+						    <th>Sample ID</th>
+	        				<th>External Sample ID</th>
+	        				<th>Submitter</th>
+	        				<th>Researcher</th>
+	        				<th>Tissue</th>
+	        				<th>Note</th>
+	        				<th>SA ID</th>
+	        				<th>Projects</th>
+	        				<th>Confirm</th>
+						</thead>
+					    <tbody>
+					    	{% for sample in samples_with_no_match %}
+		    					<tr>
+		    						<td>{{sample.sample_id}}</td>
+		    						<td>{{sample.external_sample_id}}</td>
+		    						<td>{{sample.submitter}}</td>
+		    						<td>{{sample.researcher}}</td>
+		    						<td>{{sample.tissue}}</td>
+		    						<td>{{sample.note}}</td>
+		    						<td>{{sample.new_patient.SA_id}}</td>
+		    						<td>
+		    							{% for project in sample.projects %}
+                            				{{project}}, 
+                        				{% endfor %}
+		    						</td>
+		    						<td><input type="checkbox" name="confirm_create[]" value="{{forloop.counter0}}"></td>
+		    					</tr>
+		    				{% endfor %}
+	        			</tbody>
+					</table>
+				{% else %}
+                    <h5><i class="text-warning">No new Patients needed to be created!</i></h5>
+                {% endif %}
+                <br>
+                {% if samples_with_multiple_matches %}
+					<legend>Samples with Multiple Reference IDs Found</legend>
+						{% for sample in samples_with_multiple_matches %}
+							<h5>Sample Information With Reference ID: {{sample.reference_id}}</h5>
+							<table class="table-striped table-bordered">
+								<thead>
+									<th>Reference ID</th>
+									<th>Researcher</th>
+									<th>Submitter</th>
+									<th>Suffix</th>
+									<th>Tissue</th>
+									<th>Note</th>
+									<th>Projects</th>
+								</thead>
+								<tbody>
+									<tr>
+										<td>{{sample.reference_id}}</td>
+										<td>{{sample.researcher}}</td>
+										<td>{{sample.submitter}}</td>
+										<td>{{sample.suffix}}</td>
+										<td>{{sample.tissue}}</td>
+										<td>{{sample.note}}</td>
+			    						<td>
+			    							{% for project in sample.projects %}
+	                            				{{project}}, 
+	                        				{% endfor %}
+			    						</td>
+									</tr>
+								</tbody>
+							</table>
+
+							<h5>Select one of the Patient matches below</h5>
+							<table class="table-striped table-bordered">
+								<thead>
+							    	<th>SA ID</th>
+						   			<th>Reference ID</th>
+						    		<th>External Patient ID</th>
+						    		<th>Case ID</th>
+						    		<th>Confirm</th>
+						    	</thead>
+						    	<tbody>
+						    		{% for patient in sample.patients %}
+						    			<tr>
+							    			<td><a href="{% url 'patient-detail' patient.id %}">{{patient.SA_id}}</a></td>
+							    			<td>{{patient.reference_id}}</td>
+							    			<td>{{patient.external_patient_id}}</td>
+							    			<td>{{patient.case_id}}</td>
+							    			<td><input type="radio" name="{{sample.reference_id}}" value="{{patient.SA_id}}"></td>
+						    			</tr>
+						    		{% endfor %}
+						    	</tbody>
+						    </table>
+						    <br>
+						{% endfor %}								
+				{% else %}
+                    <h5><i class="text-warning">No Reference IDs returned multiple Patients!</i></h5>
+                {% endif %}
+            <br>
+            <input class="btn btn-primary btn-sm" type="submit" name="create" value="Confirm">
+            <a class="btn btn-danger btn-sm" href="{% url 'sample-add' %}">Cancel</a>         
+			</fieldset>
+    	</form>
+	</div>
+    	
+{% endblock %}

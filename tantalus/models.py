@@ -74,10 +74,15 @@ class Patient(models.Model):
     """
     Patient model
     """
-    patient_id = models.CharField(
+    SA_id = models.CharField(
         unique=True,
         max_length=120,
         null=True
+    )
+
+    reference_id = models.CharField(
+        max_length=120,
+        null=True,
     )
 
     external_patient_id = models.CharField(
@@ -95,7 +100,7 @@ class Patient(models.Model):
         return reverse("patient-list")
 
     def __str__(self):
-        return self.patient_id
+        return self.SA_id
 
 
 class Sample(models.Model):
@@ -134,7 +139,7 @@ class Sample(models.Model):
         blank=True
     )
 
-    patient_id = models.ForeignKey(
+    SA_id = models.ForeignKey(
         Patient,
         on_delete=models.CASCADE,
         null=True
@@ -152,7 +157,7 @@ class Sample(models.Model):
         return reverse("sample-list")
 
     def get_patient_name(self):
-        return self.patient_id
+        return self.SA_id
 
     def get_submissions(self):
         return self.submission_set.all()

@@ -106,7 +106,7 @@ def export_external_id_results(request):
 
 @Render("tantalus/patient_list.html")
 def patient_list(request):
-    patients = tantalus.models.Patient.objects.all().order_by('patient_id')
+    patients = tantalus.models.Patient.objects.all().order_by('SA_id')
     context = {
         'patients': patients
     }
@@ -199,7 +199,7 @@ class SampleDetail(DetailView):
             project_list.append(project.__str__())
 
         try:
-            context['patient_url'] = self.object.patient_id.get_absolute_url() + str(self.object.patient_id.id)
+            context['patient_url'] = self.object.SA_id.get_absolute_url() + str(self.object.SA_id.id)
         except:
             context['patient_url'] = None
         context['project_list'] = project_list
@@ -299,8 +299,9 @@ class AnalysisDetail(DetailView):
 def export_patient_create_template(request):
     header_dict = {
         'Case ID': [],
+        'Reference ID': [],
         'External Patient ID': [],
-        'Patient ID': [],
+        'SA ID': [],
     }
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="patient-header-template.csv"'
@@ -326,12 +327,12 @@ class PatientCreate(TemplateView):
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
-        SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
-        patient_ids = []
+        SA_prefix_patients = tantalus.models.Patient.objects.filter(SA_id__startswith='SA').order_by('-SA_id')
+        SA_ids = []
         for patient in SA_prefix_patients:
-            patient_ids.append(int(patient.patient_id[2:]))
-        patient_ids.sort()
-        data = {'patient_id': 'SA' + str(patient_ids[-1] + 1)}
+            SA_ids.append(int(patient.SA_id[2:]))
+        SA_ids.sort()
+        data = {'SA_id': 'SA' + str(SA_ids[-1] + 1)}
         form = tantalus.forms.PatientForm(initial=data)
         multi_form = tantalus.forms.UploadPatientForm()
         return self.get_context_and_render(request, form, multi_form)
@@ -341,46 +342,50 @@ class PatientCreate(TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
-            msg = "Successfully created Patient {}.".format(instance.patient_id)
+            msg = "Successfully created Patient {}.".format(instance.SA_id)
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
 
         multi_form = tantalus.forms.UploadPatientForm(request.POST, request.FILES)
         if multi_form.is_valid():
-            patients_df, auto_generated_patient_ids = multi_form.get_patient_data()
+            patients_df, auto_generated_SA_ids = multi_form.get_patient_data()
 
             form_headers = patients_df.columns.tolist()
 
             external_patient_id_index = form_headers.index('External Patient ID')
-            patient_id_index = form_headers.index('Patient ID')
+            reference_id_index = form_headers.index('Reference ID')
+            SA_id_index = form_headers.index('SA ID')
             case_id_index = form_headers.index('Case ID')
 
             to_edit = []
             auto_generated_patients = []
             for idx, patient_row in patients_df.iterrows():
-                if(patient_row[patient_id_index] in auto_generated_patient_ids):
+                if(patient_row[SA_id_index] in auto_generated_SA_ids):
                     patient = tantalus.models.Patient(
-                        patient_id=patient_row[patient_id_index],
+                        SA_id=patient_row[SA_id_index],
                         external_patient_id=patient_row[external_patient_id_index],
-                        case_id=patient_row[case_id_index]
+                        case_id=patient_row[case_id_index],
+                        reference_id=patient_row[reference_id_index]
                     )
                     auto_generated_patients.append(model_to_dict(patient))
                     continue
-                patient, created = tantalus.models.Patient.objects.get_or_create(patient_id=patient_row[patient_id_index])
+                patient, created = tantalus.models.Patient.objects.get_or_create(SA_id=patient_row[SA_id_index])
                 if(created):
                     patient.external_patient_id = patient_row[external_patient_id_index]
                     patient.case_id = patient_row[case_id_index]
+                    patient.reference_id = patient_row[reference_id_index]
                     patient.save()
                 else:
                     patient.external_patient_id = patient_row[external_patient_id_index]
                     patient.case_id = patient_row[case_id_index]
+                    patient.reference_id = patient_row[reference_id_index]
                     to_edit.append(model_to_dict(patient))
             if(len(to_edit) == 0 and len(auto_generated_patients) == 0):
                 msg = "Successfully created all Patients."
                 messages.success(request, msg)
                 return HttpResponseRedirect(reverse('patient-list'))
             else:
-                msg = "You are editing existing Patient Data or have asked us to auto-generate Patient IDs. Please Confirm Modifications and ID Generation."
+                msg = "You are editing existing Patient Data or have asked us to auto-generate SA IDs. Please Confirm Modifications and ID Generation."
                 messages.warning(request, msg)
                 request.session['to_edit'] = to_edit
                 request.session['auto_generated_patients'] = auto_generated_patients
@@ -396,6 +401,7 @@ class ConfirmPatientEditFromCreate(TemplateView):
     template_name = "tantalus/confirm_patient_edit.html"
 
     def get_context_and_render(self, request, to_edit, auto_generated_patients):
+        print(auto_generated_patients)
         context = {
             'patients_to_edit': to_edit,
             'auto_generated_patients': auto_generated_patients,
@@ -405,7 +411,7 @@ class ConfirmPatientEditFromCreate(TemplateView):
     def get(self, request, *args, **kwargs):
         existing_patient_list = []
         for patient in request.session['to_edit']:
-            existing_patient = tantalus.models.Patient.objects.get(patient_id=patient['patient_id'])
+            existing_patient = tantalus.models.Patient.objects.get(SA_id=patient['SA_id'])
             existing_patient.new_external_patient_id = patient['external_patient_id']
             existing_patient.new_case_id = patient['case_id']
 
@@ -425,7 +431,8 @@ class ConfirmPatientEditFromCreate(TemplateView):
     def post(self, request, *args, **kwargs):
 
         for patient in request.session['to_edit']:
-            existing_patient = tantalus.models.Patient.objects.get(patient_id=patient['patient_id'])
+            existing_patient = tantalus.models.Patient.objects.get(SA_id=patient['SA_id'])
+            existing_patient.reference_id = patient['reference_id']
             existing_patient.external_patient_id = patient['external_patient_id']
             existing_patient.case_id = patient['case_id']
             existing_patient.save()
@@ -464,7 +471,7 @@ class PatientEdit(TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
-            msg = "Successfully edited Patient {}.".format(patient.patient_id)
+            msg = "Successfully edited Patient {}.".format(patient.SA_id)
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
         else:
@@ -574,58 +581,159 @@ class SampleCreate(TemplateView):
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
         elif multi_form.is_valid():
-            samples_df, projects_list = multi_form.get_sample_data()
+            samples_df, projects_list, one_ref_found, no_ref_found, multiple_refs_found = multi_form.get_sample_data()
 
             form_headers = samples_df.columns.tolist()
 
-            external_patient_id_index = form_headers.index('External Patient ID')
-            external_sample_id_index = form_headers.index('External Sample ID')
-            patient_id_index = form_headers.index('Patient ID')
+            reference_id_index = form_headers.index('Reference ID')
             suffix_index = form_headers.index('Suffix')
             submitter_index = form_headers.index('Submitter')
             researcher_index = form_headers.index('Researcher')
             tissue_index = form_headers.index('Tissue')
-            note_index = form_headers.index('Note')            
+            note_index = form_headers.index('Note')
+            external_sample_id = form_headers.index('External Sample ID')
 
+            #Get next available SA ID if new Patients need to be created
+            SA_prefix_patients = tantalus.models.Patient.objects.filter(SA_id__startswith='SA').order_by('-SA_id')
+            SA_ids = []
+            for patient in SA_prefix_patients:
+                SA_ids.append(int(patient.SA_id[2:]))
+            SA_ids.sort()
+            next_available_SA_number = SA_ids[-1] + 1                    
+
+            samples_with_one_match = []
+            samples_with_no_match = []
+            samples_with_multiple_matches = []
             for idx, sample_row in samples_df.iterrows():
-                if(pd.isnull(sample_row[patient_id_index])):
-                    patient = tantalus.models.Patient.objects.get(external_patient_id=sample_row[external_patient_id_index])
-                else:
-                    patient = tantalus.models.Patient.objects.get(patient_id=sample_row[patient_id_index])
-                if(sample_row[suffix_index] is None):
-                    sample_id = patient.patient_id
-                else:
-                    sample_id = patient.patient_id + sample_row[suffix_index]
+                multiple_matches = []
                 if(pd.isnull(sample_row[submitter_index])):
                     submitter = str(request.user)
                 else:
                     submitter = sample_row[submitter_index]
 
-                researcher = sample_row[researcher_index]
-                tissue = sample_row[tissue_index]
-                note = sample_row[note_index]
-                external_sample_id = sample_row[external_sample_id_index]
+                projects_name_list = []
 
-                #Allow more fields in the future?
-                sample_created, created = tantalus.models.Sample.objects.get_or_create(
-                        sample_id=sample_id,
-                        external_sample_id=external_sample_id,
-                        patient_id=patient,
-                        submitter=submitter,
-                        researcher=researcher,
-                        tissue=tissue,
-                        note=note,
-                )
                 for project in projects_list[idx]:
-                    sample_created.projects.add(project)
-                if created:
-                    sample_created.save()
+                    projects_name_list.append(project.name)
 
-            return HttpResponseRedirect(sample_created.get_absolute_url())
+                incomplete_sample = {
+                    "external_sample_id": sample_row[external_sample_id],
+                    "submitter": submitter,
+                    "researcher": sample_row[researcher_index],
+                    "tissue": sample_row[tissue_index],
+                    "note": sample_row[note_index],
+                    "projects": projects_name_list,
+                }
+
+
+                if(sample_row[reference_id_index] in one_ref_found):
+                    incomplete_sample['patient'] = model_to_dict(tantalus.models.Patient.objects.get(reference_id=sample_row[reference_id_index]))
+                    incomplete_sample['sample_id'] = incomplete_sample['patient']['SA_id'] + sample_row[suffix_index]
+                    samples_with_one_match.append(incomplete_sample)
+                elif(sample_row[reference_id_index] in no_ref_found): #Create the Patient 
+                    patient = tantalus.models.Patient(
+                        SA_id='SA'+str(next_available_SA_number),
+                        reference_id=sample_row[reference_id_index],
+                    )
+                    incomplete_sample['new_patient'] = model_to_dict(patient)
+                    incomplete_sample['sample_id'] = patient.SA_id + sample_row[suffix_index]
+                    samples_with_no_match.append(incomplete_sample)
+                else:
+                    patients = tantalus.models.Patient.objects.filter(reference_id=sample_row[reference_id_index])
+                    for patient in patients:
+                        multiple_matches.append(model_to_dict(patient))
+                    incomplete_sample['patients'] = multiple_matches
+                    incomplete_sample['reference_id'] = patient.reference_id
+                    incomplete_sample['suffix'] = sample_row[suffix_index]
+                    samples_with_multiple_matches.append(incomplete_sample)
+
+            request.session['samples_with_one_match'] = samples_with_one_match
+            request.session['samples_with_multiple_matches'] = samples_with_multiple_matches
+            request.session['samples_with_no_match'] = samples_with_no_match
+            return HttpResponseRedirect(reverse('confirm-samples-create'))
+
         else:
             msg = "Failed to create the sample. Please fix the errors below."
             messages.error(request, msg)
             return self.get_context_and_render(request, form, multi_form)
+
+
+@method_decorator(login_required, name='dispatch')
+class ConfirmSamplesCreate(TemplateView):
+
+    template_name = 'tantalus/confirm_samples_create.html'
+
+    def get_context_and_render(self, request, samples_with_one_match, samples_with_multiple_matches, samples_with_no_match):
+        context = {
+            'samples_with_one_match': samples_with_one_match,
+            'samples_with_multiple_matches': samples_with_multiple_matches,
+            'samples_with_no_match': samples_with_no_match,
+        }
+
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        samples_with_one_match = request.session['samples_with_one_match']
+        samples_with_multiple_matches = request.session['samples_with_multiple_matches']
+        samples_with_no_match = request.session['samples_with_no_match']
+        return self.get_context_and_render(request, samples_with_one_match, samples_with_multiple_matches, samples_with_no_match)
+
+    def post(self, request, *args, **kwargs):
+        samples_with_one_match = request.session['samples_with_one_match']
+        samples_with_multiple_matches = request.session['samples_with_multiple_matches']
+        samples_with_no_match = request.session['samples_with_no_match']
+
+        confirmed_samples_with_one_match_indices = request.POST.getlist('confirm[]')
+        confirmed_samples_with_no_match_indices = request.POST.getlist('confirm_create[]')
+
+        confirmed_samples_with_multiple_matches_indices = []
+        for sample in samples_with_multiple_matches:
+            if(request.POST.get(sample['reference_id']) is None):
+                pass
+            else:
+                try:
+                    patient = tantalus.models.Patient.objects.get(SA_id=request.POST.get(sample['reference_id']))
+                    sample['SA_id'] = patient
+                    sample['sample_id'] = patient.SA_id + sample['suffix'] 
+                    sample.pop('reference_id')
+                    sample.pop('patients')
+                    sample.pop('suffix')
+                    projects = sample.pop('projects')
+                    created_sample = tantalus.models.Sample.objects.create(**sample)
+
+                    for project in projects:
+                        created_sample.projects.add(tantalus.models.Project.objects.get(name=project))
+                    created_sample.save()
+                except Exception as e:
+                    messages.error(request, str(e))
+                    return HttpResponseRedirect((request.path))
+
+
+        #For loop finds out which samples were selected for SA_IDs that were found
+        for idx, sample in enumerate(samples_with_one_match):
+            if str(idx) in confirmed_samples_with_one_match_indices:
+                patient = tantalus.models.Patient.objects.get(SA_id=sample['patient']['SA_id'])
+                sample['SA_id'] = patient
+                sample.pop('patient')
+                projects = sample.pop('projects')
+                created_sample = tantalus.models.Sample.objects.create(**sample)
+                for project in projects:
+                    created_sample.projects.add(tantalus.models.Project.objects.get(name=project))
+                created_sample.save()
+
+        for idx, sample in enumerate(samples_with_no_match):
+            if(str(idx) in confirmed_samples_with_no_match_indices):
+                patient = tantalus.models.Patient.objects.create(**sample['new_patient'])
+                sample['SA_id'] = patient
+                sample.pop('new_patient')
+                projects = sample.pop('projects')
+                created_sample = tantalus.models.Sample.objects.create(**sample)
+                for project in projects:
+                    created_sample.projects.add(tantalus.models.Project.objects.get(name=project))
+                created_sample.save()
+
+        messages.success(request, 'Successfully Created Samples')
+        return HttpResponseRedirect(reverse('sample-list'))
 
 
 @method_decorator(login_required, name='dispatch')
@@ -701,15 +809,14 @@ class SampleEdit(TemplateView):
 
 def export_sample_create_template(request):
     header_dict = {
-        'External Patient ID': [],
-        'Patient ID': [],
-        'External Sample ID': [],
+        'Reference ID': [],
         'Suffix': [],
         'Submitter': [],
         'Researcher': [],
         'Tissue': [],
         'Note': [],
         'Projects': [],
+        'External Sample ID': [],
     }
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="header-template.csv"'

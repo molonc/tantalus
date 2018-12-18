@@ -16,7 +16,8 @@
                 <table id="datatable" class="table table-striped" style="display:none;">
                     <thead>
                         <tr>
-                            <th>Patient ID</th>
+                            <th>SA ID</th>
+                            <th>Reference ID</th>
                             <th>External Patient ID</th>
                             <th>Case ID</th>
                         </tr>
@@ -25,7 +26,8 @@
                         <br/>
                         {% for patient in patients %}
                             <tr>
-                                <td><a href="{% url 'patient-detail' patient.id %}">{{patient.patient_id}}</a></td>
+                                <td><a href="{% url 'patient-detail' patient.id %}">{{patient.SA_id}}</a></td>
+                                <td>{{patient.reference_id}}</td>
                                 <td>{{patient.external_patient_id}}</td>
                                 <td>{{patient.case_id}}</td>
                             </tr>
