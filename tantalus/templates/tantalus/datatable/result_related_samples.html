@@ -1,0 +1,37 @@
+ <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+    <h4>Related Samples</h4>
+    <div class="table-responsive">
+        <table id="related-samples-datatable" class="table-striped table-bordered">
+            <thead>
+                <th>Sample ID</th>
+                <th>Patient</th>
+                <th>Collab Sample ID</th>
+                <th>Submitter</th>
+                <th>Collaborator</th>
+                <th>Tissue</th>
+                <th>Note</th>
+                <th>Projects</th>
+                <th>Submission IDs</th>
+            </thead>
+            <tbody>
+                {% for sample in samples %}
+                    <tr>
+                        <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
+                        {% if sample.patient %}
+                            <td><a href="{% url 'patient-detail' sample.patient.id %}">{{sample.patient.patient_id}}</a></td>
+                        {% else %}
+                            <td>No Patient associated</td>
+                        {% endif %}
+                        <td>{{sample.collab_sample_id}}</td>
+                        <td>{{sample.submitter}}</td>
+                        <td>{{sample.collaborator}}</td>
+                        <td>{{sample.tissue}}</td>
+                        <td>{{sample.note}}</td>
+                        <td>{{sample.projects_list|join:", "}}</td>
+                        <td>{{sample.submission_list|join:", "}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,27 @@
+ <div class="table-responsive">
+    <table id="datatable" class="table table-striped" style="display:none;">
+        <thead>
+            <tr>
+                <th>Analysis ID</th>
+                <th>Owner</th>
+                <th>Name</th>
+                <th>Jira Ticket</th>
+                <th>Last Updated</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <br/>
+            {% for analysis in analyses %}
+                <tr>
+                    <td><a href="{% url 'analysis-detail' analysis.id %}">{{analysis.id}}</td>
+                    <td>{{analysis.owner}}</td>
+                    <td>{{analysis.name}}</td>
+                    <td>{{analysis.jira_ticket}}</td>
+                    <td>{{analysis.last_updated}}</td>
+                    <td>{{analysis.status}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

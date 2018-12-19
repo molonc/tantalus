@@ -74,6 +74,9 @@ class Patient(models.Model):
     """
     Patient model
     """
+
+    history = HistoricalRecords()
+
     patient_id = models.CharField(
         unique=True,
         max_length=120,
@@ -81,7 +84,6 @@ class Patient(models.Model):
     )
 
     external_patient_id = models.CharField(
-        unique=True,
         max_length=120,
         null=True
     )
@@ -93,7 +95,7 @@ class Patient(models.Model):
     )
 
     def get_absolute_url(self):
-        return reverse("patient-list")
+        return reverse("patient-detail", args=(self.id,))
 
     def __str__(self):
         return self.patient_id
@@ -135,7 +137,7 @@ class Sample(models.Model):
         blank=True
     )
 
-    patient_id = models.ForeignKey(
+    patient = models.ForeignKey(
         Patient,
         on_delete=models.CASCADE,
         null=True
@@ -150,13 +152,38 @@ class Sample(models.Model):
         return self.sample_id
 
     def get_absolute_url(self):
-        return reverse("sample-list")
+        return reverse("sample-detail", args=(self.id,))
 
     def get_patient_name(self):
         return self.patient_id
 
     def get_submissions(self):
         return self.submission_set.all()
+
+
+class LibraryType(models.Model):
+    """
+    Type of sequencing applied to a DNA library.
+    """
+
+    history = HistoricalRecords()
+
+    name = models.CharField(
+        max_length=50,
+        blank=True,
+        null=False,
+        unique=True
+    )
+
+    description = models.CharField(
+        max_length=240,
+        blank=True,
+        null=False,
+        unique=True
+    )
+
+    def __unicode__(self):
+        return self.name
 
 
 class DNALibrary(models.Model):
@@ -174,37 +201,10 @@ class DNALibrary(models.Model):
 
     library_id = create_id_field(unique=True)
 
-    EXOME = 'EXOME'
-    WGS = 'WGS'
-    RNASEQ = 'RNASEQ'
-    SINGLE_CELL_WGS = 'SC_WGS'
-    SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
-    EXCAP = 'EXCAP'
-    BISULFITE = 'BISULFITE'
-    CHIP = 'CHIP'
-    MRE = 'MRE'
-    MIRNA = 'MIRNA'
-    MEDIP = 'MEDIP'
-    DNA_AMPLICON = 'DNA_AMPLICON'
-
-    library_type_choices = (
-        (EXOME, 'Bulk Whole Exome Sequence'),
-        (WGS, 'Bulk Whole Genome Sequence'),
-        (RNASEQ, 'Bulk RNA-Seq'),
-        (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
-        (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
-        (EXCAP,'Exon Capture'),
-        (MIRNA,'micro RNA'),
-        (BISULFITE,'Bisulfite'),
-        (CHIP,'Chromatin Immunoprecipitation'),
-        (MRE,'Methylation sensitive restriction enzyme sequencing'),
-        (MEDIP,'Methylated DNA immunoprecipitation'),
-        (DNA_AMPLICON,'Targetted DNA Amplicon Sequence')
-    )
-
-    library_type = models.CharField(
-        max_length=50,
-        choices=library_type_choices,
+    library_type = models.ForeignKey(
+        LibraryType,
+        on_delete=models.CASCADE,
+        null=True
     )
 
     SINGLE_INDEX = 'S'
@@ -402,7 +402,7 @@ class FileResource(models.Model):
         }[self.compression]
 
     def get_file_size(self):
-        size_mb = str("{:,}".format(self.size / 1000000)) + " MB"
+        size_mb = str("{:,.2f}".format(self.size / 1000000.0)) + " MB"
         return size_mb
 
 
@@ -437,6 +437,44 @@ class SequenceFileInfo(models.Model):
         blank=True,
         null=True,
     )
+
+
+class ReferenceGenome(models.Model):
+    """
+    Reference genome species / version.
+    """
+
+    history = HistoricalRecords()
+
+    name = models.CharField(
+        max_length=50,
+        blank=True,
+        null=False,
+        unique=True
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class AlignmentTool(models.Model):
+    """
+    Alignment tool used to create an aligned sequence dataset.
+    """
+
+    history = HistoricalRecords()
+
+    name = models.CharField(
+        unique=True,
+        max_length=50,
+    )
+
+    description = models.CharField(
+        max_length=250,
+    )
+
+    def __str__(self):
+        return self.name
 
 
 class SequenceDataset(models.Model):
@@ -506,32 +544,17 @@ class SequenceDataset(models.Model):
         on_delete=models.CASCADE,
     )
 
-    HG19 = 'HG19'
-    HG18 = 'HG18'
-    MM10 = 'MM10'
-    UNALIGNED = 'UNALIGNED'
-    UNUSABLE = 'UNUSABLE'
-
-    reference_genome_choices = (
-        (HG19, 'Human Genome 19'),
-        (HG18, 'Human Genome 18'),
-        (MM10, 'Mouse Genome 10'),
-        (UNALIGNED, 'Not aligned to a reference'),
-        (UNUSABLE, 'Alignments are not usable'),
-    )
-
-    reference_genome = models.CharField(
-        max_length=50,
-        # TODO: foreign key or update choices
-        #choices=reference_genome_choices,
-        default=UNALIGNED,
-    )
-
-    aligner = models.CharField(
-        max_length=50,
+    reference_genome = models.ForeignKey(
+        ReferenceGenome,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
-        default=None,
+    )
+
+    aligner = models.ForeignKey(
+        'AlignmentTool',
+        null=True,
+        blank=True,
     )
 
     def get_num_total_sequencing_lanes(self):
@@ -569,6 +592,21 @@ class SequenceDataset(models.Model):
         return self.name
 
 
+class AnalysisType(models.Model):
+
+    history = HistoricalRecords()
+
+    name = models.CharField(
+        max_length=50,
+        blank=False,
+        null=False,
+        unique=True
+    )
+
+    def __str__(self):
+        return self.name
+
+
 # Validator for analysis version
 analysis_version_validator = RegexValidator(
     regex=r"v\d+\.\d+\.\d+",
@@ -592,6 +630,13 @@ class Analysis(models.Model):
     name = models.CharField(
         max_length=200,
         unique=True,
+    )
+
+    analysis_type= models.ForeignKey(
+        AnalysisType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
 
     version = models.CharField(
@@ -647,6 +692,9 @@ class Analysis(models.Model):
     def __unicode__(self):
         return '{}'.format(self.name)
 
+    def get_absolute_url(self):
+        return reverse("analysis-detail", args=(self.id,))
+
 
 class ResultsDataset(models.Model):
     """
@@ -678,17 +726,21 @@ class ResultsDataset(models.Model):
 
     results_version = models.CharField(
         max_length=50,
-        null=False,
+        null=True,
     )
 
     analysis = models.ForeignKey(
         Analysis,
-        null=False,
-        on_delete=models.CASCADE,
+        null=True,
+        on_delete=models.SET_NULL,
     )
 
     samples = models.ManyToManyField(
         Sample,
+    )
+
+    libraries = models.ManyToManyField(
+        DNALibrary,
     )
 
     file_resources = models.ManyToManyField(
@@ -726,10 +778,6 @@ class Storage(PolymorphicModel):
     def get_filepath(self, file_resource):
         raise NotImplementedError()
 
-    @property
-    def is_read_only(self):
-        return False
-
 
 class ServerStorage(Storage):
     """
@@ -752,10 +800,6 @@ class ServerStorage(Storage):
         max_length=30,
     )
 
-    read_only = models.BooleanField(
-        default=True,
-    )
-
     def get_prefix(self):
         return self.storage_directory
 
@@ -764,23 +808,7 @@ class ServerStorage(Storage):
             str(self.storage_directory),
             file_resource.filename.strip('/'))
 
-    @property
-    def is_read_only(self):
-        return self.read_only
-
     storage_type = 'server'
-
-
-class AzureBlobCredentials(models.Model):
-    """
-    Azure blob credentials.
-    """
-
-    history = HistoricalRecords()
-
-    storage_key = models.CharField(
-        max_length=200,
-    )
 
 
 class AzureBlobStorage(Storage):
@@ -801,11 +829,6 @@ class AzureBlobStorage(Storage):
 
     storage_container = models.CharField(
         max_length=63,
-    )
-
-    credentials = models.ForeignKey(
-        AzureBlobCredentials,
-        on_delete=models.CASCADE,
     )
 
     def get_prefix(self):
@@ -844,16 +867,11 @@ class FileInstance(models.Model):
         on_delete=models.CASCADE,
     )
 
-    filename_override = models.CharField(
-        max_length=500,
-        blank=True,
-        default='',
+    is_deleted = models.BooleanField(
+        default=False,
     )
 
     def get_filepath(self):
-        if self.filename_override is not '':
-            return self.filename_override
-
         return self.storage.get_filepath(self.file_resource)
 
     class Meta:
@@ -864,17 +882,22 @@ class Sow(models.Model):
     """
     Sow model
     """
+
+    history = HistoricalRecords()
+
     # Unique on name
     name = models.CharField(max_length=50,unique=True)
 
     def __str__(self):
         return self.name
 
-
 class Submission(models.Model):
     """
     Submission model
     """
+
+    history = HistoricalRecords()
+
     # Add nullable library id
     sample = models.ForeignKey(
         Sample,
@@ -918,40 +941,10 @@ class Submission(models.Model):
         default=None
     )
 
-    EXOME = 'EXOME'
-    WGS = 'WGS'
-    RNASEQ = 'RNASEQ'
-    SINGLE_CELL_WGS = 'SC_WGS'
-    SINGLE_CELL_RNASEQ = 'SC_RNASEQ'
-    EXCAP = 'EXCAP'
-    BISULFITE = 'BISULFITE'
-    CHIP = 'CHIP'
-    MRE = 'MRE'
-    MIRNA = 'MIRNA'
-    MEDIP = 'MEDIP'
-    DNA_AMPLICON = 'DNA_AMPLICON'
-
-    library_type_choices = (
-        (EXOME, 'Bulk Whole Exome Sequence'),
-        (WGS, 'Bulk Whole Genome Sequence'),
-        (RNASEQ, 'Bulk RNA-Seq'),
-        (SINGLE_CELL_WGS, 'Single Cell Whole Genome Sequence'),
-        (SINGLE_CELL_RNASEQ, 'Single Cell RNA-Seq'),
-        (EXCAP,'Exon Capture'),
-        (MIRNA,'micro RNA'),
-        (BISULFITE,'Bisulfite'),
-        (CHIP,'Chromatin Immunoprecipitation'),
-        (MRE,'Methylation sensitive restriction enzyme sequencing'),
-        (MEDIP,'Methylated DNA immunoprecipitation'),
-        (DNA_AMPLICON,'Targetted DNA Amplicon Sequence')
-    )
-
-    library_type = models.CharField(
-        max_length=240,
-        blank=True,
-        null=True,
-        default=None,
-        choices=library_type_choices
+    library_type = models.ForeignKey(
+        LibraryType,
+        on_delete=models.CASCADE,
+        null=True
     )
 
     def get_absolute_url(self):

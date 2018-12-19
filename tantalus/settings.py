@@ -165,4 +165,5 @@ REST_FRAMEWORK = {
 }
 
 LOGIN_URL = '/account/login'
+JIRA_URL = 'https://www.bcgsc.ca/jira/'
 

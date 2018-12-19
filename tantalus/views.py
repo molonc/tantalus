@@ -1,6 +1,7 @@
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -26,14 +27,18 @@ import pandas as pd
 from io import StringIO
 import xlsxwriter
 
+from jira import JIRA, JIRAError
+
 from tantalus.utils import read_excel_sheets
-from tantalus.settings import STATIC_ROOT
+from tantalus.settings import STATIC_ROOT, JIRA_URL
 from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
+from tantalus.settings import LOGIN_URL
 
 
-class ExternalIDSearch(TemplateView):
+class ExternalIDSearch(LoginRequiredMixin, TemplateView):
+    login_url =LOGIN_URL
 
     search_template_name = "tantalus/external_id_search.html"
     result_template_name = "tantalus/external_id_results.html"
@@ -85,6 +90,7 @@ class ExternalIDSearch(TemplateView):
             return self.get_context_and_render(request, form)
 
 
+@login_required
 def export_external_id_results(request):
     header_dict = {
         'ID': [],
@@ -104,6 +110,7 @@ def export_external_id_results(request):
     return response
 
 
+@login_required
 @Render("tantalus/patient_list.html")
 def patient_list(request):
     patients = tantalus.models.Patient.objects.all().order_by('patient_id')
@@ -113,7 +120,8 @@ def patient_list(request):
     return context
 
 
-class PatientDetail(DetailView):
+class PatientDetail(LoginRequiredMixin, DetailView):
+    login_url =LOGIN_URL
 
     model = tantalus.models.Patient
     template_name = "tantalus/patient_detail.html"
@@ -146,6 +154,7 @@ class PatientDetail(DetailView):
         return context
 
 
+@login_required
 @Render("tantalus/submission_list.html")
 def submission_list(request):
     submissions = tantalus.models.Submission.objects.all().order_by('id')
@@ -155,7 +164,8 @@ def submission_list(request):
     return context
 
 
-class SubmissionDetail(DetailView):
+class SubmissionDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
 
     model = tantalus.models.Submission
     template_name = "tantalus/submission_detail.html"
@@ -164,10 +174,11 @@ class SubmissionDetail(DetailView):
         # TODO: add other fields to the view?
         context = super(SubmissionDetail, self).get_context_data(**kwargs)
         sample_object = tantalus.models.Sample.objects.get(pk=self.object.sample_id)
-        context['sample_url'] = sample_object.get_absolute_url() + str(self.object.sample.id)
+        context['sample_url'] = sample_object.get_absolute_url()
         return context
 
 
+@login_required
 @Render("tantalus/sample_list.html")
 def sample_list(request):
     """
@@ -182,7 +193,8 @@ def sample_list(request):
     return context
 
 
-class SampleDetail(DetailView):
+class SampleDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
 
     model = tantalus.models.Sample
     template_name = "tantalus/sample_detail.html"
@@ -191,22 +203,19 @@ class SampleDetail(DetailView):
         # TODO: add other fields to the view?
         context = super(SampleDetail, self).get_context_data(**kwargs)
 
+        sequence_datasets_set = self.object.sequencedataset_set.all()
         submission_set = self.object.submission_set.all()
         project_set = self.object.projects.all()
-        project_list = []
+        library_set = tantalus.models.DNALibrary.objects.filter(sequencedataset__sample=self.object).distinct()
 
-        for project in project_set:    
-            project_list.append(project.__str__())
-
-        try:
-            context['patient_url'] = self.object.patient_id.get_absolute_url() + str(self.object.patient_id.id)
-        except:
-            context['patient_url'] = None
-        context['project_list'] = project_list
+        context['project_list'] = project_set
+        context['sequence_datasets_set'] = sequence_datasets_set
         context['submission_set'] = submission_set
+        context['library_set'] = library_set
         return context
 
 
+@login_required
 @Render("tantalus/result_list.html")
 def result_list(request):
     results = tantalus.models.ResultsDataset.objects.all().order_by('id')
@@ -217,31 +226,25 @@ def result_list(request):
     return context
 
 
-class ResultDetail(DetailView):
+class ResultDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
+
     model = tantalus.models.ResultsDataset
     template_name = "tantalus/result_detail.html"
 
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
         context = super(ResultDetail, self).get_context_data(**kwargs)
-        sample_list = list(self.object.samples.all())
 
-        for sample in sample_list:
-            projects_list = []
-            submission_list = []
-            for project in sample.projects.all():
-                projects_list.append(project.__str__())
-            sample.projects_list = projects_list
+        sample_set = self.object.samples.all()
+        library_set = self.object.libraries.all()
+        project_set = tantalus.models.Project.objects.filter(sample__in=sample_set).distinct()
+        submission_set = tantalus.models.Submission.objects.filter(sample__in=sample_set).distinct()
 
-            for submission in sample.submission_set.all():
-                submission_list.append(submission.id)
-            sample.submission_list = submission_list
-
-        analysis = list(tantalus.models.Analysis.objects.filter(id=(self.object.analysis.id)))[0]
-        context['input_datasets'] = analysis.input_datasets.all()
-        context['file_resources'] = list(self.object.file_resources.all())
-        context['samples'] = sample_list
-        context['pk'] = kwargs['object'].id
+        context['file_resources'] = self.object.file_resources.all()
+        context['library_set'] = library_set
+        context['samples'] = sample_set
+        context['pk'] = self.object.id
         context['form'] = tantalus.forms.AddDatasetToTagForm()
         return context
 
@@ -262,8 +265,8 @@ class ResultDetail(DetailView):
             return HttpResponseRedirect(result.get_absolute_url())
 
 
-@method_decorator(login_required, name='dispatch')
-class TagResultsDelete(View):
+class TagResultsDelete(LoginRequiredMixin, View):
+    login_url = LOGIN_URL
 
     def get(self, request, pk, pk_2):
         result = get_object_or_404(tantalus.models.ResultsDataset, pk=pk)
@@ -274,6 +277,102 @@ class TagResultsDelete(View):
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
 
+@method_decorator(login_required, name='dispatch')
+class AnalysisCreate(TemplateView):
+    template_name = "tantalus/analysis_create.html"
+
+    def create_jira_ticket(self, username, password, name, description, reporter, assignee, project_name):
+
+        jira_server = JIRA(JIRA_URL, auth=(username, password))
+
+        projects = jira_server.projects()
+
+        for project in projects:
+            if(project.name.lower() == project_name.lower()):
+                project_id = project.id
+
+
+        title = "Analysis Ticket For of {}".format(name)
+
+        issue_dict = {
+            "project": {"id": project_id},
+            "summary": title,
+            "description": description,
+            "issuetype": {"name": "Task"},
+            "reporter": {"name": reporter},
+            "assignee": {"name": assignee},
+        }
+
+        new_issue = jira_server.create_issue(fields=issue_dict)
+
+        return new_issue
+
+    def get_context_and_render(self, request, form):
+        context = {
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        form = tantalus.forms.AnalysisForm()
+        return self.get_context_and_render(request, form)
+
+    def post(self, request, *args, **kwargs):
+        form = tantalus.forms.AnalysisForm(request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.owner = request.user
+            jira_ticket = self.create_jira_ticket(form['jira_username'].value(), form['jira_password'].value(), 
+                                          instance.name, form['description'].value(), str(request.user), str(request.user), form['project_name'].value())
+
+
+            instance.jira_ticket = jira_ticket
+
+            instance.save()
+            msg = "Successfully created Analysis {}.".format(instance.name)
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            msg = "Failed to create Analysis. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form)
+
+
+@method_decorator(login_required, name='dispatch')
+class AnalysisEdit(TemplateView):
+
+    template_name = "tantalus/analysis_edit.html"
+
+    def get_context_and_render(self, request, form, pk=None):
+        context = {
+            'pk':pk,
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        analysis_pk = kwargs['pk']
+        analysis = tantalus.models.Analysis.objects.get(id=analysis_pk)
+        form = tantalus.forms.AnalysisEditForm(instance=analysis)
+        return self.get_context_and_render(request, form, analysis_pk)
+
+    def post(self, request, *args, **kwargs):
+        analysis_pk = kwargs['pk']
+        analysis = tantalus.models.Analysis.objects.get(id=analysis_pk)
+        form = tantalus.forms.AnalysisEditForm(request.POST, instance=analysis)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save()
+            msg = "Successfully edited Patient {}".format(instance.name)
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            msg = "Failed to edit the Analysis. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form, analysis_pk)
+
+
+@login_required
 @Render("tantalus/analysis_list.html")
 def analysis_list(request):
     analyses = tantalus.models.Analysis.objects.all().order_by('id')
@@ -284,7 +383,9 @@ def analysis_list(request):
     return context
 
 
-class AnalysisDetail(DetailView):
+class AnalysisDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
+
     model = tantalus.models.Analysis
     template_name = "tantalus/analysis_detail.html"
 
@@ -295,7 +396,19 @@ class AnalysisDetail(DetailView):
         context['input_results'] = self.object.input_results.all()
         return context
 
+        
+@login_required
+@Render("tantalus/analysis_list.html")
+def analysis_list(request):
+    analyses = tantalus.models.Analysis.objects.all().order_by('id')
 
+    context = {
+        'analyses': analyses
+    }
+    return context
+
+
+@login_required
 def export_patient_create_template(request):
     header_dict = {
         'Case ID': [],
@@ -309,11 +422,11 @@ def export_patient_create_template(request):
     return response
 
 
-@method_decorator(login_required, name='dispatch')
-class PatientCreate(TemplateView):
+class PatientCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Patient create page.
     """
+    login_ur = LOGIN_URL
 
     template_name = "tantalus/patient_create.html"
 
@@ -326,21 +439,29 @@ class PatientCreate(TemplateView):
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
-        form = tantalus.forms.PatientForm()
+        SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
+        patient_ids = []
+        for patient in SA_prefix_patients:
+            patient_ids.append(int(patient.patient_id[2:]))
+        patient_ids.sort()
+        data = {'patient_id': 'SA' + str(patient_ids[-1] + 1)}
+        form = tantalus.forms.PatientForm(initial=data)
         multi_form = tantalus.forms.UploadPatientForm()
         return self.get_context_and_render(request, form, multi_form)
 
     def post(self, request, *args, **kwargs):
         form = tantalus.forms.PatientForm(request.POST)
-        multi_form = tantalus.forms.UploadPatientForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
             msg = "Successfully created Patient {}.".format(instance.patient_id)
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
+
+        multi_form = tantalus.forms.UploadPatientForm(request.POST, request.FILES)
         if multi_form.is_valid():
-            patients_df = multi_form.get_patient_data()
+            patients_df, auto_generated_patient_ids = multi_form.get_patient_data()
+
             form_headers = patients_df.columns.tolist()
 
             external_patient_id_index = form_headers.index('External Patient ID')
@@ -348,23 +469,34 @@ class PatientCreate(TemplateView):
             case_id_index = form_headers.index('Case ID')
 
             to_edit = []
+            auto_generated_patients = []
             for idx, patient_row in patients_df.iterrows():
+                if(patient_row[patient_id_index] in auto_generated_patient_ids):
+                    patient = tantalus.models.Patient(
+                        patient_id=patient_row[patient_id_index],
+                        external_patient_id=patient_row[external_patient_id_index],
+                        case_id=patient_row[case_id_index]
+                    )
+                    auto_generated_patients.append(model_to_dict(patient))
+                    continue
                 patient, created = tantalus.models.Patient.objects.get_or_create(patient_id=patient_row[patient_id_index])
                 if(created):
                     patient.external_patient_id = patient_row[external_patient_id_index]
                     patient.case_id = patient_row[case_id_index]
+                    patient.save()
                 else:
                     patient.external_patient_id = patient_row[external_patient_id_index]
                     patient.case_id = patient_row[case_id_index]
                     to_edit.append(model_to_dict(patient))
-            if(len(to_edit) == 0):
+            if(len(to_edit) == 0 and len(auto_generated_patients) == 0):
                 msg = "Successfully created all Patients."
                 messages.success(request, msg)
                 return HttpResponseRedirect(reverse('patient-list'))
             else:
-                msg = "Editing Existing Patient Data. Please Confirm Modifications."
+                msg = "You are editing existing Patient Data or have asked us to auto-generate Patient IDs. Please Confirm Modifications and ID Generation."
                 messages.warning(request, msg)
                 request.session['to_edit'] = to_edit
+                request.session['auto_generated_patients'] = auto_generated_patients
                 return HttpResponseRedirect(reverse('confirm-patient-edit-from-create'))
         else:
             msg = "Failed to create the Patient. Please fix the errors below."
@@ -372,13 +504,15 @@ class PatientCreate(TemplateView):
             return self.get_context_and_render(request, form, multi_form)
 
 
-@method_decorator(login_required, name='dispatch')
-class ConfirmPatientEditFromCreate(TemplateView):
+class ConfirmPatientEditFromCreate(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
+
     template_name = "tantalus/confirm_patient_edit.html"
 
-    def get_context_and_render(self, request, to_edit):
+    def get_context_and_render(self, request, to_edit, auto_generated_patients):
         context = {
             'patients_to_edit': to_edit,
+            'auto_generated_patients': auto_generated_patients,
         }
         return render(request, self.template_name, context)
 
@@ -400,7 +534,7 @@ class ConfirmPatientEditFromCreate(TemplateView):
 
             existing_patient_list.append(existing_patient)
 
-        return self.get_context_and_render(request, existing_patient_list)
+        return self.get_context_and_render(request, existing_patient_list, request.session['auto_generated_patients'])
 
     def post(self, request, *args, **kwargs):
 
@@ -410,13 +544,17 @@ class ConfirmPatientEditFromCreate(TemplateView):
             existing_patient.case_id = patient['case_id']
             existing_patient.save()
 
+        for patient in request.session['auto_generated_patients']:
+            new_patient = tantalus.models.Patient(**patient)
+            new_patient.save()
+
         msg = "Successfully modified and created all Patients."
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('patient-list'))
 
 
-@method_decorator(login_required, name='dispatch')
-class PatientEdit(TemplateView):
+class PatientEdit(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
 
     template_name = "tantalus/patient_edit.html"
 
@@ -449,11 +587,11 @@ class PatientEdit(TemplateView):
             return self.get_context_and_render(request, form, patient_pk)
 
 
-@method_decorator(login_required, name='dispatch')
-class SubmissionCreate(TemplateView):
+class SubmissionCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Sample create page.
     """
+    login_url = LOGIN_URL
 
     template_name = "tantalus/submission_create.html"
 
@@ -483,12 +621,11 @@ class SubmissionCreate(TemplateView):
             return self.get_context_and_render(request, form)
 
 
-@method_decorator(login_required, name='dispatch')
-class SpecificSubmissionCreate(TemplateView):
+class SpecificSubmissionCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Sample create page.
     """
-
+    login_url = LOGIN_URL
     template_name = "tantalus/submission_create.html"
 
     def get_context_and_render(self, request, sample_pk, form, pk=None):
@@ -519,11 +656,11 @@ class SpecificSubmissionCreate(TemplateView):
             return self.get_context_and_render(request, form)
 
 
-@method_decorator(login_required, name='dispatch')
-class SampleCreate(TemplateView):
+class SampleCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Sample create page.
     """
+    login_url = LOGIN_URL
 
     template_name = "tantalus/sample_create.html"
 
@@ -585,11 +722,11 @@ class SampleCreate(TemplateView):
             return self.get_context_and_render(request, form, multi_form)
 
 
-@method_decorator(login_required, name='dispatch')
-class SpecificSampleCreate(TemplateView):
+class SpecificSampleCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Sample create page.
     """
+    login_url = LOGIN_URL
 
     template_name = "tantalus/specific_sample_create.html"
 
@@ -622,8 +759,8 @@ class SpecificSampleCreate(TemplateView):
             return self.get_context_and_render(request, form, patient_id)
 
 
-@method_decorator(login_required, name='dispatch')
-class SampleEdit(TemplateView):
+class SampleEdit(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
 
     template_name = "tantalus/sample_edit.html"
 
@@ -656,6 +793,7 @@ class SampleEdit(TemplateView):
             return self.get_context_and_render(request, form, sample_pk)
 
 
+@login_required
 def export_sample_create_template(request):
     header_dict = {
         'External Patient ID': [],
@@ -670,6 +808,7 @@ def export_sample_create_template(request):
     return response
 
 
+@login_required
 @Render("tantalus/tag_list.html")
 def tag_list(request):
     """
@@ -694,7 +833,9 @@ class TagDelete(View):
         return HttpResponseRedirect(reverse('tag-list'))
 
 
-class TagDetail(DetailView):
+class TagDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
+
     model = tantalus.models.Tag
     template_name = "tantalus/tag_detail.html"
 
@@ -724,7 +865,8 @@ class TagDatasetDelete(View):
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
 
-class DatasetListJSON(BaseDatatableView):
+class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
+    login_url = LOGIN_URL
     """
     Class used as AJAX data source through the ajax option in the abstractdataset_list template.
     This enables server-side processing of the data used in the javascript DataTables.
@@ -771,7 +913,7 @@ class DatasetListJSON(BaseDatatableView):
             return list(row.get_storage_names())
 
         if column == 'library_type':
-            return row.library.library_type
+            return row.library.library_type.name
 
         if column == 'num_total_read_groups':
             return row.get_num_total_sequencing_lanes()
@@ -806,7 +948,7 @@ class DatasetListJSON(BaseDatatableView):
                         q |= Q(library__library_id__startswith=search)
 
                     elif col['name'] == 'library_type':
-                        q |= Q(library__library_type__startswith=search)
+                        q |= Q(library__library_type__name__startswith=search)
 
                     # standard search for simple . lookups across models
                     else:
@@ -820,7 +962,8 @@ class DatasetListJSON(BaseDatatableView):
         return qs
 
 
-class DatasetList(ListView):
+class DatasetList(LoginRequiredMixin, ListView):
+    login_url = LOGIN_URL
 
     model = tantalus.models.SequenceDataset
     template_name = "tantalus/abstractdataset_list.html"
@@ -843,7 +986,8 @@ class DatasetList(ListView):
         return context
 
 
-class DatasetDetail(DetailView):
+class DatasetDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
 
     model = tantalus.models.SequenceDataset
     template_name = "tantalus/abstractdataset_detail.html"
@@ -881,14 +1025,19 @@ class DatasetDelete(View):
     """
     def get(self, request, pk):
         dataset = get_object_or_404(tantalus.models.SequenceDataset, pk=pk)
-        dataset.file_resources.all().delete()
+        for file_resource in dataset.file_resources.all():
+            for file_instance in file_resource.fileinstance_set.all():
+                file_instance.is_deleted = True
+                file_instance.save()
         dataset.delete()
         msg = "Successfully removed datasest"
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('dataset-list'))
 
 
-class DatasetSearch(FormView):
+class DatasetSearch(LoginRequiredMixin, FormView):
+
+    login_url = LOGIN_URL
 
     form_class = tantalus.forms.DatasetSearchForm
     success_url = reverse_lazy('dataset-tag')
@@ -1096,21 +1245,10 @@ def get_storage_stats(storages=['all']):
     storage_size = file_resources.aggregate(Sum('size'))
     storage_size = storage_size['size__sum']
 
-    # Build the file transfer set
-    if 'all' in storages:
-        num_active_file_transfers = tantalus.models.FileTransfer.objects.filter(
-            running=True).count()
-    else:
-        num_active_file_transfers = tantalus.models.FileTransfer.objects.filter(
-            running=True).filter(
-            Q(from_storage__name__in=storages)
-            | Q(to_storage__name__in=storages)).count()
-
     return {'num_bams': num_bams,
             'num_specs': num_specs,
             'num_bais': num_bais,
             'num_fastqs': num_fastqs,
-            'num_active_file_transfers': num_active_file_transfers,
             'storage_size': storage_size,
            }
 
@@ -1136,14 +1274,12 @@ def get_library_stats(filetype, storages_dict):
     # Make sure the filetype is 'BAM' or 'FASTQ'
     assert filetype in ['BAM', 'FASTQ']
 
-    # Get the list of library types that we'll get data for
-    library_types = [x[0] for x in tantalus.models.DNALibrary.library_type_choices]
-
     # Results dictionary
     results = dict()
 
+    # Get the list of library types that we'll get data for
     # Go through each library
-    for lib_type in library_types:
+    for lib_type in tantalus.models.LibraryType.objects.all():
         # Make a list to store results in
         results[lib_type] = list()
 
@@ -1154,7 +1290,7 @@ def get_library_stats(filetype, storages_dict):
             # I'm not exactly sure why this is so, without it, filter
             # picks up a ton of duplicates. Very strange.
             matching_files = tantalus.models.FileResource.objects.filter(
-                sequencedataset__library__library_type=lib_type).filter(
+                sequencedataset__library__library_type=lib_type.id).filter(
                 fileinstance__storage__name__in=storages).distinct()
 
             if filetype == 'BAM':
@@ -1185,7 +1321,8 @@ def get_library_stats(filetype, storages_dict):
     return results
 
 
-class DataStatsView(TemplateView):
+class DataStatsView(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
     """A view to show info on data statistics."""
     template_name = 'tantalus/data_stats.html'
 
@@ -1218,9 +1355,10 @@ class DataStatsView(TemplateView):
         fastq_dict = get_library_stats('FASTQ', storages_dict)
 
         context = {
-            'storage_stats': sorted(storage_stats.iteritems(),
-                                            key=lambda x, y: y['storage_size'],
-                                            reverse=True),
+            'storage_stats': sorted(
+                storage_stats.iteritems(),
+                key=lambda y: y[1]['storage_size'],
+                reverse=True),
             'locations_list': sorted(['all', 'azure', 'gsc', 'rocks', 'shahlab']),
             'bam_library_stats': sorted(bam_dict.iteritems()),
             'fastq_library_stats': sorted(fastq_dict.iteritems()),
@@ -1228,7 +1366,9 @@ class DataStatsView(TemplateView):
         return context
 
 
-class HomeView(TemplateView):
+class HomeView(LoginRequiredMixin, TemplateView):
+
+    login_url = LOGIN_URL
 
     template_name = 'tantalus/index.html'
 

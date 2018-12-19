@@ -1,0 +1,33 @@
+<h4>Related Sequence Datasets</h4>
+<div class="table-responsive">
+    <table id="datatable" class="table-striped table-bordered">
+        <thead>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Library ID</th>
+            <th>Library Type</th>
+            <th>Reference Genome</th>
+            <th>Aligner</th>
+            <th>Last Updated</th>
+            <th>Num. Read Groups</th>
+            <th>Num. Total Read Groups</th>
+            <th>Completed</th>
+        </thead>
+        <tbody>
+            {% for dataset in sequence_datasets_set %}
+                <tr>
+                    <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.name}}</a></td>
+                    <td>{{dataset.dataset_type}}</td>
+                    <td>{{dataset.library.id}}</td>
+                    <td>{{dataset.get_library_type}}</td>
+                    <td>{{dataset.reference_genome}}</td>
+                    <td>{{dataset.aligner}}</td>
+                    <td>{{dataset.last_updated}}</td>
+                    <td>{{dataset.sequence_lanes.all.count}}</td>
+                    <td>{{dataset.get_num_total_sequencing_lanes}}</td>
+                    <td>{{dataset.get_is_complete}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

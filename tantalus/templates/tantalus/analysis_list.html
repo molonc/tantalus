@@ -6,35 +6,13 @@
 {% endblock %}
 
 {% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">Select an Analysis to view its details</h4>
+        <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'analysis-add' %}">Add Analysis</a>
+    </div>
     <div class="container" style="background-color:#F5F5F5;">
         {% if analyses %}
-            <div class="table-responsive">
-                <table id="datatable" class="table table-striped" style="display:none;">
-                    <thead>
-                        <tr>
-                        	<th>Analysis ID</th>
-                            <th>Owner</th>
-                            <th>Name</th>
-                            <th>Jira Ticket</th>
-                            <th>Last Updated</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <br/>
-                        {% for analysis in analyses %}
-                            <tr>
-                            	<td><a href="{% url 'analysis-detail' analysis.id %}">{{analysis.id}}</td>
-                            	<td>{{analysis.owner}}</td>
-                            	<td>{{analysis.name}}</td>
-                            	<td>{{analysis.jira_ticket}}</td>
-                            	<td>{{analysis.last_updated}}</td>
-                            	<td>{{analysis.status}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% include "tantalus/datatable/analysis_list.html" %}
         {% else %}
             <h5><i class="text-warning">No Analyses yet.</i></h>
         {% endif %}

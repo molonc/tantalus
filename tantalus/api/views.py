@@ -11,7 +11,6 @@ from tantalus.api.permissions import IsOwnerOrReadOnly
 import tantalus.api.serializers
 from tantalus.api.filters import (
     AnalysisFilter,
-    AzureBlobCredentialsFilter,
     DNALibraryFilter,
     FileInstanceFilter,
     FileResourceFilter,
@@ -72,18 +71,21 @@ class OwnerEditModelViewSet(viewsets.ModelViewSet):
 
 
 class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, permissions.IsAdminUser)
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_class = SampleFilter
 
 
 class FileTypeViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.FileType.objects.all()
     serializer_class = tantalus.api.serializers.FileTypeSerializer
     filter_class = FileTypeFilter
 
 
 class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileResourceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileResourceSerializer
@@ -91,6 +93,7 @@ class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 
 class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.SequenceFileInfo.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequenceFileInfoSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequenceFileInfoSerializer
@@ -98,6 +101,7 @@ class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 
 class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.DNALibrary.objects.all()
     serializer_class_readonly = tantalus.api.serializers.DNALibrarySerializer
     serializer_class_readwrite = tantalus.api.serializers.DNALibrarySerializer
@@ -105,6 +109,7 @@ class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 
 class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.SequencingLane.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequencingLaneSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequencingLaneSerializer
@@ -112,6 +117,7 @@ class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 
 class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.SequenceDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
@@ -121,36 +127,37 @@ class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
         """Delete all associated file resources too."""
         # Delete the file resources
         this_dataset = get_object_or_404(self.queryset, pk=pk)
-        this_dataset.file_resources.all().delete()
+        for file_resource in this_dataset.file_resources.all():
+            for file_instance in file_resource.fileinstance_set.all():
+                file_instance.is_deleted = True
+                file_instance.save()
 
         # Call the parent constructor
         return super(SequenceDatasetViewSet, self).destroy(request, pk)
 
 
 class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.Storage.objects.all()
     serializer_class = tantalus.api.serializers.StorageSerializer
     filter_class = StorageFilter
 
 
 class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.ServerStorage.objects.all()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
     filter_class = ServerStorageFilter
 
 
 class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.AzureBlobStorage.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
 
 
-class AzureBlobCredentialsViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    queryset = tantalus.models.AzureBlobCredentials.objects.all()
-    serializer_class = tantalus.api.serializers.AzureBlobCredentialsSerializer
-    filter_class = AzureBlobCredentialsFilter
-
-
 class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.FileInstance.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileInstanceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileInstanceSerializer
@@ -163,12 +170,14 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
         { "name": "test_api_tag", "sequencedataset_set": [1, 2, 3, 4], "resultsdataset_set": [9, 10] }
     Note that a post will update an existing tag by adding it to the given datasets
     """
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.Tag.objects.all()
     serializer_class = tantalus.api.serializers.TagSerializer
     filter_class = TagFilter
 
 
 class ResultDatasetsViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.ResultsDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.ResultDatasetSerializer
     serializer_class_readwrite = tantalus.api.serializers.ResultDatasetSerializer
@@ -178,13 +187,17 @@ class ResultDatasetsViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
         """Delete all associated file resources too."""
         # Delete the file resources
         this_dataset = get_object_or_404(self.queryset, pk=pk)
-        this_dataset.file_resources.all().delete()
+        for file_resource in this_dataset.file_resources.all():
+            for file_instance in file_resource.fileinstance_set.all():
+                file_instance.is_deleted = True
+                file_instance.save()
 
         # Call the parent constructor
-        super(ResultDatasetsViewSet, self).destroy(request, pk)
+        return super(ResultDatasetsViewSet, self).destroy(request, pk)
 
 
 class AnalysisViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.Analysis.objects.all()
     serializer_class_readonly = tantalus.api.serializers.AnalysisSerializer
     serializer_class_readwrite = tantalus.api.serializers.AnalysisSerializer

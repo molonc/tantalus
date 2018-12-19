@@ -30,37 +30,7 @@
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if sequence_datasets %}
-            <h4>Sequence Datasets</h4>
-            <div class="table-responsive">
-                <table id="sequence-dataset-datatable" class="table-striped table-bordered">
-                    <thead>
-                        <th>Dataset ID</th>
-                        <th>Dataset Name</th>
-                        <th>Type</th>
-                        <th>Samples</th>
-                        <th>Libraries</th>
-                        <th>Library Type</th>
-                        <th>Is Complete</th>
-                        <th></th>
-                    </thead>
-                    <tbody>
-                        {% for dataset in sequence_datasets %}
-                            <tr>
-                                <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.id}}</a></td>
-                                <td>{{dataset.name}}</td>
-                                <td>{{dataset.dataset_type}}</td>
-                                <td><a href="{% url 'sample-detail' dataset.sample.id %}">{{dataset.sample.sample_id}}</a></td>
-                                <td>{{dataset.library.library_id}}</td>
-                                <td>{{dataset.library.library_type}}</td>
-                                <td>{{dataset.get_is_complete}}</td>
-                                <td>
-                                    <a href="{% url 'tag-dataset-delete' pk=dataset.id pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+             {% include "tantalus/datatable/sequence_datasets.html" %}
         {% else %}
             <h5><i class="text-warning">No Sequence Datasets associated with this Tag yet.</i></h5>
         {% endif %}
@@ -68,51 +38,10 @@
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if results %}
-            <h4>Results</h4>
-            <div class="table-responsive">
-                <table id="results-datatable" class="table-striped table-bordered">
-                    <thead>
-                        <th>Result ID</th>
-                        <th>Result Owner</th>
-                        <th>Result Name</th>
-                        <th>Result Type</th>                     
-                        <th>Result Version</th>
-                        <th>Result Analysis</th>
-                        <td></td>
-                    </thead>
-                    <tbody>
-                        {% for result in results %}
-                            <tr>
-                                <td><a href="{% url 'result-detail' result.id %}">{{result.id}}</a></td>
-                                <td>{{result.owner}}</td>
-                                <td>{{result.name}}</td>
-                                <td>{{result.results_type}}</td>
-                                <td>{{result.results_version}}</td>
-                                <td><a href="{% url 'analysis-detail' result.analysis.id %}">{{result.analysis.name}}</a></td>
-                                <td>
-                                    <a href="{% url 'tag-results-delete' pk=result.id pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+             {% include "tantalus/datatable/results.html" %}
         {% else %}
             <h5><i class="text-warning">No Results associated with this Tag yet.</i></h5>
         {% endif %}
     </div>
 
-{% endblock %}
-
-{% block datatables_script %}
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("#sequence-datasets-datatable").DataTable({
-                "order": [[0, "desc"]]
-            });
-            $("#results-datatable").DataTable({
-                "order": [[0, "desc"]]
-            });
-        });
-    </script>
 {% endblock %}

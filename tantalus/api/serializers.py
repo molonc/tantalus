@@ -1,6 +1,6 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, ValidationError
 from rest_framework import serializers
 
 import tantalus.models
@@ -60,14 +60,7 @@ class AzureBlobStorageSerializer(serializers.ModelSerializer):
             'storage_account',
             'storage_container',
             'prefix',
-            'credentials',
         )
-
-
-class AzureBlobCredentialsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = tantalus.models.AzureBlobCredentials
-        fields = '__all__'
 
 
 class FileInstanceSerializer(serializers.ModelSerializer):
@@ -125,7 +118,18 @@ class FileResourceSerializerRead(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class LibraryTypeField(serializers.Field):
+    def to_representation(self, obj):
+        return obj.name
+    def to_internal_value(self, data):
+        try:
+            return tantalus.models.LibraryType.objects.get(name=data)
+        except ObjectDoesNotExist:
+            raise ValidationError('{} does not exist'.format(data))
+
+
 class DNALibrarySerializer(serializers.ModelSerializer):
+    library_type = LibraryTypeField()
     class Meta:
         model = tantalus.models.DNALibrary
         fields = '__all__'
@@ -137,7 +141,29 @@ class SequencingLaneSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AlignmentToolField(serializers.Field):
+    def to_representation(self, obj):
+        return obj.name
+    def to_internal_value(self, data):
+        try:
+            return tantalus.models.AlignmentTool.objects.get(name=data)
+        except ObjectDoesNotExist:
+            raise ValidationError('{} does not exist'.format(data))
+
+
+class ReferenceGenomeField(serializers.Field):
+    def to_representation(self, obj):
+        return obj.name
+    def to_internal_value(self, data):
+        try:
+            return tantalus.models.ReferenceGenome.objects.get(name=data)
+        except ObjectDoesNotExist:
+            raise ValidationError('{} does not exist'.format(data))
+
+
 class SequenceDatasetSerializer(serializers.ModelSerializer):
+    aligner = AlignmentToolField(required=False, allow_null=True)
+    reference_genome = ReferenceGenomeField(required=False, allow_null=True)
     class Meta:
         model = tantalus.models.SequenceDataset
         fields = '__all__'
@@ -147,6 +173,13 @@ class SequenceDatasetSerializerRead(serializers.ModelSerializer):
     sample = SampleSerializer()
     library = DNALibrarySerializer()
     sequence_lanes = SequencingLaneSerializer(many=True)
+    aligner = AlignmentToolField()
+    reference_genome = ReferenceGenomeField()
+    is_complete = serializers.SerializerMethodField()
+
+    def get_is_complete(self, obj):
+        return obj.get_is_complete()
+
     class Meta:
         model = tantalus.models.SequenceDataset
         fields = '__all__'
@@ -199,7 +232,18 @@ class ResultDatasetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AnalysisTypeField(serializers.Field):
+    def to_representation(self, obj):
+        return obj.name
+    def to_internal_value(self, data):
+        try:
+            return tantalus.models.AnalysisType.objects.get(name=data)
+        except ObjectDoesNotExist:
+            raise ValidationError('{} does not exist'.format(data))
+
+
 class AnalysisSerializer(serializers.ModelSerializer):
+    analysis_type = AnalysisTypeField()
     class Meta:
         model = tantalus.models.Analysis
         fields = '__all__'

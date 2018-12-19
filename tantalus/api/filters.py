@@ -4,7 +4,6 @@ from django.db import models
 from django_filters import rest_framework as filters
 from tantalus.models import (
     Analysis,
-    AzureBlobCredentials,
     DNALibrary,
     FileInstance,
     FileResource,
@@ -58,14 +57,6 @@ class AnalysisFilter(BaseFilterSet):
         }
 
 
-class AzureBlobCredentialsFilter(BaseFilterSet):
-    """Filters for Azure Blob credentials."""
-
-    class Meta(BaseFilterSet.Meta):
-        model = AzureBlobCredentials
-        fields = {"id": ["exact"]}
-
-
 class DNALibraryFilter(BaseFilterSet):
     """Filters for DNA libraries."""
 
@@ -85,6 +76,7 @@ class FileInstanceFilter(BaseFilterSet):
             "file_resource": ["exact"],
             "owner": ["exact"],
             "storage": ["exact"],
+            "is_deleted": ["exact"],
         }
 
 
@@ -96,6 +88,8 @@ class FileResourceFilter(BaseFilterSet):
         super(FileResourceFilter, self).__init__(*args, **kwargs)
         self.filters["sequencedataset__id"].label = "Has SequenceDataset ID"
         self.filters["sequencedataset__name"].label = "Has SequenceDataset name"
+        self.filters["sequencefileinfo__index_sequence"].label = "Index Sequence"
+        self.filters["fileinstance__storage__name"].label = "Is in Storage name"
 
     class Meta(BaseFilterSet.Meta):
         model = FileResource
@@ -105,6 +99,7 @@ class FileResourceFilter(BaseFilterSet):
             "sequencedataset__name": ["exact"],
             "sequencedataset__id": ["exact"],
             "sequencefileinfo__index_sequence": ["exact"],
+            "fileinstance__storage__name": ["exact"],
         }
 
 
@@ -132,6 +127,8 @@ class ResultsDatasetFilter(filters.FilterSet):
             "samples": ["exact"],
             "analysis": ["exact"],
             "file_resources__filename": ["exact"],
+            "results_type": ["exact"],
+            "results_version": ["exact"],
         }
 
 
@@ -163,12 +160,14 @@ class SequenceDatasetFilter(filters.FilterSet):
             "id": ["exact"],
             "name": ["exact"],
             "library__library_id": ["exact"],
+            "library__library_type__name": ["exact"],
             "sample__sample_id": ["exact"],
             "tags__name": ["exact"],
             "sequence_lanes__flowcell_id": ["exact"],
+            "sequence_lanes__lane_number": ["exact"],
             "dataset_type": ["exact"],
-            "aligner": ["exact"],
-            "reference_genome": ["exact"],
+            "aligner__name": ["exact"],
+            "reference_genome__name": ["exact"],
             "analysis": ["exact"],
             "analysis__name": ["exact"],
             "analysis__jira_ticket": ["exact"],
@@ -195,7 +194,6 @@ class SequencingLaneFilter(BaseFilterSet):
         model = SequencingLane
         fields = {
             "id": ["exact"],
-            "dna_library_id": ["exact"],
             "dna_library__library_id": ["exact"],
             "flowcell_id": ["exact"],
             "lane_number": ["exact"],
