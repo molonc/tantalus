@@ -342,8 +342,9 @@ class DatasetSearchForm(forms.Form):
         widget=forms.widgets.Textarea
     )
 
-    library_type = forms.ChoiceField(
-        choices=(('', '---'),) + tantalus.models.DNALibrary.library_type_choices,
+    library_type = forms.ModelChoiceField(
+        queryset=tantalus.models.LibraryType.objects.all(),
+        empty_label='---',
         label="Library type",
         required=False,
     )
