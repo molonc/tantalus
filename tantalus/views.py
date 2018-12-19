@@ -404,7 +404,6 @@ class ConfirmPatientEditFromCreate(TemplateView):
     template_name = "tantalus/confirm_patient_edit.html"
 
     def get_context_and_render(self, request, to_edit, auto_generated_patients):
-        print(auto_generated_patients)
         context = {
             'patients_to_edit': to_edit,
             'auto_generated_patients': auto_generated_patients,
