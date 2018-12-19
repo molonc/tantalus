@@ -333,6 +333,7 @@ class PatientCreate(TemplateView):
             SA_ids.append(int(patient.SA_id[2:]))
         SA_ids.sort()
         data = {'SA_id': 'SA' + str(SA_ids[-1] + 1)}
+
         form = tantalus.forms.PatientForm(initial=data)
         multi_form = tantalus.forms.UploadPatientForm()
         return self.get_context_and_render(request, form, multi_form)
@@ -401,7 +402,6 @@ class ConfirmPatientEditFromCreate(TemplateView):
     template_name = "tantalus/confirm_patient_edit.html"
 
     def get_context_and_render(self, request, to_edit, auto_generated_patients):
-        print(auto_generated_patients)
         context = {
             'patients_to_edit': to_edit,
             'auto_generated_patients': auto_generated_patients,
