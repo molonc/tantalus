@@ -276,6 +276,21 @@ class TagResultsDelete(View):
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
 
+class AnalysisCreate(TemplateView):
+
+    template_name = "tantalus/analysis_create.html"
+
+    def get_context_and_render(self, request, form):
+        context = {
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        form = tantalus.forms.AnalysisForm()
+        return self.get_context_and_render(request, form)
+
+
 @Render("tantalus/analysis_list.html")
 def analysis_list(request):
     analyses = tantalus.models.Analysis.objects.all().order_by('id')

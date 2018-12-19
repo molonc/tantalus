@@ -1,0 +1,23 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Analysis Create
+{% endblock %}
+
+{% block body %}
+    <div class="container graybg">
+        <form action="{% url 'analysis-add' %}" method="POST">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Add a single Analysis</legend>
+                <table class="table-condensed">
+                    <thead>
+                    {{form}}
+                    </thead>
+                </table>
+            	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
+            </fieldset>
+        </form><br>
+    </div>
+{% endblock %}
