@@ -25,6 +25,9 @@ class PatientForm(forms.ModelForm):
     class Meta:
         model = tantalus.models.Patient
         fields = '__all__'
+        help_texts = {
+            'patient_id': 'Next available SA ID. You may change this if you wish',
+        }
 
     def clean_patient_id(self):
         patient_id = self.cleaned_data.get('patient_id', False)
@@ -65,12 +68,38 @@ class UploadPatientForm(forms.Form):
             temp_dict[header_row[index]] = column_data_list
 
         df = pd.DataFrame(data=temp_dict)
+
+        SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
+        patient_ids = []
+        
+        for patient in SA_prefix_patients:
+            patient_ids.append(int(patient.patient_id[2:]))
+        patient_ids.sort()
+
         form_headers = df.columns.tolist()
+
+        external_patient_id_index = form_headers.index('External Patient ID')
+        case_id_index = form_headers.index('Case ID')
         patient_id_index = form_headers.index('Patient ID')
+
+        next_available_patient_id = patient_ids[-1] + 1
+        auto_generated_patient_ids = []
+
         for idx, patient_row in df.iterrows():
+            if(pd.isnull(patient_row[case_id_index])):
+                raise ValidationError("Error on Row {}. Case ID cannot be empty".format(idx + 2))
+            if(pd.isnull(patient_row[patient_id_index]) and pd.isnull(patient_row[external_patient_id_index])):
+                raise ValidationError("Error on Row {}. Both Patient ID and External Patient IDs cannot be empty".format(idx + 2))
+            elif(pd.isnull(patient_row[patient_id_index])):
+                patient_row[patient_id_index] = 'SA' + str(next_available_patient_id)
+                auto_generated_patient_ids.append('SA' + str(next_available_patient_id))
+                next_available_patient_id +=1
+            elif(pd.isnull(patient_row[external_patient_id_index])):
+                raise ValidationError("Error on Row {}. External Patient ID cannot be empty".format(idx + 2))
             if(patient_row[patient_id_index][:2] != "SA"):
                 raise ValidationError("Error on Row {}. Patient IDs must start with SA and not be {}".format(idx + 2, patient_row[patient_id_index]))
-        return df
+
+        return df, auto_generated_patient_ids
 
     def get_patient_data(self):
         return self.cleaned_data['patients_excel_file']
