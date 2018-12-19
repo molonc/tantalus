@@ -795,7 +795,7 @@ class DatasetListJSON(BaseDatatableView):
             return list(row.get_storage_names())
 
         if column == 'library_type':
-            return row.library.library_type
+            return row.library.library_type.name
 
         if column == 'num_total_read_groups':
             return row.get_num_total_sequencing_lanes()
@@ -1160,14 +1160,12 @@ def get_library_stats(filetype, storages_dict):
     # Make sure the filetype is 'BAM' or 'FASTQ'
     assert filetype in ['BAM', 'FASTQ']
 
-    # Get the list of library types that we'll get data for
-    library_types = [x[0] for x in tantalus.models.DNALibrary.library_type_choices]
-
     # Results dictionary
     results = dict()
 
+    # Get the list of library types that we'll get data for
     # Go through each library
-    for lib_type in library_types:
+    for lib_type in tantalus.models.LibraryType.objects.all():
         # Make a list to store results in
         results[lib_type] = list()
 
@@ -1178,7 +1176,7 @@ def get_library_stats(filetype, storages_dict):
             # I'm not exactly sure why this is so, without it, filter
             # picks up a ton of duplicates. Very strange.
             matching_files = tantalus.models.FileResource.objects.filter(
-                sequencedataset__library__library_type=lib_type).filter(
+                sequencedataset__library__library_type=lib_type.id).filter(
                 fileinstance__storage__name__in=storages).distinct()
 
             if filetype == 'BAM':
