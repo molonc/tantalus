@@ -1251,21 +1251,10 @@ def get_storage_stats(storages=['all']):
     storage_size = file_resources.aggregate(Sum('size'))
     storage_size = storage_size['size__sum']
 
-    # Build the file transfer set
-    if 'all' in storages:
-        num_active_file_transfers = tantalus.models.FileTransfer.objects.filter(
-            running=True).count()
-    else:
-        num_active_file_transfers = tantalus.models.FileTransfer.objects.filter(
-            running=True).filter(
-            Q(from_storage__name__in=storages)
-            | Q(to_storage__name__in=storages)).count()
-
     return {'num_bams': num_bams,
             'num_specs': num_specs,
             'num_bais': num_bais,
             'num_fastqs': num_fastqs,
-            'num_active_file_transfers': num_active_file_transfers,
             'storage_size': storage_size,
            }
 
@@ -1371,9 +1360,10 @@ class DataStatsView(TemplateView):
         fastq_dict = get_library_stats('FASTQ', storages_dict)
 
         context = {
-            'storage_stats': sorted(storage_stats.iteritems(),
-                                            key=lambda x, y: y['storage_size'],
-                                            reverse=True),
+            'storage_stats': sorted(
+                storage_stats.iteritems(),
+                key=lambda y: y['storage_size'],
+                reverse=True),
             'locations_list': sorted(['all', 'azure', 'gsc', 'rocks', 'shahlab']),
             'bam_library_stats': sorted(bam_dict.iteritems()),
             'fastq_library_stats': sorted(fastq_dict.iteritems()),
