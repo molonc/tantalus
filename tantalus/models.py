@@ -438,6 +438,26 @@ class SequenceFileInfo(models.Model):
     )
 
 
+class AlignmentTool(models.Model):
+    """
+    Alignment tool used to create an aligned sequence dataset.
+    """
+
+    history = HistoricalRecords()
+
+    name = models.CharField(
+        unique=True,
+        max_length=50,
+    )
+
+    description = models.CharField(
+        max_length=250,
+    )
+
+    def __str__(self):
+        return self.name
+
+
 class SequenceDataset(models.Model):
     """
     Generalized dataset class.
@@ -526,11 +546,9 @@ class SequenceDataset(models.Model):
         default=UNALIGNED,
     )
 
-    aligner = models.CharField(
-        max_length=50,
+    aligner = models.ForeignKey(
+        'AlignmentTool',
         null=True,
-        blank=True,
-        default=None,
     )
 
     def get_num_total_sequencing_lanes(self):

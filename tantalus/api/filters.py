@@ -167,7 +167,7 @@ class SequenceDatasetFilter(filters.FilterSet):
             "tags__name": ["exact"],
             "sequence_lanes__flowcell_id": ["exact"],
             "dataset_type": ["exact"],
-            "aligner": ["exact"],
+            "aligner__name": ["exact"],
             "reference_genome": ["exact"],
             "analysis": ["exact"],
             "analysis__name": ["exact"],

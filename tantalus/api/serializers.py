@@ -137,7 +137,16 @@ class SequencingLaneSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AlignmentToolField(serializers.Field):
+    def to_representation(self, obj):
+        return obj.name
+    def to_internal_value(self, data):
+        alignment_tool, created = tantalus.models.AlignmentTool.objects.get(name=data)
+        return alignment_tool
+
+
 class SequenceDatasetSerializer(serializers.ModelSerializer):
+    aligner = AlignmentToolField()
     class Meta:
         model = tantalus.models.SequenceDataset
         fields = '__all__'
@@ -147,6 +156,7 @@ class SequenceDatasetSerializerRead(serializers.ModelSerializer):
     sample = SampleSerializer()
     library = DNALibrarySerializer()
     sequence_lanes = SequencingLaneSerializer(many=True)
+    aligner = AlignmentToolField()
     class Meta:
         model = tantalus.models.SequenceDataset
         fields = '__all__'
