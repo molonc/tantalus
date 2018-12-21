@@ -6,18 +6,22 @@ from django.db import migrations, models
 import tantalus
 
 def populate_file_resources(apps, schema_editor):
+    BCLFolder = apps.get_model('tantalus', 'BCLFolder')
+    SingleEndFastqFile = apps.get_model('tantalus', 'SingleEndFastqFile')
+    PairedEndFastqFiles = apps.get_model('tantalus', 'PairedEndFastqFiles')
+    BamFile = apps.get_model('tantalus', 'BamFile')
     
-    for b in tantalus.models.BCLFolder.objects.all():
+    for b in BCLFolder.objects.all():
         b.file_resources.add(b.folder)
 
-    for b in tantalus.models.SingleEndFastqFile.objects.all():
+    for b in SingleEndFastqFile.objects.all():
         b.file_resources.add(b.reads_file)
 
-    for b in tantalus.models.PairedEndFastqFiles.objects.all():
+    for b in PairedEndFastqFiles.objects.all():
         b.file_resources.add(b.reads_1_file)
         b.file_resources.add(b.reads_2_file)
 
-    for b in tantalus.models.BamFile.objects.all():
+    for b in BamFile.objects.all():
         b.file_resources.add(b.bam_file)
         if b.bam_index_file is not None:
             b.file_resources.add(b.bam_index_file)
