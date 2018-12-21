@@ -273,8 +273,6 @@ class DatasetSearchForm(forms.Form):
         widget=forms.widgets.CheckboxSelectMultiple()
     )
     storages = forms.ModelMultipleChoiceField(
-        #TANTA-151
-        #choices=tuple([(s.name, s.name) for s in tantalus.models.Storage.objects.all()]),
         queryset=tantalus.models.Storage.objects.all(),
         required=False,
         help_text="Only look for files that are present in the selected storage.",
@@ -294,8 +292,6 @@ class DatasetSearchForm(forms.Form):
     )
 
     sequencing_center = forms.ModelChoiceField(
-        #TANTA-151
-        #choices=(('', '---'),) + tantalus.models.SequencingLane.sequencing_centre_choices,
         queryset=tantalus.models.SequencingLane.objects.all().values_list('sequencing_centre').distinct(),
         empty_label='---',
         label="Sequencing center",
@@ -304,8 +300,6 @@ class DatasetSearchForm(forms.Form):
     )
 
     sequencing_instrument = forms.ModelChoiceField(
-        #TANTA-151
-        #choices=(('', '---'),) + tuple(map(lambda x: (x[0], x[0]), list(tantalus.models.SequencingLane.objects.all().values_list('sequencing_instrument').distinct()))),
         queryset=tantalus.models.SequencingLane.objects.all().values_list('sequencing_instrument').distinct(),
         empty_label='---',
         label="Sequencing instrument",
@@ -322,7 +316,6 @@ class DatasetSearchForm(forms.Form):
     )
     
     library_type = forms.ModelChoiceField(
-        #TANTA-128, TANTA-151
         queryset=tantalus.models.LibraryType.objects.all(),
         empty_label='---',
         label="Library type",
