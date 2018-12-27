@@ -81,7 +81,6 @@ class Patient(models.Model):
     )
 
     external_patient_id = models.CharField(
-        unique=True,
         max_length=120,
         null=True
     )
@@ -170,6 +169,30 @@ class LibraryType(models.Model):
         if (self.name): return self.name
         #if (self.name): return {"id": self.id, "name": self.name}
         return ''
+
+
+class LibraryType(models.Model):
+    """
+    Type of sequencing applied to a DNA library.
+    """
+    history = HistoricalRecords()
+
+    name = models.CharField(
+        max_length=50,
+        blank=True,
+        null=False,
+        unique=True
+    )
+
+    description = models.CharField(
+        max_length=240,
+        blank=True,
+        null=False,
+        unique=True
+    )
+
+    def __unicode__(self):
+        return self.name
 
 
 class DNALibrary(models.Model):
@@ -435,6 +458,44 @@ class ReferenceGenome(models.Model):
         unique=True
     )
 
+class ReferenceGenome(models.Model):
+    """
+    Reference genome species / version.
+    """
+
+    history = HistoricalRecords()
+
+    name = models.CharField(
+        max_length=50,
+        blank=True,
+        null=False,
+        unique=True
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class AlignmentTool(models.Model):
+    """
+    Alignment tool used to create an aligned sequence dataset.
+    """
+
+    history = HistoricalRecords()
+
+    name = models.CharField(
+        unique=True,
+        max_length=50,
+    )
+
+    description = models.CharField(
+        max_length=250,
+    )
+
+    def __str__(self):
+        return self.name
+
+
 class SequenceDataset(models.Model):
     """
     Generalized dataset class.
@@ -502,38 +563,15 @@ class SequenceDataset(models.Model):
         on_delete=models.CASCADE,
     )
 
-    #HG19 = 'HG19'
-    #HG18 = 'HG18'
-    #MM10 = 'MM10'
-    #UNALIGNED = 'UNALIGNED'
-    #UNUSABLE = 'UNUSABLE'
-    #
-    #reference_genome_choices = (
-    #    (HG19, 'Human Genome 19'),
-    #    (HG18, 'Human Genome 18'),
-    #    (MM10, 'Mouse Genome 10'),
-    #    (UNALIGNED, 'Not aligned to a reference'),
-    #    (UNUSABLE, 'Alignments are not usable'),
-    #)
-    #
-    #reference_genome = models.CharField(
-    #    max_length=50,
-    #    # TODO: foreign key or update choices
-    #    #choices=reference_genome_choices,
-    #    default=UNALIGNED,
-    #)
-
     reference_genome = models.ForeignKey(
         ReferenceGenome,
         on_delete=models.CASCADE,
         null=True,
     )
 
-    aligner = models.CharField(
-        max_length=50,
+    aligner = models.ForeignKey(
+        'AlignmentTool',
         null=True,
-        blank=True,
-        default=None,
     )
 
     def get_num_total_sequencing_lanes(self):

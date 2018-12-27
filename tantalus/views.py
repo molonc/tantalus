@@ -326,21 +326,29 @@ class PatientCreate(TemplateView):
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
-        form = tantalus.forms.PatientForm()
+        SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
+        patient_ids = []
+        for patient in SA_prefix_patients:
+            patient_ids.append(int(patient.patient_id[2:]))
+        patient_ids.sort()
+        data = {'patient_id': 'SA' + str(patient_ids[-1] + 1)}
+        form = tantalus.forms.PatientForm(initial=data)
         multi_form = tantalus.forms.UploadPatientForm()
         return self.get_context_and_render(request, form, multi_form)
 
     def post(self, request, *args, **kwargs):
         form = tantalus.forms.PatientForm(request.POST)
-        multi_form = tantalus.forms.UploadPatientForm(request.POST, request.FILES)
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
             msg = "Successfully created Patient {}.".format(instance.patient_id)
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
+
+        multi_form = tantalus.forms.UploadPatientForm(request.POST, request.FILES)
         if multi_form.is_valid():
-            patients_df = multi_form.get_patient_data()
+            patients_df, auto_generated_patient_ids = multi_form.get_patient_data()
+
             form_headers = patients_df.columns.tolist()
 
             external_patient_id_index = form_headers.index('External Patient ID')
@@ -348,23 +356,34 @@ class PatientCreate(TemplateView):
             case_id_index = form_headers.index('Case ID')
 
             to_edit = []
+            auto_generated_patients = []
             for idx, patient_row in patients_df.iterrows():
+                if(patient_row[patient_id_index] in auto_generated_patient_ids):
+                    patient = tantalus.models.Patient(
+                        patient_id=patient_row[patient_id_index],
+                        external_patient_id=patient_row[external_patient_id_index],
+                        case_id=patient_row[case_id_index]
+                    )
+                    auto_generated_patients.append(model_to_dict(patient))
+                    continue
                 patient, created = tantalus.models.Patient.objects.get_or_create(patient_id=patient_row[patient_id_index])
                 if(created):
                     patient.external_patient_id = patient_row[external_patient_id_index]
                     patient.case_id = patient_row[case_id_index]
+                    patient.save()
                 else:
                     patient.external_patient_id = patient_row[external_patient_id_index]
                     patient.case_id = patient_row[case_id_index]
                     to_edit.append(model_to_dict(patient))
-            if(len(to_edit) == 0):
+            if(len(to_edit) == 0 and len(auto_generated_patients) == 0):
                 msg = "Successfully created all Patients."
                 messages.success(request, msg)
                 return HttpResponseRedirect(reverse('patient-list'))
             else:
-                msg = "Editing Existing Patient Data. Please Confirm Modifications."
+                msg = "You are editing existing Patient Data or have asked us to auto-generate Patient IDs. Please Confirm Modifications and ID Generation."
                 messages.warning(request, msg)
                 request.session['to_edit'] = to_edit
+                request.session['auto_generated_patients'] = auto_generated_patients
                 return HttpResponseRedirect(reverse('confirm-patient-edit-from-create'))
         else:
             msg = "Failed to create the Patient. Please fix the errors below."
@@ -376,9 +395,10 @@ class PatientCreate(TemplateView):
 class ConfirmPatientEditFromCreate(TemplateView):
     template_name = "tantalus/confirm_patient_edit.html"
 
-    def get_context_and_render(self, request, to_edit):
+    def get_context_and_render(self, request, to_edit, auto_generated_patients):
         context = {
             'patients_to_edit': to_edit,
+            'auto_generated_patients': auto_generated_patients,
         }
         return render(request, self.template_name, context)
 
@@ -400,7 +420,7 @@ class ConfirmPatientEditFromCreate(TemplateView):
 
             existing_patient_list.append(existing_patient)
 
-        return self.get_context_and_render(request, existing_patient_list)
+        return self.get_context_and_render(request, existing_patient_list, request.session['auto_generated_patients'])
 
     def post(self, request, *args, **kwargs):
 
@@ -409,6 +429,10 @@ class ConfirmPatientEditFromCreate(TemplateView):
             existing_patient.external_patient_id = patient['external_patient_id']
             existing_patient.case_id = patient['case_id']
             existing_patient.save()
+
+        for patient in request.session['auto_generated_patients']:
+            new_patient = tantalus.models.Patient(**patient)
+            new_patient.save()
 
         msg = "Successfully modified and created all Patients."
         messages.success(request, msg)
@@ -1095,21 +1119,10 @@ def get_storage_stats(storages=['all']):
     storage_size = file_resources.aggregate(Sum('size'))
     storage_size = storage_size['size__sum']
 
-    # Build the file transfer set
-    if 'all' in storages:
-        num_active_file_transfers = tantalus.models.FileTransfer.objects.filter(
-            running=True).count()
-    else:
-        num_active_file_transfers = tantalus.models.FileTransfer.objects.filter(
-            running=True).filter(
-            Q(from_storage__name__in=storages)
-            | Q(to_storage__name__in=storages)).count()
-
     return {'num_bams': num_bams,
             'num_specs': num_specs,
             'num_bais': num_bais,
             'num_fastqs': num_fastqs,
-            'num_active_file_transfers': num_active_file_transfers,
             'storage_size': storage_size,
            }
 
@@ -1215,9 +1228,10 @@ class DataStatsView(TemplateView):
         fastq_dict = get_library_stats('FASTQ', storages_dict)
 
         context = {
-            'storage_stats': sorted(storage_stats.iteritems(),
-                                            key=lambda x, y: y['storage_size'],
-                                            reverse=True),
+            'storage_stats': sorted(
+                storage_stats.iteritems(),
+                key=lambda y: y['storage_size'],
+                reverse=True),
             'locations_list': sorted(['all', 'azure', 'gsc', 'rocks', 'shahlab']),
             'bam_library_stats': sorted(bam_dict.iteritems()),
             'fastq_library_stats': sorted(fastq_dict.iteritems()),

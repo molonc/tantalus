@@ -4,10 +4,10 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
-from tantalus.models import FileResource
 
+def fix_bai_file_type(apps, schema_editor):
+    FileResource = apps.get_model('tantalus', 'FileResource')
 
-def fix_bai_file_type(apps, schema_editor): 
     file_resources = FileResource.objects.all().filter(filename__icontains='.bai', file_type='BAM')
     for file_resource in file_resources:
         file_resource.file_type = 'BAI'

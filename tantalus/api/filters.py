@@ -8,6 +8,7 @@ from tantalus.models import (
     DNALibrary,
     FileInstance,
     FileResource,
+    FileType,
     ResultsDataset,
     Sample,
     SequenceDataset,
@@ -107,6 +108,18 @@ class FileResourceFilter(BaseFilterSet):
         }
 
 
+class FileTypeFilter(BaseFilterSet):
+    """Filters for file types."""
+
+    class Meta(BaseFilterSet.Meta):
+        model = FileType
+        fields = {
+            "id": ["exact"],
+            "name": ["exact"],
+            "extension": ["exact"],
+        }
+
+
 class ResultsDatasetFilter(filters.FilterSet):
     """Filters for results datasets."""
 
@@ -154,8 +167,8 @@ class SequenceDatasetFilter(filters.FilterSet):
             "tags__name": ["exact"],
             "sequence_lanes__flowcell_id": ["exact"],
             "dataset_type": ["exact"],
-            "aligner": ["exact"],
-            "reference_genome": ["exact"],
+            "aligner__name": ["exact"],
+            "reference_genome__name": ["exact"],
             "analysis": ["exact"],
             "analysis__name": ["exact"],
             "analysis__jira_ticket": ["exact"],

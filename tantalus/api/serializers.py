@@ -125,7 +125,7 @@ class FileResourceSerializerRead(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class LibraryTypeField(serializers.ModelSerializer):
+class LibraryTypeField(serializers.Field):
     def to_representation(self, obj):
         return obj.name
     def to_internal_value(self, data):
@@ -145,7 +145,24 @@ class SequencingLaneSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AlignmentToolField(serializers.Field):
+    def to_representation(self, obj):
+        return obj.name
+    def to_internal_value(self, data):
+        alignment_tool = tantalus.models.AlignmentTool.objects.get(name=data)
+        return alignment_tool
+
+
+class ReferenceGenomeField(serializers.Field):
+    def to_representation(self, obj):
+        return obj.name
+    def to_internal_value(self, data):
+        return tantalus.models.ReferenceGenome.objects.get(name=data)
+
+
 class SequenceDatasetSerializer(serializers.ModelSerializer):
+    aligner = AlignmentToolField()
+    reference_genome = ReferenceGenomeField()
     class Meta:
         model = tantalus.models.SequenceDataset
         fields = '__all__'
@@ -155,6 +172,8 @@ class SequenceDatasetSerializerRead(serializers.ModelSerializer):
     sample = SampleSerializer()
     library = DNALibrarySerializer()
     sequence_lanes = SequencingLaneSerializer(many=True)
+    aligner = AlignmentToolField()
+    reference_genome = ReferenceGenomeField()
     class Meta:
         model = tantalus.models.SequenceDataset
         fields = '__all__'
