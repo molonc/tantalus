@@ -76,6 +76,7 @@ class FileInstanceFilter(BaseFilterSet):
             "file_resource": ["exact"],
             "owner": ["exact"],
             "storage": ["exact"],
+            "is_deleted": ["exact"],
         }
 
 
