@@ -18,7 +18,6 @@ router.register(r'sequence_dataset', views.SequenceDatasetViewSet)
 router.register(r'storage', views.StorageViewSet)
 router.register(r'storage_server', views.ServerStorageViewSet)
 router.register(r'storage_azure_blob', views.AzureBlobStorageViewSet)
-router.register(r'storage_azure_blob_credentials', views.AzureBlobCredentialsViewSet)
 router.register(r'tag', views.Tag)
 
 # Schema for Swagger API
