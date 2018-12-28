@@ -866,16 +866,11 @@ class FileInstance(models.Model):
         on_delete=models.CASCADE,
     )
 
-    filename_override = models.CharField(
-        max_length=500,
-        blank=True,
-        default='',
+    is_deleted = models.BooleanField(
+        default=False,
     )
 
     def get_filepath(self):
-        if self.filename_override is not '':
-            return self.filename_override
-
         return self.storage.get_filepath(self.file_resource)
 
     class Meta:
