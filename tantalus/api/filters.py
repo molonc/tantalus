@@ -4,7 +4,6 @@ from django.db import models
 from django_filters import rest_framework as filters
 from tantalus.models import (
     Analysis,
-    AzureBlobCredentials,
     DNALibrary,
     FileInstance,
     FileResource,
@@ -56,14 +55,6 @@ class AnalysisFilter(BaseFilterSet):
             "version": ["exact"],
             "jira_ticket": ["exact"],
         }
-
-
-class AzureBlobCredentialsFilter(BaseFilterSet):
-    """Filters for Azure Blob credentials."""
-
-    class Meta(BaseFilterSet.Meta):
-        model = AzureBlobCredentials
-        fields = {"id": ["exact"]}
 
 
 class DNALibraryFilter(BaseFilterSet):

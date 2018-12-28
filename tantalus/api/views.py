@@ -11,7 +11,6 @@ from tantalus.api.permissions import IsOwnerOrReadOnly
 import tantalus.api.serializers
 from tantalus.api.filters import (
     AnalysisFilter,
-    AzureBlobCredentialsFilter,
     DNALibraryFilter,
     FileInstanceFilter,
     FileResourceFilter,
@@ -142,12 +141,6 @@ class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
 class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.AzureBlobStorage.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
-
-
-class AzureBlobCredentialsViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    queryset = tantalus.models.AzureBlobCredentials.objects.all()
-    serializer_class = tantalus.api.serializers.AzureBlobCredentialsSerializer
-    filter_class = AzureBlobCredentialsFilter
 
 
 class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
