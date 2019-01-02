@@ -830,7 +830,7 @@ class DatasetListJSON(BaseDatatableView):
                         q |= Q(library__library_id__startswith=search)
 
                     elif col['name'] == 'library_type':
-                        q |= Q(library__library_type__startswith=search)
+                        q |= Q(library__library_type__name__startswith=search)
 
                     # standard search for simple . lookups across models
                     else:
