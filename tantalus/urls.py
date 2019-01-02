@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^api/', include('tantalus.api.urls')),
     url(r'^account/', include('account.urls')),
     url(r'^samples/$', tantalus.views.sample_list, name='sample-list'),
+    url(r'^samples/(?P<pk>\d+)/disassociatedatset/(?P<pk_2>[0-9]+)$', tantalus.views.DatasetDisassociation.as_view(), name='dataset-disassociation'),
     url(r'^samples/create$', tantalus.views.SampleCreate.as_view(), name='sample-add'),
     url(r'^samples/create/(?P<patient_id>.{1,20})$', tantalus.views.SpecificSampleCreate.as_view(), name='specific-sample-add'),
     url(r'^samples/(?P<pk>\d+)$', tantalus.views.SampleDetail.as_view(), name='sample-detail'),

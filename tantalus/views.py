@@ -191,6 +191,14 @@ class SampleDetail(DetailView):
         # TODO: add other fields to the view?
         context = super(SampleDetail, self).get_context_data(**kwargs)
 
+        sequence_datasets_set = list(self.object.sequencedataset_set.all())
+
+        for dataset in sequence_datasets_set:
+            file_resource_list = []
+            for file_resource in dataset.file_resources.all():
+                file_resource_list.append(file_resource.id)
+            dataset.file_resource_list = file_resource_list
+
         submission_set = self.object.submission_set.all()
         project_set = self.object.projects.all()
         project_list = []
@@ -203,8 +211,29 @@ class SampleDetail(DetailView):
         except:
             context['patient_url'] = None
         context['project_list'] = project_list
+        context['sequence_datasets_set'] = sequence_datasets_set
         context['submission_set'] = submission_set
         return context
+
+
+@method_decorator(login_required, name='dispatch')
+class DatasetDisassociation(View):
+    """
+    Disassociates Dataset from Sample on the Sample Detail page
+    Marks the file instances within the file resources associated with that Dataset as is_deleted=True
+    """
+    def get(self, request, pk, pk_2):
+        dataset = get_object_or_404(tantalus.models.SequenceDataset, pk=pk)
+        for file_resource in dataset.file_resources.all():
+            for file_instance in file_resource.fileinstance_set.all():
+                file_instance.is_deleted = True
+                file_instance.save()
+        sample = get_object_or_404(tantalus.models.Sample, pk=pk_2)
+        dataset.sample = None
+        dataset.save()
+        msg = "Successfully removed datasest"
+        messages.success(request, msg)
+        return HttpResponseRedirect(sample.get_absolute_url())
 
 
 @Render("tantalus/result_list.html")
@@ -780,8 +809,11 @@ class DatasetListJSON(BaseDatatableView):
             return row.dataset_type
 
         if column == 'sample_id':
-            sample_link = (reverse('sample-detail', args=(row.sample.id,)))
-            return "<a href=" + sample_link + ">" + row.sample.sample_id + "</a>"
+            try:
+                sample_link = (reverse('sample-detail', args=(row.sample.id,)))
+                return "<a href=" + sample_link + ">" + row.sample.sample_id + "</a>"
+            except:
+                return None
         if column == 'library_id':
             return row.library.library_id
 

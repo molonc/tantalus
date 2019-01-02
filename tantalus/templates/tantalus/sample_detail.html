@@ -51,12 +51,13 @@
             <h5><i class="text-warning">No Sample Details yet.</i></h5>
         {% endif %}
     </div>
+
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'specific-submission-add' object.id %}">Add Submission(s) to This Sample</a>
         {% if submission_set %}
             <h4>Related Submissions</h4>
             <div class="table-responsive">
-                <table id="datatable" class="table-striped table-bordered">
+                <table id="submission-datatable" class="table-striped table-bordered">
                     <thead>
                         <th>Submission ID</th>
                         <th>SOW</th>
@@ -89,4 +90,62 @@
             <h5><i class="text-warning">No Submissions associated with this Sample yet.</i></h5>
         {% endif %}
     </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if sequence_datasets_set %}
+            <h4>Related Sequence Datasets</h4>
+            <div class="table-responsive">
+                <table id="sequencedataset-datatable" class="table-striped table-bordered">
+                    <thead>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Library ID</th>
+                        <th>Library Type</th>
+                        <th>Reference Genome</th>
+                        <th>Aligner</th>
+                        <th>Last Updated</th>
+                        <th>Num. Read Groups</th>
+                        <th>Num. Total Read Groups</th>
+                        <th>Completed</th>
+                        <th></th>
+                    </thead>
+                    <tbody>
+                        {% for dataset in sequence_datasets_set %}
+                            <tr>
+                                <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.name}}</a></td>
+                                <td>{{dataset.dataset_type}}</td>
+                                <td>{{dataset.library.id}}</td>
+                                <td>{{dataset.get_library_type}}</td>
+                                <td>{{dataset.reference_genome}}</td>
+                                <td>{{dataset.aligner}}</td>
+                                <td>{{dataset.last_updated}}</td>
+                                <td>{{dataset.sequence_lanes.all.count}}</td>
+                                <td>{{dataset.get_num_total_sequencing_lanes}}</td>
+                                <td>{{dataset.get_is_complete}}</td>
+                                <td>
+                                    <a href="{% url 'dataset-disassociation' pk=dataset.id pk_2=object.id %}" onclick="return confirm('Disassociate this dataset?')"><i class="icon-remove-sign" style="color:red"></i>Disassociate</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h5><i class="text-warning">No Sequence Datasets associated with this Sample yet.</i></h5>
+        {% endif %}
+    </div>
 {% endblock %}
+
+{% block datatables_script %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#submission-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+            $("#sequencedataset-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+        });
+    </script>
+{% endblock %}
+
