@@ -229,8 +229,7 @@ class DatasetDisassociation(View):
                 file_instance.is_deleted = True
                 file_instance.save()
         sample = get_object_or_404(tantalus.models.Sample, pk=pk_2)
-        dataset.sample = None
-        dataset.save()
+        dataset.delete()
         msg = "Successfully removed datasest"
         messages.success(request, msg)
         return HttpResponseRedirect(sample.get_absolute_url())

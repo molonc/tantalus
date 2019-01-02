@@ -20,11 +20,7 @@
                 </tr>
                 <tr>
                     <th class="custom-table-header">Sample ID</th>
-                    {% if object.sample %}
-                        <td class="custom-table-detail"><a href="{% url 'sample-detail' object.sample.id %}">{{object.sample}}</a></td>
-                    {% else %}
-                        <td class="custom-table-detail">No Sample Associated</td>
-                    {% endif %}
+                    <td class="custom-table-detail"><a href="{% url 'sample-detail' object.sample.id %}">{{object.sample}}</a></td>
                 </tr>
                 <tr>
                     <th class="custom-table-header">Library ID</th>

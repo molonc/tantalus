@@ -519,7 +519,6 @@ class SequenceDataset(models.Model):
     sample = models.ForeignKey(
         Sample,
         on_delete=models.CASCADE,
-        null=True,
     )
 
     library = models.ForeignKey(
