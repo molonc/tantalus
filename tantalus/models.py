@@ -706,7 +706,7 @@ class ResultsDataset(models.Model):
     analysis = models.ForeignKey(
         Analysis,
         null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
     )
 
     samples = models.ManyToManyField(
