@@ -705,7 +705,7 @@ class ResultsDataset(models.Model):
 
     analysis = models.ForeignKey(
         Analysis,
-        null=False,
+        null=True,
         on_delete=models.CASCADE,
     )
 
