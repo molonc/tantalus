@@ -149,7 +149,7 @@ class Sample(models.Model):
         return self.sample_id
 
     def get_absolute_url(self):
-        return reverse("sample-list")
+        return reverse("sample-detail", args=(self.id,))
 
     def get_patient_name(self):
         return self.patient_id
