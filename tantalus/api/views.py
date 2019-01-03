@@ -120,7 +120,10 @@ class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
         """Delete all associated file resources too."""
         # Delete the file resources
         this_dataset = get_object_or_404(self.queryset, pk=pk)
-        this_dataset.file_resources.all().delete()
+        for file_resource in this_dataset.file_resources.all():
+            for file_instance in file_resource.fileinstance_set.all():
+                file_instance.is_deleted = True
+                file_instance.save()
 
         # Call the parent constructor
         return super(SequenceDatasetViewSet, self).destroy(request, pk)
@@ -171,7 +174,10 @@ class ResultDatasetsViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
         """Delete all associated file resources too."""
         # Delete the file resources
         this_dataset = get_object_or_404(self.queryset, pk=pk)
-        this_dataset.file_resources.all().delete()
+        for file_resource in this_dataset.file_resources.all():
+            for file_instance in file_resource.fileinstance_set.all():
+                file_instance.is_deleted = True
+                file_instance.save()
 
         # Call the parent constructor
         return super(ResultDatasetsViewSet, self).destroy(request, pk)

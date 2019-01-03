@@ -107,7 +107,6 @@
                         <th>Num. Read Groups</th>
                         <th>Num. Total Read Groups</th>
                         <th>Completed</th>
-                        <th></th>
                     </thead>
                     <tbody>
                         {% for dataset in sequence_datasets_set %}
@@ -122,9 +121,6 @@
                                 <td>{{dataset.sequence_lanes.all.count}}</td>
                                 <td>{{dataset.get_num_total_sequencing_lanes}}</td>
                                 <td>{{dataset.get_is_complete}}</td>
-                                <td>
-                                    <a href="{% url 'dataset-disassociation' pk=dataset.id pk_2=object.id %}" onclick="return confirm('Disassociate this dataset?')"><i class="icon-remove-sign" style="color:red"></i>Disassociate</a>
-                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

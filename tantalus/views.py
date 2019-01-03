@@ -216,25 +216,6 @@ class SampleDetail(DetailView):
         return context
 
 
-@method_decorator(login_required, name='dispatch')
-class DatasetDisassociation(View):
-    """
-    Disassociates Dataset from Sample on the Sample Detail page
-    Marks the file instances within the file resources associated with that Dataset as is_deleted=True
-    """
-    def get(self, request, pk, pk_2):
-        dataset = get_object_or_404(tantalus.models.SequenceDataset, pk=pk)
-        for file_resource in dataset.file_resources.all():
-            for file_instance in file_resource.fileinstance_set.all():
-                file_instance.is_deleted = True
-                file_instance.save()
-        sample = get_object_or_404(tantalus.models.Sample, pk=pk_2)
-        dataset.delete()
-        msg = "Successfully removed datasest"
-        messages.success(request, msg)
-        return HttpResponseRedirect(sample.get_absolute_url())
-
-
 @Render("tantalus/result_list.html")
 def result_list(request):
     results = tantalus.models.ResultsDataset.objects.all().order_by('id')
@@ -936,7 +917,10 @@ class DatasetDelete(View):
     """
     def get(self, request, pk):
         dataset = get_object_or_404(tantalus.models.SequenceDataset, pk=pk)
-        dataset.file_resources.all().delete()
+        for file_resource in dataset.file_resources.all():
+            for file_instance in file_resource.fileinstance_set.all():
+                file_instance.is_deleted = True
+                file_instance.save()
         dataset.delete()
         msg = "Successfully removed datasest"
         messages.success(request, msg)
