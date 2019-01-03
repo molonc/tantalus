@@ -21,6 +21,17 @@ import tantalus.models
 from openpyxl import load_workbook
 
 
+class AnalysisForm(forms.ModelForm):
+    class Meta:
+        model = tantalus.models.Analysis
+        fields = [
+            'name',
+            'version',
+            'jira_ticket',
+            'args',
+        ]
+
+
 class PatientForm(forms.ModelForm):
     class Meta:
         model = tantalus.models.Patient

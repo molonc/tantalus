@@ -669,6 +669,9 @@ class Analysis(models.Model):
     def __unicode__(self):
         return '{}'.format(self.name)
 
+    def get_absolute_url(self):
+        return reverse("analysis-detail", args=(self.id,))
+
 
 class ResultsDataset(models.Model):
     """
