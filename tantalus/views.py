@@ -191,10 +191,11 @@ class SampleDetail(DetailView):
         # TODO: add other fields to the view?
         context = super(SampleDetail, self).get_context_data(**kwargs)
 
+        sequence_datasets_set = self.object.sequencedataset_set.all()
         submission_set = self.object.submission_set.all()
         project_set = self.object.projects.all()
-        project_list = []
 
+        project_list = []
         for project in project_set:    
             project_list.append(project.__str__())
 
@@ -203,6 +204,7 @@ class SampleDetail(DetailView):
         except:
             context['patient_url'] = None
         context['project_list'] = project_list
+        context['sequence_datasets_set'] = sequence_datasets_set
         context['submission_set'] = submission_set
         return context
 
@@ -1036,7 +1038,10 @@ class DatasetDelete(View):
     """
     def get(self, request, pk):
         dataset = get_object_or_404(tantalus.models.SequenceDataset, pk=pk)
-        dataset.file_resources.all().delete()
+        for file_resource in dataset.file_resources.all():
+            for file_instance in file_resource.fileinstance_set.all():
+                file_instance.is_deleted = True
+                file_instance.save()
         dataset.delete()
         msg = "Successfully removed datasest"
         messages.success(request, msg)
