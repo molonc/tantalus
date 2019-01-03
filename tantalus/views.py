@@ -191,18 +191,11 @@ class SampleDetail(DetailView):
         # TODO: add other fields to the view?
         context = super(SampleDetail, self).get_context_data(**kwargs)
 
-        sequence_datasets_set = list(self.object.sequencedataset_set.all())
-
-        for dataset in sequence_datasets_set:
-            file_resource_list = []
-            for file_resource in dataset.file_resources.all():
-                file_resource_list.append(file_resource.id)
-            dataset.file_resource_list = file_resource_list
-
+        sequence_datasets_set = self.object.sequencedataset_set.all()
         submission_set = self.object.submission_set.all()
         project_set = self.object.projects.all()
-        project_list = []
 
+        project_list = []
         for project in project_set:    
             project_list.append(project.__str__())
 
