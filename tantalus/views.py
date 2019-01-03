@@ -276,6 +276,7 @@ class TagResultsDelete(View):
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
 
+@method_decorator(login_required, name='dispatch')
 class AnalysisCreate(TemplateView):
 
     template_name = "tantalus/analysis_create.html"
@@ -289,6 +290,20 @@ class AnalysisCreate(TemplateView):
     def get(self, request, *args, **kwargs):
         form = tantalus.forms.AnalysisForm()
         return self.get_context_and_render(request, form)
+
+    def post(self, request, *args, **kwargs):
+        form = tantalus.forms.AnalysisForm(request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.owner = request.user
+            instance.save()
+            msg = "Successfully created Analysis {}.".format(instance.name)
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            msg = "Failed to create Analysis. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form)
 
 
 @Render("tantalus/analysis_list.html")
