@@ -60,6 +60,7 @@ class AnalysisEditForm(forms.ModelForm):
         model = tantalus.models.Analysis
         fields = [
             'name',
+            'analysis_type',
             'version',
             'args',
             'status',
