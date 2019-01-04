@@ -26,6 +26,8 @@ import pandas as pd
 from io import StringIO
 import xlsxwriter
 
+from jira import JIRA, JIRAError
+
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT
 from misc.helpers import Render
