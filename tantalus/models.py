@@ -544,11 +544,13 @@ class SequenceDataset(models.Model):
         ReferenceGenome,
         on_delete=models.CASCADE,
         null=True,
+        blank=True,
     )
 
     aligner = models.ForeignKey(
         'AlignmentTool',
         null=True,
+        blank=True,
     )
 
     def get_num_total_sequencing_lanes(self):
