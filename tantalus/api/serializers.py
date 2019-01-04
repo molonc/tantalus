@@ -154,8 +154,8 @@ class ReferenceGenomeField(serializers.Field):
 
 
 class SequenceDatasetSerializer(serializers.ModelSerializer):
-    aligner = AlignmentToolField()
-    reference_genome = ReferenceGenomeField()
+    aligner = AlignmentToolField(required=False, allow_null=True)
+    reference_genome = ReferenceGenomeField(required=False, allow_null=True)
     class Meta:
         model = tantalus.models.SequenceDataset
         fields = '__all__'
