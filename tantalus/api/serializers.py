@@ -219,7 +219,15 @@ class ResultDatasetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AnalysisTypeField(serializers.Field):
+    def to_representation(self, obj):
+        return obj.name
+    def to_internal_value(self, data):
+        return tantalus.models.AnalysisType.objects.get(name=data)
+
+
 class AnalysisSerializer(serializers.ModelSerializer):
+    analysis_type = AnalysisTypeField()
     class Meta:
         model = tantalus.models.Analysis
         fields = '__all__'
