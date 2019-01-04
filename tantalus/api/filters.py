@@ -155,6 +155,7 @@ class SequenceDatasetFilter(filters.FilterSet):
             "id": ["exact"],
             "name": ["exact"],
             "library__library_id": ["exact"],
+            "library__library_type__name": ["exact"],
             "sample__sample_id": ["exact"],
             "tags__name": ["exact"],
             "sequence_lanes__flowcell_id": ["exact"],
