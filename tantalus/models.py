@@ -700,7 +700,7 @@ class ResultsDataset(models.Model):
 
     results_version = models.CharField(
         max_length=50,
-        null=False,
+        null=True,
     )
 
     analysis = models.ForeignKey(
