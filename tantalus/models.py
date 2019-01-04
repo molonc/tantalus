@@ -588,6 +588,21 @@ class SequenceDataset(models.Model):
         return self.name
 
 
+class AnalysisType(models.Model):
+
+    history = HistoricalRecords()
+
+    name = models.CharField(
+        max_length=50,
+        blank=False,
+        null=False,
+        unique=True
+    )
+
+    def __str__(self):
+        return self.name
+
+
 # Validator for analysis version
 analysis_version_validator = RegexValidator(
     regex=r"v\d+\.\d+\.\d+",
@@ -611,6 +626,13 @@ class Analysis(models.Model):
     name = models.CharField(
         max_length=200,
         unique=True,
+    )
+
+    analysis_type= models.ForeignKey(
+        AnalysisType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,    
     )
 
     version = models.CharField(

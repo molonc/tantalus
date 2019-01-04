@@ -26,6 +26,7 @@ class AnalysisForm(forms.ModelForm):
         model = tantalus.models.Analysis
         fields = [
             'name',
+            'analysis_type',
             'version',
             'jira_ticket',
             'args',
