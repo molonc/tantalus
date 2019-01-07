@@ -632,7 +632,7 @@ class Analysis(models.Model):
         AnalysisType,
         on_delete=models.CASCADE,
         null=True,
-        blank=True,    
+        blank=True,
     )
 
     version = models.CharField(
@@ -770,10 +770,6 @@ class Storage(PolymorphicModel):
     def get_filepath(self, file_resource):
         raise NotImplementedError()
 
-    @property
-    def is_read_only(self):
-        return False
-
 
 class ServerStorage(Storage):
     """
@@ -796,10 +792,6 @@ class ServerStorage(Storage):
         max_length=30,
     )
 
-    read_only = models.BooleanField(
-        default=True,
-    )
-
     def get_prefix(self):
         return self.storage_directory
 
@@ -807,10 +799,6 @@ class ServerStorage(Storage):
         return os.path.join(
             str(self.storage_directory),
             file_resource.filename.strip('/'))
-
-    @property
-    def is_read_only(self):
-        return self.read_only
 
     storage_type = 'server'
 
