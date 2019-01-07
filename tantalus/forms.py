@@ -69,6 +69,7 @@ class AnalysisEditForm(forms.ModelForm):
         ]
 
 
+
 class PatientForm(forms.ModelForm):
     class Meta:
         model = tantalus.models.Patient
