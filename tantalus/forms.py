@@ -22,15 +22,19 @@ from openpyxl import load_workbook
 
 
 class AnalysisForm(forms.ModelForm):
+
+    jira_username = forms.CharField()
+    jira_password = forms.CharField(widget=forms.PasswordInput)
+
     class Meta:
         model = tantalus.models.Analysis
         fields = [
             'name',
             'analysis_type',
             'version',
-            'jira_ticket',
             'args',
         ]
+
 
 
 class PatientForm(forms.ModelForm):
