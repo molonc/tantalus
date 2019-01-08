@@ -19,6 +19,7 @@ from django.core.exceptions import ValidationError
 import tantalus.models
 
 from openpyxl import load_workbook
+from jira import JIRA, JIRAError
 
 
 class AnalysisForm(forms.ModelForm):
@@ -32,9 +33,39 @@ class AnalysisForm(forms.ModelForm):
             'name',
             'analysis_type',
             'version',
+            'analysis_type',
             'args',
         ]
 
+    def clean(self):
+
+        username = self.cleaned_data['jira_username']
+        password = self.cleaned_data['jira_password']
+
+        try:
+            jira_server = JIRA('https://www.bcgsc.ca/jira/', auth=(username, password))
+        except:
+            raise ValidationError('Invalid JIRA Credentials Provided!')
+
+        if(tantalus.models.Analysis.objects.filter(name=self.cleaned_data['name']).count()):
+            raise ValidationError('Analysis Name Already Taken')
+
+        return self.cleaned_data
+
+
+#Purpose of this form is to exclude the Jira Ticket field
+class AnalysisEditForm(forms.ModelForm):
+
+    class Meta:
+        model = tantalus.models.Analysis
+        fields = [
+            'name',
+            'version',
+            'args',
+            'status',
+            'owner',
+            'analysis_type'
+        ]
 
 
 class PatientForm(forms.ModelForm):

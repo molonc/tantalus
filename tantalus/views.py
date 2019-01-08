@@ -298,6 +298,38 @@ class AnalysisCreate(TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.owner = request.user
+
+            #Create Jira Ticket, cannabalized from /shahlab/bhewitson/scripts/scpipeline_utils/create_analysis.py
+            jira_server = JIRA('https://www.bcgsc.ca/jira/', auth=(form['jira_username'].value(), form['jira_password'].value()))
+
+            title = "Analysis Ticket For of {}".format(instance.name)
+
+            description = [
+                "(x) Alignment",
+                "(x) Hmmcopy",
+                "(x) Classifier",
+                "(x) MT bam extraction",
+                "(x) Path to results on blob:",
+                "{noformat}Container: singlecelldata\nresults/<jira_ticket>{noformat}",
+                "(x) Upload to Montage",
+            ]
+
+            issue_dict = {
+                "project": {"id": 11220},
+                "summary": title,
+                "description": "\n\n".join(description),
+                "issuetype": {"name": "Task"},
+                "reporter": {"name": "jpham"},
+                "assignee": {"name": "jpham"},
+            }
+
+            new_issue = jira_server.create_issue(fields=issue_dict)
+
+            for watcher in ("jpham", "bhewitson", "elaks"):
+                jira_server.add_watcher(new_issue.id, watcher)
+
+            instance.jira_ticket = str(new_issue)
+
             instance.save()
             msg = "Successfully created Analysis {}.".format(instance.name)
             messages.success(request, msg)
@@ -306,6 +338,40 @@ class AnalysisCreate(TemplateView):
             msg = "Failed to create Analysis. Please fix the errors below."
             messages.error(request, msg)
             return self.get_context_and_render(request, form)
+
+
+@method_decorator(login_required, name='dispatch')
+class AnalysisEdit(TemplateView):
+
+    template_name = "tantalus/analysis_edit.html"
+
+    def get_context_and_render(self, request, form, pk=None):
+        context = {
+            'pk':pk,
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        analysis_pk = kwargs['pk']
+        analysis = tantalus.models.Analysis.objects.get(id=analysis_pk)
+        form = tantalus.forms.AnalysisEditForm(instance=analysis)
+        return self.get_context_and_render(request, form, analysis_pk)
+
+    def post(self, request, *args, **kwargs):
+        analysis_pk = kwargs['pk']
+        analysis = tantalus.models.Analysis.objects.get(id=analysis_pk)
+        form = tantalus.forms.AnalysisEditForm(request.POST, instance=analysis)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save()
+            msg = "Successfully edited Patient {}".format(instance.name)
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            msg = "Failed to edit the Analysis. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form, analysis_pk)
 
 
 @Render("tantalus/analysis_list.html")
