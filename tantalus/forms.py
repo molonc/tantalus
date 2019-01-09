@@ -15,8 +15,10 @@ from django.db import transaction
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from tantalus.settings import JIRA_URL
 
 import tantalus.models
+import requests
 
 from openpyxl import load_workbook
 from jira import JIRA, JIRAError
@@ -26,6 +28,8 @@ class AnalysisForm(forms.ModelForm):
 
     jira_username = forms.CharField()
     jira_password = forms.CharField(widget=forms.PasswordInput)
+    description = forms.CharField(widget=forms.Textarea)
+    project_name = forms.CharField()
 
     class Meta:
         model = tantalus.models.Analysis
@@ -42,10 +46,28 @@ class AnalysisForm(forms.ModelForm):
         username = self.cleaned_data['jira_username']
         password = self.cleaned_data['jira_password']
 
+        options = {
+            'server': JIRA_URL
+        }
+
         try:
-            jira_server = JIRA('https://www.bcgsc.ca/jira/', auth=(username, password))
-        except:
-            raise ValidationError('Invalid JIRA Credentials Provided!')
+            jira_server = JIRA(options=options, basic_auth=(username, password), max_retries=0)
+        except JIRAError as e:
+            raise ValidationError('Unable to connect to JIRA. Check your credentials')
+        except Exception as e:
+            raise ValidationError('Unknown Error Occured. Contact Shahlab Staff')
+
+        projects = jira_server.projects()
+
+        project_found = False
+
+        for project in projects:
+            if(self.cleaned_data['project_name'] == project.name):
+                project_found = True
+                break
+
+        if not project_found:
+            raise ValidationError("Project Name Doesn't Exist")
 
         if(tantalus.models.Analysis.objects.filter(name=self.cleaned_data['name']).count()):
             raise ValidationError('Analysis Name Already Taken')
@@ -53,41 +75,10 @@ class AnalysisForm(forms.ModelForm):
         return self.cleaned_data
 
 
-#Purpose of this form is to exclude the Jira Ticket field
 class AnalysisEditForm(forms.ModelForm):
-
-    class Meta:
-        model = tantalus.models.Analysis
-        fields = [
-            'name',
-            'analysis_type',
-            'version',
-            'analysis_type',
-            'args',
-            'status',
-            'owner',
-            'analysis_type'
-        ]
-
-    def clean(self):
-
-        username = self.cleaned_data['jira_username']
-        password = self.cleaned_data['jira_password']
-
-        try:
-            jira_server = JIRA('https://www.bcgsc.ca/jira/', auth=(username, password))
-        except:
-            raise ValidationError('Invalid JIRA Credentials Provided!')
-
-        if(tantalus.models.Analysis.objects.filter(name=self.cleaned_data['name']).count()):
-            raise ValidationError('Analysis Name Already Taken')
-
-        return self.cleaned_data
-
-
-#Purpose of this form is to exclude the Jira Ticket field
-class AnalysisEditForm(forms.ModelForm):
-
+    '''
+    Purpose: Excludes Jira Ticket field but includes other fields such as status and owner
+    '''
     class Meta:
         model = tantalus.models.Analysis
         fields = [

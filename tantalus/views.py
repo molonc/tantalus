@@ -29,7 +29,7 @@ import xlsxwriter
 from jira import JIRA, JIRAError
 
 from tantalus.utils import read_excel_sheets
-from tantalus.settings import STATIC_ROOT
+from tantalus.settings import STATIC_ROOT, JIRA_URL
 from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
@@ -283,6 +283,39 @@ class AnalysisCreate(TemplateView):
 
     template_name = "tantalus/analysis_create.html"
 
+    def create_jira_ticket(self, username, password, name, description, reporter, assignee, project_name):
+
+        jira_server = JIRA(JIRA_URL, auth=(username, password))
+
+        projects = jira_server.projects()
+
+        for project in projects:
+            if(project.name.lower() == project_name.lower()):
+                project_id = project.id
+
+
+        title = "Analysis Ticket For of {}".format(name)
+
+        description = [
+            description
+        ]
+
+        issue_dict = {
+            "project": {"id": project_id},
+            "summary": title,
+            "description": "\n\n".join(description),
+            "issuetype": {"name": "Task"},
+            "reporter": {"name": reporter},
+            "assignee": {"name": assignee},
+        }
+
+        new_issue = jira_server.create_issue(fields=issue_dict)
+
+        '''for watcher in ("jpham", "bhewitson", "elaks"):
+            jira_server.add_watcher(new_issue.id, watcher)'''
+
+        return new_issue
+
     def get_context_and_render(self, request, form):
         context = {
             'form': form,
@@ -298,37 +331,12 @@ class AnalysisCreate(TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.owner = request.user
+            print(form['project_name'].value())
+            jira_ticket = self.create_jira_ticket(form['jira_username'].value(), form['jira_password'].value(), 
+                                          instance.name, form['description'].value(), str(request.user), str(request.user), form['project_name'].value())
 
-            #Create Jira Ticket, cannabalized from /shahlab/bhewitson/scripts/scpipeline_utils/create_analysis.py
-            jira_server = JIRA('https://www.bcgsc.ca/jira/', auth=(form['jira_username'].value(), form['jira_password'].value()))
 
-            title = "Analysis Ticket For of {}".format(instance.name)
-
-            description = [
-                "(x) Alignment",
-                "(x) Hmmcopy",
-                "(x) Classifier",
-                "(x) MT bam extraction",
-                "(x) Path to results on blob:",
-                "{noformat}Container: singlecelldata\nresults/<jira_ticket>{noformat}",
-                "(x) Upload to Montage",
-            ]
-
-            issue_dict = {
-                "project": {"id": 11220},
-                "summary": title,
-                "description": "\n\n".join(description),
-                "issuetype": {"name": "Task"},
-                "reporter": {"name": "jpham"},
-                "assignee": {"name": "jpham"},
-            }
-
-            new_issue = jira_server.create_issue(fields=issue_dict)
-
-            for watcher in ("jpham", "bhewitson", "elaks"):
-                jira_server.add_watcher(new_issue.id, watcher)
-
-            instance.jira_ticket = str(new_issue)
+            instance.jira_ticket = jira_ticket
 
             instance.save()
             msg = "Successfully created Analysis {}.".format(instance.name)
