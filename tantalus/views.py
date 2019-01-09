@@ -280,7 +280,6 @@ class TagResultsDelete(View):
 
 @method_decorator(login_required, name='dispatch')
 class AnalysisCreate(TemplateView):
-
     template_name = "tantalus/analysis_create.html"
 
     def create_jira_ticket(self, username, password, name, description, reporter, assignee, project_name):
@@ -296,23 +295,16 @@ class AnalysisCreate(TemplateView):
 
         title = "Analysis Ticket For of {}".format(name)
 
-        description = [
-            description
-        ]
-
         issue_dict = {
             "project": {"id": project_id},
             "summary": title,
-            "description": "\n\n".join(description),
+            "description": description,
             "issuetype": {"name": "Task"},
             "reporter": {"name": reporter},
             "assignee": {"name": assignee},
         }
 
         new_issue = jira_server.create_issue(fields=issue_dict)
-
-        '''for watcher in ("jpham", "bhewitson", "elaks"):
-            jira_server.add_watcher(new_issue.id, watcher)'''
 
         return new_issue
 
@@ -331,7 +323,6 @@ class AnalysisCreate(TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.owner = request.user
-            print(form['project_name'].value())
             jira_ticket = self.create_jira_ticket(form['jira_username'].value(), form['jira_password'].value(), 
                                           instance.name, form['description'].value(), str(request.user), str(request.user), form['project_name'].value())
 
