@@ -74,6 +74,9 @@ class Patient(models.Model):
     """
     Patient model
     """
+
+    history = HistoricalRecords()
+
     patient_id = models.CharField(
         unique=True,
         max_length=120,
@@ -162,6 +165,7 @@ class LibraryType(models.Model):
     """
     Type of sequencing applied to a DNA library.
     """
+
     history = HistoricalRecords()
 
     name = models.CharField(
@@ -874,6 +878,9 @@ class Sow(models.Model):
     """
     Sow model
     """
+
+    history = HistoricalRecords()
+
     # Unique on name
     name = models.CharField(max_length=50,unique=True)
 
@@ -884,6 +891,9 @@ class Submission(models.Model):
     """
     Submission model
     """
+
+    history = HistoricalRecords()
+
     # Add nullable library id
     sample = models.ForeignKey(
         Sample,
