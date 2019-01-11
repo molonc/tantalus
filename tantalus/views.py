@@ -1333,7 +1333,7 @@ class DataStatsView(TemplateView):
         context = {
             'storage_stats': sorted(
                 storage_stats.iteritems(),
-                key=lambda y: y['storage_size'],
+                key=lambda y: y[1]['storage_size'],
                 reverse=True),
             'locations_list': sorted(['all', 'azure', 'gsc', 'rocks', 'shahlab']),
             'bam_library_stats': sorted(bam_dict.iteritems()),
