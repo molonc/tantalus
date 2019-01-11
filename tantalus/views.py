@@ -26,8 +26,10 @@ import pandas as pd
 from io import StringIO
 import xlsxwriter
 
+from jira import JIRA, JIRAError
+
 from tantalus.utils import read_excel_sheets
-from tantalus.settings import STATIC_ROOT
+from tantalus.settings import STATIC_ROOT, JIRA_URL
 from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
@@ -278,8 +280,33 @@ class TagResultsDelete(View):
 
 @method_decorator(login_required, name='dispatch')
 class AnalysisCreate(TemplateView):
-
     template_name = "tantalus/analysis_create.html"
+
+    def create_jira_ticket(self, username, password, name, description, reporter, assignee, project_name):
+
+        jira_server = JIRA(JIRA_URL, auth=(username, password))
+
+        projects = jira_server.projects()
+
+        for project in projects:
+            if(project.name.lower() == project_name.lower()):
+                project_id = project.id
+
+
+        title = "Analysis Ticket For of {}".format(name)
+
+        issue_dict = {
+            "project": {"id": project_id},
+            "summary": title,
+            "description": description,
+            "issuetype": {"name": "Task"},
+            "reporter": {"name": reporter},
+            "assignee": {"name": assignee},
+        }
+
+        new_issue = jira_server.create_issue(fields=issue_dict)
+
+        return new_issue
 
     def get_context_and_render(self, request, form):
         context = {
@@ -296,6 +323,12 @@ class AnalysisCreate(TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.owner = request.user
+            jira_ticket = self.create_jira_ticket(form['jira_username'].value(), form['jira_password'].value(), 
+                                          instance.name, form['description'].value(), str(request.user), str(request.user), form['project_name'].value())
+
+
+            instance.jira_ticket = jira_ticket
+
             instance.save()
             msg = "Successfully created Analysis {}.".format(instance.name)
             messages.success(request, msg)
@@ -304,6 +337,40 @@ class AnalysisCreate(TemplateView):
             msg = "Failed to create Analysis. Please fix the errors below."
             messages.error(request, msg)
             return self.get_context_and_render(request, form)
+
+
+@method_decorator(login_required, name='dispatch')
+class AnalysisEdit(TemplateView):
+
+    template_name = "tantalus/analysis_edit.html"
+
+    def get_context_and_render(self, request, form, pk=None):
+        context = {
+            'pk':pk,
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        analysis_pk = kwargs['pk']
+        analysis = tantalus.models.Analysis.objects.get(id=analysis_pk)
+        form = tantalus.forms.AnalysisEditForm(instance=analysis)
+        return self.get_context_and_render(request, form, analysis_pk)
+
+    def post(self, request, *args, **kwargs):
+        analysis_pk = kwargs['pk']
+        analysis = tantalus.models.Analysis.objects.get(id=analysis_pk)
+        form = tantalus.forms.AnalysisEditForm(request.POST, instance=analysis)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save()
+            msg = "Successfully edited Patient {}".format(instance.name)
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            msg = "Failed to edit the Analysis. Please fix the errors below."
+            messages.error(request, msg)
+            return self.get_context_and_render(request, form, analysis_pk)
 
 
 @Render("tantalus/analysis_list.html")

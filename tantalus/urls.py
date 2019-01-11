@@ -59,6 +59,7 @@ urlpatterns = [
     url(r'^analyses/create$', tantalus.views.AnalysisCreate.as_view(), name='analysis-add'),
     url(r'^analyses/$', tantalus.views.analysis_list, name='analysis-list'),
     url(r'^analyses/(?P<pk>\d+)$', tantalus.views.AnalysisDetail.as_view(), name='analysis-detail'),
+    url(r'^analyses/edit/(?P<pk>\d+)$', tantalus.views.AnalysisEdit.as_view(), name='analysis-edit'),
     url(r'^externalidsearch/$', tantalus.views.ExternalIDSearch.as_view(), name='external-id-search'),
     url(r'^export-external-id-results/$', tantalus.views.export_external_id_results, name='export-external-id-results'),
     url(r'^$', tantalus.views.HomeView.as_view(), name='home'),

@@ -8,6 +8,7 @@
 {% block body %}
     <div class="container detail-container" style="padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
+        	<a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'analysis-edit' pk=object.id %}">Edit Analysis</a>
         	<h4>Analysis Details</h4>
             <table class="table-condensed">
                 <tr>
