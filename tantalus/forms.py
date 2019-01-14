@@ -566,7 +566,7 @@ class DatasetSearchForm(forms.Form):
             results = results.filter(dataset_type__in=dataset_type)
 
         if storages:
-            results = results.filter(file_resources__fileinstance__storage__name__in=storages)
+            results = results.filter(file_resources__fileinstance__storage_id__in=storages)
 
         if compression_schemes:
             results = results.filter(file_resources__compression__in=compression_schemes)
