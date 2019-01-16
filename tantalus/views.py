@@ -166,7 +166,7 @@ class SubmissionDetail(DetailView):
         # TODO: add other fields to the view?
         context = super(SubmissionDetail, self).get_context_data(**kwargs)
         sample_object = tantalus.models.Sample.objects.get(pk=self.object.sample_id)
-        context['sample_url'] = sample_object.get_absolute_url() + str(self.object.sample.id)
+        context['sample_url'] = sample_object.get_absolute_url()
         return context
 
 
