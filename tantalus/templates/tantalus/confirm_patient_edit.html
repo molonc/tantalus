@@ -72,9 +72,11 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $("#patient-edit-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
             $("#patient-generate-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
         });

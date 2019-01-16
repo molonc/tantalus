@@ -160,9 +160,11 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $("#lane-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
             $("#file-resource-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
         });

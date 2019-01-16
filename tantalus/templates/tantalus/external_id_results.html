@@ -87,12 +87,15 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $("#samples-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
             $("#multiple-matched-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
             $("#not-matched-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
         });

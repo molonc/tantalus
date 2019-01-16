@@ -116,9 +116,11 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $("#input-datasets-analysis").DataTable({
+            	stateSave: true,
                 "order": [[0, "desc"]]
             });
             $("#input-results-analysis").DataTable({
+            	stateSave: true,
                 "order": [[0, "desc"]]
             });
         });

@@ -108,9 +108,11 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $("#sequence-datasets-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
             $("#results-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
         });

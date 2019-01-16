@@ -190,12 +190,15 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $("#related-samples-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
             $("#input-datasets-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
             $("#file-resources-datatable").DataTable({
+                stateSave: true,
                 "order": [[0, "desc"]]
             });
         });
