@@ -88,6 +88,8 @@ class FileResourceFilter(BaseFilterSet):
         super(FileResourceFilter, self).__init__(*args, **kwargs)
         self.filters["sequencedataset__id"].label = "Has SequenceDataset ID"
         self.filters["sequencedataset__name"].label = "Has SequenceDataset name"
+        self.filters["sequencefileinfo__index_sequence"].label = "Index Sequence"
+        self.filters["fileinstance__storage__name"].label = "Is in Storage name"
 
     class Meta(BaseFilterSet.Meta):
         model = FileResource
@@ -97,6 +99,7 @@ class FileResourceFilter(BaseFilterSet):
             "sequencedataset__name": ["exact"],
             "sequencedataset__id": ["exact"],
             "sequencefileinfo__index_sequence": ["exact"],
+            "fileinstance__storage__name": ["exact"],
         }
 
 
@@ -124,6 +127,8 @@ class ResultsDatasetFilter(filters.FilterSet):
             "samples": ["exact"],
             "analysis": ["exact"],
             "file_resources__filename": ["exact"],
+            "results_type": ["exact"],
+            "results_version": ["exact"],
         }
 
 
