@@ -55,37 +55,7 @@
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'specific-submission-add' object.id %}">Add Submission(s) to This Sample</a>
         {% if submission_set %}
-            <h4>Related Submissions</h4>
-            <div class="table-responsive">
-                <table id="submission-datatable" class="table-striped table-bordered">
-                    <thead>
-                        <th>Submission ID</th>
-                        <th>SOW</th>
-                        <th>Submission Date</th>
-                        <th>Submitted By</th>
-                        <th>Lanes Sequenced</th>
-                        <th>Updated Goal</th>
-                        <th>Payment</th>
-                        <th>Data Path</th>
-                        <th>Library Type</th>
-                    </thead>
-                    <tbody>
-                        {% for submission in submission_set %}
-                            <tr>
-                                <td><a href="{% url 'submission-detail' submission.id %}">{{submission.id}}</a></td>
-                                <td>{{submission.sow}}</td>
-                                <td>{{submission.submission_date}}</td>
-                                <td>{{submission.submitted_by}}</td>
-                                <td>{{submission.lanes_sequenced}}</td>
-                                <td>{{submission.updated_goal}}</td>
-                                <td>{{submission.payment}}</td>
-                                <td>{{submission.data_path}}</td>
-                                <td>{{submission.library_type}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% include "tantalus/datatable/submission.html" %}
         {% else %}
             <h5><i class="text-warning">No Submissions associated with this Sample yet.</i></h5>
         {% endif %}
@@ -93,57 +63,10 @@
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if sequence_datasets_set %}
-            <h4>Related Sequence Datasets</h4>
-            <div class="table-responsive">
-                <table id="sequencedataset-datatable" class="table-striped table-bordered">
-                    <thead>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Library ID</th>
-                        <th>Library Type</th>
-                        <th>Reference Genome</th>
-                        <th>Aligner</th>
-                        <th>Last Updated</th>
-                        <th>Num. Read Groups</th>
-                        <th>Num. Total Read Groups</th>
-                        <th>Completed</th>
-                    </thead>
-                    <tbody>
-                        {% for dataset in sequence_datasets_set %}
-                            <tr>
-                                <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.name}}</a></td>
-                                <td>{{dataset.dataset_type}}</td>
-                                <td>{{dataset.library.id}}</td>
-                                <td>{{dataset.get_library_type}}</td>
-                                <td>{{dataset.reference_genome}}</td>
-                                <td>{{dataset.aligner}}</td>
-                                <td>{{dataset.last_updated}}</td>
-                                <td>{{dataset.sequence_lanes.all.count}}</td>
-                                <td>{{dataset.get_num_total_sequencing_lanes}}</td>
-                                <td>{{dataset.get_is_complete}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% include "tantalus/datatable/related_sequence_datasets.html" %}
         {% else %}
             <h5><i class="text-warning">No Sequence Datasets associated with this Sample yet.</i></h5>
         {% endif %}
     </div>
-{% endblock %}
-
-{% block datatables_script %}
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("#submission-datatable").DataTable({
-                stateSave: true,
-                "order": [[0, "desc"]]
-            });
-            $("#sequencedataset-datatable").DataTable({
-                stateSave: true,
-                "order": [[0, "desc"]]
-            });
-        });
-    </script>
 {% endblock %}
 

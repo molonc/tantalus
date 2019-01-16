@@ -59,7 +59,7 @@
                         <a style="color: white;" href="{% url 'api:schema-redoc' %}">API Reference</a>
                     </li>
                 </ul>
-            </div>            
+            </div>
         </div>
     </nav><br>
     <!-- end of Header -->
@@ -105,7 +105,7 @@
     {% block datatables_script %}
         <script type="text/javascript">
             $(document).ready(function() {
-                $("#datatable").DataTable({
+                $( "table[id*='datatable']" ).DataTable({
                     stateSave: true,
                     "order": [[0, "desc"]]
                 });

@@ -1,0 +1,15 @@
+<h4>Invalid External IDs</h4>
+<div class="table-responsive">
+    <table id="not-matched-datatable" class="table-striped table-bordered">
+        <thead>
+            <th>External Sample ID</th>
+        </thead>
+        <tbody>
+            {% for id in wrong_ids %}
+                <tr>
+                    <td>{{id}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

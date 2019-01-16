@@ -1,0 +1,16 @@
+<table id="patient-generate-datatable" class="table-striped table-bordered">
+    <thead>
+        <th>Auto Generated Patient ID</th>
+        <th>External Patient ID</th>
+        <th>Case ID</th>
+    </thead>
+    <tbody>
+        {% for patient in auto_generated_patients %}
+            <tr>
+                <td>{{patient.patient_id}}</td>
+                <td>{{patient.external_patient_id}}</td>
+                <td>{{patient.case_id}}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

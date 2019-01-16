@@ -1,0 +1,22 @@
+<table id="datatable-id" class="table-striped table-bordered">
+    <thead>
+        <th>Patient ID</th>
+        <th>Current External Patient ID</th>
+        <th>New External Patient ID</th>
+        <th>Current Case ID</th>
+        <th>New Case ID</th>
+        <th>Fields Changed</th>
+    </thead>
+    <tbody>
+        {% for patient in patients_to_edit %}
+            <tr>
+                <td>{{patient.patient_id}}</td>
+                <td>{{patient.external_patient_id}}</td>
+                <td>{{patient.new_external_patient_id}}</td>
+                <td>{{patient.case_id}}</td>
+                <td>{{patient.new_case_id}}</td>
+                <td>{{patient.fields_changed}}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

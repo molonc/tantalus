@@ -1,0 +1,23 @@
+<div class="table-responsive">
+    <table id="datatable" class="table table-striped" style="display:none;">
+        <thead>
+            <tr>
+                <th>Submission ID</th>
+                <th>Sample</th>
+                <th>Submission Date</th>
+                <th>Submitted By </th>
+            </tr>
+        </thead>
+        <tbody>
+            <br/>
+            {% for submission in submissions %}
+                <tr>
+                    <td><a href="{% url 'submission-detail' submission.id %}">{{submission.id}}</a></td>
+                    <td>{{submission.sample}}</td>
+                    <td>{{submission.submission_date}}</td>
+                    <td>{{submission.submitted_by}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

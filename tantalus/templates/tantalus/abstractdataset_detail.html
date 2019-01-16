@@ -78,38 +78,7 @@
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
-            <h4>Lanes</h4>
-            <div class="table-responsive">
-                <table id="lane-datatable" class="table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Flowcell ID</th>
-                            <th>Lane Number</th>
-                            <th>DNA Library</th>
-                            <th>Owner</th>
-                            <th>Sequencing Center</th>
-                            <th>Sequencing Instrument</th>
-                            <th>Sequencing Library ID</th>
-                            <th>Read Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <br/>
-                        {% for lane in object.sequence_lanes.all %}
-                            <tr>
-                                <td>{{lane.flowcell_id}}</td>
-                                <td>{{lane.lane_number}}</td>
-                                <td>{{lane.dna_library}}</td>
-                                <td>{{lane.owner}}</td>
-                                <td>{{lane.sequencing_center}}</td>
-                                <td>{{lane.sequencing_instrument}}</td>
-                                <td>{{lane.sequencing_library_id}}</td>
-                                <td>{{lane.read_type}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% include "tantalus/datatable/lanes.html" %}
         {% else %}
             <h5><i class="text-warning">No Lanes yet.</i></h5>
         {% endif %}
@@ -118,55 +87,10 @@
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
-            <h4>File Resources</h4>
-            <div class="table-responsive">
-                <table id="file-resource-datatable" class="table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th>File name</th>
-                            <th>File Type</th>
-                            <th>Index Sequence</th>
-                            <th>Read End</th>
-                            <th>Region</th>
-                            <th>Size</th>
-                            <th>Storage</th>
-                            <th>Owner</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <br/>
-                        {% for file in object.file_resources.all %}
-                            <tr>
-                                <td>{{file.filename}}</td>
-                                <td>{{file.file_type.name}}</td>
-                                <td>{{file.sequencefileinfo.index_sequence}}</td>
-                                <td>{{file.sequencefileinfo.read_end}}</td>
-                                <td>{{file.sequencefileinfo.genome_region}}</td>
-                                <td>{{file.get_file_size}}</td>
-                                <td>{{storages|join:", "}}</td>
-                                <td>{{file.owner.username}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% include "tantalus/datatable/abstract_file_resources.html" %}
         {% else %}
             <h5><i class="text-warning">No file resources yet.</i></h5>
         {% endif %}
     </div>
 {% endblock %}
 
-{% block datatables_script %}
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("#lane-datatable").DataTable({
-                stateSave: true,
-                "order": [[0, "desc"]]
-            });
-            $("#file-resource-datatable").DataTable({
-                stateSave: true,
-                "order": [[0, "desc"]]
-            });
-        });
-    </script>
-{% endblock %}

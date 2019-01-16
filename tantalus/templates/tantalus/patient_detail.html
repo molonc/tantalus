@@ -30,35 +30,7 @@
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'specific-sample-add' object.patient_id %}">Add Sample to this Patient</a>
         {% if samples %}
-            <h4>Related Samples</h4>
-            <div class="table-responsive">
-                <table id="datatable" class="table-striped table-bordered">
-                    <thead>
-                        <th>Sample ID</th>
-                        <th>External Sample ID</th>
-                        <th>Submitter</th>
-                        <th>Collaborator</th>
-                        <th>Tissue</th>
-                        <th>Note</th>
-                        <th>Projects</th>
-                        <th>Submission IDs</th>
-                    </thead>
-                    <tbody>
-                        {% for sample in samples %}
-                            <tr>
-                                <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
-                                <td>{{sample.external_sample_id}}</td>
-                                <td>{{sample.submitter}}</td>
-                                <td>{{sample.collaborator}}</td>
-                                <td>{{sample.tissue}}</td>
-                                <td>{{sample.note}}</td>
-                                <td>{{sample.projects_list|join:", "}}</td>
-                                <td>{{sample.submission_list|join:", "}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% include "tantalus/datatable/patient_related_samples.html" %}
         {% else %}
             <h5><i class="text-warning">No Samples associated with this Patient yet.</i></h5>
         {% endif %}
