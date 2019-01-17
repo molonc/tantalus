@@ -132,7 +132,7 @@
     </div>
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
-            {% if sequence_datasets_set %}
+            {% if library_set %}
                 <h4>Related Libraries</h4>
                 <div class="table-responsive">
                     <table id="dnalibraries-datatable" class="table-striped table-bordered">
@@ -144,13 +144,13 @@
                             <th>Owner</th>
                         </thead>
                         <tbody>
-                            {% for dataset in sequence_datasets_set %}
+                            {% for library in library_set %}
                                 <tr>
-                                    <td>{{dataset.library.id}}</td>
-                                    <td>{{dataset.library.library_id}}</td>
-                                    <td>{{dataset.library.library_type}}</td>
-                                    <td>{{dataset.library.index_format}}</td>
-                                    <td>{{dataset.library.owner}}</td>
+                                    <td>{{library.library.id}}</td>
+                                    <td>{{library.library.library_id}}</td>
+                                    <td>{{library.library.library_type}}</td>
+                                    <td>{{library.library.index_format}}</td>
+                                    <td>{{library.library.owner}}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
