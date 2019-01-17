@@ -402,7 +402,7 @@ class FileResource(models.Model):
         }[self.compression]
 
     def get_file_size(self):
-        size_mb = str("{:,}".format(self.size / 1000000)) + " MB"
+        size_mb = str("{:,.2f}".format(self.size / 1000000.0)) + " MB"
         return size_mb
 
 
