@@ -167,6 +167,11 @@ class SequenceDatasetSerializerRead(serializers.ModelSerializer):
     sequence_lanes = SequencingLaneSerializer(many=True)
     aligner = AlignmentToolField()
     reference_genome = ReferenceGenomeField()
+    is_complete = serializers.SerializerMethodField()
+
+    def get_is_complete(self, obj):
+        return obj.get_is_complete()
+
     class Meta:
         model = tantalus.models.SequenceDataset
         fields = '__all__'
