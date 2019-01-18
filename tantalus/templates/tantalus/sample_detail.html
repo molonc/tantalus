@@ -113,7 +113,7 @@
                             <tr>
                                 <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.name}}</a></td>
                                 <td>{{dataset.dataset_type}}</td>
-                                <td>{{dataset.library.id}}</td>
+                                <td>{{dataset.library.library_id}}</td>
                                 <td>{{dataset.get_library_type}}</td>
                                 <td>{{dataset.reference_genome}}</td>
                                 <td>{{dataset.aligner}}</td>
@@ -130,6 +130,36 @@
             <h5><i class="text-warning">No Sequence Datasets associated with this Sample yet.</i></h5>
         {% endif %}
     </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+            {% if library_set %}
+                <h4>Related Libraries</h4>
+                <div class="table-responsive">
+                    <table id="dnalibraries-datatable" class="table-striped table-bordered">
+                        <thead>
+                            <th>ID</th>
+                            <th>Library ID</th>
+                            <th>Library Type</th>
+                            <th>Index Format</th>
+                            <th>Owner</th>
+                        </thead>
+                        <tbody>
+                            {% for library in library_set %}
+                                <tr>
+                                    <td>{{library.library.id}}</td>
+                                    <td>{{library.library.library_id}}</td>
+                                    <td>{{library.library.library_type}}</td>
+                                    <td>{{library.library.index_format}}</td>
+                                    <td>{{library.library.owner}}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <h5><i class="text-warning">No DNA Libraries associated with this Sample yet.</i></h5>
+            {% endif %}
+        </div>
 {% endblock %}
 
 {% block datatables_script %}
@@ -139,6 +169,9 @@
                 "order": [[0, "desc"]]
             });
             $("#sequencedataset-datatable").DataTable({
+                "order": [[0, "desc"]]
+            });
+             $("#dnalibraries-datatable").DataTable({
                 "order": [[0, "desc"]]
             });
         });
