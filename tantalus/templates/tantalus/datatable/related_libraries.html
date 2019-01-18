@@ -1,0 +1,23 @@
+<h4>Related Libraries</h4>
+<div class="table-responsive">
+    <table id="dnalibraries-datatable" class="table-striped table-bordered">
+        <thead>
+            <th>ID</th>
+            <th>Library ID</th>
+            <th>Library Type</th>
+            <th>Index Format</th>
+            <th>Owner</th>
+        </thead>
+        <tbody>
+            {% for library in library_set %}
+                <tr>
+                    <td>{{library.library.id}}</td>
+                    <td>{{library.library.library_id}}</td>
+                    <td>{{library.library.library_type}}</td>
+                    <td>{{library.library.index_format}}</td>
+                    <td>{{library.library.owner}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

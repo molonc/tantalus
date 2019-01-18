@@ -166,7 +166,7 @@ class SubmissionDetail(DetailView):
         # TODO: add other fields to the view?
         context = super(SubmissionDetail, self).get_context_data(**kwargs)
         sample_object = tantalus.models.Sample.objects.get(pk=self.object.sample_id)
-        context['sample_url'] = sample_object.get_absolute_url() + str(self.object.sample.id)
+        context['sample_url'] = sample_object.get_absolute_url()
         return context
 
 
@@ -196,6 +196,7 @@ class SampleDetail(DetailView):
         sequence_datasets_set = self.object.sequencedataset_set.all()
         submission_set = self.object.submission_set.all()
         project_set = self.object.projects.all()
+        unique_library_set = sequence_datasets_set.distinct("library__library_id")
 
         project_list = []
         for project in project_set:    
@@ -208,6 +209,7 @@ class SampleDetail(DetailView):
         context['project_list'] = project_list
         context['sequence_datasets_set'] = sequence_datasets_set
         context['submission_set'] = submission_set
+        context['library_set'] = unique_library_set
         return context
 
 
