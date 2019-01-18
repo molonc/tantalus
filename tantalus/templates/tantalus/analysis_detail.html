@@ -47,35 +47,7 @@
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
     	{% if input_datasets %}
-	        <h4>Input Datasets for this Analysis</h4>
-	        <div class="table-responsive">
-	            <table id="input-datasets-analysis" class="table-striped table-bordered">
-	                <thead>
-	                	<th>Dataset ID</th>
-	                    <th>Dataset Owner</th>
-	                    <th>Dataset Name</th>
-	                    <th>Dataset Type</th>
-	                    <th>Sample</th>
-	                    <th>Library</th>
-	                    <th>Reference Genome</th>
-	                    <th>Aligner</th>
-	                </thead>
-	                <tbody>
-	                    {% for dataset in input_datasets %}
-	                        <tr>
-	                            <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.id}}</a></td>
-	                            <td>{{dataset.owner}}</td>
-	                            <td>{{dataset.name}}</td>
-	                            <td>{{dataset.dataset_type}}</td>
-	                            <td>{{dataset.sample.sample_id}}</td>
-	                            <td>{{dataset.library.library_id}}</td>
-	                            <td>{{dataset.reference_genome}}</td>
-	                            <td>{{dataset.aligner}}</td>
-	                        </tr>
-	                    {% endfor %}
-	                </tbody>
-	            </table>
-	        </div>
+	         {% include "tantalus/datatable/input_datasets.html" %}
 	    {% else %}
 	    	<h5><i class="text-warning">No Input Datasets for this Analysis yet.</i></h5>
         {% endif %}
@@ -83,44 +55,9 @@
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
     	{% if input_results %}
-    		<h4>Input Results for this Analysis</h4>
-	        <div class="table-responsive">
-	            <table id="input-results-analysis" class="table-striped table-bordered">
-	                <thead>
-	                	<th>Results ID</th>
-	                    <th>Results Owner</th>
-	                    <th>Results Name</th>
-	                    <th>Results Type</th>
-	                    <th>Results Version</th>
-	                </thead>
-	                <tbody>
-	                    {% for result in input_results %}
-	                        <tr>
-	                            <td><a href="{% url 'result-detail' result.id %}">{{result.id}}</a></td>
-	                            <td>{{result.owner}}</td>
-	                            <td>{{result.name}}</td>
-	                            <td>{{result.results_type}}</td>
-	                            <td>{{result.results_version}}</td>
-	                        </tr>
-	                    {% endfor %}
-	                </tbody>
-	            </table>
-	        </div>
+    		 {% include "tantalus/datatable/input_results.html" %}
     	{% else %}
     		<h5><i class="text-warning">No Input Results for this Analysis yet.</i></h5>
     	{% endif %}
     </div>
-{% endblock %}
-
-{% block datatables_script %}
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("#input-datasets-analysis").DataTable({
-                "order": [[0, "desc"]]
-            });
-            $("#input-results-analysis").DataTable({
-                "order": [[0, "desc"]]
-            });
-        });
-    </script>
 {% endblock %}

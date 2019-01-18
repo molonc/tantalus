@@ -1,0 +1,19 @@
+<h4>External IDs with 1 Associated Sample ID</h4>
+<div class="table-responsive">
+    <table id="samples-datatable" class="table-striped table-bordered">
+        <thead>
+            <th>Sample PK</th>
+            <th>Sample ID</th>
+            <th>External Sample ID</th>
+        </thead>
+        <tbody>
+            {% for sample in samples %}
+                <tr>
+                    <td><a href="{% url 'sample-detail' sample.id %}">{{sample.id}}</a></td>
+                    <td>{{sample.sample_id}}</td>
+                    <td>{{sample.external_sample_id}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

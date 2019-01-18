@@ -12,28 +12,7 @@
     </div>
     <div class="container" style="background-color:#F5F5F5;">
         {% if patients %}
-            <div class="table-responsive">
-                <table id="datatable" class="table table-striped" style="display:none;">
-                    <thead>
-                        <tr>
-                            <th>Patient ID</th>
-                            <th>External Patient ID</th>
-                            <th>Case ID</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <br/>
-                        {% for patient in patients %}
-                            <tr>
-                                <td><a href="{% url 'patient-detail' patient.id %}">{{patient.patient_id}}</a></td>
-                                <td>{{patient.external_patient_id}}</td>
-                                <td>{{patient.case_id}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
+            {% include "tantalus/datatable/patient_list.html" %}
         {% else %}
             <h5><i class="text-warning">No Patients yet.</i></h>
         {% endif %}

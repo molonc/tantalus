@@ -86,118 +86,12 @@
         {% endif %}
     </div>
 
-    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
-        <h4>Related Samples</h4>
-        <div class="table-responsive">
-            <table id="related-samples-datatable" class="table-striped table-bordered">
-                <thead>
-                    <th>Sample ID</th>
-                    <th>Patient</th>
-                    <th>Collab Sample ID</th>
-                    <th>Submitter</th>
-                    <th>Collaborator</th>
-                    <th>Tissue</th>
-                    <th>Note</th>
-                    <th>Projects</th>
-                    <th>Submission IDs</th>
-                </thead>
-                <tbody>
-                    {% for sample in samples %}
-                        <tr>
-                            <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
-                            {% if sample.patient_id %}
-                            	<td><a href="{% url 'patient-detail' sample.patient_id.id %}">{{sample.patient_id.patient_id}}</a></td>
-                            {% else %}
-                            	<td>No Patient associated</td>
-                            {% endif %}
-                            <td>{{sample.collab_sample_id}}</td>
-                            <td>{{sample.submitter}}</td>
-                            <td>{{sample.collaborator}}</td>
-                            <td>{{sample.tissue}}</td>
-                            <td>{{sample.note}}</td>
-                            <td>{{sample.projects_list|join:", "}}</td>
-                            <td>{{sample.submission_list|join:", "}}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+    {% include "tantalus/datatable/result_related_samples.html" %}
+    {% include "tantalus/datatable/input_datasets.html" %}
+    {% include "tantalus/datatable/file_resources.html" %}
 
-    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
-        <h4>Input Datasets</h4>
-        <div class="table-responsive">
-            <table id="input-datasets-datatable" class="table-striped table-bordered">
-                <thead>
-                	<th>Dataset ID</th>
-                    <th>Dataset Owner</th>
-                    <th>Dataset Name</th>
-                    <th>Dataset Type</th>
-                    <th>Sample</th>
-                    <th>Library</th>
-                    <th>Reference Genome</th>
-                    <th>Aligner</th>
-                </thead>
-                <tbody>
-                    {% for dataset in input_datasets %}
-                        <tr>
-                            <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.id}}</a></td>
-                            <td>{{dataset.owner}}</td>
-                            <td>{{dataset.name}}</td>
-                            <td>{{dataset.dataset_type}}</td>
-                            <td>{{dataset.sample.sample_id}}</td>
-                            <td>{{dataset.library.library_id}}</td>
-                            <td>{{dataset.reference_genome}}</td>
-                            <td>{{dataset.aligner}}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
-        <h4>File Resources</h4>
-        <div class="table-responsive">
-            <table id="file-resources-datatable" class="table-striped table-bordered">
-                <thead>
-                    <th>ID</th>
-                    <th>File Name</th>
-                    <th>Owner</th>
-                    <th>Created</th>
-                    <th>Last Updated</th>
-                    <th>Compression</th>
-                </thead>
-                <tbody>
-                    {% for file in file_resources %}
-                        <tr>
-                            <td>{{file.id}}</td>
-                            <td>{{file.filename}}</td>
-                            <td>{{file.owner}}</td>
-                            <td>{{file.created}}</td>
-                            <td>{{file.last_updated}}</td>
-                            <td>{{file.compression}}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <br>
+
+
 {% endblock %}
 
-{% block datatables_script %}
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("#related-samples-datatable").DataTable({
-                "order": [[0, "desc"]]
-            });
-            $("#input-datasets-datatable").DataTable({
-                "order": [[0, "desc"]]
-            });
-            $("#file-resources-datatable").DataTable({
-                "order": [[0, "desc"]]
-            });
-        });
-    </script>
-{% endblock %}

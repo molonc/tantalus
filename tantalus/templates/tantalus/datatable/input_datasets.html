@@ -1,0 +1,31 @@
+<div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+    <h4>Input Datasets</h4>
+    <div class="table-responsive">
+        <table id="input-datasets-datatable" class="table-striped table-bordered">
+            <thead>
+                <th>Dataset ID</th>
+                <th>Dataset Owner</th>
+                <th>Dataset Name</th>
+                <th>Dataset Type</th>
+                <th>Sample</th>
+                <th>Library</th>
+                <th>Reference Genome</th>
+                <th>Aligner</th>
+            </thead>
+            <tbody>
+                {% for dataset in input_datasets %}
+                    <tr>
+                        <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.id}}</a></td>
+                        <td>{{dataset.owner}}</td>
+                        <td>{{dataset.name}}</td>
+                        <td>{{dataset.dataset_type}}</td>
+                        <td>{{dataset.sample.sample_id}}</td>
+                        <td>{{dataset.library.library_id}}</td>
+                        <td>{{dataset.reference_genome}}</td>
+                        <td>{{dataset.aligner}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

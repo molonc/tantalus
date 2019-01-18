@@ -12,31 +12,7 @@
     </div>
     <div class="container" style="background-color:#F5F5F5;">
         {% if samples %}
-            <div class="table-responsive">
-                <table id="datatable" class="table table-striped" style="display:none;">
-                    <thead>
-                        <tr>
-                            <th>Primary Sample ID</th>
-                            <th>External Sample ID</th>
-                            <th>Submitter</th>
-                            <th>Collaborator</th>
-                            <th>Tissue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <br/>
-                        {% for sample in samples %}
-                            <tr>
-                                <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
-                                <td>{{sample.external_sample_id}}</td>
-                                <td>{{sample.submitter}}</td>
-                                <td>{{sample.collaborator}}</td>
-                                <td>{{sample.tissue}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% include "tantalus/datatable/sample_list.html" %}
         {% else %}
             <h5><i class="text-warning">No samples yet.</i></h>
         {% endif %}

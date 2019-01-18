@@ -8,25 +8,7 @@
 {% block body %}
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if samples %}
-            <h4>External IDs with 1 Associated Sample ID</h4>
-            <div class="table-responsive">
-                <table id="samples-datatable" class="table-striped table-bordered">
-                    <thead>
-                    	<th>Sample PK</th>
-                        <th>Sample ID</th>
-                        <th>External Sample ID</th>
-                    </thead>
-                    <tbody>
-                        {% for sample in samples %}
-                            <tr>
-                                <td><a href="{% url 'sample-detail' sample.id %}">{{sample.id}}</a></td>
-                                <td>{{sample.sample_id}}</td>
-                                <td>{{sample.external_sample_id}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% include "tantalus/datatable/external_ids_single.html" %}
             <a class="btn btn-primary btn-sm" href="{% url 'export-external-id-results' %}">Download Table as CSV</a> 
         {% else %}
             <h5><i class="text-warning">No Samples Found.</i></h5>
@@ -35,25 +17,7 @@
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if multiple_samples %}
-            <h4>External IDs with Multiple Associated Sample IDs</h4>
-            <div class="table-responsive">
-                <table id="multiple-matched-datatable" class="table-striped table-bordered">
-                    <thead>
-                    	<th>Sample PK</th>
-                        <th>Sample ID</th>
-                        <th>External Sample ID</th>
-                    </thead>
-                    <tbody>
-                        {% for sample in multiple_samples %}
-                            <tr>
-                                <td><a href="{% url 'sample-detail' sample.id %}">{{sample.id}}</a></td>
-                                <td>{{sample.sample_id}}</td>
-                                <td>{{sample.external_sample_id}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            {% include "tantalus/datatable/external_ids_multiple.html" %}
         {% else %}
             <h5><i class="text-warning">No Mismatched External Sample IDs</i></h5>
         {% endif %}
@@ -61,40 +25,10 @@
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if wrong_ids %}
-            <h4>Invalid External IDs</h4>
-            <div class="table-responsive">
-                <table id="not-matched-datatable" class="table-striped table-bordered">
-                    <thead>
-                        <th>External Sample ID</th>
-                    </thead>
-                    <tbody>
-                        {% for id in wrong_ids %}
-                            <tr>
-                                <td>{{id}}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+             {% include "tantalus/datatable/invalid_external_ids.html" %}
         {% else %}
             <h5><i class="text-warning">No Mismatched External Sample IDs</i></h5>
         {% endif %}
     </div>
 {% endblock %}
 
-
-{% block datatables_script %}
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $("#samples-datatable").DataTable({
-                "order": [[0, "desc"]]
-            });
-            $("#multiple-matched-datatable").DataTable({
-                "order": [[0, "desc"]]
-            });
-            $("#not-matched-datatable").DataTable({
-                "order": [[0, "desc"]]
-            });
-        });
-    </script>
-{% endblock %}

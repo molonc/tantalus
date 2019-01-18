@@ -1,0 +1,32 @@
+<h4>Lanes</h4>
+<div class="table-responsive">
+    <table id="lane-datatable" class="table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Flowcell ID</th>
+                <th>Lane Number</th>
+                <th>DNA Library</th>
+                <th>Owner</th>
+                <th>Sequencing Center</th>
+                <th>Sequencing Instrument</th>
+                <th>Sequencing Library ID</th>
+                <th>Read Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            <br/>
+            {% for lane in object.sequence_lanes.all %}
+                <tr>
+                    <td>{{lane.flowcell_id}}</td>
+                    <td>{{lane.lane_number}}</td>
+                    <td>{{lane.dna_library}}</td>
+                    <td>{{lane.owner}}</td>
+                    <td>{{lane.sequencing_center}}</td>
+                    <td>{{lane.sequencing_instrument}}</td>
+                    <td>{{lane.sequencing_library_id}}</td>
+                    <td>{{lane.read_type}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

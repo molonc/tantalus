@@ -1,0 +1,31 @@
+<h4>Related Submissions</h4>
+<div class="table-responsive">
+    <table id="submission_datatable" class="table-striped table-bordered">
+        <thead>
+            <th>Submission ID</th>
+            <th>SOW</th>
+            <th>Submission Date</th>
+            <th>Submitted By</th>
+            <th>Lanes Sequenced</th>
+            <th>Updated Goal</th>
+            <th>Payment</th>
+            <th>Data Path</th>
+            <th>Library Type</th>
+        </thead>
+        <tbody>
+            {% for submission in submission_set %}
+                <tr>
+                    <td><a href="{% url 'submission-detail' submission.id %}">{{submission.id}}</a></td>
+                    <td>{{submission.sow}}</td>
+                    <td>{{submission.submission_date}}</td>
+                    <td>{{submission.submitted_by}}</td>
+                    <td>{{submission.lanes_sequenced}}</td>
+                    <td>{{submission.updated_goal}}</td>
+                    <td>{{submission.payment}}</td>
+                    <td>{{submission.data_path}}</td>
+                    <td>{{submission.library_type}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

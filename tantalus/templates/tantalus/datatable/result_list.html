@@ -1,0 +1,27 @@
+<div class="table-responsive">
+    <table id="datatable" class="table table-striped" style="display:none;">
+        <thead>
+            <tr>
+                <th>Result ID</th>
+                <th>Owner</th>
+                <th>Name</th>
+                <th>Results Type</th>
+                <th>Results Version</th>
+                <th>Analysis</th>
+            </tr>
+        </thead>
+        <tbody>
+            <br/>
+            {% for result in results %}
+                <tr>
+                    <td><a href="{% url 'result-detail' result.id %}">{{result.id}}</td>
+                    <td>{{result.owner}}</td>
+                    <td>{{result.name}}</td>
+                    <td>{{result.results_type}}</td>
+                    <td>{{result.results_version}}</td>
+                    <td>{{result.analysis}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
