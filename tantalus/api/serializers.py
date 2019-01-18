@@ -142,8 +142,11 @@ class AlignmentToolField(serializers.Field):
     def to_representation(self, obj):
         return obj.name
     def to_internal_value(self, data):
-        alignment_tool = tantalus.models.AlignmentTool.objects.get(name=data)
-        return alignment_tool
+        try:
+            alignment_tool = tantalus.models.AlignmentTool.objects.get(name=data)
+            return alignment_tool
+        except ObjectDoesNotExist:
+            raise ValidationError('{} does not exist'.format(data))
 
 
 class ReferenceGenomeField(serializers.Field):
