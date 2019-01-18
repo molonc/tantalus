@@ -164,6 +164,7 @@ class SequenceDatasetFilter(filters.FilterSet):
             "sample__sample_id": ["exact"],
             "tags__name": ["exact"],
             "sequence_lanes__flowcell_id": ["exact"],
+            "sequence_lanes__lane_number": ["exact"],
             "dataset_type": ["exact"],
             "aligner__name": ["exact"],
             "reference_genome__name": ["exact"],
@@ -193,7 +194,6 @@ class SequencingLaneFilter(BaseFilterSet):
         model = SequencingLane
         fields = {
             "id": ["exact"],
-            "dna_library_id": ["exact"],
             "dna_library__library_id": ["exact"],
             "flowcell_id": ["exact"],
             "lane_number": ["exact"],
