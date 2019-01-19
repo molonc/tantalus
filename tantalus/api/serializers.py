@@ -122,7 +122,10 @@ class LibraryTypeField(serializers.Field):
     def to_representation(self, obj):
         return obj.name
     def to_internal_value(self, data):
-        return tantalus.models.LibraryType.objects.get(name=data)
+        try:
+            return tantalus.models.LibraryType.objects.get(name=data)
+        except ObjectDoesNotExist:
+            raise ValidationError('{} does not exist'.format(data))
 
 
 class DNALibrarySerializer(serializers.ModelSerializer):
@@ -153,7 +156,10 @@ class ReferenceGenomeField(serializers.Field):
     def to_representation(self, obj):
         return obj.name
     def to_internal_value(self, data):
-        return tantalus.models.ReferenceGenome.objects.get(name=data)
+        try:
+            return tantalus.models.ReferenceGenome.objects.get(name=data)
+        except ObjectDoesNotExist:
+            raise ValidationError('{} does not exist'.format(data))
 
 
 class SequenceDatasetSerializer(serializers.ModelSerializer):
@@ -231,7 +237,10 @@ class AnalysisTypeField(serializers.Field):
     def to_representation(self, obj):
         return obj.name
     def to_internal_value(self, data):
-        return tantalus.models.AnalysisType.objects.get(name=data)
+        try:
+            return tantalus.models.AnalysisType.objects.get(name=data)
+        except ObjectDoesNotExist:
+            raise ValidationError('{} does not exist'.format(data))
 
 
 class AnalysisSerializer(serializers.ModelSerializer):
