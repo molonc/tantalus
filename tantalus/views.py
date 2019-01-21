@@ -196,20 +196,12 @@ class SampleDetail(DetailView):
         sequence_datasets_set = self.object.sequencedataset_set.all()
         submission_set = self.object.submission_set.all()
         project_set = self.object.projects.all()
-        unique_library_set = sequence_datasets_set.distinct("library__library_id")
+        library_set = tantalus.models.DNALibrary.objects.filter(sequencedataset__sample=self.object).distinct()
 
-        project_list = []
-        for project in project_set:    
-            project_list.append(project.__str__())
-
-        try:
-            context['patient_url'] = self.object.patient_id.get_absolute_url() + str(self.object.patient_id.id)
-        except:
-            context['patient_url'] = None
-        context['project_list'] = project_list
+        context['project_list'] = project_set
         context['sequence_datasets_set'] = sequence_datasets_set
         context['submission_set'] = submission_set
-        context['library_set'] = unique_library_set
+        context['library_set'] = library_set
         return context
 
 
@@ -230,24 +222,16 @@ class ResultDetail(DetailView):
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
         context = super(ResultDetail, self).get_context_data(**kwargs)
-        sample_list = list(self.object.samples.all())
 
-        for sample in sample_list:
-            projects_list = []
-            submission_list = []
-            for project in sample.projects.all():
-                projects_list.append(project.__str__())
-            sample.projects_list = projects_list
+        sample_set = self.object.samples.all()
+        library_set = self.object.libraries.all()
+        project_set = tantalus.models.Project.objects.filter(sample__in=sample_set).distinct()
+        submission_set = tantalus.models.Submission.objects.filter(sample__in=sample_set).distinct()
 
-            for submission in sample.submission_set.all():
-                submission_list.append(submission.id)
-            sample.submission_list = submission_list
-
-        analysis = list(tantalus.models.Analysis.objects.filter(id=(self.object.analysis.id)))[0]
-        context['input_datasets'] = analysis.input_datasets.all()
-        context['file_resources'] = list(self.object.file_resources.all())
-        context['samples'] = sample_list
-        context['pk'] = kwargs['object'].id
+        context['file_resources'] = self.object.file_resources.all()
+        context['library_set'] = library_set
+        context['samples'] = sample_set
+        context['pk'] = self.object.id
         context['form'] = tantalus.forms.AddDatasetToTagForm()
         return context
 

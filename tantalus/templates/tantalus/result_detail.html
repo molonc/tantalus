@@ -87,11 +87,15 @@
     </div>
 
     {% include "tantalus/datatable/result_related_samples.html" %}
-    {% include "tantalus/datatable/input_datasets.html" %}
     {% include "tantalus/datatable/file_resources.html" %}
 
-
-
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if library_set %}
+            {% include "tantalus/datatable/related_libraries.html" %}
+        {% else %}
+            <h5><i class="text-warning">No DNA Libraries associated with these results yet.</i></h5>
+        {% endif %}
+    </div>
 
 {% endblock %}
 

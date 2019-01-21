@@ -95,7 +95,7 @@ class Patient(models.Model):
     )
 
     def get_absolute_url(self):
-        return reverse("patient-list")
+        return reverse("patient-detail", args=(self.id,))
 
     def __str__(self):
         return self.patient_id
