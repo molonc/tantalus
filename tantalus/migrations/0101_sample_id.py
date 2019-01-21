@@ -78,9 +78,13 @@ def data_migrate(apps, class_name):
             #projects is property (set) of Sample
             sample_to.projects.add(*list(sample_from.projects.all()))
             sample_from.projects = []
+
             #resultsdataset is virtual property (set) of Sample
             sample_to.resultsdataset_set.add(*list(sample_from.resultsdataset_set.all()))
             sample_from.resultsdataset_set = []
+
+            sample_to.save()
+            sample_from.save() #probably needed to save M:N field
 
             #there should be no reference to old sample_id left
             sample_from.delete()
@@ -102,11 +106,6 @@ class Migration(migrations.Migration):
         ('tantalus', '0100_auto_20190121_2144'),
     ]
 
-    # -- rename "reference_genome" to "temp_reference_genome"
-    # -- create FK "reference_genome" (vocabulary)
-    # -- fill vocabulary with unique values from "reference_genome"
-    # -- set "reference_genome" FK to values based on "temp_reference_genome" and vocabulary
-    # -- remove "temp_reference_genome"
     operations = [
         migrations.RunPython(data_migrate, do0),
     ]
