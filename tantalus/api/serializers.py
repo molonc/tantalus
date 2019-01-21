@@ -146,8 +146,7 @@ class AlignmentToolField(serializers.Field):
         return obj.name
     def to_internal_value(self, data):
         try:
-            alignment_tool = tantalus.models.AlignmentTool.objects.get(name=data)
-            return alignment_tool
+            return tantalus.models.AlignmentTool.objects.get(name=data)
         except ObjectDoesNotExist:
             raise ValidationError('{} does not exist'.format(data))
 
