@@ -137,7 +137,7 @@ class Sample(models.Model):
         blank=True
     )
 
-    patient_id = models.ForeignKey(
+    patient = models.ForeignKey(
         Patient,
         on_delete=models.CASCADE,
         null=True

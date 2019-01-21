@@ -17,8 +17,8 @@
                 {% for sample in samples %}
                     <tr>
                         <td><a href="{% url 'sample-detail' sample.id %}">{{sample.sample_id}}</a></td>
-                        {% if sample.patient_id %}
-                            <td><a href="{% url 'patient-detail' sample.patient_id.id %}">{{sample.patient_id.patient_id}}</a></td>
+                        {% if sample.patient %}
+                            <td><a href="{% url 'patient-detail' sample.patient.id %}">{{sample.patient.patient_id}}</a></td>
                         {% else %}
                             <td>No Patient associated</td>
                         {% endif %}

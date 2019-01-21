@@ -36,8 +36,8 @@
                 </tr>
                 <tr>
                     <th style="padding: 0; padding-top: 4px;">Patient ID</th>
-                    {% if object.patient_id %}
-                        <td style="padding: 0; padding-left: 35px;"><a href="{% url 'patient-detail' pk=object.patient_id.id %}">{{object.patient_id}}</a></td>
+                    {% if object.patient %}
+                        <td style="padding: 0; padding-left: 35px;"><a href="{% url 'patient-detail' pk=object.patient.id %}">{{object.patient}}</a></td>
                     {% else %}
                         <td style="padding: 0; padding-left: 35px;">No Patient Associated</td>
                     {% endif %}

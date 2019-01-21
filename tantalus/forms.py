@@ -201,7 +201,7 @@ class SampleForm(forms.ModelForm):
             'collaborator',
             'tissue',
             'note',
-            'patient_id',
+            'patient',
             'projects',
         ]
 
