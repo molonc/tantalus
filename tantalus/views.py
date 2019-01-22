@@ -1,6 +1,7 @@
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -33,9 +34,11 @@ from tantalus.settings import STATIC_ROOT, JIRA_URL
 from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
+from tantalus.settings import LOGIN_URL
 
 
-class ExternalIDSearch(TemplateView):
+class ExternalIDSearch(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
 
     search_template_name = "tantalus/external_id_search.html"
     result_template_name = "tantalus/external_id_results.html"
@@ -87,6 +90,7 @@ class ExternalIDSearch(TemplateView):
             return self.get_context_and_render(request, form)
 
 
+@login_required
 def export_external_id_results(request):
     header_dict = {
         'ID': [],
@@ -106,6 +110,7 @@ def export_external_id_results(request):
     return response
 
 
+@login_required
 @Render("tantalus/patient_list.html")
 def patient_list(request):
     patients = tantalus.models.Patient.objects.all().order_by('patient_id')
@@ -115,7 +120,8 @@ def patient_list(request):
     return context
 
 
-class PatientDetail(DetailView):
+class PatientDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
 
     model = tantalus.models.Patient
     template_name = "tantalus/patient_detail.html"
@@ -148,6 +154,7 @@ class PatientDetail(DetailView):
         return context
 
 
+@login_required
 @Render("tantalus/submission_list.html")
 def submission_list(request):
     submissions = tantalus.models.Submission.objects.all().order_by('id')
@@ -157,7 +164,8 @@ def submission_list(request):
     return context
 
 
-class SubmissionDetail(DetailView):
+class SubmissionDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
 
     model = tantalus.models.Submission
     template_name = "tantalus/submission_detail.html"
@@ -170,6 +178,7 @@ class SubmissionDetail(DetailView):
         return context
 
 
+@login_required
 @Render("tantalus/sample_list.html")
 def sample_list(request):
     """
@@ -184,7 +193,8 @@ def sample_list(request):
     return context
 
 
-class SampleDetail(DetailView):
+class SampleDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
 
     model = tantalus.models.Sample
     template_name = "tantalus/sample_detail.html"
@@ -205,6 +215,7 @@ class SampleDetail(DetailView):
         return context
 
 
+@login_required
 @Render("tantalus/result_list.html")
 def result_list(request):
     results = tantalus.models.ResultsDataset.objects.all().order_by('id')
@@ -215,7 +226,9 @@ def result_list(request):
     return context
 
 
-class ResultDetail(DetailView):
+class ResultDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
+
     model = tantalus.models.ResultsDataset
     template_name = "tantalus/result_detail.html"
 
@@ -252,8 +265,8 @@ class ResultDetail(DetailView):
             return HttpResponseRedirect(result.get_absolute_url())
 
 
-@method_decorator(login_required, name='dispatch')
-class TagResultsDelete(View):
+class TagResultsDelete(LoginRequiredMixin, View):
+    login_url = LOGIN_URL
 
     def get(self, request, pk, pk_2):
         result = get_object_or_404(tantalus.models.ResultsDataset, pk=pk)
@@ -264,8 +277,9 @@ class TagResultsDelete(View):
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
 
-@method_decorator(login_required, name='dispatch')
-class AnalysisCreate(TemplateView):
+class AnalysisCreate(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
+
     template_name = "tantalus/analysis_create.html"
 
     def create_jira_ticket(self, username, password, name, description, reporter, assignee, project_name):
@@ -325,8 +339,8 @@ class AnalysisCreate(TemplateView):
             return self.get_context_and_render(request, form)
 
 
-@method_decorator(login_required, name='dispatch')
-class AnalysisEdit(TemplateView):
+class AnalysisEdit(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
 
     template_name = "tantalus/analysis_edit.html"
 
@@ -359,6 +373,7 @@ class AnalysisEdit(TemplateView):
             return self.get_context_and_render(request, form, analysis_pk)
 
 
+@login_required
 @Render("tantalus/analysis_list.html")
 def analysis_list(request):
     analyses = tantalus.models.Analysis.objects.all().order_by('id')
@@ -369,7 +384,9 @@ def analysis_list(request):
     return context
 
 
-class AnalysisDetail(DetailView):
+class AnalysisDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
+
     model = tantalus.models.Analysis
     template_name = "tantalus/analysis_detail.html"
 
@@ -381,6 +398,7 @@ class AnalysisDetail(DetailView):
         return context
 
 
+@login_required
 def export_patient_create_template(request):
     header_dict = {
         'Case ID': [],
@@ -394,11 +412,11 @@ def export_patient_create_template(request):
     return response
 
 
-@method_decorator(login_required, name='dispatch')
-class PatientCreate(TemplateView):
+class PatientCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Patient create page.
     """
+    login_ur = LOGIN_URL
 
     template_name = "tantalus/patient_create.html"
 
@@ -476,8 +494,9 @@ class PatientCreate(TemplateView):
             return self.get_context_and_render(request, form, multi_form)
 
 
-@method_decorator(login_required, name='dispatch')
-class ConfirmPatientEditFromCreate(TemplateView):
+class ConfirmPatientEditFromCreate(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
+
     template_name = "tantalus/confirm_patient_edit.html"
 
     def get_context_and_render(self, request, to_edit, auto_generated_patients):
@@ -524,8 +543,8 @@ class ConfirmPatientEditFromCreate(TemplateView):
         return HttpResponseRedirect(reverse('patient-list'))
 
 
-@method_decorator(login_required, name='dispatch')
-class PatientEdit(TemplateView):
+class PatientEdit(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
 
     template_name = "tantalus/patient_edit.html"
 
@@ -558,11 +577,11 @@ class PatientEdit(TemplateView):
             return self.get_context_and_render(request, form, patient_pk)
 
 
-@method_decorator(login_required, name='dispatch')
-class SubmissionCreate(TemplateView):
+class SubmissionCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Sample create page.
     """
+    login_url = LOGIN_URL
 
     template_name = "tantalus/submission_create.html"
 
@@ -592,12 +611,11 @@ class SubmissionCreate(TemplateView):
             return self.get_context_and_render(request, form)
 
 
-@method_decorator(login_required, name='dispatch')
-class SpecificSubmissionCreate(TemplateView):
+class SpecificSubmissionCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Sample create page.
     """
-
+    login_url = LOGIN_URL
     template_name = "tantalus/submission_create.html"
 
     def get_context_and_render(self, request, sample_pk, form, pk=None):
@@ -628,11 +646,11 @@ class SpecificSubmissionCreate(TemplateView):
             return self.get_context_and_render(request, form)
 
 
-@method_decorator(login_required, name='dispatch')
-class SampleCreate(TemplateView):
+class SampleCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Sample create page.
     """
+    login_url = LOGIN_URL
 
     template_name = "tantalus/sample_create.html"
 
@@ -694,11 +712,11 @@ class SampleCreate(TemplateView):
             return self.get_context_and_render(request, form, multi_form)
 
 
-@method_decorator(login_required, name='dispatch')
-class SpecificSampleCreate(TemplateView):
+class SpecificSampleCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Sample create page.
     """
+    login_url = LOGIN_URL
 
     template_name = "tantalus/specific_sample_create.html"
 
@@ -731,8 +749,8 @@ class SpecificSampleCreate(TemplateView):
             return self.get_context_and_render(request, form, patient_id)
 
 
-@method_decorator(login_required, name='dispatch')
-class SampleEdit(TemplateView):
+class SampleEdit(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
 
     template_name = "tantalus/sample_edit.html"
 
@@ -765,6 +783,7 @@ class SampleEdit(TemplateView):
             return self.get_context_and_render(request, form, sample_pk)
 
 
+@login_required
 def export_sample_create_template(request):
     header_dict = {
         'External Patient ID': [],
@@ -779,6 +798,7 @@ def export_sample_create_template(request):
     return response
 
 
+@login_required
 @Render("tantalus/tag_list.html")
 def tag_list(request):
     """
@@ -803,7 +823,9 @@ class TagDelete(View):
         return HttpResponseRedirect(reverse('tag-list'))
 
 
-class TagDetail(DetailView):
+class TagDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
+
     model = tantalus.models.Tag
     template_name = "tantalus/tag_detail.html"
 
@@ -833,7 +855,8 @@ class TagDatasetDelete(View):
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
 
-class DatasetListJSON(BaseDatatableView):
+class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
+    login_url = LOGIN_URL
     """
     Class used as AJAX data source through the ajax option in the abstractdataset_list template.
     This enables server-side processing of the data used in the javascript DataTables.
@@ -929,7 +952,8 @@ class DatasetListJSON(BaseDatatableView):
         return qs
 
 
-class DatasetList(ListView):
+class DatasetList(LoginRequiredMixin, ListView):
+    login_url = LOGIN_URL
 
     model = tantalus.models.SequenceDataset
     template_name = "tantalus/abstractdataset_list.html"
@@ -952,7 +976,8 @@ class DatasetList(ListView):
         return context
 
 
-class DatasetDetail(DetailView):
+class DatasetDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
 
     model = tantalus.models.SequenceDataset
     template_name = "tantalus/abstractdataset_detail.html"
@@ -1000,7 +1025,9 @@ class DatasetDelete(View):
         return HttpResponseRedirect(reverse('dataset-list'))
 
 
-class DatasetSearch(FormView):
+class DatasetSearch(LoginRequiredMixin, FormView):
+
+    login_url = LOGIN_URL
 
     form_class = tantalus.forms.DatasetSearchForm
     success_url = reverse_lazy('dataset-tag')
@@ -1284,7 +1311,8 @@ def get_library_stats(filetype, storages_dict):
     return results
 
 
-class DataStatsView(TemplateView):
+class DataStatsView(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
     """A view to show info on data statistics."""
     template_name = 'tantalus/data_stats.html'
 
@@ -1328,7 +1356,9 @@ class DataStatsView(TemplateView):
         return context
 
 
-class HomeView(TemplateView):
+class HomeView(LoginRequiredMixin, TemplateView):
+
+    login_url = LOGIN_URL
 
     template_name = 'tantalus/index.html'
 
