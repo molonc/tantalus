@@ -71,8 +71,13 @@ def data_migrate(apps, class_name):
             # updating 1:N
             for child in [SequenceDataset,Submission]:
                 for s in child.objects.filter(sample_id=sample_from.id):
+                    print("{} sample {}".format(s.name, s.sample.sample_id))
+                    assert sample_from.sample_id in s.name
                     s.sample_id = sample_to.id
+                    s.name = s.name.replace(sample_from.sample_id, sample_to.sample_id)
                     s.save()
+                    s = child.objects.get(id=s.id)
+                    print("{} sample {}".format(s.name, s.sample.sample_id))
 
             # updating M:N
             #projects is property (set) of Sample
