@@ -22,3 +22,5 @@ admin.site.register(FileInstance)
 admin.site.register(Sow)
 admin.site.register(Submission)
 admin.site.register(AnalysisType)
+admin.site.register(ResultsDataset)
+
