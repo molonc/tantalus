@@ -176,7 +176,7 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
     filter_class = TagFilter
 
 
-class ResultDatasetsViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
+class ResultsDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.ResultsDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.ResultDatasetSerializer
@@ -193,7 +193,7 @@ class ResultDatasetsViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
                 file_instance.save()
 
         # Call the parent constructor
-        return super(ResultDatasetsViewSet, self).destroy(request, pk)
+        return super(ResultsDatasetViewSet, self).destroy(request, pk)
 
 
 class AnalysisViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
