@@ -12,12 +12,8 @@ class Migration(migrations.Migration):
         results = apps.get_model('tantalus', 'ResultsDataset')
 
         for result in results.objects.all():
-            if result.analysis :
-                if isinstance(result.analysis.args,dict) and 'library_id' in result.analysis.args:
-                    for library in DNALibrary.objects.filter(sequencedataset__id__in=result.analysis.input_datasets.all()):
-                        result.libraries.add(library.id)
-
-
+            for library in DNALibrary.objects.filter(sequencedataset__id__in=result.analysis.input_datasets.all()):
+                result.libraries.add(library.id)
 
     dependencies = [
         ('tantalus', '0101_sample_id'),
