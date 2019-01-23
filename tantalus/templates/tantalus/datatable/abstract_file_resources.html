@@ -5,10 +5,8 @@
             <tr>
                 <th>File name</th>
                 <th>File Type</th>
-                <th>Index Sequence</th>
-                <th>Read End</th>
-                <th>Region</th>
                 <th>Size</th>
+                <th>Created Time</th>
                 <th>Storage</th>
                 <th>Owner</th>
             </tr>
@@ -19,10 +17,8 @@
                 <tr>
                     <td>{{file.filename}}</td>
                     <td>{{file.file_type.name}}</td>
-                    <td>{{file.sequencefileinfo.index_sequence}}</td>
-                    <td>{{file.sequencefileinfo.read_end}}</td>
-                    <td>{{file.sequencefileinfo.genome_region}}</td>
                     <td>{{file.get_file_size}}</td>
+                    <td>{{file.created}}</td>
                     <td>{{storages|join:", "}}</td>
                     <td>{{file.owner.username}}</td>
                 </tr>
