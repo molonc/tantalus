@@ -88,6 +88,8 @@ class FileResourceFilter(BaseFilterSet):
         super(FileResourceFilter, self).__init__(*args, **kwargs)
         self.filters["sequencedataset__id"].label = "Has SequenceDataset ID"
         self.filters["sequencedataset__name"].label = "Has SequenceDataset name"
+        self.filters["resultsdataset__id"].label = "Has Results ID"
+        self.filters["resultsdataset__name"].label = "Has Results name"
         self.filters["sequencefileinfo__index_sequence"].label = "Index Sequence"
         self.filters["fileinstance__storage__name"].label = "Is in Storage name"
 
@@ -98,6 +100,8 @@ class FileResourceFilter(BaseFilterSet):
             "filename": ["exact"],
             "sequencedataset__name": ["exact"],
             "sequencedataset__id": ["exact"],
+            "resultsdataset__name": ["exact"],
+            "resultsdataset__id": ["exact"],
             "sequencefileinfo__index_sequence": ["exact"],
             "fileinstance__storage__name": ["exact"],
         }
