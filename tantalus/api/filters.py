@@ -54,6 +54,7 @@ class AnalysisFilter(BaseFilterSet):
             "name": ["exact"],
             "version": ["exact"],
             "jira_ticket": ["exact"],
+            "analysis_type__name": ["exact"],
         }
 
 
