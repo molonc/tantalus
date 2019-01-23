@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
                 if isinstance(result.analysis.args,dict) and 'library_id' in result.analysis.args:
                     for library in DNALibrary.objects.filter(sequencedataset__id__in=result.analysis.input_datasets.all()):
                         result.libraries.add(library.id)
-                        result.save
+
 
 
     dependencies = [
