@@ -179,8 +179,8 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
 class ResultsDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAdminUser,)
     queryset = tantalus.models.ResultsDataset.objects.all()
-    serializer_class_readonly = tantalus.api.serializers.ResultDatasetSerializer
-    serializer_class_readwrite = tantalus.api.serializers.ResultDatasetSerializer
+    serializer_class_readonly = tantalus.api.serializers.ResultsDatasetSerializerRead
+    serializer_class_readwrite = tantalus.api.serializers.ResultsDatasetSerializer
     filter_class = ResultsDatasetFilter
 
     def destroy(self, request, pk=None):

@@ -226,7 +226,16 @@ class TagSerializer(serializers.ModelSerializer):
         return instance
 
 
-class ResultDatasetSerializer(serializers.ModelSerializer):
+class ResultsDatasetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.ResultsDataset
+        fields = '__all__'
+
+
+class ResultsDatasetSerializerRead(serializers.ModelSerializer):
+    samples = SampleSerializer(many=True)
+    libraries = DNALibrarySerializer(many=True)
+
     class Meta:
         model = tantalus.models.ResultsDataset
         fields = '__all__'
