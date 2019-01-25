@@ -129,11 +129,11 @@ class ResultsDatasetFilter(filters.FilterSet):
             "id": ["exact"],
             "owner": ["exact"],
             "name": ["exact"],
-            "samples": ["exact"],
             "analysis": ["exact"],
             "file_resources__filename": ["exact"],
             "results_type": ["exact"],
             "results_version": ["exact"],
+            "tags__name": ["exact"],
         }
 
 
