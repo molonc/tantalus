@@ -76,6 +76,7 @@ class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_class = SampleFilter
 
+
 class PatientViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.Patient.objects.all()

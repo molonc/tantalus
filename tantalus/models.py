@@ -174,9 +174,6 @@ class Sample(models.Model):
     def get_absolute_url(self):
         return reverse("sample-detail", args=(self.id,))
 
-    def get_patient_name(self):
-        return self.patient_id
-
     def get_submissions(self):
         return self.submission_set.all()
 
@@ -352,30 +349,6 @@ class FileResource(models.Model):
 
     created = models.DateTimeField()
 
-    file_type = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-    )
-
-    GZIP = 'GZIP'
-    BZIP2 = 'BZIP2'
-    SPEC = 'SPEC'
-    UNCOMPRESSED = 'UNCOMPRESSED'
-
-    compression_choices = (
-        (GZIP, 'gzip'),
-        (BZIP2, 'bzip2'),
-        (SPEC, 'SpEC'),
-        (UNCOMPRESSED, 'uncompressed'),
-    )
-
-    compression = models.CharField(
-        max_length=50,
-        choices=compression_choices,
-        default=UNCOMPRESSED,
-    )
-
     filename = models.CharField(
         max_length=500,
         unique=True,
@@ -393,14 +366,6 @@ class FileResource(models.Model):
 
     def get_filename_uid(self):
         return self.md5[:8]
-
-    def get_compression_suffix(self):
-        return {
-            self.GZIP: '.gz',
-            self.BZIP2: '.bz2',
-            self.SPEC: '.spec',
-            self.UNCOMPRESSED: '',
-        }[self.compression]
 
     def get_file_size(self):
         size_mb = str("{:,.2f}".format(self.size / 1000000.0)) + " MB"
@@ -744,12 +709,10 @@ class ResultsDataset(models.Model):
 
     samples = models.ManyToManyField(
         Sample,
-        blank=True,
     )
 
     libraries = models.ManyToManyField(
         DNALibrary,
-        blank=True,
     )
 
     file_resources = models.ManyToManyField(
