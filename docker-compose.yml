@@ -1,0 +1,21 @@
+version: '2'
+
+services:
+    db:
+      image: postgres
+
+    django:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      container_name: tantalus
+      image: docker_tantalus
+      stdin_open: true
+      tty: true
+      volumes:
+        - .:/tantalus
+      ports:
+        - "8000:8000"
+      depends_on:
+        - db
+
