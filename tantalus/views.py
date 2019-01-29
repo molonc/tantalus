@@ -855,6 +855,7 @@ class TagDatasetDelete(View):
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
+@login_required
 def get_file_resources(request,pk):
     sequencedataset = tantalus.models.SequenceDataset.objects.filter(id=pk)
 
