@@ -15,6 +15,3 @@ RUN pip install --upgrade pip && pip install -r requirements.txt --ignore-instal
 
 EXPOSE 8000
 
-ENTRYPOINT ["python", "manage.py"]
-
-CMD ["runserver", "8000"]
