@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^tags/delete/(?P<pk>\d+)$', tantalus.views.TagDelete.as_view(), name='tag-delete'),
     url(r'^datasets/$', tantalus.views.DatasetList.as_view(), name='dataset-list'),
     url(r'^datasets_json/$', tantalus.views.DatasetListJSON.as_view(), name='dataset-list-json'),
+    url(r'^datasets_fileresources_json/(?P<pk>\d+)$', tantalus.views.get_file_resources, name='datasets_fileresources_json'),
     url(r'^datasets/(?P<pk>\d+)$', tantalus.views.DatasetDetail.as_view(), name='dataset-detail'),
     url(r'^datasets/tag$', tantalus.views.DatasetTag.as_view(), name='dataset-tag'),
     url(r'^datasets/tag/csv$', tantalus.views.dataset_set_to_CSV, name='dataset-tag-csv'),

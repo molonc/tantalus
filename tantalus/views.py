@@ -28,6 +28,7 @@ from io import StringIO
 import xlsxwriter
 
 from jira import JIRA, JIRAError
+from pip._vendor.html5lib import serializer
 
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT, JIRA_URL
@@ -854,6 +855,22 @@ class TagDatasetDelete(View):
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
+def get_file_resources(request,pk):
+    sequencedataset = tantalus.models.SequenceDataset.objects.filter(id=pk)
+
+    return_data = []
+
+    for file_resource in sequencedataset[0].file_resources.all():
+        data = {'id':file_resource.id,
+                'filename': file_resource.filename,
+                'owner': str(file_resource.owner),
+                'created' : str(file_resource.created),
+                'last_updated' : str(file_resource.last_updated),
+                'compression' : file_resource.compression}
+        return_data.append(data)
+    return HttpResponse(json.dumps(return_data), content_type="application/json")
+
+
 
 class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
     login_url = LOGIN_URL
@@ -884,6 +901,7 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
         return tantalus.models.SequenceDataset.objects.all()
 
     def render_column(self, row, column):
+
         if column == 'dataset_type':
             return row.dataset_type
 
@@ -919,7 +937,6 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
         """
         If search['value'] is provided then filter all searchable columns using istartswith.
         """
-
         if not self.pre_camel_case_notation:
             # get global search value
             search = self._querydict.get('search[value]', None)
@@ -1274,7 +1291,7 @@ def get_library_stats(filetype, storages_dict):
         results[lib_type] = list()
 
         # Go through each storage
-        for storage_name, storages in storages_dict.iteritems():
+        for storage_name, storages in storages_dict.items():
             # Get data for this storage and library. The distinct() at
             # the end of the queryset operations is necessary here, and
             # I'm not exactly sure why this is so, without it, filter
@@ -1320,20 +1337,19 @@ class DataStatsView(LoginRequiredMixin, TemplateView):
         """Get data info."""
         # Contains per-storage specific stats
         storage_stats = dict()
-
+        
         # Go through local storages (i.e., non-cloud)
         for local_storage_name in ['gsc', 'shahlab', 'rocks']:
             # General stats
             storage_stats[local_storage_name] = (
                 get_storage_stats([local_storage_name]))
-
+        
         # Go through cloud storages.
         azure_storages = [x.name for x in tantalus.models.AzureBlobStorage.objects.all()]
         storage_stats['azure'] = get_storage_stats(azure_storages)
-
+        
         # Get overall data stats over all storage locations
         storage_stats['all'] = get_storage_stats(['all'])
-
         # Contains per-library-type stats
         storages_dict = {'all': ['gsc', 'shahlab', 'rocks'] + azure_storages,
                          'gsc': ['gsc'],
@@ -1343,16 +1359,17 @@ class DataStatsView(LoginRequiredMixin, TemplateView):
                         }
         bam_dict = get_library_stats('BAM', storages_dict)
         fastq_dict = get_library_stats('FASTQ', storages_dict)
-
+        
         context = {
             'storage_stats': sorted(
-                storage_stats.iteritems(),
+                storage_stats.items(),
                 key=lambda y: y[1]['storage_size'],
                 reverse=True),
             'locations_list': sorted(['all', 'azure', 'gsc', 'rocks', 'shahlab']),
-            'bam_library_stats': sorted(bam_dict.iteritems()),
-            'fastq_library_stats': sorted(fastq_dict.iteritems()),
+            'bam_library_stats': sorted(bam_dict.items()),
+            'fastq_library_stats': sorted(fastq_dict.items()),
             }
+
         return context
 
 

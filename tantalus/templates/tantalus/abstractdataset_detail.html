@@ -85,12 +85,11 @@
     </div>
 
 
-    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
-        {% if object %}
-            {% include "tantalus/datatable/abstract_file_resources.html" %}
-        {% else %}
-            <h5><i class="text-warning">No file resources yet.</i></h5>
-        {% endif %}
-    </div>
+    {% if object %}
+        {% include "tantalus/datatable/abstract_file_resources.html" %}
+    {% else %}
+        <h5><i class="text-warning">No file resources yet.</i></h5>
+    {% endif %}
+
 {% endblock %}
 

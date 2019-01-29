@@ -1,28 +1,50 @@
-<h4>File Resources</h4>
-<div class="table-responsive">
-    <table id="file-resource-datatable" class="table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>File name</th>
-                <th>File Type</th>
-                <th>Size</th>
-                <th>Created Time</th>
-                <th>Storage</th>
-                <th>Owner</th>
-            </tr>
-        </thead>
-        <tbody>
-            <br/>
-            {% for file in object.file_resources.all %}
+
+<div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+    <h4>File Resources</h4>
+
+    <div class="table-responsive">
+        <table class="file_resources_datatable table table-striped">
+            <thead>
                 <tr>
-                    <td>{{file.filename}}</td>
-                    <td>{{file.file_type.name}}</td>
-                    <td>{{file.get_file_size}}</td>
-                    <td>{{file.created}}</td>
-                    <td>{{storages|join:", "}}</td>
-                    <td>{{file.owner.username}}</td>
+                    <th class="file_resource_id">ID</th>
+                    <th class="file_resource_filename">File Name</th>
+                    <th class="file_resource_owner">Owner</th>
+                    <th class="file_resource_created">Created</th>
+                    <th class="file_resource_last_updated">Last Updated</th>
+                    <th class="file_resource_compression">Compression</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+    <br>
+
+
+    <script type="text/javascript">
+
+
+     $(document).ready(function() {
+        $('.file_resources_datatable').DataTable({
+            stateSave: true,
+            processing: true,
+            "ajax": {
+                "url": '/datasets_fileresources_json/' + {{object.id}},
+                "type": "GET",
+                "dataSrc": ""
+            },
+            "columns": [
+                { "data" : "id" },
+                { "data" : "filename" },
+                { "data" : "owner" },
+                { "data" : "created" },
+                { "data" : "last_updated" },
+                { "data" : "compression" }
+            ]
+        } );
+    } );
+    </script>
+
 </div>
+
