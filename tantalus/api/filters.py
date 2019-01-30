@@ -134,6 +134,7 @@ class ResultsDatasetFilter(filters.FilterSet):
             "results_type": ["exact"],
             "results_version": ["exact"],
             "tags__name": ["exact"],
+            "libraries__library_id": ["exact"],
         }
 
 
