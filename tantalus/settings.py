@@ -20,16 +20,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'wahteveryouwant'
+SECRET_KEY = os.environ.get('TANTALUS_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 debug_raw = os.environ.get('TANTALUS_DEBUG', 'False')
 DEBUG = True if debug_raw.lower() == 'true' else False
 
 # Safeguard to ensure production code is not run during development
-IS_PRODUCTION = False
+IS_PRODUCTION = (os.environ.get('TANTALUS_IS_PRODUCTION', '') == 'thisismostdefinitelyproduction')
 
-ALLOWED_HOSTS = '127.0.0.1'
+ALLOWED_HOSTS = os.environ.get('TANTALUS_ALLOWED_HOSTS', '127.0.0.1').split(' ')
 
 AUTH_USER_MODEL = 'account.User'
 
@@ -93,11 +93,11 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tantalus_dev',
-        'USER': 'amcpherson',
-        'PASSWORD': 'shahlab',
-        'HOST': 'db',
-        'PORT': 5432,
+        'NAME': os.environ.get('TANTALUS_POSTGRESQL_NAME'),
+        'USER': os.environ.get('TANTALUS_POSTGRESQL_USER'),
+        'PASSWORD': os.environ.get('TANTALUS_POSTGRESQL_PASSWORD'),
+        'HOST': os.environ.get('TANTALUS_POSTGRESQL_HOST', 'localhost'),
+        'PORT': os.environ.get('TANTALUS_POSTGRESQL_PORT', '5432'),
         'TEST': {
             'NAME': 'tantalus_test'
         }

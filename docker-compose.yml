@@ -4,11 +4,9 @@ services:
     db:
       image: postgres
       environment:
-        - POSTGRES_USER=amcpherson
-        - POSTGRES_PASSWORD=shahlab
+        - POSTGRES_USER=simong
+        - POSTGRES_PASSWORD=pinchpinch
         - POSTGRES_DB=tantalus_dev
-      ports:
-        - '5433:5432'
       healthcheck:
         test: ["CMD", "curl", "-f", "http://db:5432"]
         interval: 30s
@@ -23,7 +21,7 @@ services:
       image: docker_tantalus
       stdin_open: true
       tty: true
-      command: ["python", "manage.py", "runserver", "8000"]
+      command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py createsuperuserargs --username simong --password pinchpinch --noinput --email 'simong@crab.com' && python manage.py runserver 0.0.0.0:8000"
       volumes:
         - .:/tantalus
       ports:
