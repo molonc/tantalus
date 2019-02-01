@@ -54,6 +54,9 @@ class AnalysisFilter(BaseFilterSet):
             "version": ["exact"],
             "jira_ticket": ["exact"],
             "analysis_type__name": ["exact"],
+            "version": ["exact"],
+            "input_datasets__id": ["exact"],
+            "input_results__id": ["exact"],
         }
 
 
@@ -95,7 +98,7 @@ class FileResourceFilter(BaseFilterSet):
         model = FileResource
         fields = {
             "id": ["exact"],
-            "filename": ["exact"],
+            "filename": ["exact", "endswith"],
             "dataset__name": ["exact"],
             "dataset__id": ["exact"],
             "sequencefileinfo__index_sequence": ["exact"],
@@ -129,6 +132,7 @@ class ResultsDatasetFilter(filters.FilterSet):
             "results_type": ["exact"],
             "results_version": ["exact"],
             "tags__name": ["exact"],
+            "libraries__library_id": ["exact"],
         }
 
 
