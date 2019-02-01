@@ -102,7 +102,6 @@ class FileTypeField(serializers.Field):
 
 
 class FileResourceSerializer(serializers.ModelSerializer):
-    sequencefileinfo_set = SequenceFileInfoSerializer(read_only=True)
     file_type = FileTypeField()
     class Meta:
         model = tantalus.models.FileResource
