@@ -40,8 +40,6 @@ from tantalus.settings import LOGIN_URL
 class ExternalIDSearch(LoginRequiredMixin, TemplateView):
     login_url = LOGIN_URL
 
-
-
     search_template_name = "tantalus/external_id_search.html"
     result_template_name = "tantalus/external_id_results.html"
 
