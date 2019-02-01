@@ -351,10 +351,10 @@ class FileResource(models.Model):
 
     created = models.DateTimeField()
 
-    file_type = models.ForeignKey(
-        FileType,
+    file_type = models.CharField(
+        max_length=50,
         null=True,
-        on_delete=models.CASCADE,
+        blank=True,
     )
 
     GZIP = 'GZIP'

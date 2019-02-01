@@ -103,7 +103,6 @@ class FileTypeField(serializers.Field):
 
 class FileResourceSerializer(serializers.ModelSerializer):
     sequencefileinfo_set = SequenceFileInfoSerializer(read_only=True)
-    file_type = FileTypeField()
     class Meta:
         model = tantalus.models.FileResource
         fields = '__all__'
@@ -112,7 +111,6 @@ class FileResourceSerializer(serializers.ModelSerializer):
 class FileResourceSerializerRead(serializers.ModelSerializer):
     file_instances = FileInstanceSerializerRead(source='fileinstance_set', many=True, read_only=True)
     sequencefileinfo = SequenceFileInfoSerializer(read_only=True)
-    file_type = FileTypeField()
     class Meta:
         model = tantalus.models.FileResource
         fields = '__all__'
