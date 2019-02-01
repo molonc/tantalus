@@ -365,7 +365,7 @@ class DatasetSearchForm(forms.Form):
     )
 
     dataset_type = forms.MultipleChoiceField(
-        choices=tantalus.models.SequenceDataset.dataset_type_choices,
+        choices=tantalus.models.Dataset.dataset_type_choices,
         label="Dataset type",
         required=False,
         help_text="Type of files to process",

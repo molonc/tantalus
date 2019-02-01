@@ -8,9 +8,8 @@ from tantalus.models import (
     FileInstance,
     FileResource,
     FileType,
-    ResultsDataset,
+    Dataset,
     Sample,
-    SequenceDataset,
     SequenceFileInfo,
     SequencingLane,
     ServerStorage,
@@ -87,10 +86,8 @@ class FileResourceFilter(BaseFilterSet):
     def __init__(self, *args, **kwargs):
         """Take care of filter names that render poorly."""
         super(FileResourceFilter, self).__init__(*args, **kwargs)
-        self.filters["sequencedataset__id"].label = "Has SequenceDataset ID"
-        self.filters["sequencedataset__name"].label = "Has SequenceDataset name"
-        self.filters["resultsdataset__id"].label = "Has Results ID"
-        self.filters["resultsdataset__name"].label = "Has Results name"
+        self.filters["dataset__id"].label = "Has Dataset ID"
+        self.filters["dataset__name"].label = "Has Dataset name"
         self.filters["sequencefileinfo__index_sequence"].label = "Index Sequence"
         self.filters["fileinstance__storage__name"].label = "Is in Storage name"
 
@@ -99,10 +96,8 @@ class FileResourceFilter(BaseFilterSet):
         fields = {
             "id": ["exact"],
             "filename": ["exact"],
-            "sequencedataset__name": ["exact"],
-            "sequencedataset__id": ["exact"],
-            "resultsdataset__name": ["exact"],
-            "resultsdataset__id": ["exact"],
+            "dataset__name": ["exact"],
+            "dataset__id": ["exact"],
             "sequencefileinfo__index_sequence": ["exact"],
             "fileinstance__storage__name": ["exact"],
         }
@@ -124,7 +119,7 @@ class ResultsDatasetFilter(filters.FilterSet):
     """Filters for results datasets."""
 
     class Meta(BaseFilterSet.Meta):
-        model = ResultsDataset
+        model = Dataset
         fields = {
             "id": ["exact"],
             "owner": ["exact"],
@@ -143,16 +138,16 @@ class SampleFilter(BaseFilterSet):
     def __init__(self, *args, **kwargs):
         """Take care of filter names that render poorly."""
         super(SampleFilter, self).__init__(*args, **kwargs)
-        self.filters["sequencedataset__id"].label = "Has SequenceDataset"
-        self.filters["sequencedataset__id__in"].label = "Has SequenceDataset in"
-        self.filters["sequencedataset__id__isnull"].label = "Has no SequenceDatasets"
+        self.filters["dataset__id"].label = "Has Dataset"
+        self.filters["dataset__id__in"].label = "Has Dataset in"
+        self.filters["dataset__id__isnull"].label = "Has no eDatasets"
 
     class Meta(BaseFilterSet.Meta):
         model = Sample
         fields = {
             "id": ["exact", "in"],
             "sample_id": ["exact", "in"],
-            "sequencedataset__id": ["exact", "in", "isnull"],
+            "dataset__id": ["exact", "in", "isnull"],
         }
 
 
@@ -160,13 +155,10 @@ class SequenceDatasetFilter(filters.FilterSet):
     """Filters for sequence datasets."""
 
     class Meta(BaseFilterSet.Meta):
-        model = SequenceDataset
+        model = Dataset
         fields = {
             "id": ["exact"],
             "name": ["exact"],
-            "library__library_id": ["exact"],
-            "library__library_type__name": ["exact"],
-            "sample__sample_id": ["exact"],
             "tags__name": ["exact"],
             "sequence_lanes__flowcell_id": ["exact"],
             "sequence_lanes__lane_number": ["exact"],

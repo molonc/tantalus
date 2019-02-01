@@ -118,7 +118,7 @@ class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAdminUser,)
-    queryset = tantalus.models.SequenceDataset.objects.all()
+    queryset = tantalus.models.Dataset.objects.filter(dataset_class='Sequence')
     serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
     filter_class = SequenceDatasetFilter
@@ -178,7 +178,7 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
 
 class ResultsDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAdminUser,)
-    queryset = tantalus.models.ResultsDataset.objects.all()
+    queryset = tantalus.models.Dataset.objects.filter(dataset_class='Results')
     serializer_class_readonly = tantalus.api.serializers.ResultsDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.ResultsDatasetSerializer
     filter_class = ResultsDatasetFilter

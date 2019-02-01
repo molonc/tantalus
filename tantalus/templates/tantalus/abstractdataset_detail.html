@@ -20,11 +20,11 @@
                 </tr>
                 <tr>
                     <th class="custom-table-header">Sample ID</th>
-                    <td class="custom-table-detail"><a href="{% url 'sample-detail' object.sample.id %}">{{object.sample}}</a></td>
+                    <td class="custom-table-detail"><a href="{% url 'sample-detail' object.samples.all.first.id %}">{{object.samples.all.first}}</a></td>
                 </tr>
                 <tr>
                     <th class="custom-table-header">Library ID</th>
-                    <td class="custom-table-detail">{{object.library.library_id}}</td>
+                    <td class="custom-table-detail">{{object.libraries.all.first.library_id}}</td>
                 </tr>
                 <tr>
                     <th class="custom-table-header">Reference Genome</th>

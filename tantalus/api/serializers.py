@@ -165,13 +165,16 @@ class SequenceDatasetSerializer(serializers.ModelSerializer):
     aligner = AlignmentToolField(required=False, allow_null=True)
     reference_genome = ReferenceGenomeField(required=False, allow_null=True)
     class Meta:
-        model = tantalus.models.SequenceDataset
-        fields = '__all__'
+        model = tantalus.models.Dataset
+        exclude = [
+            'results_type',
+            'results_version',
+        ]
 
 
 class SequenceDatasetSerializerRead(serializers.ModelSerializer):
-    sample = SampleSerializer()
-    library = DNALibrarySerializer()
+    samples = SampleSerializer(many=True)
+    libraries = DNALibrarySerializer(many=True)
     sequence_lanes = SequencingLaneSerializer(many=True)
     aligner = AlignmentToolField()
     reference_genome = ReferenceGenomeField()
@@ -181,8 +184,11 @@ class SequenceDatasetSerializerRead(serializers.ModelSerializer):
         return obj.get_is_complete()
 
     class Meta:
-        model = tantalus.models.SequenceDataset
-        fields = '__all__'
+        model = tantalus.models.Dataset
+        exclude = [
+            'results_type',
+            'results_version',
+        ]
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -194,13 +200,13 @@ class TagSerializer(serializers.ModelSerializer):
         many=True,
         allow_null=True,
         required=False,
-        queryset=tantalus.models.SequenceDataset.objects.all(),)
+        queryset=tantalus.models.Dataset.objects.filter(dataset_class='Sequence'),)
 
     resultsdataset_set = serializers.PrimaryKeyRelatedField(
         many=True,
         allow_null=True,
         required=False,
-        queryset=tantalus.models.ResultsDataset.objects.all(),)
+        queryset=tantalus.models.Dataset.objects.filter(dataset_class='Results'),)
 
     class Meta:
         model = tantalus.models.Tag
@@ -228,7 +234,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 class ResultsDatasetSerializer(serializers.ModelSerializer):
     class Meta:
-        model = tantalus.models.ResultsDataset
+        model = tantalus.models.Dataset
         fields = '__all__'
 
 
@@ -237,7 +243,7 @@ class ResultsDatasetSerializerRead(serializers.ModelSerializer):
     libraries = DNALibrarySerializer(many=True)
 
     class Meta:
-        model = tantalus.models.ResultsDataset
+        model = tantalus.models.Dataset
         fields = '__all__'
 
 

@@ -203,10 +203,10 @@ class SampleDetail(LoginRequiredMixin, DetailView):
         # TODO: add other fields to the view?
         context = super(SampleDetail, self).get_context_data(**kwargs)
 
-        sequence_datasets_set = self.object.sequencedataset_set.all()
+        sequence_datasets_set = self.object.dataset_set.filter(dataset_class='Sequence').distinct()
         submission_set = self.object.submission_set.all()
         project_set = self.object.projects.all()
-        library_set = tantalus.models.DNALibrary.objects.filter(sequencedataset__sample=self.object).distinct()
+        library_set = tantalus.models.DNALibrary.objects.filter(dataset__in=sequence_datasets_set).distinct()
 
         context['project_list'] = project_set
         context['sequence_datasets_set'] = sequence_datasets_set
@@ -218,7 +218,7 @@ class SampleDetail(LoginRequiredMixin, DetailView):
 @login_required
 @Render("tantalus/result_list.html")
 def result_list(request):
-    results = tantalus.models.ResultsDataset.objects.all().order_by('id')
+    results = tantalus.models.Dataset.objects.filter(dataset_class='Results').order_by('id')
 
     context = {
         'results': results
@@ -229,7 +229,7 @@ def result_list(request):
 class ResultDetail(LoginRequiredMixin, DetailView):
     login_url = LOGIN_URL
 
-    model = tantalus.models.ResultsDataset
+    model = tantalus.models.Dataset
     template_name = "tantalus/result_detail.html"
 
     def get_context_data(self, **kwargs):
@@ -395,6 +395,8 @@ class AnalysisDetail(LoginRequiredMixin, DetailView):
         context = super(AnalysisDetail, self).get_context_data(**kwargs)
         context['input_datasets'] = self.object.input_datasets.all()
         context['input_results'] = self.object.input_results.all()
+        #context['input_datasets'] = self.object.dataset.filter(dataset_class='Sequence')
+        #context['input_results'] = self.object.dataset_set.filter(dataset_class='Results')
         return context
 
 
@@ -862,12 +864,12 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
     This enables server-side processing of the data used in the javascript DataTables.
     """
 
-    model = tantalus.models.SequenceDataset
+    model = tantalus.models.Dataset
 
-    columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
+    columns = ['id', 'dataset_type', 'samples', 'libraries','library_types', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
 
     # MUST be in the order of the columns
-    order_columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
+    order_columns = ['id', 'dataset_type', 'samples', 'libraries','library_types', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
     max_display_length = 100
 
     def get_context_data(self, *args, **kwargs):
@@ -880,18 +882,23 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
 
     def get_initial_queryset(self):
         if 'datasets' in self.kwargs.keys():
-            return tantalus.models.SequenceDataset.objects.filter(pk__in=self.kwargs['datasets'])
-        return tantalus.models.SequenceDataset.objects.all()
+            return tantalus.models.Dataset.objects.filter(pk__in=self.kwargs['datasets'], dataset_class='Sequence')
+        return tantalus.models.Dataset.objects.filter(dataset_class='Sequence')
 
     def render_column(self, row, column):
         if column == 'dataset_type':
             return row.dataset_type
 
-        if column == 'sample_id':
-            sample_link = (reverse('sample-detail', args=(row.sample.id,)))
-            return "<a href=" + sample_link + ">" + row.sample.sample_id + "</a>"
-        if column == 'library_id':
-            return row.library.library_id
+        if column == 'samples':
+            sample = row.samples.all().first()
+            sample_link = (reverse('sample-detail', args=(sample.id,)))
+            return "<a href=" + str(sample_link) + ">" + sample.sample_id + "</a>"
+
+        if column == 'libraries':
+            libraries = ""
+            for library in row.libraries.all():
+                libraries = libraries + library.library_id + ', '
+            return libraries[:-2]
 
         if column == 'num_read_groups':
             return row.sequence_lanes.count()
@@ -902,8 +909,8 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
         if column == 'storages':
             return list(row.get_storage_names())
 
-        if column == 'library_type':
-            return row.library.library_type.name
+        if column == 'library_types':
+            return row.libraries.all().first().library_type.name
 
         if column == 'num_total_read_groups':
             return row.get_num_total_sequencing_lanes()
@@ -931,14 +938,14 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
                     if col['name'] == 'tags':
                         q |= Q(tags__name__startswith=search)
 
-                    elif col['name'] == 'sample_id':
-                        q |= Q(sample__sample_id__startswith=search)
+                    elif col['name'] == 'samples':
+                        q |= Q(samples__sample_id__startswith=search)
 
-                    elif col['name'] == 'library_id':
-                        q |= Q(library__library_id__startswith=search)
+                    elif col['name'] == 'libraries':
+                        q |= Q(libraries__library_id__startswith=search)
 
-                    elif col['name'] == 'library_type':
-                        q |= Q(library__library_type__name__startswith=search)
+                    elif col['name'] == 'library_types':
+                        q |= Q(libraries__library_type__name__startswith=search)
 
                     # standard search for simple . lookups across models
                     else:
@@ -955,7 +962,7 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
 class DatasetList(LoginRequiredMixin, ListView):
     login_url = LOGIN_URL
 
-    model = tantalus.models.SequenceDataset
+    model = tantalus.models.Dataset
     template_name = "tantalus/abstractdataset_list.html"
     paginate_by = 100
 
@@ -979,7 +986,7 @@ class DatasetList(LoginRequiredMixin, ListView):
 class DatasetDetail(LoginRequiredMixin, DetailView):
     login_url = LOGIN_URL
 
-    model = tantalus.models.SequenceDataset
+    model = tantalus.models.Dataset
     template_name = "tantalus/abstractdataset_detail.html"
 
     def get_context_data(self, **kwargs):
@@ -993,7 +1000,7 @@ class DatasetDetail(LoginRequiredMixin, DetailView):
 
     def post(self, request, *args, **kwargs):
         dataset_pk = kwargs['pk']
-        dataset = tantalus.models.SequenceDataset.objects.get(id=dataset_pk)
+        dataset = tantalus.models.ataset.objects.get(id=dataset_pk)
         form = tantalus.forms.AddDatasetToTagForm(request.POST)
         if form.is_valid():
             tag = form.cleaned_data['tag']
@@ -1364,12 +1371,12 @@ class HomeView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {
-            'dataset_bam_count': tantalus.models.SequenceDataset.objects.filter(dataset_type='BAM').count(),
-            'dataset_fastq_count': tantalus.models.SequenceDataset.objects.filter(dataset_type='FQ').count(),
+            'dataset_bam_count': tantalus.models.Dataset.objects.filter(dataset_class='Sequence', dataset_type='BAM').count(),
+            'dataset_fastq_count': tantalus.models.Dataset.objects.filter(dataset_class='Sequence', dataset_type='FQ').count(),
             'patient_count': tantalus.models.Patient.objects.all().count(),
             'sample_count': tantalus.models.Sample.objects.all().count(),
             'submission_count': tantalus.models.Submission.objects.all().count(),
-            'result_count': tantalus.models.ResultsDataset.objects.all().count(),
+            'result_count': tantalus.models.Dataset.objects.filter(dataset_class='Results').count(),
             'analysis_count': tantalus.models.Analysis.objects.all().count(),
             'tag_count': tantalus.models.Tag.objects.all().count(),
         }

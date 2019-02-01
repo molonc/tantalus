@@ -477,7 +477,132 @@ class AlignmentTool(models.Model):
         return self.name
 
 
-class SequenceDataset(models.Model):
+class Dataset(models.Model):
+
+    history = HistoricalRecords()
+
+    dataset_class_choices = [
+        ('Sequence', 'Sequence'), 
+        ('Results', 'Results'),
+    ]
+
+    dataset_class = models.CharField(
+        choices=dataset_class_choices, 
+        null=True, 
+        max_length=50
+    )
+
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        help_text="When the dataset was last updated.",
+    )
+
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+    )
+
+    tags = models.ManyToManyField(
+        Tag,
+        blank=True,
+    )
+
+    BAM = 'BAM'
+    FQ = 'FQ'
+
+    dataset_type_choices = (
+        (BAM, 'BAM Files'),
+        (FQ, 'FastQ Files'),
+    )
+
+    dataset_type = models.CharField(
+        max_length=50,
+        choices=dataset_type_choices,
+        null=False,
+        default=BAM,
+    )
+
+    samples = models.ManyToManyField(
+        Sample,
+        blank=True,
+    )
+
+    libraries = models.ManyToManyField(
+        DNALibrary,
+        blank=True,
+    )
+
+    file_resources = models.ManyToManyField(
+        FileResource,
+    )
+
+    sequence_lanes = models.ManyToManyField(
+        SequencingLane,
+    )
+
+    analysis = models.ForeignKey(
+        'Analysis',
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+    reference_genome = models.ForeignKey(
+        ReferenceGenome,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+
+    aligner = models.ForeignKey(
+        'AlignmentTool',
+        null=True,
+        blank=True,
+    )
+
+    results_type = models.CharField(
+        max_length=50,
+        null=False,
+    )
+
+    results_version = models.CharField(
+        max_length=50,
+        null=True,
+    )
+
+    def get_num_total_sequencing_lanes(self):
+        total = 0
+        for library in self.libraries.all():
+            total += SequencingLane.objects.filter(dna_library=library).count()
+        return total
+
+    def get_is_complete(self):
+        return self.sequence_lanes.all().count() == self.get_num_total_sequencing_lanes()
+
+    def get_absolute_url(self):
+        if(self.dataset_class == 'Sequence'):
+            return reverse("dataset-detail", args=(self.id,))
+        else:
+            return reverse("result-detail", args=(self.id,))
+
+    def get_storage_names(self):
+        return list(
+            FileInstance.objects.filter(
+                file_resource__dataset=self)
+            .values_list('storage__name', flat=True)
+            .distinct())
+
+    def __unicode__(self):
+        return '{}'.format(self.name)
+
+
+
+'''class SequenceDataset(models.Model):
     """
     Generalized dataset class.
     """
@@ -589,7 +714,7 @@ class SequenceDataset(models.Model):
         return reverse("dataset-detail", args=(self.id,))
 
     def __str__(self):
-        return self.name
+        return self.name'''
 
 
 class AnalysisType(models.Model):
@@ -656,13 +781,13 @@ class Analysis(models.Model):
     )
 
     input_datasets = models.ManyToManyField(
-        'SequenceDataset',
+        'Dataset',
         related_name='inputdatasets',
         blank=True,
     )
 
     input_results = models.ManyToManyField(
-        'ResultsDataset',
+        'Dataset',
         related_name='inputresults',
         blank=True,
     )
@@ -696,7 +821,7 @@ class Analysis(models.Model):
         return reverse("analysis-detail", args=(self.id,))
 
 
-class ResultsDataset(models.Model):
+'''class ResultsDataset(models.Model):
     """
     Generalized results class.
     """
@@ -753,7 +878,7 @@ class ResultsDataset(models.Model):
         return reverse("result-detail", args=(self.id,))
 
     def __unicode__(self):
-        return '{}'.format(self.name)
+        return '{}'.format(self.name)'''
 
 
 class Storage(PolymorphicModel):

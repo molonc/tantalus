@@ -18,8 +18,8 @@
                 <tr>
                     <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.name}}</a></td>
                     <td>{{dataset.dataset_type}}</td>
-                    <td>{{dataset.library.id}}</td>
-                    <td>{{dataset.get_library_type}}</td>
+                    <td>{{dataset.libraries.all.first.id}}</td>
+                    <td>{{dataset.libraries.all.first.library_type}}</td>
                     <td>{{dataset.reference_genome}}</td>
                     <td>{{dataset.aligner}}</td>
                     <td>{{dataset.last_updated}}</td>
