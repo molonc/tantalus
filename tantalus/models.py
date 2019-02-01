@@ -602,7 +602,7 @@ class Dataset(models.Model):
 
 
 
-'''class SequenceDataset(models.Model):
+class SequenceDataset(models.Model):
     """
     Generalized dataset class.
     """
@@ -714,7 +714,7 @@ class Dataset(models.Model):
         return reverse("dataset-detail", args=(self.id,))
 
     def __str__(self):
-        return self.name'''
+        return self.name
 
 
 class AnalysisType(models.Model):
@@ -781,14 +781,20 @@ class Analysis(models.Model):
     )
 
     input_datasets = models.ManyToManyField(
-        'Dataset',
+        'SequenceDataset',
         related_name='inputdatasets',
         blank=True,
     )
 
     input_results = models.ManyToManyField(
-        'Dataset',
+        'ResultsDataset',
         related_name='inputresults',
+        blank=True,
+    )
+
+    inputs = models.ManyToManyField(
+        'Dataset',
+        related_name='inputdatasets',
         blank=True,
     )
 
@@ -821,7 +827,7 @@ class Analysis(models.Model):
         return reverse("analysis-detail", args=(self.id,))
 
 
-'''class ResultsDataset(models.Model):
+class ResultsDataset(models.Model):
     """
     Generalized results class.
     """
@@ -878,7 +884,7 @@ class Analysis(models.Model):
         return reverse("result-detail", args=(self.id,))
 
     def __unicode__(self):
-        return '{}'.format(self.name)'''
+        return '{}'.format(self.name)
 
 
 class Storage(PolymorphicModel):
