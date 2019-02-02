@@ -437,7 +437,7 @@ class DatasetSearchForm(forms.Form):
         tags = self.cleaned_data['tagged_with']
         if tags:
             tags_list = [tag.strip() for tag in tags.split(",")]
-            results = tantalus.models.SequenceDataset.objects.all()
+            results = tantalus.models.Dataset.objects.filter(dataset_class='Sequence')
             for tag in tags_list:
                 if not results.filter(tags__name=tag).exists():
                     raise forms.ValidationError("Filter for the following tags together resulted in 0 results: {}".format(
@@ -450,7 +450,7 @@ class DatasetSearchForm(forms.Form):
         if sample:
             no_match_samples = []
             for samp in sample.split():
-                if not tantalus.models.SequenceDataset.objects.filter(sample__sample_id=samp).exists():
+                if not tantalus.models.Dataset.objects.filter(sample__sample_id=samp, dataset_class='Sequence').exists():
                     no_match_samples.append(samp)
             if no_match_samples != []:
                 raise forms.ValidationError("Filter for the following sample resulted in 0 results: {}".format(
@@ -463,7 +463,7 @@ class DatasetSearchForm(forms.Form):
         if library:
             no_match_list = []
             for lib in library.split():
-                if not tantalus.models.SequenceDataset.objects.filter(library__library_id=lib).exists():
+                if not tantalus.models.Dataset.objects.filter(library__library_id=lib, dataset_class='Results').exists():
                     no_match_list.append(lib)
 
             if no_match_list:
@@ -480,12 +480,12 @@ class DatasetSearchForm(forms.Form):
                 if "_" in flowcell_lane:
                     # parse out flowcell ID and lane number, assumed to be separated by an underscore
                     flowcell, lane_number = flowcell_lane.split("_", 1)
-                    if not tantalus.models.SequenceDataset.objects.filter(
-                        sequence_lanes__flowcell_id=flowcell,sequence_lanes__lane_number=lane_number).exists():
+                    if not tantalus.models.Dataset.objects.filter(
+                        sequence_lanes__flowcell_id=flowcell, dataset_class='Sequence', sequence_lanes__lane_number=lane_number).exists():
                         no_match_list.append(flowcell_lane)
                 else:
                     # no lane number included
-                    if not tantalus.models.SequenceDataset.objects.filter(sequence_lanes__flowcell_id=flowcell_lane).exists():
+                    if not tantalus.models.Dataset.objects.filter(sequence_lanes__flowcell_id=flowcell_lane, dataset_class='Sequence').exists():
                         no_match_list.append(flowcell_lane)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following flowcell lane resulted in 0 results: {}".format(
@@ -498,7 +498,7 @@ class DatasetSearchForm(forms.Form):
         if sequencing_library_id_field:
             no_match_list = []
             for sequencing_library in sequencing_library_id_field.split():
-                if not tantalus.models.SequenceDataset.objects.filter(library__library_id=sequencing_library).exists():
+                if not tantalus.models.Dataset.objects.filter(library__library_id=sequencing_library, dataset_class='Sequence').exists():
                     no_match_list.append(sequencing_library)
             if no_match_list:
                 raise forms.ValidationError("Filter for the following sequencing library resulted in 0 results: {}".format(
@@ -549,7 +549,7 @@ class DatasetSearchForm(forms.Form):
             min_num_read_groups = self.cleaned_data['min_num_read_groups']
 
 
-        results = tantalus.models.SequenceDataset.objects.all()
+        results = tantalus.models.Dataset.objects.filter(dataset_class='Sequence')
 
         # TODO: add prefetch related
 
@@ -629,12 +629,12 @@ class DatasetTagForm(forms.Form):
         super(DatasetTagForm, self).__init__(*args, **kwargs)
 
         if datasets:
-            self.models_to_tag = tantalus.models.SequenceDataset.objects.filter(pk__in=datasets)
+            self.models_to_tag = tantalus.models.Dataset.objects.filter(pk__in=datasets, dataset_class='Sequence')
         else:
-            self.models_to_tag = tantalus.models.SequenceDataset.objects.all()
+            self.models_to_tag = tantalus.models.Dataset.objects.filter(dataset_class='Sequence')
 
     def add_dataset_tags(self):
         tag_name = self.cleaned_data['tag_name']
         tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
-        tag.sequencedataset_set.add(*self.models_to_tag)
+        tag.dataset_set.add(*self.models_to_tag)
 
