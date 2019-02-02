@@ -40,18 +40,16 @@ class Tag(models.Model):
 
         For now I'm not including tagged analyses in this count.
         """
-        sequence_dataset_count = self.sequencedataset_set.count()
-        results_dataset_count = self.resultsdataset_set.count()
 
-        return sequence_dataset_count + results_dataset_count
+        return self.dataset_set.all().count()
 
     def count_sequence_datasets(self):
 
-        return self.sequencedataset_set.count()
+        return self.dataset_set.filter(dataset_class='Sequence').count()
 
     def count_result_datasets(self):
 
-        return self.resultsdataset_set.count()
+        return self.dataset_set.filter(dataset_class='Results').count()
 
     def get_absolute_url(self):
         return reverse("tag-detail", args=(self.id,))
@@ -602,121 +600,6 @@ class Dataset(models.Model):
 
 
 
-class SequenceDataset(models.Model):
-    """
-    Generalized dataset class.
-    """
-
-    history = HistoricalRecords()
-
-    last_updated = models.DateTimeField(
-        auto_now=True,
-        help_text="When the dataset was last updated.",
-    )
-
-    owner = models.ForeignKey(
-        account.models.User,
-        on_delete=models.SET_NULL,
-        null=True,
-    )
-
-    name = models.CharField(
-        max_length=200,
-        unique=True,
-    )
-
-    tags = models.ManyToManyField(
-        Tag,
-        blank=True,
-    )
-
-    BAM = 'BAM'
-    FQ = 'FQ'
-
-    dataset_type_choices = (
-        (BAM, 'BAM Files'),
-        (FQ, 'FastQ Files'),
-    )
-
-    dataset_type = models.CharField(
-        max_length=50,
-        choices=dataset_type_choices,
-        null=False,
-        default=BAM,
-    )
-
-    sample = models.ForeignKey(
-        Sample,
-        on_delete=models.CASCADE,
-    )
-
-    library = models.ForeignKey(
-        DNALibrary,
-        on_delete=models.CASCADE,
-    )
-
-    file_resources = models.ManyToManyField(
-        FileResource,
-    )
-
-    sequence_lanes = models.ManyToManyField(
-        SequencingLane,
-    )
-
-    analysis = models.ForeignKey(
-        'Analysis',
-        null=True,
-        on_delete=models.CASCADE,
-    )
-
-    reference_genome = models.ForeignKey(
-        ReferenceGenome,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-    )
-
-    aligner = models.ForeignKey(
-        'AlignmentTool',
-        null=True,
-        blank=True,
-    )
-
-    def get_num_total_sequencing_lanes(self):
-        return SequencingLane.objects.filter(dna_library=self.library).count()
-
-    def get_is_complete(self):
-        return self.sequence_lanes.all().count() == self.get_num_total_sequencing_lanes()
-
-    def get_storage_names(self):
-        return list(
-            FileInstance.objects.filter(
-                file_resource__sequencedataset=self)
-            .values_list('storage__name', flat=True)
-            .distinct())
-
-    def get_dataset_type_name(self):
-        return self.dataset_type
-
-    def get_samples(self):
-        return self.sample.sample_id
-
-    def get_libraries(self):
-        return self.library.library_id
-
-    def get_library_type(self):
-        return self.library.library_type
-
-    def get_created_time(self):
-        return self.file_resources.all().aggregate(Max('created'))['created__max']
-
-    def get_absolute_url(self):
-        return reverse("dataset-detail", args=(self.id,))
-
-    def __str__(self):
-        return self.name
-
-
 class AnalysisType(models.Model):
 
     history = HistoricalRecords()
@@ -780,18 +663,6 @@ class Analysis(models.Model):
         null=True,
     )
 
-    input_datasets = models.ManyToManyField(
-        'SequenceDataset',
-        related_name='inputdatasets',
-        blank=True,
-    )
-
-    input_results = models.ManyToManyField(
-        'ResultsDataset',
-        related_name='inputresults',
-        blank=True,
-    )
-
     inputs = models.ManyToManyField(
         'Dataset',
         related_name='inputdatasets',
@@ -825,66 +696,6 @@ class Analysis(models.Model):
 
     def get_absolute_url(self):
         return reverse("analysis-detail", args=(self.id,))
-
-
-class ResultsDataset(models.Model):
-    """
-    Generalized results class.
-    """
-
-    history = HistoricalRecords()
-
-    owner = models.ForeignKey(
-        account.models.User,
-        on_delete=models.SET_NULL,
-        null=True,
-    )
-
-    name = models.CharField(
-        max_length=200,
-        unique=True,
-    )
-
-    tags = models.ManyToManyField(
-        Tag,
-        blank=True,
-    )
-
-    results_type = models.CharField(
-        max_length=50,
-        null=False,
-    )
-
-    results_version = models.CharField(
-        max_length=50,
-        null=True,
-    )
-
-    analysis = models.ForeignKey(
-        Analysis,
-        null=True,
-        on_delete=models.SET_NULL,
-    )
-
-    samples = models.ManyToManyField(
-        Sample,
-        blank=True,
-    )
-
-    libraries = models.ManyToManyField(
-        DNALibrary,
-        blank=True,
-    )
-
-    file_resources = models.ManyToManyField(
-        FileResource,
-    )
-
-    def get_absolute_url(self):
-        return reverse("result-detail", args=(self.id,))
-
-    def __unicode__(self):
-        return '{}'.format(self.name)
 
 
 class Storage(PolymorphicModel):

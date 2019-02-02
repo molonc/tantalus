@@ -18,7 +18,11 @@
                     <td>{{result.name}}</td>
                     <td>{{result.results_type}}</td>
                     <td>{{result.results_version}}</td>
-                    <td><a href="{% url 'analysis-detail' result.analysis.id %}">{{result.analysis.name}}</a></td>
+                    {% if result.analysis %}
+                        <td><a href="{% url 'analysis-detail' result.analysis.id %}">{{result.analysis.id}}</a></td>
+                    {% else %}
+                        <td>None</td>
+                    {% endif %}
                     <td>
                         <a href="{% url 'tag-results-delete' pk=result.id pk_2=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
                     </td>

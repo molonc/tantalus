@@ -250,7 +250,7 @@ class ResultDetail(LoginRequiredMixin, DetailView):
 
     def post(self, request, *args, **kwargs):
         result_pk = kwargs['pk']
-        result = tantalus.models.ResultsDataset.objects.get(id=result_pk)
+        result = tantalus.models.Dataset.objects.get(id=result_pk, dataset_class='Results')
         form = tantalus.forms.AddDatasetToTagForm(request.POST)
         if form.is_valid():
             tag = form.cleaned_data['tag']
@@ -269,9 +269,9 @@ class TagResultsDelete(LoginRequiredMixin, View):
     login_url = LOGIN_URL
 
     def get(self, request, pk, pk_2):
-        result = get_object_or_404(tantalus.models.ResultsDataset, pk=pk)
+        result = get_object_or_404(tantalus.models.Dataset, pk=pk, dataset_class='Results')
         tag = get_object_or_404(tantalus.models.Tag, pk=pk_2)
-        tag.resultsdataset_set.remove(result)
+        tag.dataset_set.remove(result)
         msg = "Successfully removed datasest "
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
@@ -393,8 +393,8 @@ class AnalysisDetail(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
         context = super(AnalysisDetail, self).get_context_data(**kwargs)
-        context['input_datasets'] = self.object.input_datasets.all()
-        context['input_results'] = self.object.input_results.all()
+        context['input_datasets'] = self.object.inputs.filter(dataset_class='Sequence')
+        context['input_results'] = self.object.inputs.filter(dataset_class='Results')
         #context['input_datasets'] = self.object.dataset.filter(dataset_class='Sequence')
         #context['input_results'] = self.object.dataset_set.filter(dataset_class='Results')
         return context
@@ -833,8 +833,8 @@ class TagDetail(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, object):
         tag = get_object_or_404(tantalus.models.Tag, pk=object.id)
-        sequence_datasets = tag.sequencedataset_set.all()
-        results = tag.resultsdataset_set.all()
+        sequence_datasets = tag.dataset_set.filter(dataset_class='Sequence')
+        results = tag.dataset_set.filter(dataset_class='Results')
         context = {
             'tag': tag,
             'sequence_datasets': sequence_datasets,
@@ -849,9 +849,9 @@ class TagDatasetDelete(View):
     tantalus.models.Tag dataset delete page.
     """
     def get(self, request, pk,pk_2):
-        dataset = get_object_or_404(tantalus.models.SequenceDataset,pk=pk)
+        dataset = get_object_or_404(tantalus.models.Dataset,pk=pk, dataset_class='Sequence')
         tag = get_object_or_404(tantalus.models.Tag,pk=pk_2)
-        tag.sequencedataset_set.remove(dataset)
+        tag.dataset_set.remove(dataset)
         msg = "Successfully removed datasest "
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
@@ -1021,7 +1021,7 @@ class DatasetDelete(View):
     tantalus.models.SequenceDataset delete page.
     """
     def get(self, request, pk):
-        dataset = get_object_or_404(tantalus.models.SequenceDataset, pk=pk)
+        dataset = get_object_or_404(tantalus.models.Dataset, pk=pk, dataset_class='Sequence')
         for file_resource in dataset.file_resources.all():
             for file_instance in file_resource.fileinstance_set.all():
                 file_instance.is_deleted = True
@@ -1070,11 +1070,11 @@ class DatasetTag(FormView):
 
         dataset_pks = self.request.session.get('dataset_search_results', None)
         if dataset_pks:
-            datasets = tantalus.models.SequenceDataset.objects.filter(pk__in=dataset_pks)
+            datasets = tantalus.models.Dataset.objects.filter(pk__in=dataset_pks, dataset_class='Sequence')
             kwargs['datasets'] = datasets
             kwargs['dataset_pks'] = dataset_pks
         else:
-            kwargs['datasets'] = tantalus.models.SequenceDataset.objects.all()
+            kwargs['datasets'] = tantalus.models.Dataset.objects.filter(dataset_class='Sequence')
             kwargs['select_none_default'] = True
 
         if 'form' not in kwargs:
@@ -1192,7 +1192,7 @@ def dataset_set_to_CSV(request):
 
     # Get the datasets from the POST
     pks = sorted(json.loads(request.POST['dataset_pks']))
-    datasets = tantalus.models.SequenceDataset.objects.filter(pk__in=pks)
+    datasets = tantalus.models.Dataset.objects.filter(pk__in=pks, dataset_class='Sequence')
 
     # Write the data from each dataset
     for dataset in datasets:
