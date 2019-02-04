@@ -4,7 +4,7 @@ from django_filters import rest_framework as filters
 import rest_framework.exceptions
 from rest_framework import viewsets, mixins
 from rest_framework import permissions
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from tantalus.api.permissions import IsOwnerOrReadOnly
@@ -60,7 +60,7 @@ class RestrictedQueryMixin(object):
 
 class OwnerEditModelViewSet(viewsets.ModelViewSet):
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly,)
+        permissions.IsAuthenticated,)
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
     def get_serializer_class(self):
@@ -70,14 +70,14 @@ class OwnerEditModelViewSet(viewsets.ModelViewSet):
 
 
 class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, permissions.IsAdminUser)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_class = SampleFilter
 
 
 class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileResourceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileResourceSerializer
@@ -85,7 +85,7 @@ class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 
 class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.SequenceFileInfo.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequenceFileInfoSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequenceFileInfoSerializer
@@ -93,7 +93,7 @@ class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 
 class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.DNALibrary.objects.all()
     serializer_class_readonly = tantalus.api.serializers.DNALibrarySerializer
     serializer_class_readwrite = tantalus.api.serializers.DNALibrarySerializer
@@ -101,7 +101,7 @@ class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 
 class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.SequencingLane.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequencingLaneSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequencingLaneSerializer
@@ -109,7 +109,7 @@ class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 
 class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.SequenceDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
@@ -129,27 +129,27 @@ class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 
 class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.Storage.objects.all()
     serializer_class = tantalus.api.serializers.StorageSerializer
     filter_class = StorageFilter
 
 
 class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.ServerStorage.objects.all()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
     filter_class = ServerStorageFilter
 
 
 class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.AzureBlobStorage.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
 
 
 class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.FileInstance.objects.all()
     serializer_class_readonly = tantalus.api.serializers.FileInstanceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileInstanceSerializer
@@ -162,14 +162,14 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
         { "name": "test_api_tag", "sequencedataset_set": [1, 2, 3, 4], "resultsdataset_set": [9, 10] }
     Note that a post will update an existing tag by adding it to the given datasets
     """
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.Tag.objects.all()
     serializer_class = tantalus.api.serializers.TagSerializer
     filter_class = TagFilter
 
 
 class ResultsDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.ResultsDataset.objects.all()
     serializer_class_readonly = tantalus.api.serializers.ResultsDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.ResultsDatasetSerializer
@@ -189,7 +189,7 @@ class ResultsDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 
 class AnalysisViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.Analysis.objects.all()
     serializer_class_readonly = tantalus.api.serializers.AnalysisSerializer
     serializer_class_readwrite = tantalus.api.serializers.AnalysisSerializer
