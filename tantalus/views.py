@@ -863,7 +863,7 @@ class FileResourceJSON(BaseDatatableView):
     order_columns = ['id','filename', 'owner', 'created', 'last_updated', 'compression']
 
     def get_id(request, id):
-        return render(request, {'id' : id}, 'templates/tantalus/datatable/abstract_file_resources.html')
+        return render(request, {'id' : id}, 'templates/tantalus/datatable/file_resources.html')
 
     def get_initial_queryset(self):
 

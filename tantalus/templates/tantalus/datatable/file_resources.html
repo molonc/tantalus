@@ -1,28 +1,50 @@
+
 <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
     <h4>File Resources</h4>
+
     <div class="table-responsive">
-        <table id="file-resources-datatable" class="table-striped table-bordered">
+        <table class="file_resources_datatable table table-striped table-bordered">
             <thead>
-                <th>ID</th>
-                <th>File Name</th>
-                <th>Owner</th>
-                <th>Created</th>
-                <th>Last Updated</th>
-                <th>Compression</th>
+                <tr>
+                    <th class="file_resource_id">ID</th>
+                    <th class="file_resource_filename">File Name</th>
+                    <th class="file_resource_owner">Owner</th>
+                    <th class="file_resource_created">Created</th>
+                    <th class="file_resource_last_updated">Last Updated</th>
+                    <th class="file_resource_compression">Compression</th>
+                </tr>
             </thead>
             <tbody>
-                {% for file in file_resources %}
-                    <tr>
-                        <td>{{file.id}}</td>
-                        <td>{{file.filename}}</td>
-                        <td>{{file.owner}}</td>
-                        <td>{{file.created}}</td>
-                        <td>{{file.last_updated}}</td>
-                        <td>{{file.compression}}</td>
-                    </tr>
-                {% endfor %}
+
             </tbody>
         </table>
     </div>
+    <br>
+
+
+    <script type="text/javascript">
+
+
+     $(document).ready(function() {
+        $('.file_resources_datatable').DataTable({
+                stateSave: true,
+                columnDefs:[
+                    {"name": "id", "targets": "file_resource_id"},
+                    {"name": "filename", "targets": "file_resource_filename"},
+                    {"name": "owner", "targets": "file_resource_owner"},
+                    {"name": "created", "targets": "file_resource_created"},
+                    {"name": "last_updated", "targets": "file_resource_last_updated"},
+                    {"name": "compression", "targets": "file_resource_compression"}
+                ],
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '{% url 'fileresources-list-json' %}',
+                    data : {"id" : {{object.id}}}
+                }
+        } );
+    } );
+    </script>
+
 </div>
-<br>
+
