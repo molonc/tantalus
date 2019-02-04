@@ -300,29 +300,6 @@ class SequencingLane(models.Model):
         unique_together = ('flowcell_id', 'lane_number', 'dna_library')
 
 
-class FileType(models.Model):
-    """
-    Type of a File Resource.
-    """
-
-    history = HistoricalRecords()
-
-    name = models.CharField(
-        unique=True,
-        max_length=255,
-    )
-
-    extension = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-    )
-
-    def __str__(self):
-        """String representation of file type."""
-        return "%s (%s)" % (self.name, self.extension)
-
-
 class FileResource(models.Model):
     """
     File resource.
@@ -351,10 +328,10 @@ class FileResource(models.Model):
 
     created = models.DateTimeField()
 
-    file_type = models.ForeignKey(
-        FileType,
+    file_type = models.CharField(
+        max_length=50,
         null=True,
-        on_delete=models.CASCADE,
+        blank=True,
     )
 
     GZIP = 'GZIP'

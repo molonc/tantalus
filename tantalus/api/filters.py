@@ -7,7 +7,6 @@ from tantalus.models import (
     DNALibrary,
     FileInstance,
     FileResource,
-    FileType,
     ResultsDataset,
     Sample,
     SequenceDataset,
@@ -108,18 +107,6 @@ class FileResourceFilter(BaseFilterSet):
             "resultsdataset__id": ["exact"],
             "sequencefileinfo__index_sequence": ["exact"],
             "fileinstance__storage__name": ["exact"],
-        }
-
-
-class FileTypeFilter(BaseFilterSet):
-    """Filters for file types."""
-
-    class Meta(BaseFilterSet.Meta):
-        model = FileType
-        fields = {
-            "id": ["exact"],
-            "name": ["exact"],
-            "extension": ["exact"],
         }
 
 

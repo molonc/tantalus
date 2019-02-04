@@ -4,7 +4,6 @@
         <thead>
             <tr>
                 <th>File name</th>
-                <th>File Type</th>
                 <th>Size</th>
                 <th>Created Time</th>
                 <th>Storage</th>
@@ -16,7 +15,6 @@
             {% for file in object.file_resources.all %}
                 <tr>
                     <td>{{file.filename}}</td>
-                    <td>{{file.file_type.name}}</td>
                     <td>{{file.get_file_size}}</td>
                     <td>{{file.created}}</td>
                     <td>{{storages|join:", "}}</td>
