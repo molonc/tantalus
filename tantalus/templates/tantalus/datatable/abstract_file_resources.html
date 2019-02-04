@@ -27,6 +27,7 @@
 
      $(document).ready(function() {
         $('.file_resources_datatable').DataTable({
+                stateSave: true,
                 columnDefs:[
                     {"name": "id", "targets": "file_resource_id"},
                     {"name": "filename", "targets": "file_resource_filename"},
