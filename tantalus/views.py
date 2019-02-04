@@ -18,6 +18,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.defaulttags import register
 from django.forms import ModelForm
 from django.forms.models import model_to_dict
+from django.urls import resolve
 
 import csv
 import json
@@ -855,21 +856,45 @@ class TagDatasetDelete(View):
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
-@login_required
-def get_file_resources(request,pk):
-    sequencedataset = tantalus.models.SequenceDataset.objects.filter(id=pk)
 
-    return_data = []
+class FileResourceJSON(BaseDatatableView):
+    model = tantalus.models.FileResource
+    columns = ['id','filename', 'owner', 'created', 'last_updated', 'compression']
+    order_columns = ['id','filename', 'owner', 'created', 'last_updated', 'compression']
 
-    for file_resource in sequencedataset[0].file_resources.all():
-        data = {'id':file_resource.id,
-                'filename': file_resource.filename,
-                'owner': str(file_resource.owner),
-                'created' : str(file_resource.created),
-                'last_updated' : str(file_resource.last_updated),
-                'compression' : file_resource.compression}
-        return_data.append(data)
-    return HttpResponse(json.dumps(return_data), content_type="application/json")
+    def get_id(request, id):
+        return render(request, {'id' : id}, 'templates/tantalus/datatable/abstract_file_resources.html')
+
+    def get_initial_queryset(self):
+
+        id = self.request.GET.get("id", None)
+        dataset = tantalus.models.SequenceDataset.objects.filter(id=id)
+
+        return dataset[0].file_resources
+
+
+    def render_column(self, row, column):
+        if column == 'id':
+            return row.id
+        if column == 'filename':
+            return row.filename
+        if column == 'owner':
+            return str(row.owner)
+        if column == 'created':
+            return row.created
+        if column == 'last_updated':
+            return row.last_updated
+        if column == 'compression':
+            return row.compression
+        else:
+            return super(FileResourceJSON, self).render_column(row, column)
+
+
+    def filter_queryset(self, qs):
+        search = self.request.GET.get('search[value]', None)
+        if search:
+            return qs.filter(Q(id__startswith=search)|Q(filename__startswith=search))
+        return qs
 
 
 
