@@ -63,5 +63,5 @@ urlpatterns = [
     url(r'^export-external-id-results/$', tantalus.views.export_external_id_results, name='export-external-id-results'),
     url(r'^$', tantalus.views.HomeView.as_view(), name='home'),
     url(r'^json/datasets/$', tantalus.views.DatasetListJSON.as_view(), name='dataset-list-json'),
-    url(r'^json/fileresources/(?P<pk>\d+)$', tantalus.views.get_file_resources, name='fileresources-list-json'),
+    url(r'^json/fileresources/$', tantalus.views.FileResourceJSON.as_view(), name='fileresources-list-json'),
 ]
