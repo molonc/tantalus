@@ -534,6 +534,10 @@ class SequenceDataset(models.Model):
         blank=True,
     )
 
+    is_production = models.BooleanField(
+        default=False,
+    )
+
     def get_num_total_sequencing_lanes(self):
         return SequencingLane.objects.filter(dna_library=self.library).count()
 
@@ -724,6 +728,10 @@ class ResultsDataset(models.Model):
 
     file_resources = models.ManyToManyField(
         FileResource,
+    )
+
+    is_production = models.BooleanField(
+        default=False,
     )
 
     def get_absolute_url(self):
