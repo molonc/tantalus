@@ -18,7 +18,6 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.defaulttags import register
 from django.forms import ModelForm
 from django.forms.models import model_to_dict
-from django.urls import resolve
 
 import csv
 import json
@@ -29,7 +28,6 @@ from io import StringIO
 import xlsxwriter
 
 from jira import JIRA, JIRAError
-from pip._vendor.html5lib import serializer
 
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT, JIRA_URL
