@@ -100,7 +100,7 @@ class FileResourceFilter(BaseFilterSet):
         model = FileResource
         fields = {
             "id": ["exact"],
-            "filename": ["exact", "endswith"],
+            "filename": ["exact", "endswith", "startswith"],
             "sequencedataset__name": ["exact"],
             "sequencedataset__id": ["exact"],
             "resultsdataset__name": ["exact"],
