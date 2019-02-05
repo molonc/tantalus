@@ -450,7 +450,7 @@ class DatasetSearchForm(forms.Form):
         if sample:
             no_match_samples = []
             for samp in sample.split():
-                if not tantalus.models.Dataset.objects.filter(sample__sample_id=samp, dataset_class='Sequence').exists():
+                if not tantalus.models.Dataset.objects.filter(samples__sample_id__contains=samp, dataset_class='Sequence').exists():
                     no_match_samples.append(samp)
             if no_match_samples != []:
                 raise forms.ValidationError("Filter for the following sample resulted in 0 results: {}".format(
@@ -463,7 +463,7 @@ class DatasetSearchForm(forms.Form):
         if library:
             no_match_list = []
             for lib in library.split():
-                if not tantalus.models.Dataset.objects.filter(library__library_id=lib, dataset_class='Results').exists():
+                if not tantalus.models.Dataset.objects.filter(libraries__library_id__contains=lib, dataset_class='Results').exists():
                     no_match_list.append(lib)
 
             if no_match_list:
@@ -560,7 +560,7 @@ class DatasetSearchForm(forms.Form):
                 results = results.filter(tags__name=tag).exclude(tags__name__in=exclude_list)
 
         if sample:
-            results = results.filter(sample__sample_id__in=sample.split())
+            results = results.filter(samples__sample_id__in=sample.split())
 
         if dataset_type:
             results = results.filter(dataset_type__in=dataset_type)
@@ -572,7 +572,7 @@ class DatasetSearchForm(forms.Form):
             results = results.filter(file_resources__compression__in=compression_schemes)
 
         if library:
-            results = results.filter(library__library_id__in=library.split())
+            results = results.filter(libraries__library_id__in=library.split())
 
         if sequencing_center:
             results = results.filter(sequence_lanes__sequencing_centre=sequencing_center)
@@ -581,13 +581,13 @@ class DatasetSearchForm(forms.Form):
             results = results.filter(sequence_lanes__sequencing_instrument=sequencing_instrument)
 
         if sequencing_library_id:
-            results = results.filter(library__library_id__in=sequencing_library_id.split())
+            results = results.filter(libraries__library_id__in=sequencing_library_id.split())
 
         if library_type:
-            results = results.filter(library__library_type=library_type)
+            results = results.filter(libraries__library_type=library_type)
 
         if index_format:
-            results = results.filter(library__index_format=index_format)
+            results = results.filter(libraries__index_format=index_format)
 
         if min_num_read_groups is not None:
             results = results.annotate(sequence_lanes__lane_number=Count('sequence_lanes__lane_number')).filter(sequence_lanes__lane_number__gte=min_num_read_groups)
