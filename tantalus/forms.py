@@ -346,17 +346,26 @@ class DatasetSearchForm(forms.Form):
         help_text="A comma separated list of tags",
         required=False,
     )
+
+    is_production = forms.NullBooleanField(
+        label="Is Production",
+        help_text="Dataset approved for production usage",
+        required=False,
+    )
+
     exclude = forms.CharField(
         label="Exclude",
         help_text="A comma separated list of tags you want to exclude",
         required=False,
     )
+
     library = forms.CharField(
         label="Library",
         required=False,
         help_text="A white space separated list of library IDs. Eg. MF1606301",
         widget=forms.widgets.Textarea
     )
+
     sample = forms.CharField(
         label="Sample(s)",
         required=False,
@@ -371,18 +380,21 @@ class DatasetSearchForm(forms.Form):
         help_text="Type of files to process",
         widget=forms.widgets.CheckboxSelectMultiple()
     )
+
     storages = forms.ModelMultipleChoiceField(
         queryset=tantalus.models.Storage.objects.all(),
         required=False,
         help_text="Only look for files that are present in the selected storage.",
         widget=forms.widgets.CheckboxSelectMultiple(),
     )
+
     compression_schemes = forms.MultipleChoiceField(
         choices=tantalus.models.FileResource.compression_choices,
         required=False,
         help_text="Only look for files with given compression schemes.",
         widget=forms.widgets.CheckboxSelectMultiple(),
     )
+
     flowcell_id_and_lane = forms.CharField(
         label="Flowcell ID + lane number",
         required=False,
@@ -518,7 +530,7 @@ class DatasetSearchForm(forms.Form):
     def get_dataset_search_results(self, clean=True, exclude=None, tagged_with=None, library=None, sample=None, dataset_type=None,storages=None,
                                    compression_schemes=None,flowcell_id_and_lane=None, sequencing_center=None,
                                    sequencing_instrument=None, sequencing_library_id=None, library_type=None,
-                                   index_format=None, min_num_read_groups=None):
+                                   index_format=None, min_num_read_groups=None, is_production=None):
         """
         Performs the filter search with the given fields. The "clean" flag is used to indicate whether the cleaned data
         should be used or not.
@@ -547,7 +559,7 @@ class DatasetSearchForm(forms.Form):
             library_type = self.cleaned_data['library_type']
             index_format = self.cleaned_data['index_format']
             min_num_read_groups = self.cleaned_data['min_num_read_groups']
-
+            is_production = self.cleaned_data['is_production']
 
         results = tantalus.models.SequenceDataset.objects.all()
 
@@ -603,6 +615,9 @@ class DatasetSearchForm(forms.Form):
                     q = Q(sequence_lanes__flowcell_id=flowcell_lane)
                 query = query | q
             results = results.filter(query)
+
+        if is_production:
+            results = results.filter(is_production=is_production)
 
         results = results.distinct()
 

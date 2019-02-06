@@ -19,6 +19,10 @@
                     <td class="custom-table-detail">{{object.dataset_type}}</td>
                 </tr>
                 <tr>
+                    <th class="custom-table-header">Production</th>
+                    <td class="custom-table-detail">{{object.is_production}}</td>
+                </tr>
+                <tr>
                     <th class="custom-table-header">Sample ID</th>
                     <td class="custom-table-detail"><a href="{% url 'sample-detail' object.sample.id %}">{{object.sample}}</a></td>
                 </tr>

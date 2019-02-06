@@ -864,11 +864,36 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
 
     model = tantalus.models.SequenceDataset
 
-    columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
+    columns = [
+        'id',
+        'dataset_type',
+        'sample_id',
+        'library_id',
+        'library_type',
+        'is_production',
+        'num_read_groups',
+        'num_total_read_groups',
+        'is_complete',
+        'tags',
+        'storages',
+    ]
 
     # MUST be in the order of the columns
-    order_columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
-    max_display_length = 100
+    order_columns = [
+        'id',
+        'dataset_type',
+        'sample_id',
+        'library_id',
+        'library_type',
+        'is_production',
+        'num_read_groups',
+        'num_total_read_groups',
+        'is_complete',
+        'tags',
+        'storages',
+    ]
+
+    max_display_length = 50
 
     def get_context_data(self, *args, **kwargs):
         dataset_pks = self.request.session.get('dataset_search_results', None)
