@@ -32,6 +32,12 @@ class Tag(models.Model):
 
     name = create_id_field(unique=True)
 
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
     def __unicode__(self):
         return self.name
 
