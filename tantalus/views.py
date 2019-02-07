@@ -212,7 +212,7 @@ class SampleDetail(LoginRequiredMixin, DetailView):
 
         context['sequence_datasets_set'] = sequence_datasets_set
         try:
-            context['patient_url'] = self.object.SA_id.get_absolute_url() + str(self.object.SA_id.id)
+            context['patient_url'] = self.object.patient.get_absolute_url()
         except:
             context['patient_url'] = None
 
@@ -441,12 +441,12 @@ class PatientCreate(LoginRequiredMixin, TemplateView):
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
-        SA_prefix_patients = tantalus.models.Patient.objects.filter(SA_id__startswith='SA').order_by('-SA_id')
+        SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
         SA_ids = []
         for patient in SA_prefix_patients:
-            SA_ids.append(int(patient.SA_id[2:]))
+            SA_ids.append(int(patient.patient_id[2:]))
         SA_ids.sort()
-        data = {'SA_id': 'SA' + str(SA_ids[-1] + 1)}
+        data = {'patient_id': 'SA' + str(SA_ids[-1] + 1)}
         form = tantalus.forms.PatientForm(initial=data)
         multi_form = tantalus.forms.UploadPatientForm()
         return self.get_context_and_render(request, form, multi_form)
@@ -456,7 +456,7 @@ class PatientCreate(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
-            msg = "Successfully created Patient {}.".format(instance.SA_id)
+            msg = "Successfully created Patient {}.".format(instance.patient_id)
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
 
@@ -476,14 +476,14 @@ class PatientCreate(LoginRequiredMixin, TemplateView):
             for idx, patient_row in patients_df.iterrows():
                 if(patient_row[SA_id_index] in auto_generated_SA_ids):
                     patient = tantalus.models.Patient(
-                        SA_id=patient_row[SA_id_index],
+                        patient_id=patient_row[SA_id_index],
                         external_patient_id=patient_row[external_patient_id_index],
                         case_id=patient_row[case_id_index],
                         reference_id=patient_row[reference_id_index]
                     )
                     auto_generated_patients.append(model_to_dict(patient))
                     continue
-                patient, created = tantalus.models.Patient.objects.get_or_create(SA_id=patient_row[SA_id_index])
+                patient, created = tantalus.models.Patient.objects.get_or_create(patient_id=patient_row[SA_id_index])
                 if(created):
                     patient.external_patient_id = patient_row[external_patient_id_index]
                     patient.case_id = patient_row[case_id_index]
@@ -499,6 +499,7 @@ class PatientCreate(LoginRequiredMixin, TemplateView):
                 messages.success(request, msg)
                 return HttpResponseRedirect(reverse('patient-list'))
             else:
+                print(len(auto_generated_patients))
                 msg = "You are editing existing Patient Data or have asked us to auto-generate SA IDs. Please Confirm Modifications and ID Generation."
                 messages.warning(request, msg)
                 request.session['to_edit'] = to_edit
@@ -524,8 +525,9 @@ class ConfirmPatientEditFromCreate(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         existing_patient_list = []
+        print(len(request.session['to_edit']))
         for patient in request.session['to_edit']:
-            existing_patient = tantalus.models.Patient.objects.get(SA_id=patient['SA_id'])
+            existing_patient = tantalus.models.Patient.objects.get(patient_id=patient['patient_id'])
             existing_patient.new_external_patient_id = patient['external_patient_id']
             existing_patient.new_case_id = patient['case_id']
 
@@ -545,7 +547,7 @@ class ConfirmPatientEditFromCreate(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
 
         for patient in request.session['to_edit']:
-            existing_patient = tantalus.models.Patient.objects.get(SA_id=patient['SA_id'])
+            existing_patient = tantalus.models.Patient.objects.get(patient_id=patient['patient_id'])
             existing_patient.reference_id = patient['reference_id']
             existing_patient.external_patient_id = patient['external_patient_id']
             existing_patient.case_id = patient['case_id']
@@ -585,7 +587,7 @@ class PatientEdit(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save()
-            msg = "Successfully edited Patient {}.".format(patient.SA_id)
+            msg = "Successfully edited Patient {}.".format(patient.patient_id)
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
         else:

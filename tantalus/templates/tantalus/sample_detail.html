@@ -37,7 +37,7 @@
                 <tr>
                     <th style="padding: 0; padding-top: 4px;">SA ID</th>
                     {% if patient_url %}
-                        <td style="padding: 0; padding-left: 35px;"><a href='{{patient_url}}'>{{object.SA_id.SA_id}}</a></td>
+                        <td style="padding: 0; padding-left: 35px;"><a href='{{patient_url}}'>{{object.patient.patient_id}}</a></td>
                     {% else %}
                         <td style="padding: 0; padding-left: 35px;">No Patient Associated</td>
                     {% endif %}

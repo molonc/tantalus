@@ -18,7 +18,7 @@
                 {% endif %}
 
                 <legend>Confirm Auto Generated Patient IDs</legend>
-                {% if auto_generate_patients %}
+                {% if auto_generated_patients %}
                     {% include "tantalus/datatable/confirm_auto_generated_patient_ids.html" %}
                 {% else %}
                     <h5><i class="text-warning">No SA IDs were auto generated!</i></h5>

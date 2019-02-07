@@ -101,7 +101,7 @@ class PatientForm(forms.ModelForm):
 
     def clean_patient_id(self):
         patient_id = self.cleaned_data.get('patient_id', False)
-        if(SA_id[:2] != "SA"):
+        if(patient_id[:2] != "SA"):
             raise ValidationError("Error!. SA IDs must start with SA")
         return patient_id         
 
@@ -140,7 +140,7 @@ class UploadPatientForm(forms.Form):
 
         df = pd.DataFrame(data=temp_dict)
 
-        SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-SA_id')
+        SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
         SA_ids = []
         
         for patient in SA_prefix_patients:
