@@ -1,5 +1,6 @@
 """Contains filters for API viewsets."""
 
+import django
 from django.db import models
 from django_filters import rest_framework as filters
 from tantalus.models import (
@@ -48,6 +49,12 @@ class AnalysisFilter(BaseFilterSet):
 
     class Meta(BaseFilterSet.Meta):
         model = Analysis
+        filter_overrides = {
+            django.contrib.postgres.fields.JSONField: {
+                'filter_class': filters.CharFilter,
+                'extra': lambda f: {'lookup_expr': 'library_id'},
+            }
+        }
         fields = {
             "id": ["exact"],
             "name": ["exact"],
@@ -57,6 +64,7 @@ class AnalysisFilter(BaseFilterSet):
             "version": ["exact"],
             "input_datasets__id": ["exact"],
             "input_results__id": ["exact"],
+            "args": ["exact"],
         }
 
 
