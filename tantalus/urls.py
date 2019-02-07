@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^samples/$', tantalus.views.sample_list, name='sample-list'),
     url(r'^samples/create$', tantalus.views.SampleCreate.as_view(), name='sample-add'),
     url(r'^samples/create/(?P<patient_id>.{1,20})$', tantalus.views.SpecificSampleCreate.as_view(), name='specific-sample-add'),
+    url(r'^samples/confirm-samples-create$', tantalus.views.ConfirmSamplesCreate.as_view(), name='confirm-samples-create'),
     url(r'^samples/(?P<pk>\d+)$', tantalus.views.SampleDetail.as_view(), name='sample-detail'),
     url(r'^samples/edit/(?P<pk>\d+)$', tantalus.views.SampleEdit.as_view(), name='sample-edit'),
     url(r'^export-sample-create-template/$', tantalus.views.export_sample_create_template, name='export-sample-create-template'),
