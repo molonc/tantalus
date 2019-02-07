@@ -122,6 +122,7 @@ class ResultsDatasetFilter(filters.FilterSet):
             "owner": ["exact"],
             "name": ["exact"],
             "analysis": ["exact"],
+            "analysis__jira_ticket": ["exact"],
             "file_resources__filename": ["exact"],
             "results_type": ["exact"],
             "results_version": ["exact"],
