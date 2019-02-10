@@ -190,7 +190,7 @@ class ResultsDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 class AnalysisViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.Analysis.objects.all()
+    queryset = tantalus.models.Analysis.objects.all().distinct()
     serializer_class_readonly = tantalus.api.serializers.AnalysisSerializer
     serializer_class_readwrite = tantalus.api.serializers.AnalysisSerializer
     filter_class = AnalysisFilter
