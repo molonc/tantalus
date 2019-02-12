@@ -14,6 +14,7 @@ from tantalus.api.filters import (
     DNALibraryFilter,
     FileInstanceFilter,
     FileResourceFilter,
+    PatientFilter,
     ResultsDatasetFilter,
     SampleFilter,
     SequenceDatasetFilter,
@@ -74,6 +75,12 @@ class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_class = SampleFilter
+
+class PatientViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = tantalus.models.Patient.objects.all()
+    serializer_class = tantalus.api.serializers.PatientSerializer
+    filter_class = PatientFilter
 
 
 class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):

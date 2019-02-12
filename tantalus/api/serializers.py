@@ -11,6 +11,10 @@ class SampleSerializer(serializers.ModelSerializer):
         model = tantalus.models.Sample
         fields = '__all__'
 
+class PatientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.Patient
+        fields = '__all__'
 
 class StorageSerializer(serializers.ModelSerializer):
     class Meta:
