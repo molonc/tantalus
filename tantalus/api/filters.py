@@ -7,6 +7,7 @@ from tantalus.models import (
     DNALibrary,
     FileInstance,
     FileResource,
+    Patient,
     ResultsDataset,
     Sample,
     SequenceDataset,
@@ -130,6 +131,16 @@ class ResultsDatasetFilter(filters.FilterSet):
             "libraries__library_id": ["exact"],
         }
 
+class PatientFilter(filters.FilterSet):
+
+    class Meta(BaseFilterSet.Meta):
+        model = Patient
+        fields = {
+            "id": ["exact"],
+            "patient_id": ["exact"],
+            "external_patient_id": ["exact"],
+            "case_id": ["exact"],
+        }
 
 class SampleFilter(BaseFilterSet):
     """Filters for samples."""
