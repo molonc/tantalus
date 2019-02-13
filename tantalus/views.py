@@ -18,6 +18,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.defaulttags import register
 from django.forms import ModelForm
 from django.forms.models import model_to_dict
+from django.shortcuts import redirect
 
 import csv
 import json
@@ -281,32 +282,32 @@ class AnalysisCreate(LoginRequiredMixin, TemplateView):
     login_url = LOGIN_URL
 
     template_name = "tantalus/analysis_create.html"
-
-    def create_jira_ticket(self, username, password, name, description, reporter, assignee, project_name):
-
-        jira_server = JIRA(JIRA_URL, auth=(username, password))
-
-        projects = jira_server.projects()
-
-        for project in projects:
-            if(project.name.lower() == project_name.lower()):
-                project_id = project.id
-
-
-        title = "Analysis Ticket For of {}".format(name)
-
-        issue_dict = {
-            "project": {"id": project_id},
-            "summary": title,
-            "description": description,
-            "issuetype": {"name": "Task"},
-            "reporter": {"name": reporter},
-            "assignee": {"name": assignee},
-        }
-
-        new_issue = jira_server.create_issue(fields=issue_dict)
-
-        return new_issue
+    #
+    # def create_jira_ticket(self, username, password, name, description, reporter, assignee, project_name):
+    #
+    #     jira_server = JIRA(JIRA_URL, auth=(username, password))
+    #
+    #     projects = jira_server.projects()
+    #
+    #     for project in projects:
+    #         if(project.name.lower() == project_name.lower()):
+    #             project_id = project.id
+    #
+    #
+    #     title = "Analysis Ticket For of {}".format(name)
+    #
+    #     issue_dict = {
+    #         "project": {"id": project_id},
+    #         "summary": title,
+    #         "description": description,
+    #         "issuetype": {"name": "Task"},
+    #         "reporter": {"name": reporter},
+    #         "assignee": {"name": assignee},
+    #     }
+    #
+    #     # new_issue = jira_server.create_issue(fields=issue_dict)
+    #
+    #     return new_issue
 
     def get_context_and_render(self, request, form):
         context = {
@@ -323,11 +324,11 @@ class AnalysisCreate(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.owner = request.user
-            jira_ticket = self.create_jira_ticket(form['jira_username'].value(), form['jira_password'].value(), 
-                                          instance.name, form['description'].value(), str(request.user), str(request.user), form['project_name'].value())
-
-
-            instance.jira_ticket = jira_ticket
+            # jira_ticket = self.create_jira_ticket(form['jira_username'].value(), form['jira_password'].value(),
+            #                               instance.name, form['description'].value(), str(request.user), str(request.user), form['project_name'].value())
+            #
+            #
+            # instance.jira_ticket = jira_ticket
 
             instance.save()
             msg = "Successfully created Analysis {}.".format(instance.name)
@@ -1127,6 +1128,15 @@ class DatasetTag(FormView):
         # Go to tantalus.models.Tag detail page
         return HttpResponseRedirect(reverse('tag-detail', kwargs={'pk': tag_id.id}))
 
+def dataset_analysis_ajax(request):
+    print "HELLO"
+    if request.method == 'POST':
+        data = request.POST.getlist('data[]')
+        if 'analysis_dataset_ajax' in request.session:
+            del request.session['analysis_dataset_ajax']
+        request.session['analysis_dataset_ajax'] =  map(int, data)
+
+    return HttpResponse('')
 
 @require_POST
 def dataset_set_to_CSV(request):

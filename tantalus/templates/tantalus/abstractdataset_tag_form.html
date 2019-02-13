@@ -44,41 +44,110 @@
                 <h5><i class="text-warning">No datasets yet.</i></h5>
             {% endif %}
             <input class="btn btn-primary btn-sm" type="submit" name="tag_button" value="Tag" />
-            <input class="btn btn-primary btn-sm" type="submit" name="tag_and_transfer_button" value="Tag and transfer" />
             <a class="btn btn-default btn-sm" href="{% url 'dataset-list' %}">Cancel</a>
         </form>
 
         {# Output to CSV #}
-        <form action="{% url 'dataset-tag-csv' %}" method="post" style="padding-top: 10px">
+        {% csrf_token %}
+        <a class="btn btn-primary btn-sm" onclick="submit_ajax()"  style="float: left; margin-top: 10px; margin-right: 5px; margin-bottom: 10px;">Create Analysis</a>
+
+        <form action="{% url 'dataset-tag-csv' %}" method="post" style="float: left; padding-top: 10px;">
             {% csrf_token %}
             <button class="btn btn-default btn-sm" name="dataset_pks" value="{{ dataset_pks }}" type=submit>Output to CSV</button>
         </form>
 
-        <br/>
     </div>
 
 <script type="text/javascript">
+    var table;
+
     $(document).ready(function() {
-        $('.dataset_datatable').DataTable({
-            stateSave: true,
-            columnDefs:[
-                {"name": "id", "targets": "dataset_id"},
-                {"name": "dataset_type", "targets": "dataset_type", "orderable": false, "searchable": false},
-                {"name": "sample_id", "targets": "dataset_sample_id"},
-                {"name": "library_id", "targets": "dataset_library_id"},
-                {"name": "library_type", "targets": "dataset_library_type", "orderable": false},
-                {"name": "num_lanes", "targets": "dataset_num_lanes", "orderable": false, "searchable": false},
-                {"name": "num_total_read_groups", "targets": "dataset_num_total_read_groups", "orderable": false, "searchable": false},
-                {"name": "is_complete", "targets": "dataset_is_complete", "orderable": false, "searchable": false},
-                {"name": "tags", "targets": "dataset_tags"},
-                {"name": "storages", "targets": "dataset_storages", "orderable": false, "searchable": false}
-            ],
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: '{% url 'dataset-list-json' %}'
+        table =
+            $('.dataset_datatable').DataTable({
+                select: {
+                    style: 'multi',
+                },
+                stateSave: true,
+                columnDefs:[
+                    {"name": "id", "targets": "dataset_id"},
+                    {"name": "dataset_type", "targets": "dataset_type", "orderable": false, "searchable": false},
+                    {"name": "sample_id", "targets": "dataset_sample_id"},
+                    {"name": "library_id", "targets": "dataset_library_id"},
+                    {"name": "library_type", "targets": "dataset_library_type", "orderable": false},
+                    {"name": "num_lanes", "targets": "dataset_num_lanes", "orderable": false, "searchable": false},
+                    {"name": "num_total_read_groups", "targets": "dataset_num_total_read_groups", "orderable": false, "searchable": false},
+                    {"name": "is_complete", "targets": "dataset_is_complete", "orderable": false, "searchable": false},
+                    {"name": "tags", "targets": "dataset_tags"},
+                    {"name": "storages", "targets": "dataset_storages", "orderable": false, "searchable": false}
+                ],
+                paging: false,
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '{% url 'dataset-list-json' %}'
+                }
+            } );
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
             }
-        } );
+        });
     } );
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function submit_ajax() {
+        var list = [];
+        console.log("HELLO")
+        var data = table.rows( { selected: true} ).data();
+        var selected = "Selected Dataset  IDs: \n"
+
+        for (var i = 0; i < data.length; i++){
+            selected += (data[i][0].substring(19,23) + " ")
+            list.push(parseInt(data[i][0].substring(19,23)))
+        }
+
+        <!--document.getElementById('selected_dataset').innerHTML = selected-->
+
+        if (data.length <= 0){
+            alert("Please select datasets")
+        }
+        else{
+             $.ajax({
+                url: '{% url 'dataset-analysis-ajax' %}',
+                type: 'post',
+                data: { "data" : list,},
+                success: function(response) {
+                    console.log("SUCCESS")
+                    var url = '{% url 'analysis-add-dataset' %}';
+                    $(location).attr('href',url);
+                }
+            })
+        }
+    }
+
+
 </script>
 {% endblock %}

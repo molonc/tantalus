@@ -16,8 +16,27 @@
                     {{form}}
                     </thead>
                 </table>
+                <div class="container" style="margin: 10px 10px 30px 10px;">
+                    <h4 id="textfield"></h4>
+                    <button class="btn btn-primary btn-sm">Cancel Import</button>
+                </div>
             	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
             </fieldset>
+
+
         </form><br>
     </div>
+
+<script type="text/javascript">
+console.log("READY")
+     $(document).ready(function() {
+       console.log("READY")
+        document.getElementById('textfield').innerHTML = "Following input dataset are imported: " + {{ request.session.analysis_dataset_ajax }};
+     })
+
+     function onclick(){
+        document.getElementById('selected_dataset').innerHTML = "You pressed ";
+     }
+
+</script>
 {% endblock %}
