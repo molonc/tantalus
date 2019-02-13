@@ -191,7 +191,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = tantalus.models.Tag
-        fields = ('id', 'name', 'sequencedataset_set', 'resultsdataset_set')
+        fields = ('id', 'name', 'owner', 'sequencedataset_set', 'resultsdataset_set')
 
     def is_valid(self, raise_exception=False):
         if hasattr(self, 'initial_data'):
@@ -206,6 +206,9 @@ class TagSerializer(serializers.ModelSerializer):
             return super(TagSerializer, self).is_valid(raise_exception)
 
     def update(self, instance, validated_data):
+        if 'owner' in validated_data:
+            instance.owner = validated_data['owner']
+            instance.save()
         for sequencedataset in validated_data.get('sequencedataset_set', ()):
             sequencedataset.tags.add(instance)
         for resultsdataset in validated_data.get('resultsdataset_set', ()):
