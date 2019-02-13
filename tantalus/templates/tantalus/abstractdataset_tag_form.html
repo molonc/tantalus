@@ -48,7 +48,6 @@
         </form>
 
         {# Output to CSV #}
-        {% csrf_token %}
         <a class="btn btn-primary btn-sm" onclick="submit_ajax()"  style="float: left; margin-top: 10px; margin-right: 5px; margin-bottom: 10px;">Create Analysis</a>
 
         <form action="{% url 'dataset-tag-csv' %}" method="post" style="float: left; padding-top: 10px;">
@@ -58,11 +57,11 @@
 
     </div>
 
-{% endblock %}
 <script type="text/javascript">
     var table;
 
     $(document).ready(function() {
+    console.log("HELLO")
         table =
             $('.dataset_datatable').DataTable({
                 select: {
@@ -81,7 +80,6 @@
                     {"name": "tags", "targets": "dataset_tags"},
                     {"name": "storages", "targets": "dataset_storages", "orderable": false, "searchable": false}
                 ],
-                paging: false,
                 processing: true,
                 serverSide: true,
                 ajax: {
@@ -108,7 +106,6 @@
             var cookies = document.cookie.split(';');
             for (var i = 0; i < cookies.length; i++) {
                 var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) == (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -128,8 +125,6 @@
             list.push(parseInt(data[i][0].substring(19,23)))
         }
 
-        <!--document.getElementById('selected_dataset').innerHTML = selected-->
-
         if (data.length <= 0){
             alert("Please select datasets")
         }
@@ -148,3 +143,4 @@
 
 
 </script>
+{% endblock %}

@@ -282,32 +282,32 @@ class AnalysisCreate(LoginRequiredMixin, TemplateView):
     login_url = LOGIN_URL
 
     template_name = "tantalus/analysis_create.html"
-    #
-    # def create_jira_ticket(self, username, password, name, description, reporter, assignee, project_name):
-    #
-    #     jira_server = JIRA(JIRA_URL, auth=(username, password))
-    #
-    #     projects = jira_server.projects()
-    #
-    #     for project in projects:
-    #         if(project.name.lower() == project_name.lower()):
-    #             project_id = project.id
-    #
-    #
-    #     title = "Analysis Ticket For of {}".format(name)
-    #
-    #     issue_dict = {
-    #         "project": {"id": project_id},
-    #         "summary": title,
-    #         "description": description,
-    #         "issuetype": {"name": "Task"},
-    #         "reporter": {"name": reporter},
-    #         "assignee": {"name": assignee},
-    #     }
-    #
-    #     # new_issue = jira_server.create_issue(fields=issue_dict)
-    #
-    #     return new_issue
+
+    def create_jira_ticket(self, username, password, name, description, reporter, assignee, project_name):
+
+        jira_server = JIRA(JIRA_URL, auth=(username, password))
+
+        projects = jira_server.projects()
+
+        for project in projects:
+            if(project.name.lower() == project_name.lower()):
+                project_id = project.id
+
+
+        title = "Analysis Ticket For of {}".format(name)
+
+        issue_dict = {
+            "project": {"id": project_id},
+            "summary": title,
+            "description": description,
+            "issuetype": {"name": "Task"},
+            "reporter": {"name": reporter},
+            "assignee": {"name": assignee},
+        }
+
+        new_issue = jira_server.create_issue(fields=issue_dict)
+
+        return new_issue
 
     def get_context_and_render(self, request, form):
         context = {
@@ -327,11 +327,9 @@ class AnalysisCreate(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.owner = request.user
-            # jira_ticket = self.create_jira_ticket(form['jira_username'].value(), form['jira_password'].value(),
-            #                               instance.name, form['description'].value(), str(request.user), str(request.user), form['project_name'].value())
-            #
-            #
-            # instance.jira_ticket = jira_ticket
+            jira_ticket = self.create_jira_ticket(form['jira_username'].value(), form['jira_password'].value(),
+                                    instance.name, form['description'].value(), str(request.user), str(request.user), form['project_name'].value())
+            instance.jira_ticket = jira_ticket
             instance.save()
 
             if 'analysis_dataset_ajax' in request.session:
