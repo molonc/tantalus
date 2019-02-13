@@ -203,7 +203,7 @@ class SampleForm(forms.ModelForm):
             'note',
             'patient',
             'projects',
-            'is_reference'
+            'is_reference',
         ]
 
 
