@@ -158,6 +158,7 @@ class SampleFilter(BaseFilterSet):
             "id": ["exact", "in"],
             "sample_id": ["exact", "in"],
             "sequencedataset__id": ["exact", "in", "isnull"],
+            "is_reference": ["exact"],
         }
 
 
