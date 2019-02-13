@@ -313,6 +313,9 @@ class AnalysisCreate(LoginRequiredMixin, TemplateView):
         context = {
             'form': form,
         }
+        if not 'dataset' in request.path:
+            if 'analysis_dataset_ajax' in request.session:
+                del request.session["analysis_dataset_ajax"]
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
@@ -329,8 +332,10 @@ class AnalysisCreate(LoginRequiredMixin, TemplateView):
             #
             #
             # instance.jira_ticket = jira_ticket
-
             instance.save()
+
+            if 'analysis_dataset_ajax' in request.session:
+                instance.input_datasets = request.session["analysis_dataset_ajax"]
             msg = "Successfully created Analysis {}.".format(instance.name)
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
@@ -1129,7 +1134,6 @@ class DatasetTag(FormView):
         return HttpResponseRedirect(reverse('tag-detail', kwargs={'pk': tag_id.id}))
 
 def dataset_analysis_ajax(request):
-    print "HELLO"
     if request.method == 'POST':
         data = request.POST.getlist('data[]')
         if 'analysis_dataset_ajax' in request.session:

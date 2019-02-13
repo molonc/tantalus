@@ -58,6 +58,7 @@
 
     </div>
 
+{% endblock %}
 <script type="text/javascript">
     var table;
 
@@ -89,7 +90,6 @@
             } );
 
         function csrfSafeMethod(method) {
-            // these HTTP methods do not require CSRF protection
             return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
         }
 
@@ -120,7 +120,6 @@
 
     function submit_ajax() {
         var list = [];
-        console.log("HELLO")
         var data = table.rows( { selected: true} ).data();
         var selected = "Selected Dataset  IDs: \n"
 
@@ -140,7 +139,6 @@
                 type: 'post',
                 data: { "data" : list,},
                 success: function(response) {
-                    console.log("SUCCESS")
                     var url = '{% url 'analysis-add-dataset' %}';
                     $(location).attr('href',url);
                 }
@@ -150,4 +148,3 @@
 
 
 </script>
-{% endblock %}
