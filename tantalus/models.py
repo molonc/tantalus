@@ -154,6 +154,12 @@ class Sample(models.Model):
         blank=True,
     )
 
+    is_reference=models.NullBooleanField(
+        default=None,
+        null=True,
+        blank=True,
+    )
+
     def __str__(self):
         return self.sample_id
 

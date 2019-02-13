@@ -46,6 +46,14 @@
                     <th style="padding: 0; padding-top: 4px;">Projects</th>
                     <td style="padding: 0; padding-left: 35px;">{{project_list|join:", "}}</td>
                 </tr>
+                  <tr>
+                    <th style="padding: 0; padding-top: 4px;">Is Reference</th>
+                    {% if object.is_reference %}
+                        <td style="padding: 0; padding-left: 35px;">{{object.is_reference}}</a></td>
+                    {% else %}
+                        <td style="padding: 0; padding-left: 35px;">Unknown</td>
+                    {% endif %}
+                </tr>
             </table>
         {% else %}
             <h5><i class="text-warning">No Sample Details yet.</i></h5>
