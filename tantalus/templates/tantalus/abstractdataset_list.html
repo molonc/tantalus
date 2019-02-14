@@ -42,6 +42,7 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $('.dataset_datatable').DataTable({
+                lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "All"] ],
                 stateSave: true,
                 columnDefs:[
                     {"name": "id", "targets": "dataset_id"},
