@@ -958,14 +958,15 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
     def filter_queryset(self, qs):
         search = self.request.GET.get('search[value]', None)
         if search:
-            return qs.filter(Q(id__startswith=search) |
-                             Q(dataset_type__startswith=search) |
-                             Q(annotate_sample_id__startswith=search) |
-                             Q(annotate_library_id__startswith=search) |
-                             Q(library_type__startswith=search) |
-                             Q(dataset_type__startswith=search) |
-                             Q(tags__name__startswith=search)
-                             ).distinct()
+            return qs.filter(
+                Q(id__startswith=search) |
+                Q(dataset_type__startswith=search) |
+                Q(annotate_sample_id__startswith=search) |
+                Q(annotate_library_id__startswith=search) |
+                Q(library_type__startswith=search) |
+                Q(dataset_type__startswith=search) |
+                Q(tags__name__startswith=search)
+            ).distinct()
         return qs
 
 
