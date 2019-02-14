@@ -70,11 +70,11 @@
                 stateSave: true,
                 columnDefs:[
                     {"name": "id", "targets": "dataset_id"},
-                    {"name": "dataset_type", "targets": "dataset_type", "searchable": false},
+                    {"name": "dataset_type", "targets": "dataset_type"},
                     {"name": "sample_id", "targets": "dataset_sample_id"},
                     {"name": "library_id", "targets": "dataset_library_id"},
                     {"name": "library_type", "targets": "dataset_library_type"},
-                    {"name": "is_production", "targets": "dataset_is_production"},
+                    {"name": "is_production", "targets": "dataset_is_production", "searchable": false},
                     {"name": "num_read_groups", "targets": "dataset_num_read_groups", "searchable": false},
                     {"name": "num_total_read_groups", "targets": "dataset_num_total_read_groups", "orderable": false, "searchable": false},
                     {"name": "is_complete", "targets": "dataset_is_complete", "orderable": false, "searchable": false},
