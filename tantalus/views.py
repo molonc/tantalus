@@ -13,7 +13,8 @@ from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, render
 from django_datatables_view.base_datatable_view import BaseDatatableView
-from django.db.models import Q
+from django.db.models import Q, F, Count
+from django.db.models.functions import Lower
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.defaulttags import register
 from django.forms import ModelForm
@@ -909,21 +910,29 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
 
     def get_initial_queryset(self):
         if 'datasets' in self.kwargs.keys():
-            return tantalus.models.SequenceDataset.objects.filter(pk__in=self.kwargs['datasets'])
-        return tantalus.models.SequenceDataset.objects.all()
+            qs = tantalus.models.SequenceDataset.objects.filter(pk__in=self.kwargs['datasets'])
+        else:
+            qs = tantalus.models.SequenceDataset.objects.all()
+        qs = qs.annotate(
+            library_type=F('library__library_type__name'),
+            num_read_groups=Count('sequence_lanes', distinct=True),
+            annotate_library_id=F('library__library_id'),
+            annotate_sample_id=F('sample__sample_id')
+        )
+        return qs
 
     def render_column(self, row, column):
         if column == 'dataset_type':
             return row.dataset_type
 
         if column == 'sample_id':
-            sample_link = (reverse('sample-detail', args=(row.sample.id,)))
-            return "<a href=" + sample_link + ">" + row.sample.sample_id + "</a>"
+            return row.annotate_sample_id
+
         if column == 'library_id':
-            return row.library.library_id
+            return row.annotate_library_id
 
         if column == 'num_read_groups':
-            return row.sequence_lanes.count()
+            return row.num_read_groups
 
         if column == 'tags':
             return list(map(str, row.tags.all().values_list('name', flat=True)))
@@ -932,7 +941,10 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
             return list(row.get_storage_names())
 
         if column == 'library_type':
-            return row.library.library_type.name
+            return row.library_type
+
+        if column == 'is_production':
+            return row.is_production
 
         if column == 'num_total_read_groups':
             return row.get_num_total_sequencing_lanes()
@@ -944,40 +956,17 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
             return super(DatasetListJSON, self).render_column(row, column)
 
     def filter_queryset(self, qs):
-
-        """
-        If search['value'] is provided then filter all searchable columns using istartswith.
-        """
-
-        if not self.pre_camel_case_notation:
-            # get global search value
-            search = self._querydict.get('search[value]', None)
-            col_data = self.extract_datatables_column_data()
-            q = Q()
-            for col_no, col in enumerate(col_data):
-                if search and col['searchable']:
-                    # modified search queries for tags across related field manager
-                    if col['name'] == 'tags':
-                        q |= Q(tags__name__startswith=search)
-
-                    elif col['name'] == 'sample_id':
-                        q |= Q(sample__sample_id__startswith=search)
-
-                    elif col['name'] == 'library_id':
-                        q |= Q(library__library_id__startswith=search)
-
-                    elif col['name'] == 'library_type':
-                        q |= Q(library__library_type__name__startswith=search)
-
-                    # standard search for simple . lookups across models
-                    else:
-                        # apply global search to all searchable columns
-                        q |= Q(**{'{0}__startswith'.format(self.columns[col_no].replace('.', '__')): search})
-                        # column specific filter
-                        if col['search.value']:
-                            qs = qs.filter(**{'{0}__startswith'.format(self.columns[col_no].replace('.', '__')): col['search.value']})
-
-            qs = qs.filter(q).distinct()
+        search = self.request.GET.get('search[value]', None)
+        if search:
+            return qs.filter(
+                Q(id__startswith=search) |
+                Q(dataset_type__startswith=search) |
+                Q(annotate_sample_id__startswith=search) |
+                Q(annotate_library_id__startswith=search) |
+                Q(library_type__startswith=search) |
+                Q(dataset_type__startswith=search) |
+                Q(tags__name__startswith=search)
+            ).distinct()
         return qs
 
 
