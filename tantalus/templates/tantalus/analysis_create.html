@@ -16,8 +16,23 @@
                     {{form}}
                     </thead>
                 </table>
+                {% if  "dataset" in request.path %}
+                <div class="container" style="margin: 10px 10px 30px 10px;">
+                    <h4 id="textfield"></h4>
+                    <a class="btn btn-primary " onclick="window.history.go(-1); return false;">Cancel Import</a>
+                </div>
+                {% endif %}
             	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
             </fieldset>
+
+
         </form><br>
     </div>
+
+<script type="text/javascript">
+console.log("READY")
+     $(document).ready(function() {
+        document.getElementById('textfield').innerHTML = "Following input dataset are added: " + {{ request.session.analysis_dataset_ajax }};
+     })
+</script>
 {% endblock %}

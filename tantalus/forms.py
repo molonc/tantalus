@@ -653,4 +653,3 @@ class DatasetTagForm(forms.Form):
         tag_name = self.cleaned_data['tag_name']
         tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
         tag.sequencedataset_set.add(*self.models_to_tag)
-
