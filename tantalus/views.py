@@ -13,7 +13,7 @@ from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, render
 from django_datatables_view.base_datatable_view import BaseDatatableView
-from django.db.models import Q
+from django.db.models import Q, F, Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.defaulttags import register
 from django.forms import ModelForm
@@ -909,8 +909,10 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
 
     def get_initial_queryset(self):
         if 'datasets' in self.kwargs.keys():
-            return tantalus.models.SequenceDataset.objects.filter(pk__in=self.kwargs['datasets'])
-        return tantalus.models.SequenceDataset.objects.all()
+            return tantalus.models.SequenceDataset.objects.filter(pk__in=self.kwargs['datasets']).annotate(library_type=F('library__library_type__name'),
+                                                                      num_read_groups=Count('sequence_lanes', distinct=True))
+        return tantalus.models.SequenceDataset.objects.all().annotate(library_type=F('library__library_type__name'),
+                                                                      num_read_groups=Count('sequence_lanes', distinct=True))
 
     def render_column(self, row, column):
         if column == 'dataset_type':
@@ -923,7 +925,7 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
             return row.library.library_id
 
         if column == 'num_read_groups':
-            return row.sequence_lanes.count()
+            return row.num_read_groups
 
         if column == 'tags':
             return list(map(str, row.tags.all().values_list('name', flat=True)))
@@ -932,7 +934,10 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
             return list(row.get_storage_names())
 
         if column == 'library_type':
-            return row.library.library_type.name
+            return row.library_type
+
+        if column == 'is_production':
+            return row.is_production
 
         if column == 'num_total_read_groups':
             return row.get_num_total_sequencing_lanes()
