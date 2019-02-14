@@ -32,7 +32,7 @@
 <script type="text/javascript">
 console.log("READY")
      $(document).ready(function() {
-        document.getElementById('textfield').innerHTML = "Following input dataset are imported: " + {{ request.session.analysis_dataset_ajax }};
+        document.getElementById('textfield').innerHTML = "Following input dataset are added: " + {{ request.session.analysis_dataset_ajax }};
      })
 </script>
 {% endblock %}
