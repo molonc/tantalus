@@ -105,7 +105,7 @@ def sequence_dataset_fixup(apps, class_name):
             print('\n')
             for ds in SequenceDataset.objects.filter(sample__sample_id=k[0]).filter(library__library_id=k[1]):
                 sa = Sample.objects.get(sample_id=v)
-                ds.sample_id = sa
+                ds.sample_id = sa.id
                 ds.save()
                 print("sequence_dataset_fixup(); {},{}; done;" . format(k,v))
             print("sequence_dataset_fixup(); finished: {}; {};" . format(k,v))
