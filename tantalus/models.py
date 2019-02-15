@@ -62,6 +62,9 @@ class Tag(models.Model):
     def get_absolute_url(self):
         return reverse("tag-detail", args=(self.id,))
 
+    def get_created_date(self):
+        return self.history.last().history_date.date()
+
 
 class Project(models.Model):
     """
