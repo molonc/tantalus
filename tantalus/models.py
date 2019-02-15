@@ -63,7 +63,7 @@ class Tag(models.Model):
         return reverse("tag-detail", args=(self.id,))
 
     def get_created_date(self):
-        return self.history.last().history_date.date()
+        return self.history.last().history_date.date().strftime("%Y-%m-%d")
 
 
 class Project(models.Model):
