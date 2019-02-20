@@ -231,7 +231,7 @@ class DNALibrary(models.Model):
         (SINGLE_INDEX, 'Single Index'),
         (DUAL_INDEX, 'Dual Index (i7 and i5)'),
         (NO_INDEXING, 'No Indexing'),
-        (TENX_INDEX, 'Tenx Indexing')
+        (TENX_INDEX, 'Tenx Indexing'),
     )
 
     index_format = models.CharField(
