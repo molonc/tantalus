@@ -224,14 +224,14 @@ class DNALibrary(models.Model):
 
     SINGLE_INDEX = 'S'
     DUAL_INDEX = 'D'
-    NO_INDEXING = 'N'
     TENX_INDEX = 'TENX'
+    NO_INDEXING = 'N'
 
     index_format_choices = (
         (SINGLE_INDEX, 'Single Index'),
         (DUAL_INDEX, 'Dual Index (i7 and i5)'),
-        (NO_INDEXING, 'No Indexing'),
         (TENX_INDEX, 'Tenx Indexing'),
+        (NO_INDEXING, 'No Indexing'),
     )
 
     index_format = models.CharField(
@@ -301,7 +301,7 @@ class SequencingLane(models.Model):
     read_type_choices = (
         (PAIRED, 'Paired end tags'),
         (SINGLE, 'Single end tags'),
-        (TENX, 'Tenx')
+        (TENX, 'Tenx'),
     )
 
     read_type = models.CharField(
@@ -508,7 +508,7 @@ class SequenceDataset(models.Model):
     dataset_type_choices = (
         (BAM, 'BAM Files'),
         (FQ, 'FastQ Files'),
-        (BCL, 'BCL Files')
+        (BCL, 'BCL Files'),
     )
 
     dataset_type = models.CharField(
