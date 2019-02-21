@@ -38,7 +38,6 @@ urlpatterns = [
     url(r'^tags/detail/(?P<pk>\d+)/deleteresults/(?P<pk_2>[0-9]+)$', tantalus.views.TagResultsDelete.as_view(), name='tag-results-delete'),
     url(r'^tags/delete/(?P<pk>\d+)$', tantalus.views.TagDelete.as_view(), name='tag-delete'),
     url(r'^datasets/$', tantalus.views.DatasetList.as_view(), name='dataset-list'),
-    url(r'^datasets_json/$', tantalus.views.DatasetListJSON.as_view(), name='dataset-list-json'),
     url(r'^datasets/(?P<pk>\d+)$', tantalus.views.DatasetDetail.as_view(), name='dataset-detail'),
     url(r'^datasets/tag$', tantalus.views.DatasetTag.as_view(), name='dataset-tag'),
     url(r'^datasets/create-analysis$', tantalus.views.dataset_analysis_ajax, name='dataset-analysis-ajax'),
@@ -66,4 +65,6 @@ urlpatterns = [
     url(r'^externalidsearch/$', tantalus.views.ExternalIDSearch.as_view(), name='external-id-search'),
     url(r'^export-external-id-results/$', tantalus.views.export_external_id_results, name='export-external-id-results'),
     url(r'^$', tantalus.views.HomeView.as_view(), name='home'),
+    url(r'^json/datasets/$', tantalus.views.DatasetListJSON.as_view(), name='dataset-list-json'),
+    url(r'^json/fileresources/$', tantalus.views.FileResourceJSON.as_view(), name='fileresources-list-json'),
 ]

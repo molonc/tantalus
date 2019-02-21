@@ -998,6 +998,44 @@ class TagDatasetDelete(View):
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
 
 
+class FileResourceJSON(BaseDatatableView):
+    model = tantalus.models.FileResource
+    columns = ['id','filename', 'owner', 'created', 'last_updated']
+    order_columns = ['id','filename', 'owner', 'created', 'last_updated']
+
+    def get_id(request, id):
+        return render(request, {'id' : id}, 'templates/tantalus/datatable/file_resources.html')
+
+    def get_initial_queryset(self):
+
+        id = self.request.GET.get("id", None)
+        dataset = tantalus.models.SequenceDataset.objects.filter(id=id)
+
+        return dataset[0].file_resources
+
+    def render_column(self, row, column):
+        if column == 'id':
+            return row.id
+        if column == 'filename':
+            return row.filename
+        if column == 'owner':
+            return str(row.owner)
+        if column == 'created':
+            return row.created
+        if column == 'last_updated':
+            return row.last_updated
+        else:
+            return super(FileResourceJSON, self).render_column(row, column)
+
+
+    def filter_queryset(self, qs):
+        search = self.request.GET.get('search[value]', None)
+        if search:
+            return qs.filter(Q(id__startswith=search)|Q(filename__startswith=search))
+        return qs
+
+
+
 class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
     login_url = LOGIN_URL
     """
@@ -1060,6 +1098,7 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
         return qs
 
     def render_column(self, row, column):
+
         if column == 'dataset_type':
             return row.dataset_type
 
@@ -1438,7 +1477,7 @@ def get_library_stats(filetype, storages_dict):
         results[lib_type] = list()
 
         # Go through each storage
-        for storage_name, storages in storages_dict.iteritems():
+        for storage_name, storages in storages_dict.items():
             # Get data for this storage and library. The distinct() at
             # the end of the queryset operations is necessary here, and
             # I'm not exactly sure why this is so, without it, filter
@@ -1484,20 +1523,19 @@ class DataStatsView(LoginRequiredMixin, TemplateView):
         """Get data info."""
         # Contains per-storage specific stats
         storage_stats = dict()
-
+        
         # Go through local storages (i.e., non-cloud)
         for local_storage_name in ['gsc', 'shahlab', 'rocks']:
             # General stats
             storage_stats[local_storage_name] = (
                 get_storage_stats([local_storage_name]))
-
+        
         # Go through cloud storages.
         azure_storages = [x.name for x in tantalus.models.AzureBlobStorage.objects.all()]
         storage_stats['azure'] = get_storage_stats(azure_storages)
-
+        
         # Get overall data stats over all storage locations
         storage_stats['all'] = get_storage_stats(['all'])
-
         # Contains per-library-type stats
         storages_dict = {'all': ['gsc', 'shahlab', 'rocks'] + azure_storages,
                          'gsc': ['gsc'],
@@ -1507,16 +1545,17 @@ class DataStatsView(LoginRequiredMixin, TemplateView):
                         }
         bam_dict = get_library_stats('BAM', storages_dict)
         fastq_dict = get_library_stats('FASTQ', storages_dict)
-
+        
         context = {
             'storage_stats': sorted(
-                storage_stats.iteritems(),
+                storage_stats.items(),
                 key=lambda y: y[1]['storage_size'],
                 reverse=True),
             'locations_list': sorted(['all', 'azure', 'gsc', 'rocks', 'shahlab']),
-            'bam_library_stats': sorted(bam_dict.iteritems()),
-            'fastq_library_stats': sorted(fastq_dict.iteritems()),
+            'bam_library_stats': sorted(bam_dict.items()),
+            'fastq_library_stats': sorted(fastq_dict.items()),
             }
+
         return context
 
 
