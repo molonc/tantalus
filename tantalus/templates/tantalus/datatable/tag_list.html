@@ -5,7 +5,9 @@
                 <th>Tag name</th>
                 <th>Number of Sequence Datasets</th>
                 <th>Number of Result Datasets</th>
-                <th></th>
+                <th>Owner</th>
+                <th>Created Date</th>
+                <th>Delete</th>
             </tr>
         </thead>
         <tbody>
@@ -15,6 +17,12 @@
                     <td><a href="{% url 'tag-detail' tag.id %}">{{tag.name}}</a></td>
                     <td>{{tag.count_sequence_datasets}}</td>
                     <td> {{tag.count_result_datasets}}
+                    {% if tag.owner %}
+                        <td>{{tag.owner}}</td>
+                    {% else %}
+                        <td>None</td>
+                    {% endif %}
+                    <td>{{tag.get_created_date}}</td>
                     <td>
                     <a href="{% url 'tag-delete' pk=tag.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
                     </td>

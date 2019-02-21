@@ -1,0 +1,28 @@
+# Tantalus
+# Version 1.0
+
+FROM python:2.7.15
+
+ENV PYTHONUNBUFFERED 1
+
+ENV TANTALUS_DEBUG true
+ENV TANTALUS_SECRET_KEY crabbycrab
+ENV TANTALUS_IS_PRODUCTION false
+ENV TANTALUS_ALLOWED_HOSTS *
+ENV TANTALUS_POSTGRESQL_NAME tantalus_dev
+ENV TANTALUS_POSTGRESQL_USER simong
+ENV TANTALUS_POSTGRESQL_PASSWORD pinchpinch
+ENV TANTALUS_POSTGRESQL_HOST db
+ENV TANTALUS_POSTGRESQL_PORT 5432
+
+
+RUN mkdir /tantalus
+
+WORKDIR /tantalus
+
+ADD . /tantalus/
+
+RUN pip install --upgrade pip && pip install -r requirements.txt --ignore-installed
+
+EXPOSE 8000
+

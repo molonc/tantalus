@@ -7,7 +7,7 @@ from tantalus.models import (
     DNALibrary,
     FileInstance,
     FileResource,
-    FileType,
+    Patient,
     ResultsDataset,
     Sample,
     SequenceDataset,
@@ -55,6 +55,11 @@ class AnalysisFilter(BaseFilterSet):
             "version": ["exact"],
             "jira_ticket": ["exact"],
             "analysis_type__name": ["exact"],
+            "version": ["exact"],
+            "input_datasets__id": ["exact"],
+            "input_results__id": ["exact"],
+            "input_datasets__library__library_id": ["exact"],
+            "input_results__libraries__library_id": ["exact"],
         }
 
 
@@ -98,25 +103,13 @@ class FileResourceFilter(BaseFilterSet):
         model = FileResource
         fields = {
             "id": ["exact"],
-            "filename": ["exact"],
+            "filename": ["exact", "endswith", "startswith"],
             "sequencedataset__name": ["exact"],
             "sequencedataset__id": ["exact"],
             "resultsdataset__name": ["exact"],
             "resultsdataset__id": ["exact"],
             "sequencefileinfo__index_sequence": ["exact"],
             "fileinstance__storage__name": ["exact"],
-        }
-
-
-class FileTypeFilter(BaseFilterSet):
-    """Filters for file types."""
-
-    class Meta(BaseFilterSet.Meta):
-        model = FileType
-        fields = {
-            "id": ["exact"],
-            "name": ["exact"],
-            "extension": ["exact"],
         }
 
 
@@ -130,12 +123,24 @@ class ResultsDatasetFilter(filters.FilterSet):
             "owner": ["exact"],
             "name": ["exact"],
             "analysis": ["exact"],
+            "analysis__jira_ticket": ["exact"],
             "file_resources__filename": ["exact"],
             "results_type": ["exact"],
             "results_version": ["exact"],
             "tags__name": ["exact"],
+            "libraries__library_id": ["exact"],
         }
 
+class PatientFilter(filters.FilterSet):
+
+    class Meta(BaseFilterSet.Meta):
+        model = Patient
+        fields = {
+            "id": ["exact"],
+            "patient_id": ["exact"],
+            "external_patient_id": ["exact"],
+            "case_id": ["exact"],
+        }
 
 class SampleFilter(BaseFilterSet):
     """Filters for samples."""
@@ -153,6 +158,7 @@ class SampleFilter(BaseFilterSet):
             "id": ["exact", "in"],
             "sample_id": ["exact", "in"],
             "sequencedataset__id": ["exact", "in", "isnull"],
+            "is_reference": ["exact"],
         }
 
 
@@ -164,6 +170,7 @@ class SequenceDatasetFilter(filters.FilterSet):
         fields = {
             "id": ["exact"],
             "name": ["exact"],
+            "is_production": ["exact"],
             "library__library_id": ["exact"],
             "library__library_type__name": ["exact"],
             "sample__sample_id": ["exact"],

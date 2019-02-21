@@ -32,6 +32,12 @@ class Tag(models.Model):
 
     name = create_id_field(unique=True)
 
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
     def __unicode__(self):
         return self.name
 
@@ -55,6 +61,9 @@ class Tag(models.Model):
 
     def get_absolute_url(self):
         return reverse("tag-detail", args=(self.id,))
+
+    def get_created_date(self):
+        return self.history.last().history_date.date().strftime("%Y-%m-%d")
 
 
 class Project(models.Model):
@@ -81,6 +90,11 @@ class Patient(models.Model):
         unique=True,
         max_length=120,
         null=True
+    )
+
+    reference_id = models.CharField(
+        max_length=120,
+        null=True,
     )
 
     external_patient_id = models.CharField(
@@ -121,7 +135,7 @@ class Sample(models.Model):
         null=True,
     )
 
-    collaborator = models.CharField(
+    researcher = models.CharField(
         max_length=240,
         null=True,
     )
@@ -145,6 +159,12 @@ class Sample(models.Model):
 
     projects = models.ManyToManyField(
         Project,
+        blank=True,
+    )
+
+    is_reference = models.NullBooleanField(
+        default=None,
+        null=True,
         blank=True,
     )
 
@@ -209,12 +229,14 @@ class DNALibrary(models.Model):
 
     SINGLE_INDEX = 'S'
     DUAL_INDEX = 'D'
+    TENX_INDEX = 'TENX'
     NO_INDEXING = 'N'
 
     index_format_choices = (
         (SINGLE_INDEX, 'Single Index'),
         (DUAL_INDEX, 'Dual Index (i7 and i5)'),
-        (NO_INDEXING, 'No Indexing')
+        (TENX_INDEX, 'Tenx Indexing'),
+        (NO_INDEXING, 'No Indexing'),
     )
 
     index_format = models.CharField(
@@ -279,10 +301,12 @@ class SequencingLane(models.Model):
 
     PAIRED = 'P'
     SINGLE = 'S'
+    TENX = 'TENX'
 
     read_type_choices = (
         (PAIRED, 'Paired end tags'),
-        (SINGLE, 'Single end tags')
+        (SINGLE, 'Single end tags'),
+        (TENX, 'Tenx'),
     )
 
     read_type = models.CharField(
@@ -298,29 +322,6 @@ class SequencingLane(models.Model):
 
     class Meta:
         unique_together = ('flowcell_id', 'lane_number', 'dna_library')
-
-
-class FileType(models.Model):
-    """
-    Type of a File Resource.
-    """
-
-    history = HistoricalRecords()
-
-    name = models.CharField(
-        unique=True,
-        max_length=255,
-    )
-
-    extension = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-    )
-
-    def __str__(self):
-        """String representation of file type."""
-        return "%s (%s)" % (self.name, self.extension)
 
 
 class FileResource(models.Model):
@@ -351,10 +352,10 @@ class FileResource(models.Model):
 
     created = models.DateTimeField()
 
-    file_type = models.ForeignKey(
-        FileType,
+    file_type = models.CharField(
+        max_length=50,
         null=True,
-        on_delete=models.CASCADE,
+        blank=True,
     )
 
     GZIP = 'GZIP'
@@ -507,10 +508,12 @@ class SequenceDataset(models.Model):
 
     BAM = 'BAM'
     FQ = 'FQ'
+    BCL = 'BCL'
 
     dataset_type_choices = (
         (BAM, 'BAM Files'),
         (FQ, 'FastQ Files'),
+        (BCL, 'BCL Files'),
     )
 
     dataset_type = models.CharField(
@@ -555,6 +558,10 @@ class SequenceDataset(models.Model):
         'AlignmentTool',
         null=True,
         blank=True,
+    )
+
+    is_production = models.BooleanField(
+        default=False,
     )
 
     def get_num_total_sequencing_lanes(self):
@@ -747,6 +754,10 @@ class ResultsDataset(models.Model):
 
     file_resources = models.ManyToManyField(
         FileResource,
+    )
+
+    is_production = models.BooleanField(
+        default=False,
     )
 
     def get_absolute_url(self):

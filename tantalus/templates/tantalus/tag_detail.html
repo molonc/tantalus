@@ -22,6 +22,18 @@
                     <th style="padding: 0; padding-top: 4px;">Number of Results Datasets</th>
                     <td style="padding: 0; padding-left: 35px;">{{tag.count_result_datasets}}</td>
                 </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Owner</th>
+                    {% if tag.owner %}
+                        <td style="padding: 0; padding-left: 35px;">{{tag.owner}}</td>
+                    {% else %}
+                        <td style="padding: 0; padding-left: 35px;">None</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Created Date</th>
+                    <td style="padding: 0; padding-left: 35px;">{{tag.get_created_date}}</td>
+                </tr>
             </table>
         {% else %}
             <h5><i class="text-warning">No Tag Details yet.</i></h5>

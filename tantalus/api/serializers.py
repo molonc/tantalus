@@ -11,6 +11,10 @@ class SampleSerializer(serializers.ModelSerializer):
         model = tantalus.models.Sample
         fields = '__all__'
 
+class PatientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.Patient
+        fields = '__all__'
 
 class StorageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -87,23 +91,7 @@ class SequenceFileInfoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FileTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = tantalus.models.FileType
-        fields = '__all__'
-
-
-class FileTypeField(serializers.Field):
-    def to_representation(self, obj):
-        return obj.name
-    def to_internal_value(self, data):
-        file_type, created = tantalus.models.FileType.objects.get_or_create(name=data)
-        return file_type
-
-
 class FileResourceSerializer(serializers.ModelSerializer):
-    sequencefileinfo_set = SequenceFileInfoSerializer(read_only=True)
-    file_type = FileTypeField()
     class Meta:
         model = tantalus.models.FileResource
         fields = '__all__'
@@ -112,7 +100,6 @@ class FileResourceSerializer(serializers.ModelSerializer):
 class FileResourceSerializerRead(serializers.ModelSerializer):
     file_instances = FileInstanceSerializerRead(source='fileinstance_set', many=True, read_only=True)
     sequencefileinfo = SequenceFileInfoSerializer(read_only=True)
-    file_type = FileTypeField()
     class Meta:
         model = tantalus.models.FileResource
         fields = '__all__'
@@ -204,7 +191,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = tantalus.models.Tag
-        fields = ('id', 'name', 'sequencedataset_set', 'resultsdataset_set')
+        fields = ('id', 'name', 'owner', 'sequencedataset_set', 'resultsdataset_set')
 
     def is_valid(self, raise_exception=False):
         if hasattr(self, 'initial_data'):
@@ -219,6 +206,9 @@ class TagSerializer(serializers.ModelSerializer):
             return super(TagSerializer, self).is_valid(raise_exception)
 
     def update(self, instance, validated_data):
+        if 'owner' in validated_data:
+            instance.owner = validated_data['owner']
+            instance.save()
         for sequencedataset in validated_data.get('sequencedataset_set', ()):
             sequencedataset.tags.add(instance)
         for resultsdataset in validated_data.get('resultsdataset_set', ()):

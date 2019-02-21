@@ -13,11 +13,13 @@ from django.db import transaction
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, render
 from django_datatables_view.base_datatable_view import BaseDatatableView
-from django.db.models import Q
+from django.db.models import Q, F, Count
+from django.db.models.functions import Lower
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.defaulttags import register
 from django.forms import ModelForm
 from django.forms.models import model_to_dict
+from django.shortcuts import redirect
 
 import csv
 import json
@@ -208,6 +210,12 @@ class SampleDetail(LoginRequiredMixin, DetailView):
         project_set = self.object.projects.all()
         library_set = tantalus.models.DNALibrary.objects.filter(sequencedataset__sample=self.object).distinct()
 
+        context['sequence_datasets_set'] = sequence_datasets_set
+        try:
+            context['patient_url'] = self.object.patient.get_absolute_url()
+        except:
+            context['patient_url'] = None
+
         context['project_list'] = project_set
         context['sequence_datasets_set'] = sequence_datasets_set
         context['submission_set'] = submission_set
@@ -312,6 +320,9 @@ class AnalysisCreate(LoginRequiredMixin, TemplateView):
         context = {
             'form': form,
         }
+        if not 'dataset' in request.path:
+            if 'analysis_dataset_ajax' in request.session:
+                del request.session["analysis_dataset_ajax"]
         return render(request, self.template_name, context)
 
     def get(self, request, *args, **kwargs):
@@ -323,13 +334,13 @@ class AnalysisCreate(LoginRequiredMixin, TemplateView):
         if form.is_valid():
             instance = form.save(commit=False)
             instance.owner = request.user
-            jira_ticket = self.create_jira_ticket(form['jira_username'].value(), form['jira_password'].value(), 
-                                          instance.name, form['description'].value(), str(request.user), str(request.user), form['project_name'].value())
-
-
+            jira_ticket = self.create_jira_ticket(form['jira_username'].value(), form['jira_password'].value(),
+                                    instance.name, form['description'].value(), str(request.user), str(request.user), form['project_name'].value())
             instance.jira_ticket = jira_ticket
-
             instance.save()
+
+            if 'analysis_dataset_ajax' in request.session:
+                instance.input_datasets = request.session["analysis_dataset_ajax"]
             msg = "Successfully created Analysis {}.".format(instance.name)
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
@@ -402,8 +413,9 @@ class AnalysisDetail(LoginRequiredMixin, DetailView):
 def export_patient_create_template(request):
     header_dict = {
         'Case ID': [],
+        'Reference ID': [],
         'External Patient ID': [],
-        'Patient ID': [],
+        'SA ID': [],
     }
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="patient-header-template.csv"'
@@ -430,11 +442,11 @@ class PatientCreate(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
-        patient_ids = []
+        SA_ids = []
         for patient in SA_prefix_patients:
-            patient_ids.append(int(patient.patient_id[2:]))
-        patient_ids.sort()
-        data = {'patient_id': 'SA' + str(patient_ids[-1] + 1)}
+            SA_ids.append(int(patient.patient_id[2:]))
+        SA_ids.sort()
+        data = {'patient_id': 'SA' + str(SA_ids[-1] + 1)}
         form = tantalus.forms.PatientForm(initial=data)
         multi_form = tantalus.forms.UploadPatientForm()
         return self.get_context_and_render(request, form, multi_form)
@@ -450,40 +462,45 @@ class PatientCreate(LoginRequiredMixin, TemplateView):
 
         multi_form = tantalus.forms.UploadPatientForm(request.POST, request.FILES)
         if multi_form.is_valid():
-            patients_df, auto_generated_patient_ids = multi_form.get_patient_data()
+            patients_df, auto_generated_SA_ids = multi_form.get_patient_data()
 
             form_headers = patients_df.columns.tolist()
 
             external_patient_id_index = form_headers.index('External Patient ID')
-            patient_id_index = form_headers.index('Patient ID')
+            reference_id_index = form_headers.index('Reference ID')
+            SA_id_index = form_headers.index('SA ID')
             case_id_index = form_headers.index('Case ID')
 
             to_edit = []
             auto_generated_patients = []
             for idx, patient_row in patients_df.iterrows():
-                if(patient_row[patient_id_index] in auto_generated_patient_ids):
+                if(patient_row[SA_id_index] in auto_generated_SA_ids):
                     patient = tantalus.models.Patient(
-                        patient_id=patient_row[patient_id_index],
+                        patient_id=patient_row[SA_id_index],
                         external_patient_id=patient_row[external_patient_id_index],
-                        case_id=patient_row[case_id_index]
+                        case_id=patient_row[case_id_index],
+                        reference_id=patient_row[reference_id_index]
                     )
                     auto_generated_patients.append(model_to_dict(patient))
                     continue
-                patient, created = tantalus.models.Patient.objects.get_or_create(patient_id=patient_row[patient_id_index])
+                patient, created = tantalus.models.Patient.objects.get_or_create(patient_id=patient_row[SA_id_index])
                 if(created):
                     patient.external_patient_id = patient_row[external_patient_id_index]
                     patient.case_id = patient_row[case_id_index]
+                    patient.reference_id = patient_row[reference_id_index]
                     patient.save()
                 else:
                     patient.external_patient_id = patient_row[external_patient_id_index]
                     patient.case_id = patient_row[case_id_index]
+                    patient.reference_id = patient_row[reference_id_index]
                     to_edit.append(model_to_dict(patient))
             if(len(to_edit) == 0 and len(auto_generated_patients) == 0):
                 msg = "Successfully created all Patients."
                 messages.success(request, msg)
                 return HttpResponseRedirect(reverse('patient-list'))
             else:
-                msg = "You are editing existing Patient Data or have asked us to auto-generate Patient IDs. Please Confirm Modifications and ID Generation."
+                print(len(auto_generated_patients))
+                msg = "You are editing existing Patient Data or have asked us to auto-generate SA IDs. Please Confirm Modifications and ID Generation."
                 messages.warning(request, msg)
                 request.session['to_edit'] = to_edit
                 request.session['auto_generated_patients'] = auto_generated_patients
@@ -508,6 +525,7 @@ class ConfirmPatientEditFromCreate(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         existing_patient_list = []
+        print(len(request.session['to_edit']))
         for patient in request.session['to_edit']:
             existing_patient = tantalus.models.Patient.objects.get(patient_id=patient['patient_id'])
             existing_patient.new_external_patient_id = patient['external_patient_id']
@@ -530,6 +548,7 @@ class ConfirmPatientEditFromCreate(LoginRequiredMixin, TemplateView):
 
         for patient in request.session['to_edit']:
             existing_patient = tantalus.models.Patient.objects.get(patient_id=patient['patient_id'])
+            existing_patient.reference_id = patient['reference_id']
             existing_patient.external_patient_id = patient['external_patient_id']
             existing_patient.case_id = patient['case_id']
             existing_patient.save()
@@ -677,39 +696,159 @@ class SampleCreate(LoginRequiredMixin, TemplateView):
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())
         elif multi_form.is_valid():
-            samples_df = multi_form.get_sample_data()
+            samples_df, projects_list, one_ref_found, no_ref_found, multiple_refs_found = multi_form.get_sample_data()
 
             form_headers = samples_df.columns.tolist()
 
-            external_patient_id_index = form_headers.index('External Patient ID')
-            external_sample_id_index = form_headers.index('External Sample ID')
-            patient_id_index = form_headers.index('Patient ID')
-            suffix_index = form_headers.index('Suffix')            
+            reference_id_index = form_headers.index('Reference ID')
+            suffix_index = form_headers.index('Suffix')
+            submitter_index = form_headers.index('Submitter')
+            researcher_index = form_headers.index('Researcher')
+            tissue_index = form_headers.index('Tissue')
+            note_index = form_headers.index('Note')
+            external_sample_id = form_headers.index('External Sample ID')
+
+            #Get next available SA ID if new Patients need to be created
+            SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
+            SA_ids = []
+            for patient in SA_prefix_patients:
+                SA_ids.append(int(patient.patient_id[2:]))
+            SA_ids.sort()
+            next_available_SA_number = SA_ids[-1] + 1                    
+
+            samples_with_one_match = []
+            samples_with_no_match = []
+            samples_with_multiple_matches = []         
 
             for idx, sample_row in samples_df.iterrows():
-                if(pd.isnull(sample_row[patient_id_index])):
-                    patient = tantalus.models.Patient.objects.get(external_patient_id=sample_row[external_patient_id_index])
+                multiple_matches = []
+                if(pd.isnull(sample_row[submitter_index])):
+                    submitter = str(request.user)
                 else:
-                    patient = tantalus.models.Patient.objects.get(patient_id=sample_row[patient_id_index])
-                if(sample_row[suffix_index] is None):
-                    sample_id = patient.patient_id
-                else:
-                    sample_id = patient.patient_id + sample_row[suffix_index]
-                external_sample_id = sample_row[external_sample_id_index]
+                    submitter = sample_row[submitter_index]
 
-                #Allow more fields in the future?
-                sample_created, created = tantalus.models.Sample.objects.get_or_create(
-                        sample_id=sample_id,
-                        external_sample_id=external_sample_id,
-                        patient_id=patient,
+                projects_name_list = []
+
+                for project in projects_list[idx]:
+                    projects_name_list.append(project.name)
+
+                incomplete_sample = {
+                    "external_sample_id": sample_row[external_sample_id],
+                    "submitter": submitter,
+                    "researcher": sample_row[researcher_index],
+                    "tissue": sample_row[tissue_index],
+                    "note": sample_row[note_index],
+                    "projects": projects_name_list,
+                }
+
+
+                if(sample_row[reference_id_index] in one_ref_found):
+                    incomplete_sample['patient'] = model_to_dict(tantalus.models.Patient.objects.get(reference_id=sample_row[reference_id_index]))
+                    incomplete_sample['sample_id'] = incomplete_sample['patient']['patient_id'] + sample_row[suffix_index]
+                    samples_with_one_match.append(incomplete_sample)
+                elif(sample_row[reference_id_index] in no_ref_found): #Create the Patient 
+                    patient = tantalus.models.Patient(
+                        patient_id='SA'+str(next_available_SA_number),
+                        reference_id=sample_row[reference_id_index],
                     )
-                if created:
-                    sample_created.save()
-            return HttpResponseRedirect(sample_created.get_absolute_url())
+                    incomplete_sample['new_patient'] = model_to_dict(patient)
+                    incomplete_sample['sample_id'] = patient.patient_id + sample_row[suffix_index]
+                    samples_with_no_match.append(incomplete_sample)
+                else:
+                    patients = tantalus.models.Patient.objects.filter(reference_id=sample_row[reference_id_index])
+                    for patient in patients:
+                        multiple_matches.append(model_to_dict(patient))
+                    incomplete_sample['patients'] = multiple_matches
+                    incomplete_sample['reference_id'] = patient.reference_id
+                    incomplete_sample['suffix'] = sample_row[suffix_index]
+                    samples_with_multiple_matches.append(incomplete_sample)
+
+            request.session['samples_with_one_match'] = samples_with_one_match
+            request.session['samples_with_multiple_matches'] = samples_with_multiple_matches
+            request.session['samples_with_no_match'] = samples_with_no_match
+            return HttpResponseRedirect(reverse('confirm-samples-create'))
         else:
             msg = "Failed to create the sample. Please fix the errors below."
             messages.error(request, msg)
             return self.get_context_and_render(request, form, multi_form)
+
+
+@method_decorator(login_required, name='dispatch')
+class ConfirmSamplesCreate(TemplateView):
+
+    template_name = 'tantalus/confirm_samples_create.html'
+
+    def get_context_and_render(self, request, samples_with_one_match, samples_with_multiple_matches, samples_with_no_match):
+        context = {
+            'samples_with_one_match': samples_with_one_match,
+            'samples_with_multiple_matches': samples_with_multiple_matches,
+            'samples_with_no_match': samples_with_no_match,
+        }
+
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        samples_with_one_match = request.session['samples_with_one_match']
+        samples_with_multiple_matches = request.session['samples_with_multiple_matches']
+        samples_with_no_match = request.session['samples_with_no_match']
+        return self.get_context_and_render(request, samples_with_one_match, samples_with_multiple_matches, samples_with_no_match)
+
+    def post(self, request, *args, **kwargs):
+        samples_with_one_match = request.session['samples_with_one_match']
+        samples_with_multiple_matches = request.session['samples_with_multiple_matches']
+        samples_with_no_match = request.session['samples_with_no_match']
+ 
+        confirmed_samples_with_one_match_indices = request.POST.getlist('confirm[]')
+        confirmed_samples_with_no_match_indices = request.POST.getlist('confirm_create[]')
+
+        confirmed_samples_with_multiple_matches_indices = []
+        for sample in samples_with_multiple_matches:
+            if(request.POST.get(sample['reference_id']) is None):
+                pass
+            else:
+                try:
+                    patient = tantalus.models.Patient.objects.get(patient_id=request.POST.get(sample['reference_id']))
+                    sample['patient'] = patient
+                    sample['sample_id'] = patient.SA_id + sample['suffix'] 
+                    sample.pop('reference_id')
+                    sample.pop('patients')
+                    sample.pop('suffix')
+                    projects = sample.pop('projects')
+                    created_sample = tantalus.models.Sample.objects.create(**sample)
+
+                    for project in projects:
+                        created_sample.projects.add(tantalus.models.Project.objects.get(name=project))
+                    created_sample.save()
+                except Exception as e:
+                    messages.error(request, str(e))
+                    return HttpResponseRedirect((request.path))
+
+
+        #For loop finds out which samples were selected for SA_IDs that were found
+        for idx, sample in enumerate(samples_with_one_match):
+            if str(idx) in confirmed_samples_with_one_match_indices:
+                patient = tantalus.models.Patient.objects.get(patient_id=sample['patient']['patient_id'])
+                sample['patient'] = patient
+                sample.pop('patient')
+                projects = sample.pop('projects')
+                created_sample = tantalus.models.Sample.objects.create(**sample)
+                for project in projects:
+                    created_sample.projects.add(tantalus.models.Project.objects.get(name=project))
+                created_sample.save()
+
+        for idx, sample in enumerate(samples_with_no_match):
+            if(str(idx) in confirmed_samples_with_no_match_indices):
+                patient = tantalus.models.Patient.objects.create(**sample['new_patient'])
+                sample['patient'] = patient
+                sample.pop('new_patient')
+                projects = sample.pop('projects')
+                created_sample = tantalus.models.Sample.objects.create(**sample)
+                for project in projects:
+                    created_sample.projects.add(tantalus.models.Project.objects.get(name=project))
+                created_sample.save()
+
+        messages.success(request, 'Successfully Created Samples')
+        return HttpResponseRedirect(reverse('sample-list'))
 
 
 class SpecificSampleCreate(LoginRequiredMixin, TemplateView):
@@ -786,10 +925,14 @@ class SampleEdit(LoginRequiredMixin, TemplateView):
 @login_required
 def export_sample_create_template(request):
     header_dict = {
-        'External Patient ID': [],
-        'Patient ID': [],
-        'External Sample ID': [],
+        'Reference ID': [],
         'Suffix': [],
+        'Submitter': [],
+        'Researcher': [],
+        'Tissue': [],
+        'Note': [],
+        'Projects': [],
+        'External Sample ID': [],
     }
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="header-template.csv"'
@@ -905,11 +1048,36 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
 
     model = tantalus.models.SequenceDataset
 
-    columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
+    columns = [
+        'id',
+        'dataset_type',
+        'sample_id',
+        'library_id',
+        'library_type',
+        'is_production',
+        'num_read_groups',
+        'num_total_read_groups',
+        'is_complete',
+        'tags',
+        'storages',
+    ]
 
     # MUST be in the order of the columns
-    order_columns = ['id', 'dataset_type', 'sample_id', 'library_id','library_type', 'num_read_groups', 'num_total_read_groups', 'is_complete', 'tags', 'storages']
-    max_display_length = 100
+    order_columns = [
+        'id',
+        'dataset_type',
+        'sample_id',
+        'library_id',
+        'library_type',
+        'is_production',
+        'num_read_groups',
+        'num_total_read_groups',
+        'is_complete',
+        'tags',
+        'storages',
+    ]
+
+    max_display_length = 50
 
     def get_context_data(self, *args, **kwargs):
         dataset_pks = self.request.session.get('dataset_search_results', None)
@@ -921,8 +1089,16 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
 
     def get_initial_queryset(self):
         if 'datasets' in self.kwargs.keys():
-            return tantalus.models.SequenceDataset.objects.filter(pk__in=self.kwargs['datasets'])
-        return tantalus.models.SequenceDataset.objects.all()
+            qs = tantalus.models.SequenceDataset.objects.filter(pk__in=self.kwargs['datasets'])
+        else:
+            qs = tantalus.models.SequenceDataset.objects.all()
+        qs = qs.annotate(
+            library_type=F('library__library_type__name'),
+            num_read_groups=Count('sequence_lanes', distinct=True),
+            annotate_library_id=F('library__library_id'),
+            annotate_sample_id=F('sample__sample_id')
+        )
+        return qs
 
     def render_column(self, row, column):
 
@@ -930,13 +1106,13 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
             return row.dataset_type
 
         if column == 'sample_id':
-            sample_link = (reverse('sample-detail', args=(row.sample.id,)))
-            return "<a href=" + sample_link + ">" + row.sample.sample_id + "</a>"
+            return row.annotate_sample_id
+
         if column == 'library_id':
-            return row.library.library_id
+            return row.annotate_library_id
 
         if column == 'num_read_groups':
-            return row.sequence_lanes.count()
+            return row.num_read_groups
 
         if column == 'tags':
             return list(map(str, row.tags.all().values_list('name', flat=True)))
@@ -945,7 +1121,10 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
             return list(row.get_storage_names())
 
         if column == 'library_type':
-            return row.library.library_type.name
+            return row.library_type
+
+        if column == 'is_production':
+            return row.is_production
 
         if column == 'num_total_read_groups':
             return row.get_num_total_sequencing_lanes()
@@ -957,39 +1136,17 @@ class DatasetListJSON(LoginRequiredMixin, BaseDatatableView):
             return super(DatasetListJSON, self).render_column(row, column)
 
     def filter_queryset(self, qs):
-
-        """
-        If search['value'] is provided then filter all searchable columns using istartswith.
-        """
-        if not self.pre_camel_case_notation:
-            # get global search value
-            search = self._querydict.get('search[value]', None)
-            col_data = self.extract_datatables_column_data()
-            q = Q()
-            for col_no, col in enumerate(col_data):
-                if search and col['searchable']:
-                    # modified search queries for tags across related field manager
-                    if col['name'] == 'tags':
-                        q |= Q(tags__name__startswith=search)
-
-                    elif col['name'] == 'sample_id':
-                        q |= Q(sample__sample_id__startswith=search)
-
-                    elif col['name'] == 'library_id':
-                        q |= Q(library__library_id__startswith=search)
-
-                    elif col['name'] == 'library_type':
-                        q |= Q(library__library_type__name__startswith=search)
-
-                    # standard search for simple . lookups across models
-                    else:
-                        # apply global search to all searchable columns
-                        q |= Q(**{'{0}__startswith'.format(self.columns[col_no].replace('.', '__')): search})
-                        # column specific filter
-                        if col['search.value']:
-                            qs = qs.filter(**{'{0}__startswith'.format(self.columns[col_no].replace('.', '__')): col['search.value']})
-
-            qs = qs.filter(q).distinct()
+        search = self.request.GET.get('search[value]', None)
+        if search:
+            return qs.filter(
+                Q(id__startswith=search) |
+                Q(dataset_type__startswith=search) |
+                Q(annotate_sample_id__startswith=search) |
+                Q(annotate_library_id__startswith=search) |
+                Q(library_type__startswith=search) |
+                Q(dataset_type__startswith=search) |
+                Q(tags__name__startswith=search)
+            ).distinct()
         return qs
 
 
@@ -1143,6 +1300,14 @@ class DatasetTag(FormView):
         # Go to tantalus.models.Tag detail page
         return HttpResponseRedirect(reverse('tag-detail', kwargs={'pk': tag_id.id}))
 
+def dataset_analysis_ajax(request):
+    if request.method == 'POST':
+        data = request.POST.getlist('data[]')
+        if 'analysis_dataset_ajax' in request.session:
+            del request.session['analysis_dataset_ajax']
+        request.session['analysis_dataset_ajax'] =  map(int, data)
+
+    return HttpResponse('')
 
 @require_POST
 def dataset_set_to_CSV(request):

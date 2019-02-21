@@ -11,10 +11,10 @@ from django import forms
 #===========================
 # App imports
 #---------------------------
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from tantalus.settings import JIRA_URL
 
 import tantalus.models
@@ -102,8 +102,8 @@ class PatientForm(forms.ModelForm):
     def clean_patient_id(self):
         patient_id = self.cleaned_data.get('patient_id', False)
         if(patient_id[:2] != "SA"):
-            raise ValidationError("Error!. Patient IDs must start with SA")
-        return patient_id
+            raise ValidationError("Error!. SA IDs must start with SA")
+        return patient_id         
 
 
 class UploadPatientForm(forms.Form):
@@ -122,7 +122,8 @@ class UploadPatientForm(forms.Form):
 
         try:
             external_patient_id_index = header_row.index('External Patient ID')
-            patient_id_index = header_row.index('Patient ID')
+            reference_id_index = header_row.index('Reference ID')
+            SA_id_index = header_row.index('SA ID')
             case_id_index = header_row.index('Case ID')
         except:
             raise ValidationError('Header Row Labels not configured properly')
@@ -140,36 +141,39 @@ class UploadPatientForm(forms.Form):
         df = pd.DataFrame(data=temp_dict)
 
         SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
-        patient_ids = []
+        SA_ids = []
         
         for patient in SA_prefix_patients:
-            patient_ids.append(int(patient.patient_id[2:]))
-        patient_ids.sort()
+            SA_ids.append(int(patient.patient_id[2:]))
+        SA_ids.sort()
 
         form_headers = df.columns.tolist()
 
         external_patient_id_index = form_headers.index('External Patient ID')
         case_id_index = form_headers.index('Case ID')
-        patient_id_index = form_headers.index('Patient ID')
+        SA_id_index = form_headers.index('SA ID')
+        reference_id_index = form_headers.index('Reference ID')
 
-        next_available_patient_id = patient_ids[-1] + 1
-        auto_generated_patient_ids = []
+        next_available_SA_id = SA_ids[-1] + 1
+        auto_generated_SA_ids = []
 
         for idx, patient_row in df.iterrows():
             if(pd.isnull(patient_row[case_id_index])):
                 raise ValidationError("Error on Row {}. Case ID cannot be empty".format(idx + 2))
-            if(pd.isnull(patient_row[patient_id_index]) and pd.isnull(patient_row[external_patient_id_index])):
-                raise ValidationError("Error on Row {}. Both Patient ID and External Patient IDs cannot be empty".format(idx + 2))
-            elif(pd.isnull(patient_row[patient_id_index])):
-                patient_row[patient_id_index] = 'SA' + str(next_available_patient_id)
-                auto_generated_patient_ids.append('SA' + str(next_available_patient_id))
-                next_available_patient_id +=1
+            if(pd.isnull(patient_row[reference_id_index])):
+                raise ValidationError("Error on Row {}. Reference ID cannot be empty".format(idx + 2))
+            if(pd.isnull(patient_row[SA_id_index]) and pd.isnull(patient_row[external_patient_id_index])):
+                raise ValidationError("Error on Row {}. Both SA ID and External Patient IDs cannot be empty".format(idx + 2))
+            elif(pd.isnull(patient_row[SA_id_index])):
+                patient_row[SA_id_index] = 'SA' + str(next_available_SA_id)
+                auto_generated_SA_ids.append('SA' + str(next_available_SA_id))
+                next_available_SA_id +=1
             elif(pd.isnull(patient_row[external_patient_id_index])):
                 raise ValidationError("Error on Row {}. External Patient ID cannot be empty".format(idx + 2))
-            if(patient_row[patient_id_index][:2] != "SA"):
-                raise ValidationError("Error on Row {}. Patient IDs must start with SA and not be {}".format(idx + 2, patient_row[patient_id_index]))
+            if(patient_row[SA_id_index][:2] != "SA"):
+                raise ValidationError("Error on Row {}. SA IDs must start with SA and not be {}".format(idx + 2, patient_row[SA_id_index]))
 
-        return df, auto_generated_patient_ids
+        return df, auto_generated_SA_ids
 
     def get_patient_data(self):
         return self.cleaned_data['patients_excel_file']
@@ -192,17 +196,18 @@ class SubmissionForm(forms.ModelForm):
 # Sample forms
 #---------------------------
 class SampleForm(forms.ModelForm):
+    patient = forms.ModelChoiceField(queryset=tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('patient_id'), label='SA ID')
     class Meta:
         model = tantalus.models.Sample
         fields = [
             'sample_id',
             'external_sample_id',
             'submitter',
-            'collaborator',
+            'researcher',
             'tissue',
             'note',
-            'patient',
             'projects',
+            'is_reference',
         ]
 
 
@@ -221,10 +226,11 @@ class UploadSampleForm(forms.Form):
             header_row.append(cell.value.encode('utf-8'))
 
         try:
-            external_patient_id_index = header_row.index('External Patient ID')
-            external_sample_id_index = header_row.index('External Sample ID')
-            patient_id_index = header_row.index('Patient ID')
+            reference_id_index = header_row.index('Reference ID')
             suffix_index = header_row.index('Suffix')
+            projects_index = header_row.index('Projects')
+            researcher_index = header_row.index('Researcher')
+            external_sample_id_index = header_row.index('External Sample ID')
         except:
             raise ValidationError('Header Row Labels not configured properly')
 
@@ -240,82 +246,55 @@ class UploadSampleForm(forms.Form):
 
         df = pd.DataFrame(data=temp_dict)
 
+        #This list will be returned
+        #Each element is a list that contains the project models for a specific row in the dataframe
+        all_tantalus_projects = []
+        no_ref_found = []
+        multiple_refs_found = []
+        one_ref_found = []
         for idx, sample_row in df.iterrows():
+            row_tantalus_projects = []
+            if(not pd.isnull(sample_row[projects_index])):
+                try:
+                    projects_list = sample_row[projects_index].encode('ascii', 'ignore').split(',')
+                    for project in projects_list:
+                        row_tantalus_projects.append(tantalus.models.Project.objects.get(name=project.lower().strip()))
+                except Exception as e:
+                    raise ValidationError("Projects field is malformed on row {}. Make sure the project names are separated by commas and the project(s) exist".format(idx+  2))
+
+            all_tantalus_projects.append(row_tantalus_projects)
+
             if(pd.isnull(sample_row[external_sample_id_index])):
-                raise ValidationError('External Sample ID field cannot be Null on row {}'.format(idx + 2))
-            #If both fields are null, raise error
-            if(pd.isnull(sample_row[external_patient_id_index]) and pd.isnull(sample_row[patient_id_index])):
-                raise ValidationError('Both External Patient ID and Patient ID field cannot be Null on row {}'.format(idx + 2))
-            #If only external_patient_id is null, look up patient with patient_id
-            elif(pd.isnull(sample_row[external_patient_id_index])):
-                try:
-                    patient = tantalus.models.Patient.objects.get(patient_id=sample_row[patient_id_index])
-                except:
-                    raise ValidationError('Patient not found with given Patient ID on row {} (No External Patient ID provided)'.format(
-                        sample_row[patient_id_index],
-                        idx + 2))
-                #If given suffix and patient_id match with an existing sample in tantalus, throw error
-                if(sample_row[suffix_index] is None):
-                    new_sample_id = patient.patient_id
-                else:
-                    new_sample_id = sample_row[patient_id_index] + sample_row[suffix_index]
-                try:
-                    sample = tantalus.models.Sample.objects.get(sample_id=new_sample_id)
-                except:
-                    continue
-                raise ValidationError('Sample already exists for Patient ID {} and Suffix {} on row {}'.format(
-                    sample_row[patient_id_index],
-                    sample_row[suffix_index],
-                    idx + 2
-                    ))
+                raise ValidationError("External Sample ID field cannot be empty on row {}".format(idx + 2))
 
-            elif(pd.isnull(sample_row[patient_id_index])):
-                try:
-                    patient = tantalus.models.Patient.objects.get(external_patient_id=sample_row[external_patient_id_index])
-                except:
-                    raise ValidationError('Patient not found with given External Patient ID on row {} (No Patient ID provided)'.format(
-                        sample_row[external_patient_id_index],
-                        idx + 2))
+            if(pd.isnull(sample_row[reference_id_index])):
+                raise ValidationError("Reference ID cannot be empty on row {}.".format(idx + 2))
 
-                if(sample_row[suffix_index] is None):
-                    new_sample_id = patient.patient_id
-                else:
-                    new_sample_id = patient.patient_id + sample_row[suffix_index]
-                try:
-                    sample = tantalus.models.Sample.objects.get(sample_id=new_sample_id)
-                except:
-                    continue
-                raise ValidationError('Sample already exists for Patient ID {} and Suffix {} on row {}'.format(
-                    patient.patient_id,
-                    sample_row[suffix_index],
-                    idx + 2
-                    ))
+            if(pd.isnull(sample_row[researcher_index])):
+                raise ValidationError("Researcher field cannot be empty on row {}.".format(idx + 2))
 
-                    
-            else:
-                try:
-                    patient = tantalus.models.Patient.objects.get(external_patient_id=sample_row[external_patient_id_index], patient_id=sample_row[patient_id_index])
-                except:
-                    raise ValidationError('Patient not found with given External Patient ID {} and Patient ID {} on row {}'.format(
-                        sample_row[external_patient_id_index],
-                        sample_row[patient_id_index],
-                        idx + 2))         
+            if(pd.isnull(sample_row[suffix_index])):
+                raise ValidationError("Suffix field cannot be empty on row {}.".format(idx + 2))
 
-                if(sample_row[suffix_index] is None):
-                    new_sample_id = patient.patient_id
-                else:
-                    new_sample_id = sample_row[patient_id_index] + sample_row[suffix_index]
+            try:
+                patient = tantalus.models.Patient.objects.get(reference_id=sample_row[reference_id_index])
+                sample_id = patient.patient_id + sample_row[suffix_index]       
                 try:
-                    sample = tantalus.models.Sample.objects.get(sample_id=new_sample_id)
-                except:
-                    continue
-                raise ValidationError('Sample already exists for Patient ID {} and Suffix {} on row {}'.format(
-                    sample_row[patient_id_index],
-                    sample_row[suffix_index],
-                    idx + 2
-                    ))
+                    #If to be created Sample ID already exists, raise IntegrityError
+                    patient.sample_set.get(sample_id=sample_id)
+                    raise IntegrityError
+                except ObjectDoesNotExist:
+                    one_ref_found.append(sample_row[reference_id_index])
+            except IntegrityError:
+                raise ValidationError("Sample ID already exists with Suffix provided on row {}".format(idx + 2))
+            except ObjectDoesNotExist:
+                no_ref_found.append(sample_row[reference_id_index])
+            except MultipleObjectsReturned:
+                multiple_refs_found.append(sample_row[reference_id_index])
+            except:
+                raise ValidationError("Unknown DB Error occured. Please contact Tantalus Developers")
 
-        return df
+        return df, all_tantalus_projects, one_ref_found, no_ref_found, multiple_refs_found
 
     def get_sample_data(self):
         # TODO: return dataframe here
@@ -346,17 +325,26 @@ class DatasetSearchForm(forms.Form):
         help_text="A comma separated list of tags",
         required=False,
     )
+
+    is_production = forms.NullBooleanField(
+        label="Is Production",
+        help_text="Dataset approved for production usage",
+        required=False,
+    )
+
     exclude = forms.CharField(
         label="Exclude",
         help_text="A comma separated list of tags you want to exclude",
         required=False,
     )
+
     library = forms.CharField(
         label="Library",
         required=False,
         help_text="A white space separated list of library IDs. Eg. MF1606301",
         widget=forms.widgets.Textarea
     )
+
     sample = forms.CharField(
         label="Sample(s)",
         required=False,
@@ -371,18 +359,21 @@ class DatasetSearchForm(forms.Form):
         help_text="Type of files to process",
         widget=forms.widgets.CheckboxSelectMultiple()
     )
+
     storages = forms.ModelMultipleChoiceField(
         queryset=tantalus.models.Storage.objects.all(),
         required=False,
         help_text="Only look for files that are present in the selected storage.",
         widget=forms.widgets.CheckboxSelectMultiple(),
     )
+
     compression_schemes = forms.MultipleChoiceField(
         choices=tantalus.models.FileResource.compression_choices,
         required=False,
         help_text="Only look for files with given compression schemes.",
         widget=forms.widgets.CheckboxSelectMultiple(),
     )
+
     flowcell_id_and_lane = forms.CharField(
         label="Flowcell ID + lane number",
         required=False,
@@ -518,7 +509,7 @@ class DatasetSearchForm(forms.Form):
     def get_dataset_search_results(self, clean=True, exclude=None, tagged_with=None, library=None, sample=None, dataset_type=None,storages=None,
                                    compression_schemes=None,flowcell_id_and_lane=None, sequencing_center=None,
                                    sequencing_instrument=None, sequencing_library_id=None, library_type=None,
-                                   index_format=None, min_num_read_groups=None):
+                                   index_format=None, min_num_read_groups=None, is_production=None):
         """
         Performs the filter search with the given fields. The "clean" flag is used to indicate whether the cleaned data
         should be used or not.
@@ -547,7 +538,7 @@ class DatasetSearchForm(forms.Form):
             library_type = self.cleaned_data['library_type']
             index_format = self.cleaned_data['index_format']
             min_num_read_groups = self.cleaned_data['min_num_read_groups']
-
+            is_production = self.cleaned_data['is_production']
 
         results = tantalus.models.SequenceDataset.objects.all()
 
@@ -604,6 +595,9 @@ class DatasetSearchForm(forms.Form):
                 query = query | q
             results = results.filter(query)
 
+        if is_production:
+            results = results.filter(is_production=is_production)
+
         results = results.distinct()
 
         return list(results.values_list('id', flat=True))
@@ -637,4 +631,3 @@ class DatasetTagForm(forms.Form):
         tag_name = self.cleaned_data['tag_name']
         tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
         tag.sequencedataset_set.add(*self.models_to_tag)
-
