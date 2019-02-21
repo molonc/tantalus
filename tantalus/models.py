@@ -92,6 +92,11 @@ class Patient(models.Model):
         null=True
     )
 
+    reference_id = models.CharField(
+        max_length=120,
+        null=True,
+    )
+
     external_patient_id = models.CharField(
         max_length=120,
         null=True
@@ -130,7 +135,7 @@ class Sample(models.Model):
         null=True,
     )
 
-    collaborator = models.CharField(
+    researcher = models.CharField(
         max_length=240,
         null=True,
     )

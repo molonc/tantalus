@@ -11,9 +11,12 @@
             <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'patient-edit' pk=object.id %}">Edit Patient</a>
             <table class="table-condensed">
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Patient ID</th>
+                    <th style="padding: 0; padding-top: 4px;">SA ID</th>
                     <td style="padding: 0; padding-left: 35px;">{{object.patient_id}}</td>
                 </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Reference ID</th>
+                    <td style="padding: 0; padding-left: 35px;">{{object.reference_id}}</td>
                 <tr>
                     <th style="padding: 0; padding-top: 4px;">External Patient ID</th>
                     <td style="padding: 0; padding-left: 35px;">{{object.external_patient_id}}</td>
