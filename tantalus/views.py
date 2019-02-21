@@ -1000,8 +1000,8 @@ class TagDatasetDelete(View):
 
 class FileResourceJSON(BaseDatatableView):
     model = tantalus.models.FileResource
-    columns = ['id','filename', 'owner', 'created', 'last_updated', 'compression']
-    order_columns = ['id','filename', 'owner', 'created', 'last_updated', 'compression']
+    columns = ['id','filename', 'owner', 'created', 'last_updated']
+    order_columns = ['id','filename', 'owner', 'created', 'last_updated']
 
     def get_id(request, id):
         return render(request, {'id' : id}, 'templates/tantalus/datatable/file_resources.html')
@@ -1012,7 +1012,6 @@ class FileResourceJSON(BaseDatatableView):
         dataset = tantalus.models.SequenceDataset.objects.filter(id=id)
 
         return dataset[0].file_resources
-
 
     def render_column(self, row, column):
         if column == 'id':
@@ -1025,8 +1024,6 @@ class FileResourceJSON(BaseDatatableView):
             return row.created
         if column == 'last_updated':
             return row.last_updated
-        if column == 'compression':
-            return row.compression
         else:
             return super(FileResourceJSON, self).render_column(row, column)
 
