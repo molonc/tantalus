@@ -23,6 +23,7 @@
     <script type="text/javascript">
 
      $(document).ready(function() {
+
         $('.file_resources_datatable').DataTable({
                 stateSave: true,
                 columnDefs:[
@@ -36,7 +37,7 @@
                 serverSide: true,
                 ajax: {
                     url: '{% url 'fileresources-list-json' %}',
-                    data : {"id" : {{object.id}}}
+                    data : {"id" : {{object.id}}, "directory" : "{{ request.path }}"}
                 }
         } );
     } );
