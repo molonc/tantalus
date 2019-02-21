@@ -11,7 +11,6 @@
                     <th class="file_resource_owner">Owner</th>
                     <th class="file_resource_created">Created</th>
                     <th class="file_resource_last_updated">Last Updated</th>
-                    <th class="file_resource_compression">Compression</th>
                 </tr>
             </thead>
             <tbody>
@@ -21,9 +20,7 @@
     </div>
     <br>
 
-
     <script type="text/javascript">
-
 
      $(document).ready(function() {
         $('.file_resources_datatable').DataTable({
@@ -34,7 +31,6 @@
                     {"name": "owner", "targets": "file_resource_owner"},
                     {"name": "created", "targets": "file_resource_created"},
                     {"name": "last_updated", "targets": "file_resource_last_updated"},
-                    {"name": "compression", "targets": "file_resource_compression"}
                 ],
                 processing: true,
                 serverSide: true,
