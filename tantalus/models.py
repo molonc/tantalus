@@ -157,7 +157,7 @@ class Sample(models.Model):
         blank=True,
     )
 
-    is_reference=models.NullBooleanField(
+    is_reference = models.NullBooleanField(
         default=None,
         null=True,
         blank=True,
