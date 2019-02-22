@@ -37,7 +37,7 @@
                 serverSide: true,
                 ajax: {
                     url: '{% url 'fileresources-list-json' %}',
-                    data : {"id" : {{object.id}}, "directory" : "{{ source_table }}"}
+                    data : {"id" : {{object.id}}, "source_table" : "{{ source_table }}"}
                 }
         } );
     } );
