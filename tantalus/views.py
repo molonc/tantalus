@@ -1008,7 +1008,7 @@ class FileResourceJSON(BaseDatatableView):
 
     def get_initial_queryset(self):
         id = self.request.GET.get("id", None)
-        if  "dataset" in  self.request.GET.get("directory", None):
+        if self.request.GET.get("directory", None) == "sequencedataset":
             return tantalus.models.SequenceDataset.objects.filter(id=id)[0].file_resources.all()
         else:
             return tantalus.models.ResultsDataset.objects.filter(id=id)[0].file_resources.all()
