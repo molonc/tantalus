@@ -668,6 +668,12 @@ class Analysis(models.Model):
         blank=True,
     )
 
+    output_datasets = models.ManyToManyField(
+        'SequenceDataset',
+        related_name='outputdatasets',
+        blank=True,
+    )
+
     input_results = models.ManyToManyField(
         'ResultsDataset',
         related_name='inputresults',
