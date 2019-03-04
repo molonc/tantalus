@@ -1,6 +1,6 @@
-<h4>Input Datasets</h4>
+<h4>Output Sequence Datasets</h4>
 <div class="table-responsive">
-    <table id="input-datasets-datatable" class="table-striped table-bordered">
+    <table id="output-datasets-datatable" class="table-striped table-bordered">
         <thead>
             <th>Dataset ID</th>
             <th>Dataset Owner</th>
@@ -12,7 +12,7 @@
             <th>Aligner</th>
         </thead>
         <tbody>
-            {% for dataset in input_datasets %}
+            {% for dataset in output_datasets %}
                 <tr>
                     <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.id}}</a></td>
                     <td>{{dataset.owner}}</td>

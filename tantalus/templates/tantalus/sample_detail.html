@@ -74,6 +74,14 @@
     </div>
 
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if results_datasets_set %}
+            {% include "tantalus/datatable/results_datasets.html" %}
+        {% else %}
+            <h5><i class="text-warning">No Results Datasets associated with this Sample yet.</i></h5>
+        {% endif %}
+    </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if library_set %}
             {% include "tantalus/datatable/related_libraries.html" %}
         {% else %}

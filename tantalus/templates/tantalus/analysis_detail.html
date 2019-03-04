@@ -60,4 +60,20 @@
     		<h5><i class="text-warning">No Input Results for this Analysis yet.</i></h5>
     	{% endif %}
     </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+    	{% if output_datasets %}
+	         {% include "tantalus/datatable/output_datasets.html" %}
+	    {% else %}
+	    	<h5><i class="text-warning">No Output Sequence Datasets for this Analysis yet.</i></h5>
+        {% endif %}
+    </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+    	{% if output_results %}
+	         {% include "tantalus/datatable/output_results.html" %}
+	    {% else %}
+	    	<h5><i class="text-warning">No Output Results Datasets for this Analysis yet.</i></h5>
+        {% endif %}
+    </div>
 {% endblock %}

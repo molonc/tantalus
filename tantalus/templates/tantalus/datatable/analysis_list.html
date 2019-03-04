@@ -5,6 +5,8 @@
                 <th>Analysis ID</th>
                 <th>Owner</th>
                 <th>Name</th>
+                <th>Version</th>
+                <th>Type</th>
                 <th>Jira Ticket</th>
                 <th>Last Updated</th>
                 <th>Status</th>
@@ -17,6 +19,8 @@
                     <td><a href="{% url 'analysis-detail' analysis.id %}">{{analysis.id}}</td>
                     <td>{{analysis.owner}}</td>
                     <td>{{analysis.name}}</td>
+                    <td>{{analysis.version}}</td>
+                    <td>{{analysis.analysis_type}}</td>
                     <td>{{analysis.jira_ticket}}</td>
                     <td>{{analysis.last_updated}}</td>
                     <td>{{analysis.status}}</td>

@@ -206,11 +206,14 @@ class SampleDetail(LoginRequiredMixin, DetailView):
         context = super(SampleDetail, self).get_context_data(**kwargs)
 
         sequence_datasets_set = self.object.sequencedataset_set.all()
+        results_datasets_set = self.object.resultsdataset_set.all()
+
         submission_set = self.object.submission_set.all()
         project_set = self.object.projects.all()
         library_set = tantalus.models.DNALibrary.objects.filter(sequencedataset__sample=self.object).distinct()
 
         context['sequence_datasets_set'] = sequence_datasets_set
+        context['results_datasets_set'] = results_datasets_set
         try:
             context['patient_url'] = self.object.patient.get_absolute_url()
         except:
@@ -406,6 +409,8 @@ class AnalysisDetail(LoginRequiredMixin, DetailView):
         context = super(AnalysisDetail, self).get_context_data(**kwargs)
         context['input_datasets'] = self.object.input_datasets.all()
         context['input_results'] = self.object.input_results.all()
+        context['output_datasets'] = self.object.sequencedataset_set.all()
+        context['output_results'] = self.object.resultsdataset_set.all()
         return context
 
 
