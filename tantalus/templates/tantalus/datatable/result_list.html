@@ -23,12 +23,12 @@
                     <td>{{result.results_version}}</td>
                     <td>
                         {% for sample in result.samples.all %}
-                            <span>{{sample}}, </span>
+                            {{sample}}, 
                         {% endfor %}
                     </td>
                     <td>
                         {% for library in result.libraries.all %}
-                            <span>{{library}}, </span>
+                            {{library}}, 
                         {% endfor %}
                     </td>
                     <td>{{result.analysis}}</td>

@@ -202,7 +202,7 @@ class LibraryType(models.Model):
         unique=True
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -244,7 +244,7 @@ class DNALibrary(models.Model):
         choices=index_format_choices,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}_{}'.format(self.library_type, self.library_id)
 
 
@@ -314,7 +314,7 @@ class SequencingLane(models.Model):
         choices=read_type_choices,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         if self.lane_number == '':
             return '{}_{}'.format(self.sequencing_centre, self.flowcell_id)
         else:
@@ -385,7 +385,7 @@ class FileResource(models.Model):
         default=False,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}'.format(self.md5)
 
     def get_filename_time(self):
@@ -763,8 +763,8 @@ class ResultsDataset(models.Model):
     def get_absolute_url(self):
         return reverse("result-detail", args=(self.id,))
 
-    def __unicode__(self):
-        return '{}'.format(self.name)
+    def __str__(self):
+        return self.name
 
 
 class Storage(PolymorphicModel):
@@ -785,7 +785,7 @@ class Storage(PolymorphicModel):
         unique=True,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}'.format(self.name)
 
     def get_filepath(self, file_resource):
