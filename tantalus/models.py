@@ -38,7 +38,7 @@ class Tag(models.Model):
         null=True,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def count_datasets(self):
@@ -639,7 +639,7 @@ class Analysis(models.Model):
         unique=True,
     )
 
-    analysis_type= models.ForeignKey(
+    analysis_type = models.ForeignKey(
         AnalysisType,
         on_delete=models.CASCADE,
         null=True,
@@ -696,8 +696,8 @@ class Analysis(models.Model):
         blank=True,
     )
 
-    def __unicode__(self):
-        return '{}'.format(self.name)
+    def __str__(self):
+        return self.name
 
     def get_absolute_url(self):
         return reverse("analysis-detail", args=(self.id,))

@@ -7,6 +7,8 @@
                 <th>Name</th>
                 <th>Results Type</th>
                 <th>Results Version</th>
+                <th>Samples</th>
+                <th>Libraries</th>
                 <th>Analysis</th>
             </tr>
         </thead>
@@ -19,6 +21,16 @@
                     <td>{{result.name}}</td>
                     <td>{{result.results_type}}</td>
                     <td>{{result.results_version}}</td>
+                    <td>
+                        {% for sample in result.samples.all %}
+                            <span>{{sample}}, </span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for library in result.libraries.all %}
+                            <span>{{library}}, </span>
+                        {% endfor %}
+                    </td>
                     <td>{{result.analysis}}</td>
                 </tr>
             {% endfor %}
