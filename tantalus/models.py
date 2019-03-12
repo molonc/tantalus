@@ -712,10 +712,12 @@ class ResultsDataset(models.Model):
 
     samples = models.ManyToManyField(
         Sample,
+        blank=True,
     )
 
     libraries = models.ManyToManyField(
         DNALibrary,
+        blank=True,
     )
 
     file_resources = models.ManyToManyField(
