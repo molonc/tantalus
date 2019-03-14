@@ -60,6 +60,7 @@ class AnalysisFilter(BaseFilterSet):
             "input_results__id": ["exact"],
             "input_datasets__library__library_id": ["exact"],
             "input_results__libraries__library_id": ["exact"],
+            "status": ["exact"],
         }
 
 
