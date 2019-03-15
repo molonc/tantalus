@@ -367,13 +367,6 @@ class DatasetSearchForm(forms.Form):
         widget=forms.widgets.CheckboxSelectMultiple(),
     )
 
-    compression_schemes = forms.MultipleChoiceField(
-        choices=tantalus.models.FileResource.compression_choices,
-        required=False,
-        help_text="Only look for files with given compression schemes.",
-        widget=forms.widgets.CheckboxSelectMultiple(),
-    )
-
     flowcell_id_and_lane = forms.CharField(
         label="Flowcell ID + lane number",
         required=False,
@@ -507,7 +500,7 @@ class DatasetSearchForm(forms.Form):
             )
 
     def get_dataset_search_results(self, clean=True, exclude=None, tagged_with=None, library=None, sample=None, dataset_type=None,storages=None,
-                                   compression_schemes=None,flowcell_id_and_lane=None, sequencing_center=None,
+                                   flowcell_id_and_lane=None, sequencing_center=None,
                                    sequencing_instrument=None, sequencing_library_id=None, library_type=None,
                                    index_format=None, min_num_read_groups=None, is_production=None):
         """
@@ -530,7 +523,6 @@ class DatasetSearchForm(forms.Form):
             sample = self.cleaned_data['sample']
             dataset_type = self.cleaned_data['dataset_type']
             storages = self.cleaned_data['storages']
-            compression_schemes = self.cleaned_data['compression_schemes']
             flowcell_id_and_lane = self.cleaned_data['flowcell_id_and_lane']
             sequencing_center = self.cleaned_data['sequencing_center']
             sequencing_instrument = self.cleaned_data['sequencing_instrument']
@@ -558,9 +550,6 @@ class DatasetSearchForm(forms.Form):
 
         if storages:
             results = results.filter(file_resources__fileinstance__storage_id__in=storages)
-
-        if compression_schemes:
-            results = results.filter(file_resources__compression__in=compression_schemes)
 
         if library:
             results = results.filter(library__library_id__in=library.split())

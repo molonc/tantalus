@@ -1427,26 +1427,11 @@ def get_storage_stats(storages=['all']):
         file_resources = tantalus.models.FileResource.objects.filter(
             fileinstance__storage__name__in=storages)
 
-    # Find info on number of files
-    num_bams = file_resources.filter(
-        file_type=tantalus.models.FileType.objects.get(name="BAM")).filter(
-        ~Q(compression='SPEC')).count()
-    num_specs = file_resources.filter(
-        file_type=tantalus.models.FileType.objects.get(name="BAM")).filter(
-        compression='SPEC').count()
-    num_bais = file_resources.filter(
-        file_type=tantalus.models.FileType.objects.get(name="BAI")).count()
-    num_fastqs = file_resources.filter(
-        file_type=tantalus.models.FileType.objects.get(name="FQ")).count()
-
     # Get the size of all storages
     storage_size = file_resources.aggregate(Sum('size'))
     storage_size = storage_size['size__sum']
 
-    return {'num_bams': num_bams,
-            'num_specs': num_specs,
-            'num_bais': num_bais,
-            'num_fastqs': num_fastqs,
+    return {
             'storage_size': storage_size,
            }
 
@@ -1490,17 +1475,6 @@ def get_library_stats(filetype, storages_dict):
             matching_files = tantalus.models.FileResource.objects.filter(
                 sequencedataset__library__library_type=lib_type.id).filter(
                 fileinstance__storage__name__in=storages).distinct()
-
-            if filetype == 'BAM':
-                # Get all the matching BAM files
-                matching_files = matching_files.filter(
-                    file_type=tantalus.models.FileType.objects.get(name="BAM")
-                )
-            else:
-                # Get all the matching FASTQ files
-                matching_files = matching_files.filter(
-                    file_type=tantalus.models.FileType.objects.get(name="FQ")
-                )
 
             # Compute results - first the number of files- Add field skip_file_import to gscwgsbamquery
             number = matching_files.count()
