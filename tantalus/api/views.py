@@ -36,7 +36,7 @@ class RestrictedQueryMixin(object):
     def get_queryset(self):
         non_filter_params = set(['limit', 'offset', 'page', 'page_size', 'format'])
 
-        qs = super(RestrictedQueryMixin, self).get_queryset()
+        qs = super(RestrictedQueryMixin, self).get_queryset().order_by('id')
 
         if hasattr(self, 'filter_fields') and hasattr(self, 'filter_class'):
             raise RuntimeError("%s has both filter_fields and filter_class" % self)
@@ -75,6 +75,7 @@ class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_class = SampleFilter
+
 
 class PatientViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
