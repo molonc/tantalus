@@ -7,6 +7,11 @@ node {
             sh 'git log HEAD^..HEAD --pretty="%h %an - %s" > GIT_CHANGES'
             def lastChanges = readFile('GIT_CHANGES')
             slackSend color: "warning", message: "Started `${env.JOB_NAME}#${env.BUILD_NUMBER}`\n\n_The changes:_\n${lastChanges}"
+
+        stage 'Testing'
+            slackSend color: "warning", message: "Deploying to Test Server for build `${env.JOB_NAME}#${env.BUILD_NUMBER}`"
+            sh "ssh ubuntu@$TantalusTestVM bash -e /home/ubuntu/tantalus/test/test_tantalus.sh"
+
         stage 'Deploy'
             sh "ssh ubuntu@$TantalusVM_IP bash -e /home/dalai/tantalus/deployment/deploy_production_tantalus.sh"
 
