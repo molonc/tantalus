@@ -85,9 +85,6 @@ def rename_datasets(apps, schema_editor):
 
     # Set file instances to is_deleted=True and delete Datasets
     for name in datasets:
-        if len(datasets[name]) >= 3:
-            for dataset in datasets[name]:
-                print dataset.id
         assert len(datasets[name]) <= 2
         if len(datasets[name]) == 2:
             dataset1, dataset2 = datasets[name]
@@ -108,8 +105,6 @@ def rename_datasets(apps, schema_editor):
                 assert files1 != files2
 
                 # Delete dataset1
-                print 'deleting {}'.format(dataset1.name)
-                print 'is_delete=True {}'.format(dataset1.file_resources.all()[0].filename)
                 for f in dataset1.file_resources.all():
                     for i in f.fileinstance_set.all():
                         i.is_deleted = True
@@ -117,7 +112,6 @@ def rename_datasets(apps, schema_editor):
                 dataset1.delete()
 
                 # Rename dataset2
-                print 'renaming {}->{}'.format(dataset2.name, name)
                 dataset2.name = name
                 dataset2.save()
 
@@ -126,8 +120,7 @@ def rename_datasets(apps, schema_editor):
                 assert files1 != files2
 
                 # Delete dataset2
-                print 'deleting {}'.format(dataset2.name)
-                print 'is_delete=True {}'.format(dataset2.file_resources.all()[0].filename)
+
                 for f in dataset2.file_resources.all():
                     for i in f.fileinstance_set.all():
                         i.is_deleted = True
@@ -135,7 +128,6 @@ def rename_datasets(apps, schema_editor):
                 dataset2.delete()
 
                 # Rename dataset1
-                print 'renaming {}->{}'.format(dataset1.name, name)
                 dataset1.name = name
                 dataset1.save()
 
@@ -145,12 +137,10 @@ def rename_datasets(apps, schema_editor):
                 # Delete oldest by pk
                 delete_pk, keep_pk = sorted([dataset1.id, dataset2.id])
                 dataset = SequenceDataset.objects.get(id=delete_pk)
-                print 'deleting {}'.format(dataset.name)
                 dataset.delete()
 
                 # Rename newest
                 dataset = SequenceDataset.objects.get(id=keep_pk)
-                print 'renaming {}->{}'.format(dataset.name, name)
                 dataset.name = name
                 dataset.save()
 

@@ -87,10 +87,8 @@ def migrate_data(apps, class_name):
             name = library_type_fixup[name]
         if name is None:
             model.library_type = None
-            print '{} -> None'.format(model.temp_library_type)
         else:
             model.library_type = library_types[name]
-            print '{} -> {}'.format(model.temp_library_type, model.library_type.name)
         model.save()
 
 

@@ -54,10 +54,8 @@ def migrate_aligner(apps, schema_editor):
             name = aligner_fixup[name]
         if name is None:
             model.aligner = None
-            print '{} -> None'.format(model.temp_aligner)
         else:
             model.aligner = aligners[name]
-            print '{} -> {}'.format(model.temp_aligner, model.aligner.name)
         model.save()
 
 

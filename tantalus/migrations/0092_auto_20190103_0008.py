@@ -108,8 +108,6 @@ def rename_datasets(apps, schema_editor):
         for dataset in datasets[name]:
             samples.add(dataset.sample.sample_id)
 
-    for sample_id in samples:
-        print sample_id
 
     for name in datasets:
         if len(datasets[name]) == 1:

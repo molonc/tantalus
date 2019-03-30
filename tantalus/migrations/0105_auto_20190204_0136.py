@@ -7,17 +7,13 @@ from django.db import migrations, models
 
 def update_file_type(apps, schema_editor):
     FileType = apps.get_model('tantalus', 'FileType')
-    print FileType.objects.all().count()
     i = 0
     for t in FileType.objects.all():
         f = t.fileresource_set.all()
         name = t.name
         if len(name) > 50:
             name = ''
-        print name, f.count()
         f.update(file_type=name)
-        if i % 100 == 0:
-            print i
         i += 1
 
 

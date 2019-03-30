@@ -51,7 +51,7 @@ def sample_fixup(apps, class_name):
     SequenceDataset = apps.get_model('tantalus', 'SequenceDataset')
     Submission = apps.get_model('tantalus', 'Submission')
 
-    for k,v in sample_id_fixup.iteritems():
+    for k,v in sample_id_fixup.items():
         try:
             sample_from = Sample.objects.get(sample_id=k)
             sample_to   = Sample.objects.get(sample_id=v)
@@ -100,7 +100,7 @@ def sequence_dataset_fixup(apps, class_name):
     Sample = apps.get_model('tantalus', 'Sample')
     SequenceDataset = apps.get_model('tantalus', 'SequenceDataset')
 
-    for k,v in seq_ds_fixup.iteritems():
+    for k,v in seq_ds_fixup.items():
         try:
             print('\n')
             for ds in SequenceDataset.objects.filter(sample__sample_id=k[0]).filter(library__library_id=k[1]):

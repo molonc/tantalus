@@ -56,10 +56,8 @@ def data_migrate(apps, class_name):
             name = reference_genome_fixup[name]
         if name is None:
             model.reference_genome = None
-            print '{} -> None'.format(model.temp_reference_genome)
         else:
             model.reference_genome = reference_genomes[name]
-            print '{} -> {}'.format(model.temp_reference_genome, model.reference_genome.name)
         model.save()
 
 
