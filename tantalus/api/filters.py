@@ -126,6 +126,7 @@ class ResultsDatasetFilter(filters.FilterSet):
             "analysis": ["exact"],
             "analysis__jira_ticket": ["exact"],
             "file_resources__filename": ["exact"],
+            "file_resources__id": ["exact"],
             "results_type": ["exact"],
             "results_version": ["exact"],
             "tags__name": ["exact"],
@@ -185,6 +186,7 @@ class SequenceDatasetFilter(filters.FilterSet):
             "analysis__name": ["exact"],
             "analysis__jira_ticket": ["exact"],
             "file_resources__filename": ["exact"],
+            "file_resources__id": ["exact"],
         }
 
 
