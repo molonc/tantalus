@@ -362,7 +362,7 @@ class FileResource(models.Model):
     )
 
     def __str__(self):
-        return '{}'.format(self.md5)
+        return '{}'.format(self.filename)
 
     def get_filename_time(self):
         return self.created.strftime('%Y%m%d_%H%M%S')
@@ -851,6 +851,9 @@ class FileInstance(models.Model):
     is_deleted = models.BooleanField(
         default=False,
     )
+    
+    def __str__(self):
+        return str(self.file_resource) + '-' +  self.storage.name
 
     def get_filepath(self):
         return self.storage.get_filepath(self.file_resource)
