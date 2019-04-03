@@ -10,7 +10,13 @@ node {
 
         stage 'Testing'
             slackSend color: "warning", message: "Deploying to Test Server for build `${env.JOB_NAME}#${env.BUILD_NUMBER}`"
+            sh "az login --service-principal --username $CLIENT_ID --password $SECRET_KEY --tenant $TENANT_ID"
+            sh "az vm start -g olympus -n tantalus-test"
+
+            slackSend color: "warning", message: "Test Server Initialized" 
             sh "ssh ubuntu@$TantalusTestVM bash -e /home/ubuntu/tantalus/test/test_tantalus.sh"
+            sh "az vm stop -g olympus -n tantalus-test"
+            slackSend color: "warning", message: "Finished Testing `${env.JOB_NAME}#${env.BUILD_NUMBER}` and Test Server Deallocated"
 
         stage 'Deploy'
             sh "ssh ubuntu@$TantalusVM_IP bash -e /home/dalai/tantalus/deployment/deploy_production_tantalus.sh"
