@@ -164,6 +164,31 @@ REST_FRAMEWORK = {
     ),
 }
 
-LOGIN_URL = '/account/login'
+LOGIN_URL = '/login/azuread-oauth2/?next=/'
+
+SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+
+SOCIAL_AUTH_LOGIN_URL = '/login/azuread-oauth2'
+SOCIAL_AUTH_AZUREAD_OAUTH2_KEY = os.environ.get('CLIENT_ID')
+SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET =os.environ.get('CLIENT_SECRET')
+SOCIAL_AUTH__LOGIN_REDIRECT_URL = '/whatthefuck'
+SOCIAL_AUTH_AZUREAD_LOGIN_ERROR_URL = '/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 JIRA_URL = 'https://www.bcgsc.ca/jira/'
 
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.azuread.AzureADOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+       # 'django.contrib.auth.context_processors.auth',
+        'social.apps.django_app.context_processors.login_redirect_url',
+)
+
+SOCIAL_AUTH_DISCONNECT_PIPELINE = (
+    'social.pipeline.disconnect.get_entries',
+    'social.pipeline.disconnect.revoke_tokens',
+    'social.pipeline.disconnect.disconnect'
+)

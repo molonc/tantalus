@@ -62,7 +62,6 @@
         </div>
     </nav><br>
     <!-- end of Header -->
-
     <!-- Display messages -->
     <ul class="messages" style="list-style: none;">
     {% for message in messages %}
@@ -86,18 +85,17 @@
         <span> / </span>
         <a href="{% url 'account:password_update' %}">Change Password</a>
         <span> / </span>
-        <a href="{% url 'account:logout' %}">Logout</a>
+        <a href="{% url 'logout' %}">Logout</a>
         {% else %}
-        <a href="{% url 'account:login' %}">Login</a>
+        <a href="{% url 'social:begin' 'azuread-oauth2' %}">Login</a>
         {% endif %}
     </div>
-
+    
     <!-- Page title -->
     <div class="container subheader">
         <h2>{% block title %}{% endblock %}</h2>
     </div>
     <!-- end of page title -->
-
     {% block body %}{% endblock %}
 
     {# Customize the DataTables script(s) as necessary #}
