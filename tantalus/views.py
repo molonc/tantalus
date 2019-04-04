@@ -36,7 +36,7 @@ from tantalus.settings import STATIC_ROOT, JIRA_URL
 from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
-from tantalus.settings import LOGIN_URL
+from tantalus.settings import SOCIAL_AUTH_LOGIN_URL as LOGIN_URL
 
 
 class ExternalIDSearch(LoginRequiredMixin, TemplateView):
@@ -1538,9 +1538,9 @@ class DataStatsView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class HomeView(LoginRequiredMixin, TemplateView):
+class HomeView(TemplateView):
 
-    login_url = LOGIN_URL
+    #login_url = LOGIN_URL
 
     template_name = 'tantalus/index.html'
 
