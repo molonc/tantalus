@@ -26,6 +26,7 @@ from django.urls import path
 >>>>>>> c718354... Put client secret and key into env, unsafe to put on github
 import tantalus.views
 import account.views
+from rest_framework.authtoken import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -71,9 +72,11 @@ urlpatterns = [
     url(r'^externalidsearch/$', tantalus.views.ExternalIDSearch.as_view(), name='external-id-search'),
     url(r'^export-external-id-results/$', tantalus.views.export_external_id_results, name='export-external-id-results'),
     url(r'^$', tantalus.views.HomeView.as_view(), name='home'),
+    url(r'^auth/', include('rest_framework_social_oauth2.urls')),
     url('', include('django.contrib.auth.urls')),
     url('', include('social_django.urls', namespace='social')),
     url('logout/', auth_views.LogoutView.as_view(), {'next_page': settings.LOGOUT_REDIRECT_URL}, name='logout'),
     url(r'^json/datasets/$', tantalus.views.DatasetListJSON.as_view(), name='dataset-list-json'),
     url(r'^json/fileresources/$', tantalus.views.FileResourceJSON.as_view(), name='fileresources-list-json'),
+    url(r'^api-token-auth/', views.obtain_auth_token)
 ]

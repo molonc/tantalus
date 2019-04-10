@@ -55,6 +55,9 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_filters',
     'drf_yasg',
+    'social_django',
+    'oauth2_provider',
+    'rest_framework_social_oauth2',
 ]
 
 MIDDLEWARE = [
@@ -152,8 +155,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'rest_framework_social_oauth2.authentication.SocialAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
@@ -177,14 +181,19 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 JIRA_URL = 'https://www.bcgsc.ca/jira/'
 
+DRFSO2_PROPRIETARY_BACKEND_NAME = 'AzureADOAuth2'
+
 AUTHENTICATION_BACKENDS = (
+    'rest_framework_social_oauth2.backends.DjangoOAuth2',
     'social_core.backends.azuread.AzureADOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
        # 'django.contrib.auth.context_processors.auth',
-        'social.apps.django_app.context_processors.login_redirect_url',
+       'social_django.context_processors.backends',
+       'social_django.context_processors.login_redirect',
+       'social.apps.django_app.context_processors.login_redirect_url',
 )
 
 SOCIAL_AUTH_DISCONNECT_PIPELINE = (
