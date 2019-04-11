@@ -15,6 +15,7 @@ from django.db import transaction, IntegrityError
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.contrib.auth import authenticate
 from tantalus.settings import JIRA_URL
 
 import tantalus.models
@@ -26,6 +27,7 @@ from jira import JIRA, JIRAError
 
 class AzureConnectProfileForm(forms.ModelForm):
 
+    password = forms.CharField(widget=forms.PasswordInput, required=False)
     delete_current_account_after_association = forms.NullBooleanField(initial=True)
 
     def __init__(self, *args, **kwargs):
@@ -33,6 +35,16 @@ class AzureConnectProfileForm(forms.ModelForm):
         super(AzureConnectProfileForm, self).__init__(*args, **kwargs)
         # there's a `fields` property now
         self.fields['user'].required = False
+
+    def clean_password(self):
+        password = self.cleaned_data.get("password", False)
+        try:
+            username = self.cleaned_data.get("user", False).username
+        except AttributeError as e:
+            username = None
+        if username is not None:
+            if authenticate(username=username, password=password) is None:
+                raise ValidationError('Invalid Account Credentials')
 
     class Meta:
         model = tantalus.models.Profile 
