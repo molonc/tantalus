@@ -1609,6 +1609,7 @@ class AssociateAzureView(LoginRequiredMixin, TemplateView):
                 oauth_user.user = instance.user
                 oauth_user.save()
                 logout(request)
+
                 if form.cleaned_data['delete_current_account_after_association']:
                     user_to_be_deleted.delete()
 
