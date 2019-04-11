@@ -526,6 +526,7 @@ class SequenceDataset(models.Model):
         'AlignmentTool',
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
 
     is_production = models.BooleanField(
