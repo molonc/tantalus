@@ -24,6 +24,20 @@ from openpyxl import load_workbook
 from jira import JIRA, JIRAError
 
 
+class AzureConnectProfileForm(forms.ModelForm):
+
+    delete_current_account_after_association = forms.NullBooleanField(initial=True)
+
+    def __init__(self, *args, **kwargs):
+        # first call parent's constructor
+        super(AzureConnectProfileForm, self).__init__(*args, **kwargs)
+        # there's a `fields` property now
+        self.fields['user'].required = False
+
+    class Meta:
+        model = tantalus.models.Profile 
+        fields = '__all__'
+
 class AnalysisForm(forms.ModelForm):
 
     jira_username = forms.CharField()

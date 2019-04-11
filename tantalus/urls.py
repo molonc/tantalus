@@ -72,6 +72,7 @@ urlpatterns = [
     url(r'^externalidsearch/$', tantalus.views.ExternalIDSearch.as_view(), name='external-id-search'),
     url(r'^export-external-id-results/$', tantalus.views.export_external_id_results, name='export-external-id-results'),
     url(r'^$', tantalus.views.HomeView.as_view(), name='home'),
+    url(r'^associateazure', tantalus.views.AssociateAzureView.as_view(), name='associate-azure'),
     url(r'^auth/', include('rest_framework_social_oauth2.urls')),
     url('', include('django.contrib.auth.urls')),
     url('', include('social_django.urls', namespace='social')),
