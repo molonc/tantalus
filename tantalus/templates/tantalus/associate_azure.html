@@ -1,0 +1,24 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Tantalus
+{% endblock %}
+
+{% block body %}
+<div class="container" style="margin-top: 0.69em; border:solid 1px #E0E0E0; border-radius: 3px; padding-top: 0.69em; padding-bottom: 1.2em;">
+        <form action="{% url 'associate-azure' %}" method="POST">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Associate Your Azure Token with An Existing User Account</legend>
+                <table class="table-condensed">
+                    <thead>
+                    {{form}}
+                    </thead>
+                </table>
+                <input class="btn btn-primary btn-sm" type="submit" name="associate" value="Associate Account">
+           	<input class="btn btn-danger btn-sm" type="submit" name="no_account" value="I don't have an existing account">
+	    </fieldset>
+        </form>
+</div>
+{% endblock %}

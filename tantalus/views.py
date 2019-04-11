@@ -20,6 +20,7 @@ from django.template.defaulttags import register
 from django.forms import ModelForm
 from django.forms.models import model_to_dict
 from django.shortcuts import redirect
+import account.models 
 
 import csv
 import json
@@ -36,6 +37,8 @@ from tantalus.settings import STATIC_ROOT, JIRA_URL
 from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
+import social_django.models
+from django.contrib.auth import logout
 from tantalus.settings import SOCIAL_AUTH_LOGIN_URL as LOGIN_URL
 
 
@@ -433,7 +436,7 @@ class PatientCreate(LoginRequiredMixin, TemplateView):
     """
     tantalus.models.Patient create page.
     """
-    login_ur = LOGIN_URL
+    login_url = LOGIN_URL
 
     template_name = "tantalus/patient_create.html"
 
@@ -504,7 +507,6 @@ class PatientCreate(LoginRequiredMixin, TemplateView):
                 messages.success(request, msg)
                 return HttpResponseRedirect(reverse('patient-list'))
             else:
-                print(len(auto_generated_patients))
                 msg = "You are editing existing Patient Data or have asked us to auto-generate SA IDs. Please Confirm Modifications and ID Generation."
                 messages.warning(request, msg)
                 request.session['to_edit'] = to_edit
@@ -530,7 +532,6 @@ class ConfirmPatientEditFromCreate(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         existing_patient_list = []
-        print(len(request.session['to_edit']))
         for patient in request.session['to_edit']:
             existing_patient = tantalus.models.Patient.objects.get(patient_id=patient['patient_id'])
             existing_patient.new_external_patient_id = patient['external_patient_id']
@@ -1556,3 +1557,73 @@ class HomeView(TemplateView):
             'tag_count': tantalus.models.Tag.objects.all().count(),
         }
         return context
+
+
+class AssociateAzureView(LoginRequiredMixin, TemplateView):
+    login_url = LOGIN_URL
+
+    template_name = "tantalus/associate_azure.html"
+
+    def get_context_and_render(self, request, form):
+        context = {
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if hasattr(user, 'profile') and user.profile.azure_key_associated:
+            return HttpResponseRedirect('/')
+        elif hasattr(user, 'profile'):
+            form = tantalus.forms.AzureConnectProfileForm(instance=user.profile)
+            return self.get_context_and_render(request, form)
+        else:
+            form = tantalus.forms.AzureConnectProfileForm()
+            return self.get_context_and_render(request, form)
+
+    def post(self, request, *args, **kwargs):
+
+        form = tantalus.forms.AzureConnectProfileForm(request.POST)
+
+        try:
+            chosen_user = account.models.User.objects.get(id=int(request.POST['user']))
+        except ValueError as e:
+            if request.POST.get('no_account'):
+                new_profile = tantalus.models.Profile.objects.create(user=request.user, azure_key_associated=True)
+                new_profile.save()
+
+                return HttpResponseRedirect('/')
+            else:
+                msg = "You must select a user"
+                messages.error(request, msg)
+                return self.get_context_and_render(request, form)
+
+        if hasattr(chosen_user, 'profile'):
+            form = tantalus.forms.AzureConnectProfileForm(request.POST, instance=chosen_user.profile)
+
+        if request.POST.get('associate'):
+            if form.is_valid():
+                oauth_user = social_django.models.UserSocialAuth.objects.get(user=request.user)
+                user_to_be_deleted = request.user
+                instance = form.save()
+                oauth_user.user = instance.user
+                oauth_user.save()
+                logout(request)
+                if form.cleaned_data['delete_current_account_after_association']:
+                    user_to_be_deleted.delete()
+
+                msg = "Successfully reassociated token. Please log in again at the top right to complete the process"
+                messages.success(request, msg)
+                return HttpResponseRedirect('/')
+            else:
+                msg = "Failed to associate account. Try again"
+                messages.error(request, msg)
+                return self.get_context_and_render(request, form)
+
+        elif request.POST.get('no_account'):
+            new_profile = tantalus.models.Profile.objects.create(user=request.user, azure_key_associated=True)
+            new_profile.save()
+
+            return HttpResponseRedirect('/')
+
+

@@ -14,6 +14,7 @@ class ResultsDatasetAdmin(admin.ModelAdmin):
 class SequencingLanesAdmin(admin.ModelAdmin):
     raw_id_fields = ('dna_library',)
 
+admin.site.register(Profile)
 admin.site.register(Tag)
 admin.site.register(Project)
 admin.site.register(Patient)
