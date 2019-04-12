@@ -1,5 +1,6 @@
 #!/bin/bash
 set -v
+set -e
 cd /home/ubuntu/tantalus
 git fetch origin
 git reset --hard origin/master
@@ -10,4 +11,5 @@ sudo -u postgres psql -c "DROP database tantalus"
 sudo -u postgres psql -c "CREATE database tantalus"
 pg_restore -h localhost -p 5432 -U tantalus -d tantalus -n public < /home/ubuntu/tantalus/backups/daily_backup.dump
 pip3 install -r requirements.txt --ignore-installed
-python manage.py migrate
+python3 manage.py migrate
+python3 manage.py makemigrations --check 
