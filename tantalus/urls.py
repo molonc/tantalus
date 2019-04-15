@@ -19,11 +19,8 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
-<<<<<<< HEAD
-=======
 from django.conf import settings
 from django.urls import path
->>>>>>> c718354... Put client secret and key into env, unsafe to put on github
 import tantalus.views
 import account.views
 from rest_framework.authtoken import views
