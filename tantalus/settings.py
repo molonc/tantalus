@@ -168,14 +168,11 @@ REST_FRAMEWORK = {
     ),
 }
 
-LOGIN_URL = '/login/azuread-oauth2/?next=/'
-
 SOCIAL_AUTH_POSTGRES_JSONFIELD = True
 
 SOCIAL_AUTH_LOGIN_URL = '/login/azuread-oauth2'
 SOCIAL_AUTH_AZUREAD_OAUTH2_KEY = os.environ.get('CLIENT_ID')
-SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET =os.environ.get('CLIENT_SECRET')
-SOCIAL_AUTH__LOGIN_REDIRECT_URL = '/whatthefuck'
+SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET = os.environ.get('CLIENT_SECRET')
 SOCIAL_AUTH_AZUREAD_LOGIN_ERROR_URL = '/'
 LOGIN_REDIRECT_URL = '/associateazure'
 LOGOUT_REDIRECT_URL = '/'
@@ -189,12 +186,22 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-       # 'django.contrib.auth.context_processors.auth',
-       'social_django.context_processors.backends',
-       'social_django.context_processors.login_redirect',
-       'social.apps.django_app.context_processors.login_redirect_url',
-)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
+            ]
+        }
+    }
+]
 
 SOCIAL_AUTH_DISCONNECT_PIPELINE = (
     'social.pipeline.disconnect.get_entries',

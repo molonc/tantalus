@@ -20,6 +20,7 @@ from django.template.defaulttags import register
 from django.forms import ModelForm
 from django.forms.models import model_to_dict
 from django.shortcuts import redirect
+from django.contrib.sites.shortcuts import get_current_site
 import account.models 
 
 import csv
@@ -29,6 +30,7 @@ from datetime import date
 import pandas as pd
 from io import StringIO
 import xlsxwriter
+import requests
 
 from jira import JIRA, JIRAError
 
@@ -38,8 +40,10 @@ from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
 import social_django.models
+import oauth2_provider.models
 from django.contrib.auth import logout
 from tantalus.settings import SOCIAL_AUTH_LOGIN_URL as LOGIN_URL
+from tantalus.settings import SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET, SOCIAL_AUTH_AZUREAD_OAUTH2_KEY
 
 
 class ExternalIDSearch(LoginRequiredMixin, TemplateView):
@@ -1573,6 +1577,7 @@ class AssociateAzureView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         user = request.user
         if hasattr(user, 'profile') and user.profile.azure_key_associated:
+            print('gottem')
             return HttpResponseRedirect('/')
         elif hasattr(user, 'profile'):
             form = tantalus.forms.AzureConnectProfileForm(instance=user.profile)
@@ -1627,4 +1632,61 @@ class AssociateAzureView(LoginRequiredMixin, TemplateView):
 
             return HttpResponseRedirect('/')
 
+class GetAuthTokenView(LoginRequiredMixin, TemplateView):
+    login_url = '/login/azuread-oauth2'
 
+    template_name = "tantalus/get_auth_token.html"
+
+    def get_context_and_render(self, request):
+        social_user = None
+
+        try:
+            auth_token = oauth2_provider.models.AccessToken.objects.get(user=request.user)
+            msg = "You already have an in-house token"
+            messages.success(request, msg)
+        except (oauth2_provider.models.AccessToken.MultipleObjectsReturned, ):
+            token_to_keep = oauth2_provider.models.AccessToken.objects.filter(user=request.user).last()
+            oauth2_provider.models.AccessToken.objects.exclude(pk=token_to_keep.id).delete()
+            auth_token = token_to_keep
+            msg = "You had multiple tokens. Automatically deleted all except the most recent one"
+            messages.warning(request, msg)
+        except (oauth2_provider.models.AccessToken.DoesNotExist, ):
+            social_user = social_django.models.UserSocialAuth.objects.get(user=request.user)
+            auth_token = self.create_new_token(request, social_user.extra_data['id_token'])
+            msg = "Successfully created a new Token"
+            messages.success(request, msg)
+
+        context = {
+            'user': request.user,
+            'auth_token': auth_token,
+        }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        return self.get_context_and_render(request)
+
+    def create_new_token(self, request, azure_token):
+        client_id = os.environ.get('API_ID')
+        client_secret = os.environ.get('API_SECRET')
+        backend = 'azuread-oauth2'
+
+        base_url = 'http://' + str(get_current_site(request))
+
+        extension = '/auth/convert-token'
+        url = base_url + extension
+
+        params = {
+            'grant_type': 'convert_token', 
+            'client_id': client_id, 
+            'client_secret': client_secret, 
+            'backend': backend, 
+            'token': azure_token
+        }
+
+        result = requests.post(url, params=params).json()
+        if 'access_token' in result:
+            return result['access_token']
+        else:
+            msg = result['error_description']
+            messages.error(request, msg)
+            return HttpResponseRedirect('/')      
