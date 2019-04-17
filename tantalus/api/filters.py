@@ -75,12 +75,24 @@ class DNALibraryFilter(BaseFilterSet):
 class FileInstanceFilter(BaseFilterSet):
     """Filters for file instances."""
 
+    def __init__(self, *args, **kwargs):
+        super(FileInstanceFilter, self).__init__(*args, **kwargs)
+        """Take care of filter names that render poorly."""
+        self.filters["file_resource__sequencedataset__id"].label = "Sequence Dataset ID"
+        self.filters["file_resource__sequencedataset__name"].label = "Sequence Dataset name"
+        self.filters["file_resource__resultsdataset__id"].label = "Results Dataset ID "
+        self.filters["file_resource__resultsdataset__name"].label = "Results Dataset name"
+
     class Meta(BaseFilterSet.Meta):
         model = FileInstance
         fields = {
             "id": ["exact"],
             "storage__name": ["exact"],
-            "file_resource": ["exact"],
+            "file_resource": ["exact", "in"],
+            "file_resource__sequencedataset__id": ["exact"],
+            "file_resource__sequencedataset__name": ["exact"],
+            "file_resource__resultsdataset__id": ["exact"],
+            "file_resource__resultsdataset__name": ["exact"],
             "owner": ["exact"],
             "storage": ["exact"],
             "is_deleted": ["exact"],
@@ -93,12 +105,12 @@ class FileResourceFilter(BaseFilterSet):
     def __init__(self, *args, **kwargs):
         """Take care of filter names that render poorly."""
         super(FileResourceFilter, self).__init__(*args, **kwargs)
-        self.filters["sequencedataset__id"].label = "Has SequenceDataset ID"
-        self.filters["sequencedataset__name"].label = "Has SequenceDataset name"
-        self.filters["resultsdataset__id"].label = "Has Results ID"
-        self.filters["resultsdataset__name"].label = "Has Results name"
+        self.filters["sequencedataset__id"].label = "Sequence Dataset ID"
+        self.filters["sequencedataset__name"].label = "Sequence Dataset name"
+        self.filters["resultsdataset__id"].label = "Results Dataset ID"
+        self.filters["resultsdataset__name"].label = "Results Dataset name"
         self.filters["sequencefileinfo__index_sequence"].label = "Index Sequence"
-        self.filters["fileinstance__storage__name"].label = "Is in Storage name"
+        self.filters["fileinstance__storage__name"].label = "Storage Name"
 
     class Meta(BaseFilterSet.Meta):
         model = FileResource
