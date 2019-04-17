@@ -1577,13 +1577,13 @@ class AssociateAzureView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         user = request.user
         if hasattr(user, 'profile') and user.profile.azure_key_associated:
-            print('gottem')
             return HttpResponseRedirect('/')
         elif hasattr(user, 'profile'):
             form = tantalus.forms.AzureConnectProfileForm(instance=user.profile)
             return self.get_context_and_render(request, form)
         else:
-            form = tantalus.forms.AzureConnectProfileForm()
+            user_to_exclude = request.user
+            form = tantalus.forms.AzureConnectProfileForm(user_to_exclude=user_to_exclude)
             return self.get_context_and_render(request, form)
 
     def post(self, request, *args, **kwargs):
@@ -1611,6 +1611,8 @@ class AssociateAzureView(LoginRequiredMixin, TemplateView):
                 oauth_user = social_django.models.UserSocialAuth.objects.get(user=request.user)
                 user_to_be_deleted = request.user
                 instance = form.save()
+                instance.azure_key_associated = True
+                instance.save()
                 oauth_user.user = instance.user
                 oauth_user.save()
                 logout(request)

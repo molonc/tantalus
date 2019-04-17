@@ -10,7 +10,7 @@
         <form action="{% url 'associate-azure' %}" method="POST">
             {% csrf_token %}
             <fieldset>
-                <legend>Associate Your Azure Token with An Existing User Account</legend>
+                <legend>Link Your Azure Credentials to Your Existing Tantalus Account</legend>
                 <table class="table-condensed">
                     <thead>
                     {{form}}
