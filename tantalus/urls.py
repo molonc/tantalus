@@ -70,12 +70,10 @@ urlpatterns = [
     url(r'^export-external-id-results/$', tantalus.views.export_external_id_results, name='export-external-id-results'),
     url(r'^$', tantalus.views.HomeView.as_view(), name='home'),
     url(r'^associateazure', tantalus.views.AssociateAzureView.as_view(), name='associate-azure'),
-    url(r'^auth/', include('rest_framework_social_oauth2.urls')),
-    url('', include('django.contrib.auth.urls')),
     url('', include('social_django.urls', namespace='social')),
+    url('', include('django.contrib.auth.urls')),
     url('logout/', auth_views.LogoutView.as_view(), {'next_page': settings.LOGOUT_REDIRECT_URL}, name='logout'),
     url('view-auth-token/', tantalus.views.GetAuthTokenView.as_view(), name='get-auth-token'),
     url(r'^json/datasets/$', tantalus.views.DatasetListJSON.as_view(), name='dataset-list-json'),
     url(r'^json/fileresources/$', tantalus.views.FileResourceJSON.as_view(), name='fileresources-list-json'),
-    url(r'^api-token-auth/', views.obtain_auth_token)
 ]

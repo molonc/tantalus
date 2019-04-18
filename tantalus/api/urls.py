@@ -3,6 +3,7 @@ from rest_framework import routers, permissions
 from tantalus.api import views
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from rest_framework.authtoken import views as auth_views
 
 router = routers.DefaultRouter()
 router.register(r'analysis', views.AnalysisViewSet)
@@ -41,5 +42,7 @@ urlpatterns = [
     url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=None), name='schema-json'),
     url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=None), name='schema-swagger-ui'),
     url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=None), name='schema-redoc'),
+    url(r'^api-token-auth/', auth_views.obtain_auth_token),
+    url(r'^auth/', include('rest_framework_social_oauth2.urls')),
     url(r'^', include(router.urls)),
 ]

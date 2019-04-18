@@ -181,7 +181,7 @@ JIRA_URL = 'https://www.bcgsc.ca/jira/'
 DRFSO2_PROPRIETARY_BACKEND_NAME = 'AzureADOAuth2'
 
 AUTHENTICATION_BACKENDS = (
-    'rest_framework_social_oauth2.backends.DjangoOAuth2',
+    #'rest_framework_social_oauth2.backends.DjangoOAuth2',
     'social_core.backends.azuread.AzureADOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
