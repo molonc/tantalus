@@ -1674,7 +1674,7 @@ class GetAuthTokenView(LoginRequiredMixin, TemplateView):
 
         base_url = 'http://' + str(get_current_site(request))
 
-        extension = '/auth/convert-token'
+        extension = '/api/auth/convert-token'
         url = base_url + extension
 
         params = {
