@@ -73,18 +73,6 @@ class FileInstanceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FileInstanceSerializerRead(serializers.ModelSerializer):
-    filepath = serializers.SerializerMethodField()
-    storage = StorageSerializer(read_only=True)
-
-    def get_filepath(self, obj):
-        return obj.get_filepath()
-
-    class Meta:
-        model = tantalus.models.FileInstance
-        fields = '__all__'
-
-
 class SequenceFileInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.SequenceFileInfo
@@ -98,10 +86,22 @@ class FileResourceSerializer(serializers.ModelSerializer):
 
 
 class FileResourceSerializerRead(serializers.ModelSerializer):
-    file_instances = FileInstanceSerializerRead(source='fileinstance_set', many=True, read_only=True)
     sequencefileinfo = SequenceFileInfoSerializer(read_only=True)
     class Meta:
         model = tantalus.models.FileResource
+        fields = '__all__'
+
+
+class FileInstanceSerializerRead(serializers.ModelSerializer):
+    filepath = serializers.SerializerMethodField()
+    storage = StorageSerializer(read_only=True)
+    file_resource = FileResourceSerializer(read_only=True)
+
+    def get_filepath(self, obj):
+        return obj.get_filepath()
+
+    class Meta:
+        model = tantalus.models.FileInstance
         fields = '__all__'
 
 
