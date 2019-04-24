@@ -99,7 +99,7 @@ class ExternalIDSearch(LoginRequiredMixin, TemplateView):
             return self.get_context_and_render(request, form)
 
 
-# @login_required
+@login_required
 def export_external_id_results(request):
     header_dict = {
         'ID': [],
@@ -119,7 +119,7 @@ def export_external_id_results(request):
     return response
 
 
-# @login_required
+@login_required
 @Render("tantalus/patient_list.html")
 def patient_list(request):
     patients = tantalus.models.Patient.objects.all().order_by('patient_id')
@@ -163,7 +163,7 @@ class PatientDetail(LoginRequiredMixin, DetailView):
         return context
 
 
-# @login_required
+@login_required
 @Render("tantalus/submission_list.html")
 def submission_list(request):
     submissions = tantalus.models.Submission.objects.all().order_by('id')
@@ -187,7 +187,7 @@ class SubmissionDetail(LoginRequiredMixin, DetailView):
         return context
 
 
-# @login_required
+@login_required
 @Render("tantalus/sample_list.html")
 def sample_list(request):
     """
@@ -233,7 +233,7 @@ class SampleDetail(LoginRequiredMixin, DetailView):
         return context
 
 
-# @login_required
+@login_required
 @Render("tantalus/result_list.html")
 def result_list(request):
 
@@ -242,7 +242,7 @@ def result_list(request):
     return context
 
 
-class ResultDetail(DetailView):
+class ResultDetail(LoginRequiredMixin, DetailView):
     login_url = LOGIN_URL
 
     model = tantalus.models.ResultsDataset
@@ -392,7 +392,7 @@ class AnalysisEdit(LoginRequiredMixin, TemplateView):
             return self.get_context_and_render(request, form, analysis_pk)
 
 
-# @login_required
+@login_required
 @Render("tantalus/analysis_list.html")
 def analysis_list(request):
     context = {
@@ -416,7 +416,7 @@ class AnalysisDetail(LoginRequiredMixin, DetailView):
         return context
 
 
-# @login_required
+@login_required
 def export_patient_create_template(request):
     header_dict = {
         'Case ID': [],
@@ -927,7 +927,7 @@ class SampleEdit(LoginRequiredMixin, TemplateView):
             return self.get_context_and_render(request, form, sample_pk)
 
 
-# @login_required
+@login_required
 def export_sample_create_template(request):
     header_dict = {
         'Reference ID': [],
@@ -946,7 +946,7 @@ def export_sample_create_template(request):
     return response
 
 
-# @login_required
+@login_required
 @Render("tantalus/tag_list.html")
 def tag_list(request):
     """
