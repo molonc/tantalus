@@ -1672,7 +1672,7 @@ class GetAuthTokenView(LoginRequiredMixin, TemplateView):
         client_secret = os.environ.get('API_SECRET')
         backend = 'azuread-oauth2'
 
-        base_url = 'http://' + str(get_current_site(request))
+        base_url = 'https://' + str(get_current_site(request))
 
         extension = '/api/auth/convert-token'
         url = base_url + extension
@@ -1684,7 +1684,6 @@ class GetAuthTokenView(LoginRequiredMixin, TemplateView):
             'backend': backend, 
             'token': azure_token
         }
-
         result = requests.post(url, params=params).json()
         if 'access_token' in result:
             return result['access_token']

@@ -24,7 +24,7 @@ SECRET_KEY = os.environ.get('TANTALUS_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 debug_raw = os.environ.get('TANTALUS_DEBUG', 'False')
-DEBUG = True if debug_raw.lower() == 'true' else False
+DEBUG = False
 
 # Safeguard to ensure production code is not run during development
 IS_PRODUCTION = (os.environ.get('TANTALUS_IS_PRODUCTION', '') == 'thisismostdefinitelyproduction')
@@ -166,6 +166,24 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'tantalus.api.renderers.BrowsableAPIRendererImproved',
     ),
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'WARNING',
+            'filters': None,
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+    },
 }
 
 SOCIAL_AUTH_POSTGRES_JSONFIELD = True
