@@ -187,7 +187,7 @@ LOGGING = {
 }
 
 SOCIAL_AUTH_POSTGRES_JSONFIELD = True
-
+LOGIN_URL = '/login/azuread-oauth2'
 SOCIAL_AUTH_LOGIN_URL = '/login/azuread-oauth2'
 SOCIAL_AUTH_AZUREAD_OAUTH2_KEY = os.environ.get('CLIENT_ID')
 SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET = os.environ.get('CLIENT_SECRET')
