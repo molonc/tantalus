@@ -1029,8 +1029,12 @@ class ResultJSON(BaseDatatableView):
     def filter_queryset(self, qs):
         search = self.request.GET.get('search[value]', None)
         if search:
-            return qs.filter(Q(analysis__name__istartswith=search)|Q(id__istartswith=search)|Q(name__istartswith=search)|Q(results_type__istartswith=search)|Q(libraries__library_id__istartswith=search)
-                             |Q(results_version__istartswith=search)|Q(owner__username__istartswith=search)|Q(samples__sample_id__istartswith=search))
+            return qs.filter(Q(analysis__name__istartswith=search)|Q(id__istartswith=search)|Q(name__istartswith=search)
+                             |Q(results_type__istartswith=search)|Q(libraries__library_id__istartswith=search)
+                             |Q(results_version__istartswith=search)|Q(owner__username__istartswith=search)|Q(samples__sample_id__istartswith=search)
+                             |Q(analysis__name__icontains=search)|Q(id__icontains=search)|Q(name__icontains=search)|Q(results_type__icontains=search)
+                             |Q(libraries__library_id__icontains=search)|Q(results_version__icontains=search)|Q(owner__username__icontains=search)
+                             |Q(samples__sample_id__icontains=search))
 
         return qs
 
@@ -1060,8 +1064,10 @@ class AnalysesJSON(BaseDatatableView):
     def filter_queryset(self, qs):
         search = self.request.GET.get('search[value]', None)
         if search:
-            return qs.filter(Q(id__startswith=search)|Q(name__startswith=search)|Q(version__startswith=search)|Q(analysis_type__startswith=search)
-                             |Q(jira_ticket__startswith=search)|Q(status__startswith=search))
+            return qs.filter(Q(id__istartswith=search)|Q(name__istartswith=search)|Q(version__istartswith=search)|Q(analysis_type__name__istartswith=search)
+                             |Q(jira_ticket__istartswith=search)|Q(status__istartswith=search)|Q(id__icontains=search)|Q(name__icontains=search)
+                             |Q(version__icontains=search)|Q(analysis_type__name__icontains=search)|Q(jira_ticket__icontains=search)|Q(status__icontains=search)
+                             | Q(owner__username__icontains=search)|Q(owner__username__istartswith=search))
         return qs
 
 
