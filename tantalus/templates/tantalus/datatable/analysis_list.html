@@ -1,31 +1,42 @@
  <div class="table-responsive">
-    <table id="datatable" class="table table-striped" style="display:none;">
+    <table class="analyses_datatable_ajax table table-striped" >
         <thead>
             <tr>
-                <th>Analysis ID</th>
-                <th>Owner</th>
-                <th>Name</th>
-                <th>Version</th>
-                <th>Type</th>
-                <th>Jira Ticket</th>
-                <th>Last Updated</th>
-                <th>Status</th>
+                <th class="analyses_id">Analysis ID</th>
+                <th class="analyses_owner">Owner</th>
+                <th class="analyses_name">Name</th>
+                <th class="analyses_version">Version</th>
+                <th class="analyses_type">Type</th>
+                <th class="analyses_jira_ticket"> Jira Ticket</th>
+                <th class="analyses_last_updated">Last Updated</th>
+                <th class="analyses_status">Status</th>
             </tr>
         </thead>
         <tbody>
-            <br/>
-            {% for analysis in analyses %}
-                <tr>
-                    <td><a href="{% url 'analysis-detail' analysis.id %}">{{analysis.id}}</td>
-                    <td>{{analysis.owner}}</td>
-                    <td>{{analysis.name}}</td>
-                    <td>{{analysis.version}}</td>
-                    <td>{{analysis.analysis_type}}</td>
-                    <td>{{analysis.jira_ticket}}</td>
-                    <td>{{analysis.last_updated}}</td>
-                    <td>{{analysis.status}}</td>
-                </tr>
-            {% endfor %}
         </tbody>
     </table>
+
+     <script type="text/javascript">
+     $(document).ready(function() {
+        $('.analyses_datatable_ajax').DataTable({
+                stateSave: true,
+                columnDefs:[
+                    {"name": "id", "targets": "analyses_id"},
+                    {"name": "owner", "targets": "analyses_owner"},
+                    {"name": "name", "targets": "analyses_name"},
+                    {"name": "version", "targets": "analyses_version"},
+                    {"name": "analysis_type", "targets": "analyses_type"},
+                    {"name": "jira_ticket", "targets": "analyses_jira_ticket"},
+                    {"name": "last_updated", "targets": "analyses_last_updated"},
+                    {"name": "status", "targets": "analyses_status"},
+                ],
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '{% url 'analyses-list-json' %}',
+
+                }
+        } );
+    } );
+    </script>
 </div>

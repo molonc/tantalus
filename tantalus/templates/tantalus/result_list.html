@@ -6,11 +6,6 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container" style="background-color:#F5F5F5;">
-        {% if results %}
-             {% include "tantalus/datatable/result_list.html" %}
-        {% else %}
-            <h5><i class="text-warning">No Results yet.</i></h>
-        {% endif %}
-    </div>
+
+    {% include "tantalus/datatable/result_list.html" %}
 {% endblock %}

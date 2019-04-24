@@ -75,4 +75,7 @@ urlpatterns = [
     url('view-auth-token/', tantalus.views.GetAuthTokenView.as_view(), name='get-auth-token'),
     url(r'^json/datasets/$', tantalus.views.DatasetListJSON.as_view(), name='dataset-list-json'),
     url(r'^json/fileresources/$', tantalus.views.FileResourceJSON.as_view(), name='fileresources-list-json'),
+    url(r'^json/fileresources/$', tantalus.views.FileResourceJSON.as_view(), name='fileresources-list-json'),
+    url(r'^json/results/$', tantalus.views.ResultJSON.as_view(), name='results-list-json'),
+    url(r'^json/analyses/$', tantalus.views.AnalysesJSON.as_view(), name='analyses-list-json'),
 ]

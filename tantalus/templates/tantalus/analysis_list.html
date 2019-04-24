@@ -11,10 +11,6 @@
         <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px;" href="{% url 'analysis-add' %}">Add Analysis</a>
     </div>
     <div class="container" style="background-color:#F5F5F5;">
-        {% if analyses %}
             {% include "tantalus/datatable/analysis_list.html" %}
-        {% else %}
-            <h5><i class="text-warning">No Analyses yet.</i></h>
-        {% endif %}
     </div>
 {% endblock %}

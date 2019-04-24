@@ -21,7 +21,7 @@ from django.forms import ModelForm
 from django.forms.models import model_to_dict
 from django.shortcuts import redirect
 from django.contrib.sites.shortcuts import get_current_site
-import account.models 
+import account.models
 
 import csv
 import json
@@ -99,7 +99,7 @@ class ExternalIDSearch(LoginRequiredMixin, TemplateView):
             return self.get_context_and_render(request, form)
 
 
-@login_required
+# @login_required
 def export_external_id_results(request):
     header_dict = {
         'ID': [],
@@ -119,7 +119,7 @@ def export_external_id_results(request):
     return response
 
 
-@login_required
+# @login_required
 @Render("tantalus/patient_list.html")
 def patient_list(request):
     patients = tantalus.models.Patient.objects.all().order_by('patient_id')
@@ -163,7 +163,7 @@ class PatientDetail(LoginRequiredMixin, DetailView):
         return context
 
 
-@login_required
+# @login_required
 @Render("tantalus/submission_list.html")
 def submission_list(request):
     submissions = tantalus.models.Submission.objects.all().order_by('id')
@@ -187,7 +187,7 @@ class SubmissionDetail(LoginRequiredMixin, DetailView):
         return context
 
 
-@login_required
+# @login_required
 @Render("tantalus/sample_list.html")
 def sample_list(request):
     """
@@ -233,18 +233,16 @@ class SampleDetail(LoginRequiredMixin, DetailView):
         return context
 
 
-@login_required
+# @login_required
 @Render("tantalus/result_list.html")
 def result_list(request):
-    results = tantalus.models.ResultsDataset.objects.all().order_by('id')
 
     context = {
-        'results': results
     }
     return context
 
 
-class ResultDetail(LoginRequiredMixin, DetailView):
+class ResultDetail(DetailView):
     login_url = LOGIN_URL
 
     model = tantalus.models.ResultsDataset
@@ -394,13 +392,10 @@ class AnalysisEdit(LoginRequiredMixin, TemplateView):
             return self.get_context_and_render(request, form, analysis_pk)
 
 
-@login_required
+# @login_required
 @Render("tantalus/analysis_list.html")
 def analysis_list(request):
-    analyses = tantalus.models.Analysis.objects.all().order_by('id')
-
     context = {
-        'analyses': analyses
     }
     return context
 
@@ -421,7 +416,7 @@ class AnalysisDetail(LoginRequiredMixin, DetailView):
         return context
 
 
-@login_required
+# @login_required
 def export_patient_create_template(request):
     header_dict = {
         'Case ID': [],
@@ -724,11 +719,11 @@ class SampleCreate(LoginRequiredMixin, TemplateView):
             for patient in SA_prefix_patients:
                 SA_ids.append(int(patient.patient_id[2:]))
             SA_ids.sort()
-            next_available_SA_number = SA_ids[-1] + 1                    
+            next_available_SA_number = SA_ids[-1] + 1
 
             samples_with_one_match = []
             samples_with_no_match = []
-            samples_with_multiple_matches = []         
+            samples_with_multiple_matches = []
 
             for idx, sample_row in samples_df.iterrows():
                 multiple_matches = []
@@ -756,7 +751,7 @@ class SampleCreate(LoginRequiredMixin, TemplateView):
                     incomplete_sample['patient'] = model_to_dict(tantalus.models.Patient.objects.get(reference_id=sample_row[reference_id_index]))
                     incomplete_sample['sample_id'] = incomplete_sample['patient']['patient_id'] + sample_row[suffix_index]
                     samples_with_one_match.append(incomplete_sample)
-                elif(sample_row[reference_id_index] in no_ref_found): #Create the Patient 
+                elif(sample_row[reference_id_index] in no_ref_found): #Create the Patient
                     patient = tantalus.models.Patient(
                         patient_id='SA'+str(next_available_SA_number),
                         reference_id=sample_row[reference_id_index],
@@ -807,7 +802,7 @@ class ConfirmSamplesCreate(TemplateView):
         samples_with_one_match = request.session['samples_with_one_match']
         samples_with_multiple_matches = request.session['samples_with_multiple_matches']
         samples_with_no_match = request.session['samples_with_no_match']
- 
+
         confirmed_samples_with_one_match_indices = request.POST.getlist('confirm[]')
         confirmed_samples_with_no_match_indices = request.POST.getlist('confirm_create[]')
 
@@ -819,7 +814,7 @@ class ConfirmSamplesCreate(TemplateView):
                 try:
                     patient = tantalus.models.Patient.objects.get(patient_id=request.POST.get(sample['reference_id']))
                     sample['patient'] = patient
-                    sample['sample_id'] = patient.SA_id + sample['suffix'] 
+                    sample['sample_id'] = patient.SA_id + sample['suffix']
                     sample.pop('reference_id')
                     sample.pop('patients')
                     sample.pop('suffix')
@@ -932,7 +927,7 @@ class SampleEdit(LoginRequiredMixin, TemplateView):
             return self.get_context_and_render(request, form, sample_pk)
 
 
-@login_required
+# @login_required
 def export_sample_create_template(request):
     header_dict = {
         'Reference ID': [],
@@ -951,7 +946,7 @@ def export_sample_create_template(request):
     return response
 
 
-@login_required
+# @login_required
 @Render("tantalus/tag_list.html")
 def tag_list(request):
     """
@@ -1006,6 +1001,68 @@ class TagDatasetDelete(View):
         msg = "Successfully removed datasest "
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
+
+class ResultJSON(BaseDatatableView):
+    model = tantalus.models.ResultsDataset
+    columns = ['id', 'owner', 'name', 'results_type', 'results_version', 'samples', 'libraries', 'analysis']
+    order_columns = ['id', 'owner', 'name', 'results_type', 'results_version', 'samples', 'libraries', 'analysis']
+
+
+    def render_column(self, row, column):
+        if column == 'owner':
+            return str(row.owner)
+        if column == 'name':
+            return row.name
+        if column == 'results_type':
+            return row.results_type
+        if column == 'results_version':
+            return row.results_version
+        if column == 'samples':
+            return [s.sample_id for s in row.samples.all()] if row.samples.all() else "None"
+        if column == 'libraries':
+            return [l.library_id for l in row.libraries.all()]
+        if column == 'analysis':
+            return str(row.analysis)
+        else:
+            return super(ResultJSON, self).render_column(row, column)
+
+    def filter_queryset(self, qs):
+        search = self.request.GET.get('search[value]', None)
+        if search:
+            return qs.filter(Q(analysis__name__istartswith=search)|Q(id__istartswith=search)|Q(name__istartswith=search)|Q(results_type__istartswith=search)|Q(libraries__library_id__istartswith=search)
+                             |Q(results_version__istartswith=search)|Q(owner__username__istartswith=search)|Q(samples__sample_id__istartswith=search))
+
+        return qs
+
+class AnalysesJSON(BaseDatatableView):
+    model = tantalus.models.Analysis
+    columns = ['id', 'owner', 'name', 'version', 'analysis_type', 'jira_ticket', 'last_updated', 'status']
+    order_columns = ['id', 'owner', 'name', 'version', 'analysis_type', 'jira_ticket', 'last_updated', 'status']
+
+    def render_column(self, row, column):
+        if column == 'owner':
+            return str(row.owner)
+        if column == 'name':
+            return row.name
+        if column == 'version':
+            return row.version
+        if column == 'analysis_type':
+            return row.analysis_type.name if row.analysis_type else "None"
+        if column == 'jira_ticket':
+            return row.jira_ticket if row.jira_ticket else "None"
+        if column == 'last_updated':
+            return row.last_updated
+        if column == 'status':
+            return row.status
+        else:
+            return super(AnalysesJSON, self).render_column(row, column)
+
+    def filter_queryset(self, qs):
+        search = self.request.GET.get('search[value]', None)
+        if search:
+            return qs.filter(Q(id__startswith=search)|Q(name__startswith=search)|Q(version__startswith=search)|Q(analysis_type__startswith=search)
+                             |Q(jira_ticket__startswith=search)|Q(status__startswith=search))
+        return qs
 
 
 class FileResourceJSON(BaseDatatableView):
@@ -1507,17 +1564,17 @@ class DataStatsView(LoginRequiredMixin, TemplateView):
         """Get data info."""
         # Contains per-storage specific stats
         storage_stats = dict()
-        
+
         # Go through local storages (i.e., non-cloud)
         for local_storage_name in ['gsc', 'shahlab', 'rocks']:
             # General stats
             storage_stats[local_storage_name] = (
                 get_storage_stats([local_storage_name]))
-        
+
         # Go through cloud storages.
         azure_storages = [x.name for x in tantalus.models.AzureBlobStorage.objects.all()]
         storage_stats['azure'] = get_storage_stats(azure_storages)
-        
+
         # Get overall data stats over all storage locations
         storage_stats['all'] = get_storage_stats(['all'])
         # Contains per-library-type stats
@@ -1529,7 +1586,7 @@ class DataStatsView(LoginRequiredMixin, TemplateView):
                         }
         bam_dict = get_library_stats('BAM', storages_dict)
         fastq_dict = get_library_stats('FASTQ', storages_dict)
-        
+
         context = {
             'storage_stats': sorted(
                 storage_stats.items(),
