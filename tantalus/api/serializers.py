@@ -105,6 +105,24 @@ class FileInstanceSerializerRead(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class FileResourceDetailSerializer(serializers.ModelSerializer):
+
+    file_instances = FileInstanceSerializerRead(many=True, source='fileinstance_set')
+
+    class Meta:
+        model = tantalus.models.FileResource
+        fields = ['id', 'file_instances']
+
+
+class FileResourceDetailSerializerRead(serializers.ModelSerializer):
+
+    file_instances = FileInstanceSerializerRead(read_only=True, many=True, source='fileinstance_set')
+
+    class Meta:
+        model = tantalus.models.FileResource
+        fields = ['id', 'file_instances']
+
+
 class LibraryTypeField(serializers.Field):
     def to_representation(self, obj):
         return obj.name

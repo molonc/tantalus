@@ -7,65 +7,71 @@
 
 {% block body %}
     <div class="container" style="margin-top: 0.69em; border:solid 1px #E0E0E0; border-radius: 3px; padding-top: 0.69em; padding-bottom: 1.2em;">
-        <h4>Data</h4>
-        <table class="table-striped" style="width:100%;">
-            <tbody>
-                <tr class="home-page-row">
-                    <td><a href="{% url 'dataset-list' %}">Datasets</a>
-                        <i class="counter">{{dataset_bam_count}} BAMs</i>
-                        <i class="counter">{{dataset_fastq_count}} FASTQs</i>
-                        {% if dataset_single_end_fastq_count %}
-                            <i class="counter">{{dataset_single_end_fastq_count}} single end FASTQs</i></td>
-                        {% endif %}
-                    <td>
-                        <p style="float:right;">
-                        <a href="{% url 'dataset-search' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Search Datasets</a></p>
-                    </td>
-                </tr>
-                <tr class="home-page-row">
-                    <td><a href="{%url 'patient-list' %}">Patients</a> <i class="counter">{{patient_count}}</i></td>
-                    <td>
-                        <p style="float:right;">
-                        <a href="{% url 'patient-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
-                    </td>
-                </tr>
-                <tr class="home-page-row">
-                    <td><a href="{% url 'sample-list' %}">Samples</a> <i class="counter">{{sample_count}}</i></td>
-                    <td>
-                        <p style="float:right;">
-                        <a href="{% url 'sample-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
-                    </td>
-                </tr>
-                <tr class="home-page-row">
-                    <td><a href="{% url 'submissions-list' %}">Submissions</a> <i class="counter">{{submission_count}}</i></td>
-                    <td>
-                        <p style="float:right;">
-                        <a href="{% url 'submission-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
-                    </td>
-                </tr>
-                <tr class="home-page-row">
-                    <td><a href="{% url 'result-list' %}">Result Datasets</a> <i class="counter">{{result_count}}</i></td>
-                    <td></td>
-                </tr>
-                <tr class="home-page-row">
-                    <td><a href="{% url 'analysis-list' %}">Analyses</a> <i class="counter">{{analysis_count}}</i></td>
-                    <td>
-                        <p style="float:right;">
-                        <a href="{% url 'analysis-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>   
-                    </td>
-                </tr>
-                <tr class="home-page-row">
-                    <td><a href="{% url 'tag-list' %}">Tags</a> <i class="counter">{{tag_count}}</i></td>
-                    <td></td>
-                </tr>
-                <tr class="home-page-row">
-                    <td><a href="{% url 'external-id-search' %}">Convert External Sample IDs</a></td>
-                    <td></td>
-                </tr>
-                <tr class="home-page-row">
-                    <td><a href="{% url 'data-stats' %}">Data stats (warning: loads slowly)</a></td><td></td>
-                </tr>
-            </tbody>
-        </table>
+        {% if not user.is_authenticated %}
+            <h4> Tsk Tsk. You aren't logged in. Log in at the top right!</h4>
+            <br>
+            <img src="/static/images/andrew_arms_crossed.jpg" style="width: 100%;"/>
+        {% else %}
+            <h4>Data</h4>
+            <table class="table-striped" style="width:100%;">
+                <tbody>
+                    <tr class="home-page-row">
+                        <td><a href="{% url 'dataset-list' %}">Datasets</a>
+                            <i class="counter">{{dataset_bam_count}} BAMs</i>
+                            <i class="counter">{{dataset_fastq_count}} FASTQs</i>
+                            {% if dataset_single_end_fastq_count %}
+                                <i class="counter">{{dataset_single_end_fastq_count}} single end FASTQs</i></td>
+                            {% endif %}
+                        <td>
+                            <p style="float:right;">
+                            <a href="{% url 'dataset-search' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Search Datasets</a></p>
+                        </td>
+                    </tr>
+                    <tr class="home-page-row">
+                        <td><a href="{%url 'patient-list' %}">Patients</a> <i class="counter">{{patient_count}}</i></td>
+                        <td>
+                            <p style="float:right;">
+                            <a href="{% url 'patient-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
+                        </td>
+                    </tr>
+                    <tr class="home-page-row">
+                        <td><a href="{% url 'sample-list' %}">Samples</a> <i class="counter">{{sample_count}}</i></td>
+                        <td>
+                            <p style="float:right;">
+                            <a href="{% url 'sample-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
+                        </td>
+                    </tr>
+                    <tr class="home-page-row">
+                        <td><a href="{% url 'submissions-list' %}">Submissions</a> <i class="counter">{{submission_count}}</i></td>
+                        <td>
+                            <p style="float:right;">
+                            <a href="{% url 'submission-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
+                        </td>
+                    </tr>
+                    <tr class="home-page-row">
+                        <td><a href="{% url 'result-list' %}">Result Datasets</a> <i class="counter">{{result_count}}</i></td>
+                        <td></td>
+                    </tr>
+                    <tr class="home-page-row">
+                        <td><a href="{% url 'analysis-list' %}">Analyses</a> <i class="counter">{{analysis_count}}</i></td>
+                        <td>
+                            <p style="float:right;">
+                            <a href="{% url 'analysis-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>   
+                        </td>
+                    </tr>
+                    <tr class="home-page-row">
+                        <td><a href="{% url 'tag-list' %}">Tags</a> <i class="counter">{{tag_count}}</i></td>
+                        <td></td>
+                    </tr>
+                    <tr class="home-page-row">
+                        <td><a href="{% url 'external-id-search' %}">Convert External Sample IDs</a></td>
+                        <td></td>
+                    </tr>
+                    <tr class="home-page-row">
+                        <td><a href="{% url 'data-stats' %}">Data stats (warning: loads slowly)</a></td><td></td>
+                    </tr>
+                </tbody>
+            </table>
+        {% endif %}
     </div>
 {% endblock %}

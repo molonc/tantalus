@@ -1614,6 +1614,7 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = {
+            'user': self.request.user,
             'dataset_bam_count': tantalus.models.SequenceDataset.objects.filter(dataset_type='BAM').count(),
             'dataset_fastq_count': tantalus.models.SequenceDataset.objects.filter(dataset_type='FQ').count(),
             'patient_count': tantalus.models.Patient.objects.all().count(),
