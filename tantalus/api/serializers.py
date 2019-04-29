@@ -80,6 +80,7 @@ class SequenceFileInfoSerializer(serializers.ModelSerializer):
 
 
 class FileResourceSerializer(serializers.ModelSerializer):
+    sequencefileinfo = SequenceFileInfoSerializer(read_only=True)
     class Meta:
         model = tantalus.models.FileResource
         fields = '__all__'
