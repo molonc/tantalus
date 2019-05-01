@@ -1034,7 +1034,7 @@ class ResultJSON(BaseDatatableView):
                              |Q(results_version__istartswith=search)|Q(owner__username__istartswith=search)|Q(samples__sample_id__istartswith=search)
                              |Q(analysis__name__icontains=search)|Q(id__icontains=search)|Q(name__icontains=search)|Q(results_type__icontains=search)
                              |Q(libraries__library_id__icontains=search)|Q(results_version__icontains=search)|Q(owner__username__icontains=search)
-                             |Q(samples__sample_id__icontains=search))
+                             |Q(samples__sample_id__icontains=search)).distinct()
 
         return qs
 
@@ -1067,7 +1067,7 @@ class AnalysesJSON(BaseDatatableView):
             return qs.filter(Q(id__istartswith=search)|Q(name__istartswith=search)|Q(version__istartswith=search)|Q(analysis_type__name__istartswith=search)
                              |Q(jira_ticket__istartswith=search)|Q(status__istartswith=search)|Q(id__icontains=search)|Q(name__icontains=search)
                              |Q(version__icontains=search)|Q(analysis_type__name__icontains=search)|Q(jira_ticket__icontains=search)|Q(status__icontains=search)
-                             | Q(owner__username__icontains=search)|Q(owner__username__istartswith=search))
+                             | Q(owner__username__icontains=search)|Q(owner__username__istartswith=search)).distinct()
         return qs
 
 
