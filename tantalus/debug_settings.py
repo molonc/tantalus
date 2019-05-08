@@ -39,6 +39,11 @@ LOCAL_APPS = (
     'tantalus.api',
 )
 
+
+INTERNAL_IPS = (
+    '127.0.0.1',
+)
+
 INSTALLED_APPS = [
     'account',
     'tantalus',
