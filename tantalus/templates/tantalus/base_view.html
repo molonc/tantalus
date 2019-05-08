@@ -89,7 +89,11 @@
         <span> / </span>
         <a href="{% url 'logout' %}">Logout</a>
         {% else %}
-        <a href="{% url 'social:begin' 'azuread-oauth2' %}">Login</a>
+            {% if not debug %}
+            <a href="{% url 'account:login' %}">Login</a>
+            {% else %}
+            <a href="{% url 'social:begin' 'azuread-oauth2' %}">Login</a>
+            {% endif %}
         {% endif %}
     </div>
     

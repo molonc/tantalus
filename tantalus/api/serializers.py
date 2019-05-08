@@ -92,14 +92,6 @@ class FileResourceSerializerRead(serializers.ModelSerializer):
         model = tantalus.models.FileResource
         fields = '__all__'
 
-class FileResourceInstancesSerilizer(serializers.ModelSerializer):
-    class Meta:
-        model = tantalus.models.FileResource
-        fields = (
-            'id',
-            'file_instances'
-        )
-
 class FileInstanceSerializerRead(serializers.ModelSerializer):
     filepath = serializers.SerializerMethodField()
     storage = StorageSerializer(read_only=True)
@@ -112,6 +104,14 @@ class FileInstanceSerializerRead(serializers.ModelSerializer):
         model = tantalus.models.FileInstance
         fields = '__all__'
 
+class FileResourceInstancesSerilizer(serializers.ModelSerializer):
+    # fileinstance_set = FileInstanceSerializerRead(read_only=True, many=True)
+    class Meta:
+        model = tantalus.models.SequenceFileInfo
+        fields = (
+            'id',
+            # 'fileinstance_set'
+        )
 
 class LibraryTypeField(serializers.Field):
     def to_representation(self, obj):
