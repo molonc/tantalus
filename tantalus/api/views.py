@@ -92,6 +92,12 @@ class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     filter_class = FileResourceFilter
 
 
+class FileResourceDetailViewset(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = tantalus.models.FileResource.objects.all()
+    serializer_class = tantalus.api.serializers.FileResourceInstancesSerilizer
+    filter_class = FileResourceFilter
+
 class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.SequenceFileInfo.objects.all()
