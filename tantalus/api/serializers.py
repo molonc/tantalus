@@ -92,6 +92,13 @@ class FileResourceSerializerRead(serializers.ModelSerializer):
         model = tantalus.models.FileResource
         fields = '__all__'
 
+class FileResourceInstancesSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = tantalus.models.FileResource
+        fields = (
+            'id',
+            'file_instances'
+        )
 
 class FileInstanceSerializerRead(serializers.ModelSerializer):
     filepath = serializers.SerializerMethodField()
