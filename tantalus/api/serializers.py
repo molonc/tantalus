@@ -105,12 +105,12 @@ class FileInstanceSerializerRead(serializers.ModelSerializer):
         fields = '__all__'
 
 class FileResourceInstancesSerilizer(serializers.ModelSerializer):
-    # fileinstance_set = FileInstanceSerializerRead(read_only=True, many=True)
+    fileinstance_set = FileInstanceSerializerRead(read_only=True, many=True)
     class Meta:
         model = tantalus.models.SequenceFileInfo
         fields = (
             'id',
-            # 'fileinstance_set'
+            'fileinstance_set'
         )
 
 class LibraryTypeField(serializers.Field):
