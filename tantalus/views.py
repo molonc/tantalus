@@ -1033,7 +1033,6 @@ class ResultJSON(BaseDatatableView):
         search = self.request.GET.get('search[value]', None)
         if search:
             search_list = search.split(" ")
-            print(search_list)
             qs =  qs.filter(reduce(operator.and_,[
                                          Q(analysis__name__istartswith=key)|Q(id__istartswith=key)|Q(name__istartswith=key)
                              |Q(results_type__istartswith=key)|Q(libraries__library_id__istartswith=key)
@@ -1113,9 +1112,7 @@ class FileResourceJSON(BaseDatatableView):
 
     def filter_queryset(self, qs):
         search = self.request.GET.get('search[value]', None)
-        print("query")
         if search:
-            print(qs)
             return qs.filter(Q(id__startswith=search)|Q(filename__istartswith=search)|Q(filename__icontains=search)).distinct()
         return qs
 
