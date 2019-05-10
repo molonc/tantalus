@@ -1,3 +1,5 @@
+import operator
+
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -21,6 +23,7 @@ from django.forms import ModelForm
 from django.forms.models import model_to_dict
 from django.shortcuts import redirect
 from django.contrib.sites.shortcuts import get_current_site
+from functools import reduce
 import account.models
 
 import csv
@@ -1029,12 +1032,18 @@ class ResultJSON(BaseDatatableView):
     def filter_queryset(self, qs):
         search = self.request.GET.get('search[value]', None)
         if search:
-            return qs.filter(Q(analysis__name__istartswith=search)|Q(id__istartswith=search)|Q(name__istartswith=search)
-                             |Q(results_type__istartswith=search)|Q(libraries__library_id__istartswith=search)
-                             |Q(results_version__istartswith=search)|Q(owner__username__istartswith=search)|Q(samples__sample_id__istartswith=search)
-                             |Q(analysis__name__icontains=search)|Q(id__icontains=search)|Q(name__icontains=search)|Q(results_type__icontains=search)
-                             |Q(libraries__library_id__icontains=search)|Q(results_version__icontains=search)|Q(owner__username__icontains=search)
-                             |Q(samples__sample_id__icontains=search)).distinct()
+            search_list = search.split(" ")
+            qs =  qs.filter(reduce(operator.and_,[
+                                         Q(analysis__name__istartswith=key)|Q(id__istartswith=key)|Q(name__istartswith=key)
+                             |Q(results_type__istartswith=key)|Q(libraries__library_id__istartswith=key)
+                             |Q(results_version__istartswith=key)|Q(owner__username__istartswith=key)|Q(samples__sample_id__istartswith=key)
+                             |Q(analysis__name__icontains=key)|Q(id__icontains=key)|Q(name__icontains=key)|Q(results_type__icontains=key)
+                             |Q(libraries__library_id__icontains=key)|Q(results_version__icontains=key)|Q(owner__username__icontains=key)
+                             |Q(samples__sample_id__icontains=key)|Q(samples__sample_id__in=search_list) for key in search_list if key is not ""]
+                                   )
+                            )
+
+            return qs.distinct()
 
         return qs
 
@@ -1104,7 +1113,7 @@ class FileResourceJSON(BaseDatatableView):
     def filter_queryset(self, qs):
         search = self.request.GET.get('search[value]', None)
         if search:
-            return qs.filter(Q(id__startswith=search)|Q(filename__startswith=search))
+            return qs.filter(Q(id__startswith=search)|Q(filename__istartswith=search)|Q(filename__icontains=search)).distinct()
         return qs
 
 
