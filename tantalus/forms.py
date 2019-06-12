@@ -658,3 +658,26 @@ class DatasetTagForm(forms.Form):
         tag_name = self.cleaned_data['tag_name']
         tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
         tag.sequencedataset_set.add(*self.models_to_tag)
+
+class DatasetForm(forms.ModelForm):
+    library = forms.CharField(max_length=500)
+    sample = forms.CharField(max_length=500)
+    class Meta:
+        model = tantalus.models.SequenceDataset
+        fields = [
+            'name',
+            'tags',
+            'reference_genome',
+            'dataset_type',
+            'library',
+            'sample',
+            'aligner',
+            'is_production',
+            'note',
+        ]
+
+    def clean(self):
+        data = self.cleaned_data
+        data["sample"] = tantalus.models.Sample.objects.get(id=data["sample"])
+        data["library"] = tantalus.models.DNALibrary.objects.get(id=data["library"])
+        return data

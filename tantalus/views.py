@@ -23,6 +23,8 @@ from django.forms import ModelForm
 from django.forms.models import model_to_dict
 from django.shortcuts import redirect
 from django.contrib.sites.shortcuts import get_current_site
+from django.views.generic.edit import UpdateView
+
 from functools import reduce
 import account.models
 
@@ -1283,6 +1285,38 @@ class DatasetDetail(LoginRequiredMixin, DetailView):
             msg = "Invalid Tag Name"
             messages.error(request, msg)
             return HttpResponseRedirect(dataset.get_absolute_url())
+
+
+class DatasetEdit(TemplateView):
+
+    template_name = "tantalus/abstractdataset_edit.html"
+
+    def get_context_data(self, pk):
+        print("HELLO")
+        dataset = tantalus.models.SequenceDataset.objects.get(id=pk)
+        form=tantalus.forms.DatasetForm(instance=dataset)
+        print("PRINTING FPRM")
+        print(form._html_output)
+        context = {
+            "form" : form,
+            "pk" : pk
+        }
+        return  context
+
+    def post(self, request, pk):
+        dataset = tantalus.models.SequenceDataset.objects.get(id=pk)
+        form = tantalus.forms.DatasetForm(request.POST, instance=dataset)
+
+        if form.is_valid():
+            print(dir(form))
+            form.save()
+            msg = "Successfully updated the Dataset."
+            messages.success(request, msg)
+            return HttpResponseRedirect(dataset.get_absolute_url())
+
+        msg = "Failed to update the Dataset. Please fix the errors below."
+        messages.error(request, msg)
+        return self.get_context_and_render(request, form, pk=pk)
 
 
 @method_decorator(login_required, name='dispatch')

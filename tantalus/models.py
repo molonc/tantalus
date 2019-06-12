@@ -546,6 +546,11 @@ class SequenceDataset(models.Model):
         default=False,
     )
 
+    note = models.TextField(
+        null=True,
+        blank=True,
+    )
+
     def get_num_total_sequencing_lanes(self):
         return SequencingLane.objects.filter(dna_library=self.library).count()
 
