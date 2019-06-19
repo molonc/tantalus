@@ -60,6 +60,10 @@
                     <td class="custom-table-detail">{{object.note}}</td>
                 </tr>
                 <tr>
+                    <th class="custom-table-header">Complete</th>
+                    <td class="custom-table-detail">{{object.get_is_complete}}</td>
+                </tr>
+                <tr>
                     <th class="custom-table-header">Tags</th>
                     <td class="custom-table-detail">
                         {% for tag in object.tags.all %}
