@@ -61,9 +61,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -148,6 +149,8 @@ STATIC_URL = '/static/'
 
 STATIC_ROOT = '/var/www/html/tantalus/static/'
 
+CORS_ORIGIN_ALLOW_ALL = True
+
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
@@ -190,6 +193,7 @@ LOGIN_URL = '/login/azuread-oauth2'
 SOCIAL_AUTH_LOGIN_URL = '/login/azuread-oauth2'
 SOCIAL_AUTH_AZUREAD_OAUTH2_KEY = os.environ.get('CLIENT_ID')
 SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET = os.environ.get('CLIENT_SECRET')
+SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = os.environ.get('TENANT_ID')
 SOCIAL_AUTH_AZUREAD_LOGIN_ERROR_URL = '/'
 LOGIN_REDIRECT_URL = '/associateazure'
 LOGOUT_REDIRECT_URL = '/'
