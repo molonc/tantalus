@@ -27,42 +27,6 @@ from openpyxl import load_workbook
 from jira import JIRA, JIRAError
 
 
-class AzureConnectProfileForm(forms.ModelForm):
-
-    password = forms.CharField(widget=forms.PasswordInput, required=False, help_text='Enter the password of the Tantalus User you selected above')
-    delete_current_account_after_association = forms.NullBooleanField(initial=True, help_text='Leave this checked unless you are part of the Development Team')
-
-    def __init__(self, *args, **kwargs):
-        #Clear Kwargs so form can initialize properly
-        modify_queryset = False
-        if 'user_to_exclude' in kwargs:
-            user_to_exclude = kwargs['user_to_exclude']
-            kwargs = {}
-            modify_queryset = True 
-        # first call parent's constructor
-        super(AzureConnectProfileForm, self).__init__(*args, **kwargs)
-        # there's a `fields` property now
-        self.fields['user'].required = False
-        if modify_queryset:
-            self.fields['user'].queryset = account.models.User.objects.exclude(id=user_to_exclude.id).order_by('username')
-        else:
-            self.fields['user'].queryset = account.models.User.objects.order_by('username')
-
-    def clean_password(self):
-        password = self.cleaned_data.get("password", False)
-        try:
-            username = self.cleaned_data.get("user", False).username
-        except AttributeError as e:
-            username = None
-        if username is not None:
-            if authenticate(username=username, password=password) is None:
-                raise ValidationError('Invalid Account Password')
-
-    class Meta:
-        model = tantalus.models.Profile 
-        fields = ['user']
-
-
 class AnalysisForm(forms.ModelForm):
 
     jira_username = forms.CharField()

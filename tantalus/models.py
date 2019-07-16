@@ -22,20 +22,6 @@ def create_id_field(*args, **kwargs):
         **kwargs
     )
 
-
-class Profile(models.Model):
-    """
-    Extends Django Base Account.User model
-    Extending to include a boolean that asks if they want to associate their Azure Token with an existing account
-    """
-
-    user = models.OneToOneField(account.models.User, on_delete=models.CASCADE)
-    azure_key_associated = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.user.username
-
-
 class Tag(models.Model):
     """
     Simple text tag associated with datasets.
