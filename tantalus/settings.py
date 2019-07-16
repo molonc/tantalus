@@ -60,7 +60,6 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_filters',
     'drf_yasg',
-    'social_django',
     'oauth2_provider',
     'rest_framework_social_oauth2',
     'corsheaders'
