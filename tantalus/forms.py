@@ -17,6 +17,7 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.auth import authenticate
 from tantalus.settings import JIRA_URL
+from django.db.models import F
 
 import tantalus.models
 import account.models
@@ -455,6 +456,37 @@ class DatasetSearchForm(forms.Form):
         required=False,
     )
 
+    aligner = forms.ChoiceField(
+        choices=(('', '---'),("BWA_MEM","BWA_MEM"),("BWA_ALN","BWA_ALN")),
+        label="Aligner",
+        required=False,
+    )
+
+    read_group_match = forms.NullBooleanField(
+        label="Read Group Number Match",
+        help_text="Num. Read Groups == Num. Total Read Group",
+        required=False,
+    )
+
+    analysis_version = forms.CharField(
+        label="Related Analyses Version",
+        required=False,
+        help_text="If Analysis related to dataset has suggested version(v.#.#.#)"
+    )
+
+
+    years = [2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020]
+    from_last_updated_date = forms.DateField(
+        label="Related Analyses Last Updated Date FROM",
+        required=False,
+        widget=forms.SelectDateWidget(years=years),
+    )
+    to_last_updated_date = forms.DateField(
+        label="Related Analyses Last Updated Date TO",
+        required=False,
+        widget=forms.SelectDateWidget(years=years),
+    )
+
     def clean_tagged_with(self):
         tags = self.cleaned_data['tagged_with']
         if tags:
@@ -537,10 +569,13 @@ class DatasetSearchForm(forms.Form):
                 "Found zero datasets."
             )
 
+
     def get_dataset_search_results(self, clean=True, exclude=None, tagged_with=None, library=None, sample=None, dataset_type=None,storages=None,
                                    flowcell_id_and_lane=None, sequencing_center=None,
                                    sequencing_instrument=None, sequencing_library_id=None, library_type=None,
-                                   index_format=None, min_num_read_groups=None, is_production=None):
+                                   index_format=None, min_num_read_groups=None, is_production=None,
+
+                                   aligner=None, read_group_match=None, analysis_version=None, from_last_updated_date=None, to_last_updated_date=None):
         """
         Performs the filter search with the given fields. The "clean" flag is used to indicate whether the cleaned data
         should be used or not.
@@ -568,7 +603,14 @@ class DatasetSearchForm(forms.Form):
             library_type = self.cleaned_data['library_type']
             index_format = self.cleaned_data['index_format']
             min_num_read_groups = self.cleaned_data['min_num_read_groups']
-            is_production = self.cleaned_data['is_production']
+
+            aligner = self.cleaned_data['aligner']
+            read_group_match = self.cleaned_data['read_group_match']
+
+            analysis_version = self.cleaned_data['analysis_version']
+            from_last_updated_date = self.cleaned_data['from_last_updated_date']
+            to_last_updated_date = self.cleaned_data['to_last_updated_date']
+
 
         results = tantalus.models.SequenceDataset.objects.all()
 
@@ -625,11 +667,27 @@ class DatasetSearchForm(forms.Form):
         if is_production:
             results = results.filter(is_production=is_production)
 
+        print("READ")
+        print(read_group_match)
+
+        if aligner:
+            results = results.filter(aligner__name__icontains=aligner)
+        if read_group_match is not None:
+            print(read_group_match)
+            if  read_group_match:
+                print(read_group_match)
+                results = results.annotate(num_read_group=Count('sequence_lanes', distinct=True),total_num_read_group=Count('library__sequencinglane',distinct=True)).filter(num_read_group=F('total_num_read_group'))
+        if analysis_version:
+            results = results.filter(analysis__version__icontains=analysis_version)
+        if from_last_updated_date:
+            results = results.filter(last_updated__gte=from_last_updated_date)
+        if to_last_updated_date:
+            results = results.filter(last_updated__lte=to_last_updated_date)
         results = results.distinct()
 
         return list(results.values_list('id', flat=True))
 
-
+# 7,670
 class AddDatasetToTagForm(forms.Form):
 
     tag = forms.CharField(max_length=40)
