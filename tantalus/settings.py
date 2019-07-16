@@ -39,6 +39,11 @@ LOCAL_APPS = (
     'tantalus.api',
 )
 
+
+INTERNAL_IPS = (
+    '127.0.0.1',
+)
+
 INSTALLED_APPS = [
     'account',
     'tantalus',
@@ -55,9 +60,9 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_filters',
     'drf_yasg',
-    'social_django',
     'oauth2_provider',
-    'corsheaders',
+    'rest_framework_social_oauth2',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -160,6 +165,7 @@ REST_FRAMEWORK = {
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
@@ -170,42 +176,13 @@ REST_FRAMEWORK = {
     ),
 }
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'level': 'WARNING',
-            'filters': None,
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-        },
-    },
-}
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = "DENY"
 
-SOCIAL_AUTH_POSTGRES_JSONFIELD = True
-LOGIN_URL = '/login/azuread-oauth2'
-SOCIAL_AUTH_LOGIN_URL = '/login/azuread-oauth2'
-SOCIAL_AUTH_AZUREAD_OAUTH2_KEY = os.environ.get('CLIENT_ID')
-SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET = os.environ.get('CLIENT_SECRET')
-SOCIAL_AUTH_AZUREAD_TENANT_OAUTH2_TENANT_ID = os.environ.get('TENANT_ID')
-SOCIAL_AUTH_AZUREAD_LOGIN_ERROR_URL = '/'
-LOGIN_REDIRECT_URL = '/associateazure'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/account/login'
 JIRA_URL = 'https://www.bcgsc.ca/jira/'
 
-DRFSO2_PROPRIETARY_BACKEND_NAME = 'AzureADOAuth2'
-
-AUTHENTICATION_BACKENDS = (
-    #'rest_framework_social_oauth2.backends.DjangoOAuth2',
-    'social_core.backends.azuread.AzureADOAuth2',
-    'django.contrib.auth.backends.ModelBackend',
-)
 
 JWT_AUTH = {
     'JWT_VERIFY': True,
@@ -215,26 +192,3 @@ JWT_AUTH = {
     'JWT_ALLOW_REFRESH': True,
     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=365),
 }
-
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'social_django.context_processors.backends',
-                'social_django.context_processors.login_redirect',
-            ]
-        }
-    }
-]
-
-SOCIAL_AUTH_DISCONNECT_PIPELINE = (
-    'social.pipeline.disconnect.get_entries',
-    'social.pipeline.disconnect.revoke_tokens',
-    'social.pipeline.disconnect.disconnect'
-)

@@ -85,15 +85,9 @@
         <span> / </span>
         <a href="{% url 'account:password_update' %}">Change Password</a>
         <span> / </span>
-        <a href="{% url 'get-auth-token' %}">Get API Token</a>
-        <span> / </span>
-        <a href="{% url 'logout' %}">Logout</a>
+        <a href="{% url 'account:logout' %}">Logout</a>
         {% else %}
-            {% if debug %}
-            <a href="{% url 'account:login' %}">Login</a>
-            {% else %}
-            <a href="{% url 'social:begin' 'azuread-oauth2' %}">Login</a>
-            {% endif %}
+        <a href="{% url 'account:login' %}">Login</a>
         {% endif %}
     </div>
     

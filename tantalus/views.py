@@ -40,15 +40,11 @@ import requests
 from jira import JIRA, JIRAError
 
 from tantalus.utils import read_excel_sheets
-from tantalus.settings import STATIC_ROOT, JIRA_URL
+from tantalus.settings import STATIC_ROOT, JIRA_URL, LOGIN_URL
 from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
-import social_django.models
-import oauth2_provider.models
-from django.contrib.auth import logout
-from tantalus.settings import SOCIAL_AUTH_LOGIN_URL as LOGIN_URL
-from tantalus.settings import SOCIAL_AUTH_AZUREAD_OAUTH2_SECRET, SOCIAL_AUTH_AZUREAD_OAUTH2_KEY
+
 
 
 class ExternalIDSearch(LoginRequiredMixin, TemplateView):
@@ -1652,7 +1648,7 @@ class DataStatsView(LoginRequiredMixin, TemplateView):
 
 class HomeView(TemplateView):
 
-    #login_url = LOGIN_URL
+    login_url = LOGIN_URL
 
     template_name = 'tantalus/index.html'
 
@@ -1669,132 +1665,3 @@ class HomeView(TemplateView):
         }
         return context
 
-
-class AssociateAzureView(LoginRequiredMixin, TemplateView):
-    login_url = LOGIN_URL
-
-    template_name = "tantalus/associate_azure.html"
-
-    def get_context_and_render(self, request, form):
-        context = {
-            'form': form,
-        }
-        return render(request, self.template_name, context)
-
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        if hasattr(user, 'profile') and user.profile.azure_key_associated:
-            return HttpResponseRedirect('/')
-        elif hasattr(user, 'profile'):
-            form = tantalus.forms.AzureConnectProfileForm(instance=user.profile)
-            return self.get_context_and_render(request, form)
-        else:
-            user_to_exclude = request.user
-            form = tantalus.forms.AzureConnectProfileForm(user_to_exclude=user_to_exclude)
-            return self.get_context_and_render(request, form)
-
-    def post(self, request, *args, **kwargs):
-
-        form = tantalus.forms.AzureConnectProfileForm(request.POST)
-
-        try:
-            chosen_user = account.models.User.objects.get(id=int(request.POST['user']))
-        except ValueError as e:
-            if request.POST.get('no_account'):
-                new_profile = tantalus.models.Profile.objects.create(user=request.user, azure_key_associated=True)
-                new_profile.save()
-
-                return HttpResponseRedirect('/')
-            else:
-                msg = "You must select a user"
-                messages.error(request, msg)
-                return self.get_context_and_render(request, form)
-
-        if hasattr(chosen_user, 'profile'):
-            form = tantalus.forms.AzureConnectProfileForm(request.POST, instance=chosen_user.profile)
-
-        if request.POST.get('associate'):
-            if form.is_valid():
-                oauth_user = social_django.models.UserSocialAuth.objects.get(user=request.user)
-                user_to_be_deleted = request.user
-                instance = form.save()
-                instance.azure_key_associated = True
-                instance.save()
-                oauth_user.user = instance.user
-                oauth_user.save()
-                logout(request)
-
-                if form.cleaned_data['delete_current_account_after_association']:
-                    user_to_be_deleted.delete()
-
-                msg = "Successfully reassociated token. Please log in again at the top right to complete the process"
-                messages.success(request, msg)
-                return HttpResponseRedirect('/')
-            else:
-                msg = "Failed to associate account. Try again"
-                messages.error(request, msg)
-                return self.get_context_and_render(request, form)
-
-        elif request.POST.get('no_account'):
-            new_profile = tantalus.models.Profile.objects.create(user=request.user, azure_key_associated=True)
-            new_profile.save()
-
-            return HttpResponseRedirect('/')
-
-class GetAuthTokenView(LoginRequiredMixin, TemplateView):
-    login_url = '/login/azuread-oauth2'
-
-    template_name = "tantalus/get_auth_token.html"
-
-    def get_context_and_render(self, request):
-        social_user = None
-
-        try:
-            auth_token = oauth2_provider.models.AccessToken.objects.get(user=request.user)
-            msg = "You already have an in-house token"
-            messages.success(request, msg)
-        except (oauth2_provider.models.AccessToken.MultipleObjectsReturned, ):
-            token_to_keep = oauth2_provider.models.AccessToken.objects.filter(user=request.user).last()
-            oauth2_provider.models.AccessToken.objects.exclude(pk=token_to_keep.id).delete()
-            auth_token = token_to_keep
-            msg = "You had multiple tokens. Automatically deleted all except the most recent one"
-            messages.warning(request, msg)
-        except (oauth2_provider.models.AccessToken.DoesNotExist, ):
-            social_user = social_django.models.UserSocialAuth.objects.get(user=request.user)
-            auth_token = self.create_new_token(request, social_user.extra_data['id_token'])
-            msg = "Successfully created a new Token"
-            messages.success(request, msg)
-
-        context = {
-            'user': request.user,
-            'auth_token': auth_token,
-        }
-        return render(request, self.template_name, context)
-
-    def get(self, request, *args, **kwargs):
-        return self.get_context_and_render(request)
-
-    def create_new_token(self, request, azure_token):
-        client_id = os.environ.get('API_ID')
-        client_secret = os.environ.get('API_SECRET')
-        backend = 'azuread-oauth2'
-
-        base_url = 'https://' + str(get_current_site(request))
-
-        extension = '/api/auth/convert-token'
-        url = base_url + extension
-
-        params = {
-            'grant_type': 'convert_token', 
-            'client_id': client_id, 
-            'client_secret': client_secret, 
-            'backend': backend, 
-            'token': azure_token
-        }
-        result = requests.post(url, params=params).json()
-        if 'access_token' in result:
-            return result['access_token']
-        else:
-            msg = result['error_description']
-            messages.error(request, msg)
-            return HttpResponseRedirect('/')      
