@@ -1352,8 +1352,9 @@ class DatasetSearch(LoginRequiredMixin, FormView):
 
         form = self.get_form()
         if form.is_valid():
-            kwargs['kw_search_results'] = form.get_dataset_search_results()
-            request.session['dataset_search_results'] = form.get_dataset_search_results()
+            search_data = form.get_dataset_search_results()
+            kwargs['kw_search_results'] =search_data
+            request.session['dataset_search_results'] = search_data
             request.session.modified = True
             return self.form_valid(form)
         else:
