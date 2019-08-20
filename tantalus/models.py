@@ -472,7 +472,6 @@ class SequenceDataset(models.Model):
 
     name = models.CharField(
         max_length=200,
-        unique=True,
     )
 
     tags = models.ManyToManyField(
@@ -505,6 +504,11 @@ class SequenceDataset(models.Model):
     library = models.ForeignKey(
         DNALibrary,
         on_delete=models.CASCADE,
+    )
+
+    version_number = models.PositiveIntegerField(
+        default=1,
+        null=False,
     )
 
     file_resources = models.ManyToManyField(
@@ -577,6 +581,9 @@ class SequenceDataset(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        unique_together = ('name', 'version_number')
 
 
 class AnalysisType(models.Model):
