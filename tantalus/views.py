@@ -1080,8 +1080,8 @@ class AnalysesJSON(BaseDatatableView):
 
 class FileResourceJSON(BaseDatatableView):
     model = tantalus.models.FileResource
-    columns = ['id','filename', 'owner', 'created', 'last_updated']
-    order_columns = ['id','filename', 'owner', 'created', 'last_updated']
+    columns = ['id','filename', 'owner', 'created', 'last_updated', 'storages']
+    order_columns = ['id','filename', 'owner', 'created', 'last_updated', 'storages']
 
     def get_id(request, id):
         return render(request, {'id' : id}, 'templates/tantalus/datatable/file_resources.html')
@@ -1104,6 +1104,8 @@ class FileResourceJSON(BaseDatatableView):
             return row.created
         if column == 'last_updated':
             return row.last_updated
+        if column == 'storages':
+            return row.get_storage_names()
         else:
             return super(FileResourceJSON, self).render_column(row, column)
 

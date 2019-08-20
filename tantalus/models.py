@@ -373,6 +373,13 @@ class FileResource(models.Model):
         size_mb = str("{:,.2f}".format(self.size / 1000000.0)) + " MB"
         return size_mb
 
+    def get_storage_names(self):
+        return list(
+            FileInstance.objects.filter(
+                file_resource=self)
+            .values_list('storage__name', flat=True)
+            .distinct())
+
 
 class SequenceFileInfo(models.Model):
     """
