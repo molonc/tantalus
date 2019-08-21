@@ -13,6 +13,8 @@ def update_version_number(apps, schema_editor):
             dataset.name = dataset.name[:-3]
         elif dataset.name.endswith('_V3'):
             dataset.name = dataset.name[:-3]
+        if SequenceDataset.objects.filter(name=dataset.name).count() > 0:
+            dataset.version_number = max([a.version_number for a in SequenceDataset.objects.filter(name=dataset.name)]) + 1
         dataset.save()
 
     for dataset in SequenceDataset.objects.filter(name__contains='-V'):
