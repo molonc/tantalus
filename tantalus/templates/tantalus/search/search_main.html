@@ -1,0 +1,33 @@
+{% extends "tantalus/base_view.html" %}
+
+{% load staticfiles %}
+
+{% block title %}Search Result{% endblock %}
+
+{% block body %}
+
+
+    <div id="main_table" class="container" style="text-align: center;">
+        <div class="row">
+        {% if total == 0 %}
+            <span class="pull-left"><h4>Hmm... Nothing found</h4></span>
+            <span class="pull-left"><h4>Make sure you are using the correct term and use more than one letter</h4></span>
+        </div>
+
+        {% else %}
+            <span class="pull-left"><h4>Total {{total}} match(es) "{{query}}"...</h4></span>
+
+        </div>
+        <div class="row">
+            {% include 'tantalus/search/search_table.html' with name='Sample' data=sample %}
+            {% include 'tantalus/search/search_table.html' with name='Analysis' data=analysis %}
+            {% include 'tantalus/search/search_table.html' with name='Dataset' data=dataset %}
+        </div>
+        {% endif %}
+    </div>
+    <br>
+
+
+{% include 'tantalus/scripts/pop_toggle.html' %}
+{% endblock %}
+

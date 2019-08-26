@@ -39,12 +39,29 @@ import requests
 
 from jira import JIRA, JIRAError
 
+from search_util.search_helper import return_text_search
 from tantalus.utils import read_excel_sheets
 from tantalus.settings import STATIC_ROOT, JIRA_URL, LOGIN_URL
 from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
 
+#============================
+# Search view
+#----------------------------
+class SearchView(TemplateView):
+    login_url = LOGIN_URL
+    template_name = "tantalus/search/search_main.html"
+
+
+    def get_context_data(self):
+
+        query_str = self.request.GET.get('query_str')
+
+        if len(query_str) < 1:
+            return {"total" : 0}
+
+        return return_text_search(query_str)
 
 
 class ExternalIDSearch(LoginRequiredMixin, TemplateView):

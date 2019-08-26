@@ -751,7 +751,7 @@ class ResultsDataset(models.Model):
         return reverse("result-detail", args=(self.id,))
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
 
 class Storage(PolymorphicModel):
@@ -950,5 +950,9 @@ class Submission(models.Model):
         null=True
     )
 
+
     def get_absolute_url(self):
-        return reverse("submissions-list")
+        return reverse("submission-detail", args=(self.id,))
+
+    def __str__(self):
+        return str(self.sample.sample_id)
