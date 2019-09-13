@@ -188,7 +188,7 @@ class SequenceDatasetFilter(filters.FilterSet):
             "is_production": ["exact"],
             "library__library_id": ["exact"],
             "library__library_type__name": ["exact"],
-            "sample__sample_id": ["exact"],
+            "sample__sample_id": ["exact", "contains"],
             "tags__name": ["exact"],
             "sequence_lanes__flowcell_id": ["exact"],
             "sequence_lanes__lane_number": ["exact"],
