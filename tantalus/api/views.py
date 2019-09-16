@@ -1,8 +1,9 @@
+from collections import OrderedDict
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 import rest_framework.exceptions
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, pagination
 from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -27,6 +28,26 @@ from tantalus.api.filters import (
 import tantalus.models
 
 
+class VariableResultsSetPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'page_size'
+    page_size = 10
+
+    def paginate_queryset(self, queryset, request, view=None):
+        if 'no_pagination' in request.query_params:
+            return list(queryset)
+        return super().paginate_queryset(queryset, request, view)
+
+    def get_paginated_response(self, data):
+        try:
+            return super().get_paginated_response(data)
+        except AttributeError:
+            # Occurs when page_size is set to None. Still want response in same JSON format
+            return Response(OrderedDict([
+                ('count', len(data)),
+                ('results', data)
+            ]))
+
+
 class RestrictedQueryMixin(object):
     """Cause view to fail on invalid filter query parameter.
 
@@ -34,7 +55,7 @@ class RestrictedQueryMixin(object):
     https://stackoverflow.com/questions/27182527/how-can-i-stop-django-rest-framework-to-show-all-records-if-query-parameter-is-w/50957733#50957733
     """
     def get_queryset(self):
-        non_filter_params = set(['limit', 'offset', 'page', 'page_size', 'format'])
+        non_filter_params = set(['limit', 'offset', 'page', 'page_size', 'format', 'no_pagination'])
 
         qs = super(RestrictedQueryMixin, self).get_queryset().order_by('id')
 
@@ -75,6 +96,7 @@ class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.Sample.objects.all()
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_class = SampleFilter
+    pagination_class = VariableResultsSetPagination
 
 
 class PatientViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
@@ -82,6 +104,7 @@ class PatientViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.Patient.objects.all()
     serializer_class = tantalus.api.serializers.PatientSerializer
     filter_class = PatientFilter
+    pagination_class = VariableResultsSetPagination
 
 
 class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
@@ -90,6 +113,7 @@ class FileResourceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     serializer_class_readonly = tantalus.api.serializers.FileResourceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileResourceSerializer
     filter_class = FileResourceFilter
+    pagination_class = VariableResultsSetPagination
 
 
 class FileResourceDetailViewset(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
@@ -97,6 +121,7 @@ class FileResourceDetailViewset(RestrictedQueryMixin, viewsets.ReadOnlyModelView
     queryset = tantalus.models.FileResource.objects.all()
     serializer_class = tantalus.api.serializers.FileResourceInstancesSerilizer
     filter_class = FileResourceFilter
+    pagination_class = VariableResultsSetPagination
 
 class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
@@ -104,6 +129,7 @@ class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     serializer_class_readonly = tantalus.api.serializers.SequenceFileInfoSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequenceFileInfoSerializer
     filter_class = SequenceFileInfoFilter
+    pagination_class = VariableResultsSetPagination
 
 
 class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
@@ -112,6 +138,7 @@ class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     serializer_class_readonly = tantalus.api.serializers.DNALibrarySerializer
     serializer_class_readwrite = tantalus.api.serializers.DNALibrarySerializer
     filter_class = DNALibraryFilter
+    pagination_class = VariableResultsSetPagination
 
 
 class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
@@ -120,6 +147,7 @@ class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     serializer_class_readonly = tantalus.api.serializers.SequencingLaneSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequencingLaneSerializer
     filter_class = SequencingLaneFilter
+    pagination_class = VariableResultsSetPagination
 
 
 class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
@@ -128,6 +156,8 @@ class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
     filter_class = SequenceDatasetFilter
+    pagination_class = VariableResultsSetPagination
+
 
     def destroy(self, request, pk=None):
         """Delete all associated file resources too."""
@@ -147,6 +177,7 @@ class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     queryset = tantalus.models.Storage.objects.all()
     serializer_class = tantalus.api.serializers.StorageSerializer
     filter_class = StorageFilter
+    pagination_class = VariableResultsSetPagination
 
 
 class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
@@ -154,12 +185,14 @@ class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.ServerStorage.objects.all()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
     filter_class = ServerStorageFilter
+    pagination_class = VariableResultsSetPagination
 
 
 class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.AzureBlobStorage.objects.all()
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
+    pagination_class = VariableResultsSetPagination
 
 
 class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
@@ -168,6 +201,7 @@ class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     serializer_class_readonly = tantalus.api.serializers.FileInstanceSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.FileInstanceSerializer
     filter_class = FileInstanceFilter
+    pagination_class = VariableResultsSetPagination
 
 
 class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
@@ -180,6 +214,7 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
     queryset = tantalus.models.Tag.objects.all()
     serializer_class = tantalus.api.serializers.TagSerializer
     filter_class = TagFilter
+    pagination_class = VariableResultsSetPagination
 
 
 class ResultsDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
@@ -188,6 +223,7 @@ class ResultsDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     serializer_class_readonly = tantalus.api.serializers.ResultsDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.ResultsDatasetSerializer
     filter_class = ResultsDatasetFilter
+    pagination_class = VariableResultsSetPagination
 
     def destroy(self, request, pk=None):
         """Delete all associated file resources too."""
@@ -208,3 +244,4 @@ class AnalysisViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     serializer_class_readonly = tantalus.api.serializers.AnalysisSerializer
     serializer_class_readwrite = tantalus.api.serializers.AnalysisSerializer
     filter_class = AnalysisFilter
+    pagination_class = VariableResultsSetPagination
