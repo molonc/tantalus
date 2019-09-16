@@ -26,6 +26,8 @@ class StorageSerializer(serializers.ModelSerializer):
             return ServerStorageSerializer(obj, context=self.context).to_representation(obj)
         elif isinstance(obj, tantalus.models.AzureBlobStorage):
             return AzureBlobStorageSerializer(obj, context=self.context).to_representation(obj)
+        elif isinstance(obj, tantalus.models.AwsS3Storage):
+            return AwsS3StorageSerializer(obj, context=self.context).to_representation(obj)
         return super(StorageSerializer, self).to_representation(obj)
 
 
@@ -63,6 +65,24 @@ class AzureBlobStorageSerializer(serializers.ModelSerializer):
             'name',
             'storage_account',
             'storage_container',
+            'prefix',
+        )
+
+
+class AwsS3StorageSerializer(serializers.ModelSerializer):
+    prefix = serializers.SerializerMethodField()
+    storage_type = serializers.CharField(read_only=True)
+
+    def get_prefix(self, obj):
+        return obj.get_prefix()
+
+    class Meta:
+        model = tantalus.models.AwsS3Storage
+        fields = (
+            'id',
+            'storage_type',
+            'name',
+            'bucket',
             'prefix',
         )
 

@@ -195,6 +195,12 @@ class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     pagination_class = VariableResultsSetPagination
 
 
+class AwsS3StorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = tantalus.models.AwsS3Storage.objects.all()
+    serializer_class = tantalus.api.serializers.AwsS3StorageSerializer
+
+
 class FileInstanceViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.FileInstance.objects.all()

@@ -841,7 +841,30 @@ class AzureBlobStorage(Storage):
         blobpath = '/'.join([self.storage_account, self.storage_container, blobname])
         return blobpath
 
-    storage_type = 'blob'
+
+class AwsS3Storage(Storage):
+    """
+    Aws S3 blob storage for sequence files.
+    """
+
+    storage_type = 's3'
+
+    history = HistoricalRecords()
+
+    # TODO: unsure of length limitations of bucket name
+    bucket = models.CharField(
+        max_length=256,
+    )
+
+    def get_prefix(self):
+        return self.bucket
+
+    def get_filepath(self, file_resource):
+        # strip the slash, otherwise this creates an additional
+        # <no name> root folder
+        blobname = file_resource.filename.strip('/')
+        blobpath = '/'.join([self.bucket, blobname])
+        return blobpath
 
 
 class FileInstance(models.Model):
