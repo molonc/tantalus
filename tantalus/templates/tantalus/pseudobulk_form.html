@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.5, shrink-to-fit=yes" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+
+    <title>Pseudobulk Form</title>
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
+        integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons" rel="stylesheet">
+    <script src="https://unpkg.com/vue"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@3.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script> -->
+</head>
+
+<body>
+    <v-app id="pseudobulk-form">
+        <v-container class="ma-0 pa-0" fluid>
+            <v-row justify="center" align="center">
+                <v-col cols="8">
+                    <h1>Pseudobulk Submission Form</h1>
+                    <v-row>
+                        <v-col cols="6">
+                            <v-text-field v-model="tag" label="Tag"></v-text-field>
+                        </v-col>
+
+                    </v-row>
+                    <v-row>
+                        <v-col cols="6">
+                            <v-autocomplete v-model="selectedSamples" label="Samples" chips clearable multiple close return-object
+                                :items="samples">
+                            </v-autocomplete>
+                        </v-col>
+                        <v-col>
+                            <v-textarea v-model="selectedSamplesNames" outlined full-width no-resize :color="color">
+                            </v-textarea>
+                        </v-col>
+                    </v-row>
+                    <v-row>
+                        <v-col>
+                            <v-autocomplete v-model="selectedLibraries" label="Libraries" multiple :items="libraries">
+                            </v-autocomplete>
+                        </v-col>
+                    </v-row>
+
+                    <v-row>
+                        <v-col cols="6">
+                            <v-autocomplete v-model="normalSample" label="Normal Sample" :items="samples" clearable>
+                            </v-autocomplete>
+                        </v-col>
+                    </v-row>
+                    <v-row>
+                        <v-col cols="6">
+                            <v-autocomplete v-model="normalLibrary" label="Normal Library" :items="libraries" clearable>
+                            </v-autocomplete>
+                        </v-col>
+                    </v-row>
+                    <v-btn absolute right @click="submitForm" :color="color" style="color: white">Submit</v-btn>
+                </v-col>
+            </v-row>
+
+
+
+
+            <!-- <v-select v-model='selectedItems' label='Select One Or Many' :items="items" item-text="firstName" chips
+                clearable multiple return-object>
+                <template v-slot:selection='data'>
+                    <v-chip :key="JSON.stringify(data.item)" close class="chip--select-multi"
+                        @input="data.parent.selectItem(data.item)">
+                        {{ data.item.firstName }} {{ data.item.lastName }}
+                    </v-chip>
+                </template>
+                <template v-slot:item='data'>
+                    <v-list-item-content>
+                        <v-list-item-title>
+                            {{ data.item.firstName }} {{ data.item.lastName }}
+                        </v-list-item-title>
+                    </v-list-item-content>
+                </template>
+            </v-select> -->
+
+        </v-container>
+
+    </v-app>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script type="text/javascript">
+        // Vue.use(Vuetify);
+        new Vue({
+            el: '#pseudobulk-form',
+            vuetify: new Vuetify(),
+            data() {
+                return {
+                    color: "#9e8ae3",
+                    tag: "",
+                    samples: [],
+                    libraries: [],
+                    selectedSamples: [],
+                    selectedLibraries: [],
+                    normalSample: "",
+                    normalLibrary: "",
+                }
+            },
+            computed: {
+            },
+
+            methods: {
+                submitForm: function () {
+                    if (!!this.tag && !!this.normalSample && !!this.normalLibrary && !!this.selectedSamples && !!this.selectedLibraries) {
+                        console.log("tag")
+                        console.log(this.tag)
+                        console.log("normal sample")
+                        console.log(this.normalSample)
+                        console.log("selected samples")
+                        console.log(this.selectedSamples)
+                        console.log("selected libraries")
+                        console.log(this.selectedLibraries)
+                        return
+                    }
+
+                    console.log("need to fill out all")
+
+                },
+
+                selectedSamplesNames: function (){
+                    var samples =  this.selectedSamples.forEach((sample) => {
+                        console.log(sample.text)
+                        return sample.text
+                    })
+
+                    return samples
+                }
+            },
+
+
+            created: function () {
+                this.samples = JSON.parse(unescape("{{samples| safe | escapejs}}"))
+                this.libraries = JSON.parse(unescape("{{libraries| safe | escapejs}}"))
+            },
+        })
+    </script>
+</body>
+
+</html>

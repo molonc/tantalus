@@ -18,6 +18,7 @@ from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.db.models import Q, F, Count
 from django.db.models.functions import Lower
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.serializers.json import DjangoJSONEncoder
 from django.template.defaulttags import register
 from django.forms import ModelForm
 from django.forms.models import model_to_dict
@@ -62,6 +63,37 @@ class SearchView(TemplateView):
             return {"total" : 0}
 
         return return_text_search(query_str)
+
+
+@login_required
+def pseudobulk_form(request):
+  return render(
+    request,
+    # "tantalus/test.html",
+    "tantalus/pseudobulk_form.html",
+    {
+        "samples" : json.dumps(
+            [
+                {
+                    "value" : sample.pk,
+                    "text" : sample.sample_id,
+                } 
+                for sample in tantalus.models.Sample.objects.all()
+            ],
+            cls=DjangoJSONEncoder
+        ),
+        "libraries": json.dumps(
+            [
+                {
+                    "value": library.pk,
+                    "text": library.library_id,
+                }
+                for library in tantalus.models.DNALibrary.objects.filter(library_type__in=[2, 4])
+            ],
+            cls=DjangoJSONEncoder
+        )
+    }
+  )
 
 
 class ExternalIDSearch(LoginRequiredMixin, TemplateView):
