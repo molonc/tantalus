@@ -30,14 +30,14 @@
                 <v-col cols="8">
                     <h1>Pseudobulk Submission Form</h1>
                     <v-row>
-                        <v-col cols="6">
+                        <v-col cols="4">
                             <v-text-field v-model="tag" label="Tag"></v-text-field>
                         </v-col>
 
                     </v-row>
                     <v-row>
                         <v-col cols="6">
-                            <v-autocomplete v-model="selectedSamples" label="Samples" chips clearable multiple close return-object
+                            <v-autocomplete v-model="selectedSamples" label="Samples" outlined chips clearable multiple close return-object
                                 :items="samples">
                             </v-autocomplete>
                         </v-col>
@@ -48,19 +48,23 @@
                     </v-row>
                     <v-row>
                         <v-col>
-                            <v-autocomplete v-model="selectedLibraries" label="Libraries" multiple :items="libraries">
+                            <v-autocomplete v-model="selectedLibraries" outlined label="Libraries" multiple :items="libraries">
                             </v-autocomplete>
+                        </v-col>
+                        <v-col>
+                            <v-textarea v-model="selectedSamplesNames" outlined full-width no-resize :color="color">
+                            </v-textarea>
                         </v-col>
                     </v-row>
 
                     <v-row>
-                        <v-col cols="6">
+                        <v-col cols="4">
                             <v-autocomplete v-model="normalSample" label="Normal Sample" :items="samples" clearable>
                             </v-autocomplete>
                         </v-col>
                     </v-row>
                     <v-row>
-                        <v-col cols="6">
+                        <v-col cols="4">
                             <v-autocomplete v-model="normalLibrary" label="Normal Library" :items="libraries" clearable>
                             </v-autocomplete>
                         </v-col>
@@ -113,6 +117,17 @@
                 }
             },
             computed: {
+                selectedSamplesNames: {
+                    get(){
+                        samples = this.selectedSamples.map(sample => sample.text)
+                        console.log(samples)
+                        return samples
+                    },
+
+                    set(inputSamples){
+                        console.log(inputSamples)
+                    }
+                }
             },
 
             methods: {
@@ -132,15 +147,6 @@
                     console.log("need to fill out all")
 
                 },
-
-                selectedSamplesNames: function (){
-                    var samples =  this.selectedSamples.forEach((sample) => {
-                        console.log(sample.text)
-                        return sample.text
-                    })
-
-                    return samples
-                }
             },
 
 
