@@ -4,7 +4,7 @@
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=0.5, shrink-to-fit=yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 
     <title>Pseudobulk Form</title>
@@ -28,70 +28,78 @@
         <v-container class="ma-0 pa-0" fluid>
             <v-row justify="center" align="center">
                 <v-col cols="8">
-                    <h1>Pseudobulk Submission Form</h1>
+                    <h2>Pseudobulk Submission Form</h2>
+                    <v-alert v-if="!formFilled" outlined type="warning" border="left">
+                        {% verbatim %} {{errorMsg}} {% endverbatim %}
+                    </v-alert>
                     <v-row>
                         <v-col cols="4">
-                            <v-text-field v-model="tag" label="Tag"></v-text-field>
+                            <v-text-field v-model="tag" label="Tag" :color="color"></v-text-field>
                         </v-col>
 
                     </v-row>
                     <v-row>
+                        <p class="ma-3">Select samples from dropdown or enter a list of samples in text box seperated by
+                            commas or spaces.</p>
                         <v-col cols="6">
-                            <v-autocomplete v-model="selectedSamples" label="Samples" outlined chips clearable multiple close return-object
-                                :items="samples">
+                            <v-autocomplete v-model="selectedSamples" label="Samples" outlined chips clearable multiple
+                                return-object :items="samples" :color="color">
+                                <!-- <template v-slot:selection='data'>
+                                    <v-chip :key="JSON.stringify(data.item)" class="chip--select-multi"
+                                        @input="data.parent.selectItem(data.item)">
+                                        {% verbatim %}{{ data.item.text}}
+                                        {% endverbatim %}
+                                    </v-chip>
+                                </template>
+                                <template v-slot:item='data'>
+                                    <v-list-item-content>
+                                        <v-list-item-title>
+                                            {% verbatim %}{{ data.item.text }}
+                                            {% endverbatim %}
+                                        </v-list-item-title>
+                                    </v-list-item-content>
+                                </template> -->
                             </v-autocomplete>
                         </v-col>
-                        <v-col>
+                        <v-col cols="6">
                             <v-textarea v-model="selectedSamplesNames" outlined full-width no-resize :color="color">
                             </v-textarea>
                         </v-col>
                     </v-row>
                     <v-row>
-                        <v-col>
-                            <v-autocomplete v-model="selectedLibraries" outlined label="Libraries" multiple :items="libraries">
+                        <p class="ma-3">Select libraries from dropdown or enter a list of libraries in text box
+                            seperated by commas or spaces.</p>
+                        <v-col cols="6">
+                            <v-autocomplete v-model="selectedLibraries" label="Libraries" outlined chips clearable
+                                multiple return-object :items="libraries" :color="color">
                             </v-autocomplete>
                         </v-col>
-                        <v-col>
-                            <v-textarea v-model="selectedSamplesNames" outlined full-width no-resize :color="color">
+                        <v-col cols="6">
+                            <v-textarea v-model="selectedLibrariesNames" :color="color" outlined full-width no-resize
+                                :color="color">
                             </v-textarea>
                         </v-col>
                     </v-row>
 
                     <v-row>
                         <v-col cols="4">
-                            <v-autocomplete v-model="normalSample" label="Normal Sample" :items="samples" clearable>
+                            <v-autocomplete v-model="normalSample" :color="color" label="Normal Sample" :items="selectedSamples"
+                                clearable no-data-text="Please select samples above in order to choose a normal">
+                                <template v-slot:no-data="No"></template>
                             </v-autocomplete>
                         </v-col>
                     </v-row>
                     <v-row>
                         <v-col cols="4">
-                            <v-autocomplete v-model="normalLibrary" label="Normal Library" :items="libraries" clearable>
+                            <v-autocomplete v-model="normalLibrary" :color="color" label="Normal Library"
+                                :items="selectedLibraries" clearable return-object 
+                                no-data-text="Please select libraries above in order to choose a normal">
                             </v-autocomplete>
                         </v-col>
                     </v-row>
                     <v-btn absolute right @click="submitForm" :color="color" style="color: white">Submit</v-btn>
                 </v-col>
             </v-row>
-
-
-
-
-            <!-- <v-select v-model='selectedItems' label='Select One Or Many' :items="items" item-text="firstName" chips
-                clearable multiple return-object>
-                <template v-slot:selection='data'>
-                    <v-chip :key="JSON.stringify(data.item)" close class="chip--select-multi"
-                        @input="data.parent.selectItem(data.item)">
-                        {{ data.item.firstName }} {{ data.item.lastName }}
-                    </v-chip>
-                </template>
-                <template v-slot:item='data'>
-                    <v-list-item-content>
-                        <v-list-item-title>
-                            {{ data.item.firstName }} {{ data.item.lastName }}
-                        </v-list-item-title>
-                    </v-list-item-content>
-                </template>
-            </v-select> -->
 
         </v-container>
 
@@ -112,27 +120,85 @@
                     libraries: [],
                     selectedSamples: [],
                     selectedLibraries: [],
-                    normalSample: "",
-                    normalLibrary: "",
+                    inputSamples: [],
+                    inputLibraries: [],
+                    normalSample: [],
+                    normalLibrary: [],
+                    formFilled: true,
+                    fieldsToFill: [],
+                    errorMsg: "",
                 }
             },
             computed: {
                 selectedSamplesNames: {
-                    get(){
-                        samples = this.selectedSamples.map(sample => sample.text)
-                        console.log(samples)
-                        return samples
+                    get() {
+                        // let samples = this.selectedSamples.map(sample => sample.text)
+                        // console.log(samples)
+                        // return samples
                     },
 
-                    set(inputSamples){
-                        console.log(inputSamples)
+                    set(input) {
+                        samples = input.split(/[\s,]+/)
+                        console.log("samples after splitting")
+                        console.log(samples)
+                        if (!!input) {
+                            console.log(input)
+                            return
+                        }
+                        console.log("sample input is empty")
                     }
-                }
+                },
+                selectedLibrariesNames: {
+                    get() {
+                        // let libraries = this.selectedLibraries.map(library => library.text)
+                        // console.log(libraries)
+                        // return libraries
+                    },
+
+                    set(input) {
+                        libraries = input.split(/[\s,]+/)
+                        console.log("libraries after splitting")
+                        console.log(libraries)
+                        if (!!input) {
+                            console.log(input)
+                            return
+                        }
+                        console.log("library input is empty")
+                    }
+                },
+                selectedNormalSample: {
+                    get() {
+                        if (!this.selectedSamples.length) {
+                            console.log("no normal sample options")
+                            return []
+                        }
+                    },
+                    set(input) {
+                        console.log("normal sample selected is:")
+                        console.log(input)
+                    }
+                },
+                selectedNormalLibrary: {
+                    get() {
+                        if (!this.selectedLibraries.length) {
+                            console.log("no normal library options")
+                            return []
+                        }
+                    },
+
+                    set(input) {
+                        console.log("normal selected is:")
+                        console.log(input)
+                    }
+                },
             },
 
             methods: {
-                submitForm: function () {
+                validateForm: function () {
+                    console.log(this.selectedSamples)
+                    this.errorMsg = "Please fill out the following fields: "
                     if (!!this.tag && !!this.normalSample && !!this.normalLibrary && !!this.selectedSamples && !!this.selectedLibraries) {
+                        this.formFilled = true
                         console.log("tag")
                         console.log(this.tag)
                         console.log("normal sample")
@@ -140,12 +206,44 @@
                         console.log("selected samples")
                         console.log(this.selectedSamples)
                         console.log("selected libraries")
-                        console.log(this.selectedLibraries)
+                        console.log(this.normalLibrary)
                         return
                     }
-
-                    console.log("need to fill out all")
-
+                    // Required fields have not been filled out
+                    let allFields = ["Samples", "Libraries", "Normal Sample", "Normal Library", "Tag"]
+                    var fieldsMap = {
+                        Samples: this.selectedSamples,
+                        Libraries: this.selectedLibraries,
+                        Tag: this.tag,
+                        "Normal Sample": this.normalSample,
+                        "Normal Library": this.normalLibrary,
+                    }
+                    this.fieldsToFill = []
+                    this.formFilled = false
+                    console.log("fields needs to be filled")
+                    allFields.forEach((item) => {
+                        let field = fieldsMap[item]
+                        console.log(item)
+                        console.log(field)
+                        if (Array.isArray(field)) {
+                            console.log(`${item} is array`)
+                            if (!field.length) {
+                                console.log(!field.length)
+                                console.log(`adding ${item} to fields to fill`)
+                                this.fieldsToFill.push(item)
+                            }
+                        }
+                        else if (!field) {
+                            console.log(`adding ${item} to fields to fill`)
+                            this.fieldsToFill.push(item)
+                        }
+                    })
+                    console.log(this.fieldsToFill)
+                    this.errorMsg = this.errorMsg.concat(this.fieldsToFill.join(", "))
+                },
+                submitForm: function () {
+                    this.validateForm()
+                    // add axios calls below
                 },
             },
 
