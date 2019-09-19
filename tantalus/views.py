@@ -67,33 +67,40 @@ class SearchView(TemplateView):
 
 @login_required
 def pseudobulk_form(request):
-  return render(
-    request,
-    # "tantalus/test.html",
-    "tantalus/pseudobulk_form.html",
-    {
-        "samples" : json.dumps(
-            [
-                {
-                    "value" : sample.pk,
-                    "text" : sample.sample_id,
-                } 
-                for sample in tantalus.models.Sample.objects.all()
-            ],
-            cls=DjangoJSONEncoder
-        ),
-        "libraries": json.dumps(
-            [
-                {
-                    "value": library.pk,
-                    "text": library.library_id,
-                }
-                for library in tantalus.models.DNALibrary.objects.filter(library_type__in=[2, 4])
-            ],
-            cls=DjangoJSONEncoder
-        )
-    }
-  )
+    return render(
+      request,
+      "tantalus/pseudobulk_form.html",
+      {
+          "samples" : json.dumps(
+              [
+                  {
+                      "value" : sample.pk,
+                      "text" : sample.sample_id,
+                  }
+                  for sample in tantalus.models.Sample.objects.all()
+              ],
+              cls=DjangoJSONEncoder
+          ),
+          "libraries": json.dumps(
+              [
+                  {
+                      "value": library.pk,
+                      "text": library.library_id,
+                  }
+                  for library in tantalus.models.DNALibrary.objects.filter(library_type__in=[2, 4])
+              ],
+              cls=DjangoJSONEncoder
+          )
+      }
+    )
+
+
+@login_required
+def create_pseudobulk_runs(request):
+
+    print(request.body.decode('utf-8'))
+
+    return HttpResponse("nice!")
 
 
 class ExternalIDSearch(LoginRequiredMixin, TemplateView):
@@ -1715,4 +1722,3 @@ class HomeView(TemplateView):
             'tag_count': tantalus.models.Tag.objects.all().count(),
         }
         return context
-
