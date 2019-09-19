@@ -89,6 +89,7 @@ class FileInstanceFilter(BaseFilterSet):
             "id": ["exact"],
             "storage__name": ["exact"],
             "file_resource": ["exact", "in"],
+            "file_resource__filename": ["exact"],
             "file_resource__sequencedataset__id": ["exact"],
             "file_resource__sequencedataset__name": ["exact"],
             "file_resource__resultsdataset__id": ["exact"],
