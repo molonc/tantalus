@@ -15,10 +15,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="https://fonts.googleapis.com/css?family=Material+Icons" rel="stylesheet">
     <script src="https://unpkg.com/vue"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@3.x/css/materialdesignicons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+
     <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script> -->
 </head>
@@ -26,25 +29,27 @@
 <body>
     <v-app id="pseudobulk-form">
         <v-container class="ma-0 pa-0" fluid>
-            <v-row justify="center" align="center">
-                <v-col cols="8">
-                    <h2>Pseudobulk Submission Form</h2>
-                    <v-alert v-if="!formFilled" outlined type="warning" border="left">
-                        {% verbatim %} {{errorMsg}} {% endverbatim %}
-                    </v-alert>
-                    <v-row>
-                        <v-col cols="4">
-                            <v-text-field v-model="tag" label="Tag" :color="color"></v-text-field>
-                        </v-col>
+            <template v-if="!confirmation">
+                <v-row justify="center" align="center">
+                    <v-col cols="8">
+                        <h2>Pseudobulk Submission Form</h2>
+                        <v-alert v-if="!formFilled" outlined type="warning" border="left">
+                            {% verbatim %} {{errorMsg}} {% endverbatim %}
+                        </v-alert>
+                        <v-row>
+                            <v-col cols="4">
+                                <v-text-field v-model="tag" label="Tag" :color="color"></v-text-field>
+                            </v-col>
 
-                    </v-row>
-                    <v-row>
-                        <p class="ma-3">Select samples from dropdown or enter a list of samples in text box seperated by
-                            commas or spaces.</p>
-                        <v-col cols="6">
-                            <v-autocomplete v-model="selectedSamples" label="Samples" outlined chips clearable multiple
-                                return-object :items="samples" :color="color">
-                                <!-- <template v-slot:selection='data'>
+                        </v-row>
+                        <v-row>
+                            <p class="ma-3">Select samples from dropdown or enter a list of samples in text box
+                                seperated by
+                                commas or spaces.</p>
+                            <v-col cols="6">
+                                <v-autocomplete v-model="selectedSamples" label="Samples" outlined chips clearable
+                                    multiple return-object :items="samples" :color="color">
+                                    <!-- <template v-slot:selection='data'>
                                     <v-chip :key="JSON.stringify(data.item)" class="chip--select-multi"
                                         @input="data.parent.selectItem(data.item)">
                                         {% verbatim %}{{ data.item.text}}
@@ -59,48 +64,73 @@
                                         </v-list-item-title>
                                     </v-list-item-content>
                                 </template> -->
-                            </v-autocomplete>
-                        </v-col>
-                        <v-col cols="6">
-                            <v-textarea v-model="selectedSamplesNames" outlined full-width no-resize :color="color">
-                            </v-textarea>
-                        </v-col>
-                    </v-row>
-                    <v-row>
-                        <p class="ma-3">Select libraries from dropdown or enter a list of libraries in text box
-                            seperated by commas or spaces.</p>
-                        <v-col cols="6">
-                            <v-autocomplete v-model="selectedLibraries" label="Libraries" outlined chips clearable
-                                multiple return-object :items="libraries" :color="color">
-                            </v-autocomplete>
-                        </v-col>
-                        <v-col cols="6">
-                            <v-textarea v-model="selectedLibrariesNames" :color="color" outlined full-width no-resize
-                                :color="color">
-                            </v-textarea>
-                        </v-col>
-                    </v-row>
+                                </v-autocomplete>
+                            </v-col>
+                            <v-col cols="6">
+                                <p style="color: #e36056" v-if="inputSampleError"> {%verbatim%} {{inputSampleError}}
+                                    {% endverbatim%}</p>
+                                <v-textarea v-model="inputSampleNames" outlined full-width no-resize :color="color">
+                                </v-textarea>
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <p class="ma-3">Select libraries from dropdown or enter a list of libraries in text box
+                                seperated by commas or spaces.</p>
+                            <v-col cols="6">
+                                <v-autocomplete v-model="selectedLibraries" label="Libraries" outlined chips clearable
+                                    multiple return-object :items="libraries" :color="color">
+                                </v-autocomplete>
+                            </v-col>
+                            <v-col cols="6">
+                                <v-textarea v-model="inputLibraryNames" :color="color" outlined full-width no-resize
+                                    :color="color">
+                                </v-textarea>
+                            </v-col>
+                        </v-row>
 
-                    <v-row>
-                        <v-col cols="4">
-                            <v-autocomplete v-model="normalSample" :color="color" label="Normal Sample" :items="selectedSamples"
-                                clearable no-data-text="Please select samples above in order to choose a normal">
-                                <template v-slot:no-data="No"></template>
-                            </v-autocomplete>
-                        </v-col>
-                    </v-row>
-                    <v-row>
-                        <v-col cols="4">
-                            <v-autocomplete v-model="normalLibrary" :color="color" label="Normal Library"
-                                :items="selectedLibraries" clearable return-object 
-                                no-data-text="Please select libraries above in order to choose a normal">
-                            </v-autocomplete>
-                        </v-col>
-                    </v-row>
-                    <v-btn absolute right @click="submitForm" :color="color" style="color: white">Submit</v-btn>
-                </v-col>
-            </v-row>
+                        <v-row>
+                            <v-col cols="4">
+                                <v-autocomplete v-model="selectedNormalSample" :color="color" label="Normal Sample"
+                                    :items="selectedSamples" clearable return-object outlined
+                                    no-data-text="Please select samples above in order to choose a normal">
+                                    <template v-slot:no-data="No"></template>
+                                </v-autocomplete>
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="4">
+                                <v-autocomplete v-model="selectedNormalLibrary" :color="color" label="Normal Library"
+                                    :items="selectedLibraries" clearable return-object outlined
+                                    no-data-text="Please select libraries above in order to choose a normal">
+                                </v-autocomplete>
+                            </v-col>
+                        </v-row>
+                        <v-btn absolute right @click="submitForm" :color="color" style="color: white">Submit</v-btn>
+                    </v-col>
+                </v-row>
+            </template>
+            <template v-else>
+                <v-row justify="center" align="center">
+                    <v-col cols="8">
 
+                        </v-btn>
+                        <h2>Confirmation</h2>
+                        <h5 style="color: #9e8ae3">The following libraries will be queued for anaylsis:</h5>
+                        <v-card class="ma-2 pa-2" tile>
+                            <v-list-item v-for="result in results">
+                                <v-list-item-content>
+                                    <v-list-item-title>{% verbatim %} {{result}} {% endverbatim %}</v-list-item-title>
+                                </v-list-item-content>
+                            </v-list-item>
+                        </v-card>
+                        <v-btn relative right @click="cancelConfirmation" outlined color="grey">Cancel</v-btn>
+                        <v-btn absolute right @click="cancelConfirmation" :color="color" style="color: white">Let's go!
+                        </v-btn>
+                    </v-col>
+                </v-row>
+
+
+            </template>
         </v-container>
 
     </v-app>
@@ -108,7 +138,6 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
     <script type="text/javascript">
-        // Vue.use(Vuetify);
         new Vue({
             el: '#pseudobulk-form',
             vuetify: new Vuetify(),
@@ -124,13 +153,18 @@
                     inputLibraries: [],
                     normalSample: [],
                     normalLibrary: [],
+                    allSamplesNames: [],
+                    allLibraryNames: [],
                     formFilled: true,
                     fieldsToFill: [],
                     errorMsg: "",
+                    inputSampleError: "",
+                    confirmation: false,
+                    results: "",
                 }
             },
             computed: {
-                selectedSamplesNames: {
+                inputSampleNames: {
                     get() {
                         // let samples = this.selectedSamples.map(sample => sample.text)
                         // console.log(samples)
@@ -138,17 +172,27 @@
                     },
 
                     set(input) {
-                        samples = input.split(/[\s,]+/)
+                        let inputSamples = input.split(/[\s,]+/)
                         console.log("samples after splitting")
-                        console.log(samples)
+                        console.log(inputSamples)
+
+                        inputSamples.forEach((sample) => {
+                            if (sample && !this.allSamplesNames.includes(sample.toUpperCase())) {
+                                this.inputSampleError = this.inputSampleError.concat(`${sample} is not in the database!\n`)
+                                console.log("error!")
+                                console.log(this.inputSampleError)
+                            }
+                        })
+
                         if (!!input) {
                             console.log(input)
                             return
                         }
                         console.log("sample input is empty")
+                        this.inputSampleError = ""
                     }
                 },
-                selectedLibrariesNames: {
+                inputLibraryNames: {
                     get() {
                         // let libraries = this.selectedLibraries.map(library => library.text)
                         // console.log(libraries)
@@ -170,12 +214,22 @@
                     get() {
                         if (!this.selectedSamples.length) {
                             console.log("no normal sample options")
+                            this.normalSample = []
                             return []
                         }
+                        console.log("currently normal is ")
+                        console.log(this.normalSample)
+                        if (!this.selectedSamples.includes(this.normalSample)) {
+                            console.log()
+                            this.normalSample = []
+                            return this.selectedSamples
+                        }
+                        return this.normalSample
                     },
                     set(input) {
                         console.log("normal sample selected is:")
                         console.log(input)
+                        this.normalSample = input
                     }
                 },
                 selectedNormalLibrary: {
@@ -184,11 +238,18 @@
                             console.log("no normal library options")
                             return []
                         }
+                        if (!this.selectedLibraries.includes(this.normalLibrary)) {
+                            console.log()
+                            this.normalLibrary = []
+                            return this.selectedLibraries
+                        }
+                        return this.normalLibrary
                     },
 
                     set(input) {
                         console.log("normal selected is:")
                         console.log(input)
+                        this.normalLibrary = input
                     }
                 },
             },
@@ -207,9 +268,9 @@
                         console.log(this.selectedSamples)
                         console.log("selected libraries")
                         console.log(this.normalLibrary)
-                        return
+                        return true
                     }
-                    // Required fields have not been filled out
+                    // Check if required fields have not been filled out
                     let allFields = ["Samples", "Libraries", "Normal Sample", "Normal Library", "Tag"]
                     var fieldsMap = {
                         Samples: this.selectedSamples,
@@ -228,7 +289,7 @@
                         if (Array.isArray(field)) {
                             console.log(`${item} is array`)
                             if (!field.length) {
-                                console.log(!field.length)
+                                // console.log(!field.length)
                                 console.log(`adding ${item} to fields to fill`)
                                 this.fieldsToFill.push(item)
                             }
@@ -240,17 +301,49 @@
                     })
                     console.log(this.fieldsToFill)
                     this.errorMsg = this.errorMsg.concat(this.fieldsToFill.join(", "))
+                    window.scrollTo(0, 0);
+                    return false
                 },
                 submitForm: function () {
-                    this.validateForm()
-                    // add axios calls below
+                    if (this.validateForm()) {
+                        // add axios calls below
+                        axios({
+                            method: "post",
+                            url: window.origin + "/create-pseudobulk-runs/",
+                            dataType: "json",
+                            data: {
+                                tag: this.tag,
+                                samples: this.selectedSamples,
+                                libraries: this.selectedLibraries,
+                                normal_sample: this.normalSample,
+                                normal_library: this.normalLibrary,
+                            },
+                            headers: {
+                                "X-CSRFToken": Cookies.get('csrftoken'),
+                                "content-type": "application/json"
+                            }
+                        }).then((response) => {
+                            console.log("ok")
+                            console.log(response)
+                            this.results = response.data
+                            this.confirmation = true
+                        }).catch((error) => {
+                            console.log(error)
+                        })
+                    }
+
                 },
+                cancelConfirmation: function () {
+                    this.confirmation = false
+                }
             },
 
 
             created: function () {
                 this.samples = JSON.parse(unescape("{{samples| safe | escapejs}}"))
                 this.libraries = JSON.parse(unescape("{{libraries| safe | escapejs}}"))
+                this.allSamplesNames = this.samples.map(sample => sample.text)
+                this.allLibraryNames = this.libraries.map(library => library.text)
             },
         })
     </script>

@@ -97,8 +97,26 @@ def pseudobulk_form(request):
 
 @login_required
 def create_pseudobulk_runs(request):
+    datasets = tantalus.models.SequenceDataset.objects.all()
+    request = json.loads(request.body.decode('utf-8'))
+    print(request)
 
-    print(request.body.decode('utf-8'))
+    tag_name = request["tag"]
+    normal_sample = request["normal_sample"]
+    normal_library = request["normal_library"]
+    samples = [sample["text"] for sample in request["samples"] if not (sample == normal_sample)]
+    libraries = [library["text"] for library in request["libraries"] if not (library == normal_library)]
+
+    datasets = datasets.filter(sample__sample_id__in=samples)
+    datasets = datasets.filter(library__library_id__in=libraries)
+
+    print(datasets)
+    datasets.distinct()
+
+    if len(datasets) != 0:
+        matched_results = ["{}-{}".format(d.sample.sample_id, d.library.library_id) for d in datasets]
+        return HttpResponse(matched_results)
+
 
     return HttpResponse("nice!")
 
