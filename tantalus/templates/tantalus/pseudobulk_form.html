@@ -115,13 +115,17 @@
 
                         </v-btn>
                         <h2>Confirmation</h2>
+                        <h5 style="color: #9e8ae3">The following libraries have already been ran through QC:</h5>
+                        <v-card class="ma-2 pa-2" tile>
+                            <template v-for="result in results">
+                                <v-card-text>{% verbatim %} {{result}} {% endverbatim %}</v-card-text>
+                            </template>
+                        </v-card>
                         <h5 style="color: #9e8ae3">The following libraries will be queued for anaylsis:</h5>
                         <v-card class="ma-2 pa-2" tile>
-                            <v-list-item v-for="result in results">
-                                <v-list-item-content>
-                                    <v-list-item-title>{% verbatim %} {{result}} {% endverbatim %}</v-list-item-title>
-                                </v-list-item-content>
-                            </v-list-item>
+                            <template v-for="result in results">
+                                <v-card-text>{% verbatim %} {{result}} {% endverbatim %}</v-card-text>
+                            </template>
                         </v-card>
                         <v-btn relative right @click="cancelConfirmation" outlined color="grey">Cancel</v-btn>
                         <v-btn absolute right @click="cancelConfirmation" :color="color" style="color: white">Let's go!
