@@ -46,6 +46,7 @@ from tantalus.settings import STATIC_ROOT, JIRA_URL, LOGIN_URL
 from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
+from django.core.mail import send_mail
 
 #============================
 # Search view
@@ -97,7 +98,16 @@ def pseudobulk_form(request):
 
 @login_required
 def create_pseudobulk_runs(request):
-    datasets = tantalus.models.SequenceDataset.objects.all()
+    # send_mail(
+    #     'Subject here',
+    #     'Here is the message.',
+    #     'from@example.com',
+    #     ['to@example.com'],
+    #     fail_silently=False,
+    # )
+    # datasets = tantalus.models.SequenceDataset.objects.all()
+    datasets = tantalus.models.SequenceDataset.objects.filter(
+        dataset_type="BAM", library__library_type__name="SC_WGS")
     request = json.loads(request.body.decode('utf-8'))
     print(request)
 
@@ -113,10 +123,32 @@ def create_pseudobulk_runs(request):
     print(datasets)
     datasets.distinct()
 
-    if len(datasets) != 0:
-        matched_results = ["{}-{}".format(d.sample.sample_id, d.library.library_id) for d in datasets]
-        return HttpResponse(matched_results)
+    latest_major_version = "v0.3.1"
+    libraries_analyzed = []
+    libraries_to_run = []
+    for dataset in datasets:
+        if dataset.analysis is not None:
+            if dataset.analysis.version == latest_major_version:
+                libraries_analyzed.append(dict(
+                    sample=dataset.sample.sample_id,
+                    library=dataset.library.library_id,)
+                )
+            else:
+                libraries_to_run.append(dict(
+                    sample=dataset.sample.sample_id,
+                    library=dataset.library.library_id,)
+                )
 
+        # libraries_analyzed = ["{} - {}".format(d.sample.sample_id, d.library.library_id)
+        #                          for d in datasets if d.analysis.version == latest_major_version]
+        # libraries_to_run = ["{} - {}".format(d.sample.sample_id, d.library.library_id)
+        #                    for d in datasets if d.analysis.version != latest_major_version]
+        return HttpResponse(
+            {
+                "libraries_analyzed": json.dumps(libraries_analyzed, cls=DjangoJSONEncoder), 
+                "libraries_to_run": json.dumps(libraries_to_run, cls=DjangoJSONEncoder), 
+            }
+        )
 
     return HttpResponse("nice!")
 
