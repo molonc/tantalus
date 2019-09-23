@@ -46,7 +46,9 @@ from tantalus.settings import STATIC_ROOT, JIRA_URL, LOGIN_URL
 from misc.helpers import Render
 import tantalus.models
 import tantalus.forms
-from django.core.mail import send_mail
+
+from collections import OrderedDict
+
 
 #============================
 # Search view
@@ -68,6 +70,24 @@ class SearchView(TemplateView):
 
 @login_required
 def pseudobulk_form(request):
+    # datasets = tantalus.models.SequenceDataset.objects.filter(
+    #     dataset_type="BAM", library__library_type__name__in=["SC_WGS", "WGS"])
+
+    # sample_libs = {}
+    # for d in datasets:
+    #     if d.sample.sample_id not in sample_libs:
+    #         sample_libs[d.sample.sample_id] = []
+    #     sample_libs[d.sample.sample_id].append(
+    #         {"text": d.library.pk, "value": d.library.library_id})
+
+    # samples = [{"value": s.sample.pk, "text": s.sample.sample_id}
+    #            for s in datasets]
+    # for s in samples:
+    #     sample_id = s["text"]
+    #     s["libraries"] = sample_libs[sample_id]
+
+    # print(samples)
+
     return render(
       request,
       "tantalus/pseudobulk_form.html",
@@ -91,66 +111,107 @@ def pseudobulk_form(request):
                   for library in tantalus.models.DNALibrary.objects.filter(library_type__in=[2, 4])
               ],
               cls=DjangoJSONEncoder
-          )
+          ),
+        #   "sample_libs": json.dumps(samples, cls=DjangoJSONEncoder)
       }
     )
 
 
 @login_required
 def create_pseudobulk_runs(request):
-    # send_mail(
-    #     'Subject here',
-    #     'Here is the message.',
-    #     'from@example.com',
-    #     ['to@example.com'],
-    #     fail_silently=False,
-    # )
-    # datasets = tantalus.models.SequenceDataset.objects.all()
-    datasets = tantalus.models.SequenceDataset.objects.filter(
-        dataset_type="BAM", library__library_type__name="SC_WGS")
+
+    print(request.COOKIES)
     request = json.loads(request.body.decode('utf-8'))
     print(request)
 
     tag_name = request["tag"]
+    aligner = request["aligner"]
     normal_sample = request["normal_sample"]
     normal_library = request["normal_library"]
     samples = [sample["text"] for sample in request["samples"] if not (sample == normal_sample)]
     libraries = [library["text"] for library in request["libraries"] if not (library == normal_library)]
+    input_samples = request["input_samples"]
+    input_samples = [sample for sample in input_samples if sample != ""]
+    input_libraries = request["input_libraries"]
+    input_libraries = [library for library in input_libraries if library != ""]
 
-    datasets = datasets.filter(sample__sample_id__in=samples)
-    datasets = datasets.filter(library__library_id__in=libraries)
+    datasets = tantalus.models.SequenceDataset.objects.filter(
+        dataset_type="BAM", library__library_type__name="SC_WGS",)
+
+    datasets = datasets.filter(sample__sample_id__in=samples+input_samples)
+    datasets = datasets.filter(
+        library__library_id__in=libraries+input_libraries)
 
     print(datasets)
     datasets.distinct()
 
     latest_major_version = "v0.3.1"
-    libraries_analyzed = []
-    libraries_to_run = []
-    for dataset in datasets:
-        if dataset.analysis is not None:
-            if dataset.analysis.version == latest_major_version:
-                libraries_analyzed.append(dict(
-                    sample=dataset.sample.sample_id,
-                    library=dataset.library.library_id,)
-                )
-            else:
-                libraries_to_run.append(dict(
-                    sample=dataset.sample.sample_id,
-                    library=dataset.library.library_id,)
-                )
+    already_ran_datasets = datasets.filter(
+        analysis__version__icontains=latest_major_version, 
+        aligner=aligner["value"],
+    )
 
-        # libraries_analyzed = ["{} - {}".format(d.sample.sample_id, d.library.library_id)
-        #                          for d in datasets if d.analysis.version == latest_major_version]
-        # libraries_to_run = ["{} - {}".format(d.sample.sample_id, d.library.library_id)
-        #                    for d in datasets if d.analysis.version != latest_major_version]
-        return HttpResponse(
-            {
-                "libraries_analyzed": json.dumps(libraries_analyzed, cls=DjangoJSONEncoder), 
-                "libraries_to_run": json.dumps(libraries_to_run, cls=DjangoJSONEncoder), 
-            }
+    libraries_analyzed = [
+        dataset.library.library_id for dataset in already_ran_datasets]
+
+
+    libraries_to_run = [
+        dataset.library.library_id for dataset in datasets.difference(already_ran_datasets)]
+
+    # libraries_analyzed = []
+    # libraries_to_run = []
+    # for dataset in already_ran_datasets:
+    #     libraries_analyzed.append(OrderedDict(
+    #         sample=dataset.sample.sample_id,
+    #         library=dataset.library.library_id,)
+    #     )
+
+    # for dataset in datasets.difference(already_ran_datasets):
+    #     sample_lib = OrderedDict(
+    #         sample=dataset.sample.sample_id,
+    #         library=dataset.library.library_id,
+    #     )   
+    #     print(sample_lib in already_ran_datasets)
+
+    #     if sample_lib in already_ran_datasets:
+    #         print(f"{sample_lib} already ran")
+    #         continue 
+
+    #     libraries_to_run.append(dict(sample_lib))
+
+    print(libraries_analyzed)
+    print(libraries_to_run)
+
+
+    return HttpResponse(
+        json.dumps({
+            "normal_pair": json.dumps({"sample": normal_sample["text"], "library": normal_library["text"]}, cls=DjangoJSONEncoder),
+            "libraries_analyzed": json.dumps(list(set(libraries_analyzed)), cls=DjangoJSONEncoder), 
+            "libraries_to_run": json.dumps(list(set(libraries_to_run)), cls=DjangoJSONEncoder), 
+        }, cls=DjangoJSONEncoder)
+    )
+
+def create_qc_analyses_for_pseudobulk(request):
+    request = json.loads(request.body.decode('utf-8'))
+
+    libraries = request["librariesToRun"]
+    aligner = request["aligner"]
+    print(aligner)
+
+    for library_id in libraries:
+        aligner_name = aligner['text']
+        tantalus.models.Analysis.objects.get_or_create(
+            name=f"sc_qc_{aligner_name}_{library_id}_tempname",
+            status='idle',
+            analysis_type=tantalus.models.AnalysisType.objects.get(id=8),
+            version="v0.3.1",
+            jira_ticket="SC-0000",
+            args=dict(library_id=library_id, aligner=aligner_name),
+            # owner=request.user,
         )
 
-    return HttpResponse("nice!")
+    return redirect('/analyses/')
+
 
 
 class ExternalIDSearch(LoginRequiredMixin, TemplateView):
