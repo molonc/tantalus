@@ -90,6 +90,8 @@ urlpatterns = [
     url(r'^json/fileresources/$', tantalus.views.FileResourceJSON.as_view(), name='fileresources-list-json'),
     url(r'^json/results/$', tantalus.views.ResultJSON.as_view(), name='results-list-json'),
     url(r'^json/analyses/$', tantalus.views.AnalysesJSON.as_view(), name='analyses-list-json'),
-    url(r'^pseudobulk-form/$', tantalus.views.pseudobulk_form, name='pseudobulk-form'),
-    url(r'^create-pseudobulk-runs/$', tantalus.views.create_pseudobulk_runs, name='create-pseudobulk-runs'),
+    url(r'^pseudobulk_form/$', tantalus.views.pseudobulk_form, name='pseudobulk-form'),
+    url(r'^create_pseudobulk_runs/$', tantalus.views.create_pseudobulk_runs, name='create-pseudobulk-runs'),
+    url(r'^create_qc_analyses_for_pseudobulk/$',
+        tantalus.views.create_qc_analyses_for_pseudobulk, name='create-qc-analyses-for-pseudobulk'),
 ]
