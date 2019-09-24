@@ -37,12 +37,15 @@
                             {% verbatim %} {{errorMsg}} {% endverbatim %}
                         </v-alert>
                         <v-row align="center" justify="space-between">
-                            <v-col cols="4">
+                            <!-- <v-col cols="4">
                                 <v-text-field v-model="tag" label="Tag" :color="color"></v-text-field>
+                            </v-col> -->
+                            <v-col>
+                                <v-combobox v-model="selectedTag" :items="tags" label="Search for tag or enter new tag name"></v-combobox>
                             </v-col>
                             <v-col cols="6">
-                                <v-autocomplete v-model="alignerDefault" label="Aligner" return-object
-                                    :items="aligners" :color="color">
+                                <v-autocomplete v-model="alignerDefault" label="Aligner" return-object :items="aligners"
+                                    :color="color">
                                 </v-autocomplete>
                             </v-col>
                         </v-row>
@@ -51,14 +54,15 @@
                                 seperated by
                                 commas or spaces.</p>
                             <v-col cols="6">
-                                <v-autocomplete v-model="selectedSamples" label="Samples" outlined chips clearable
-                                    multiple return-object :items="samples" :color="color">
+                                <v-autocomplete v-model="selectedSamples" label="Samples" outlined chips clearable multiple
+                                    return-object :items="samples" :color="color">
                                 </v-autocomplete>
                             </v-col>
                             <v-col cols="6">
                                 <p style="color: #e36056" v-if="inputSampleError"> {%verbatim%} {{inputSampleError}}
                                     {% endverbatim%}</p>
-                                <v-textarea v-model="inputSampleNames" outlined full-width no-resize :color="color">
+                                <v-textarea v-model="inputSampleNames" :value="inputSamples" outlined full-width no-resize
+                                    :color="color">
                                 </v-textarea>
                             </v-col>
                         </v-row>
@@ -66,17 +70,17 @@
                             <p class="ma-3">Select libraries from dropdown or enter a list of libraries in text box
                                 seperated by commas or spaces.</p>
                             <v-col cols="6">
-                                <v-autocomplete v-model="selectedLibraries" label="Libraries" outlined chips clearable
-                                    multiple return-object :items="libraries" :color="color">
+                                <v-autocomplete v-model="selectedLibraries" label="Libraries" outlined chips clearable multiple
+                                    return-object :items="libraries" :color="color">
                                 </v-autocomplete>
                             </v-col>
                             <v-col cols="6">
-                                <v-textarea v-model="inputLibraryNames" :color="color" outlined full-width no-resize
-                                    :color="color">
+                                <v-textarea v-model="inputLibraryNames" :value="inputLibraries" :color="color" outlined
+                                    full-width no-resize :color="color">
                                 </v-textarea>
                             </v-col>
                         </v-row>
-
+        
                         <v-row align="center" justify="space-between">
                             <v-col cols="6">
                                 <v-autocomplete v-model="selectedNormalSample" :color="color" label="Normal Sample"
@@ -101,34 +105,50 @@
             <template v-else>
                 <v-row justify="center" align="center">
                     <v-col cols="8">
-
+        
                         </v-btn>
                         <h2>Confirmation</h2>
-                        <h5 style="color: #9e8ae3">Normal pair chosen: </h5>
-                        <v-card class="ma-2 pa-0"> 
-                            <v-card-text>{% verbatim %} {{normalPair.sample}} - {{normalPair.library}} {% endverbatim %}</v-card-text>
-                        </v-card>
-                        <h5 style="color: #9e8ae3">The following libraries have already been ran through QC:</h5>
-                        <v-card class="ma-2 pa-0">
-                            <template v-for="library in librariesAnalyzed">
-                                <v-card-text>{% verbatim %} {{library}} {% endverbatim %}</v-card-text>
+                        <template class="ma-2 pa-2" v-if="librariesToRun.length !== 0">
+                            <h5 style="color: #9e8ae3">Normal pair chosen: </h5>
+                            <v-card class="ma-2 pa-0">
+                                <v-card-text>{% verbatim %} {{normalPair.sample}} - {{normalPair.library}} {% endverbatim %}
+                                </v-card-text>
+                            </v-card>
+                            <h5 style="color: #9e8ae3">The following libraries have already been ran through QC:</h5>
+                            <v-card class="ma-2 pa-0">
+                                <template v-for="library in librariesAnalyzed">
+                                    <v-card-text>{% verbatim %} {{library}} {% endverbatim %}</v-card-text>
+                                </template>
+                            </v-card>
+                            <h5 style="color: #9e8ae3">The following libraries will be queued for analysis:</h5>
+                            <v-card class="ma-2 pa-0" v-if="librariesToRun.length !== 0">
+                                <template v-for="library in librariesToRun">
+                                    <v-card-text>{% verbatim %} {{library}} {% endverbatim %}</v-card-text>
+                                </template>
+                            </v-card>
+                            <template class="ma-2 pa-2">
+                                <v-btn relative right @click="cancelConfirmation" outlined color="grey">Cancel</v-btn>
+                                <v-btn absolute right @click="createAnalyses" :color="color" style="color: white">Let's go!
+                                </v-btn>
                             </template>
-                        </v-card>
-                        <h5 style="color: #9e8ae3">The following libraries will be queued for analysis:</h5>
-                        <v-card class="ma-2 pa-0">
-                            <template v-for="library in librariesToRun">
-                                <v-card-text>{% verbatim %} {{library}} {% endverbatim %}</v-card-text>
-                            </template>
-                        </v-card>
-                        <template class="ma-2 pa-2">
+                        </template>
+        
+                        <template v-else class="ma-2 pa-2">
+                            <v-card class="ma-2 pa-0">
+                                <template>
+                                    <v-card-text>All libraries requested have already been ran with the latest major version of
+                                        the single cell
+                                        pipeline.</v-card-text>
+                                </template>
+                            </v-card>
                             <v-btn relative right @click="cancelConfirmation" outlined color="grey">Cancel</v-btn>
-                            <v-btn absolute right @click="createAnalyses" :color="color" style="color: white">Let's go!
+                            <v-btn absolute right @click="backToHomepage" :color="color" style="color: white">Great! Back to Homepage
                             </v-btn>
                         </template>
                     </v-col>
                 </v-row>
-
-
+        
+        
             </template>
         </v-container>
 
@@ -146,6 +166,7 @@
                     tag: "",
                     samples: [],
                     libraries: [],
+                    selectedTag: [], 
                     selectedSamples: [],
                     selectedLibraries: [],
                     inputSamples: [],
@@ -179,24 +200,13 @@
             computed: {
                 inputSampleNames: {
                     get() {
-                        // let samples = this.selectedSamples.map(sample => sample.text)
-                        // console.log(samples)
-                        // return samples
+                        return this.inputSamples.join("\n")
                     },
 
                     set(input) {
-                        let inputSamples = input.split(/[\s,]+/)
+                        this.inputSamples = input.split(/[\s,]+/)
                         console.log("samples after splitting")
-                        console.log(inputSamples)
 
-                        inputSamples.forEach((sample) => {
-                            if (sample && !this.allSamplesNames.includes(sample.toUpperCase())) {
-                                this.inputSampleError = this.inputSampleError.concat(`${sample} is not in the database!\n`)
-                                console.log("error!")
-                                console.log(this.inputSampleError)
-                            }
-                        })
-                        this.inputSamples = inputSamples
                         if (!!input) {
                             console.log(input)
                             return
@@ -207,34 +217,14 @@
                 },
                 inputLibraryNames: {
                     get() {
-                        // let libraries = this.selectedLibraries.map(library => library.text)
-                        // console.log(libraries)
-                        // return libraries
+                        return this.inputLibraries.join("\n")
                     },
-
-                    // set(input) {
-                    //     libraries = input.split(/[\s,]+/)
-                    //     console.log("libraries after splitting")
-                    //     console.log(libraries)
-                    //     if (!!input) {
-                    //         console.log(input)
-                    //         return
-                    //     }
-                    //     console.log("library input is empty")
-                    // }
 
                     set(input) {
                         let inputLibraries = input.split(/[\s,]+/)
                         console.log("libraries after splitting")
                         console.log(inputLibraries)
 
-                        // inputLibraries.forEach((library) => {
-                        //     if (library && !this.allSamplesNames.includes(library.toUpperCase())) {
-                        //         this.inputSampleError = this.inputSampleError.concat(`${library} is not in the database!\n`)
-                        //         console.log("error!")
-                        //         console.log(this.inputSampleError)
-                        //     }
-                        // })
                         this.inputLibraries = inputLibraries
                         if (!!input) {
                             console.log(input)
@@ -298,10 +288,10 @@
                     console.log(!!this.selectedLibraries.length)
                     console.log(!!this.alignerDefault)
 
-                    if (!!this.tag && !!this.normalSample && !!this.normalLibrary && (!!this.selectedSamples || !!this.inputSamples) && (!!this.selectedLibraries || !!this.inputLibraries) && !!this.alignerDefault) {
+                    if (!!this.selectedTag && !!this.normalSample && !!this.normalLibrary && (!!this.selectedSamples || !!this.inputSamples) && (!!this.selectedLibraries || !!this.inputLibraries) && !!this.alignerDefault) {
                         this.formFilled = true
                         console.log("tag")
-                        console.log(this.tag)
+                        console.log(this.selectedTag)
                         console.log("normal sample")
                         console.log(this.normalSample)
                         console.log("selected samples")
@@ -317,7 +307,7 @@
                     var fieldsMap = {
                         Samples: this.selectedSamples,
                         Libraries: this.selectedLibraries,
-                        Tag: this.tag,
+                        Tag: this.selectedTag,
                         "Normal Sample": this.normalSample,
                         "Normal Library": this.normalLibrary,
                         "Aligner": this.alignerDefault,
@@ -355,7 +345,7 @@
                             url: window.origin + "/create_pseudobulk_runs/",
                             dataType: "json",
                             data: {
-                                tag: this.tag,
+                                tag: this.selectedTag,
                                 aligner: this.alignerDefault,
                                 samples: this.selectedSamples,
                                 libraries: this.selectedLibraries,
@@ -372,11 +362,20 @@
                             console.log("ok")
                             console.log(response)
                             this.results = response.data
-                            this.librariesAnalyzed = JSON.parse(this.results["libraries_analyzed"])
-                            this.librariesToRun = JSON.parse(this.results["libraries_to_run"])
-                            this.normalPair = JSON.parse(this.results["normal_pair"])
-                            console.log(this.librariesAnalyzed)
-                            this.confirmation = true
+                            if (this.results == "noNormal") {
+                                this.errorMsg = `No normal dataset found for pair ${this.normalSample["text"]} - ${this.normalLibrary["text"]}`
+                                this.formFilled = false
+                                window.scrollTo(0, 0);
+                            }
+
+                            else {
+                                this.librariesAnalyzed = JSON.parse(this.results["libraries_analyzed"])
+                                this.librariesToRun = JSON.parse(this.results["libraries_to_run"])
+                                this.normalPair = JSON.parse(this.results["normal_pair"])
+                                console.log(this.librariesAnalyzed)
+                                this.confirmation = true
+                            }
+
                         }).catch((error) => {
                             console.log(error)
                         })
@@ -402,14 +401,19 @@
                         }
                     }).then((response) => {
                         console.log("ok")
+                        window.location.href = '/analyses/';
                     }).catch((error) => {
                         console.log(error)
                     })
                 },
+                backToHomepage: function() {
+                    window.location.href = '/';
+                }
             },
 
 
             created: function () {
+                this.tags = JSON.parse(unescape("{{tags| safe | escapejs}}"))
                 this.samples = JSON.parse(unescape("{{samples| safe | escapejs}}"))
                 this.libraries = JSON.parse(unescape("{{libraries| safe | escapejs}}"))
                 this.allSamplesNames = this.samples.map(sample => sample.text)

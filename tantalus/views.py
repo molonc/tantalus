@@ -29,6 +29,8 @@ from django.views.generic.edit import UpdateView
 from functools import reduce
 import account.models
 
+from itertools import chain
+
 import csv
 import json
 import os
@@ -70,28 +72,15 @@ class SearchView(TemplateView):
 
 @login_required
 def pseudobulk_form(request):
-    # datasets = tantalus.models.SequenceDataset.objects.filter(
-    #     dataset_type="BAM", library__library_type__name__in=["SC_WGS", "WGS"])
-
-    # sample_libs = {}
-    # for d in datasets:
-    #     if d.sample.sample_id not in sample_libs:
-    #         sample_libs[d.sample.sample_id] = []
-    #     sample_libs[d.sample.sample_id].append(
-    #         {"text": d.library.pk, "value": d.library.library_id})
-
-    # samples = [{"value": s.sample.pk, "text": s.sample.sample_id}
-    #            for s in datasets]
-    # for s in samples:
-    #     sample_id = s["text"]
-    #     s["libraries"] = sample_libs[sample_id]
-
-    # print(samples)
-
     return render(
       request,
       "tantalus/pseudobulk_form.html",
       {
+          "tags": json.dumps(
+              [tag.name for tag in tantalus.models.Tag.objects.all()],
+              cls=DjangoJSONEncoder
+          ),
+
           "samples" : json.dumps(
               [
                   {
@@ -135,49 +124,47 @@ def create_pseudobulk_runs(request):
     input_libraries = request["input_libraries"]
     input_libraries = [library for library in input_libraries if library != ""]
 
+    normal_dataset = tantalus.models.SequenceDataset.objects.filter(
+        dataset_type="BAM", sample=normal_sample["value"], library=normal_library["value"])
+
+    if len(normal_dataset) == 0:
+        return HttpResponse(json.dumps("noNormal", cls=DjangoJSONEncoder))
+
     datasets = tantalus.models.SequenceDataset.objects.filter(
         dataset_type="BAM", library__library_type__name="SC_WGS",)
 
-    datasets = datasets.filter(sample__sample_id__in=samples+input_samples)
+
+    tag, created = tantalus.models.Tag.objects.get_or_create(name=tag_name)
+
+    latest_major_version = "v0.3.1"
+    if created:
+        sequence_datasets = list(chain(
+            normal_dataset, 
+            datasets.filter(
+                library__library_id__in=libraries+input_libraries, 
+                sample__sample_id__in=samples+input_samples,
+                analysis__version__icontains=latest_major_version,
+                aligner=aligner["value"])
+            )
+        )
+
+        print("DATASETS TO ADD IN TAG")
+        print(sequence_datasets)
+        tag.sequencedataset_set.add(*sequence_datasets)
+
     datasets = datasets.filter(
         library__library_id__in=libraries+input_libraries)
 
     print(datasets)
     datasets.distinct()
 
-    latest_major_version = "v0.3.1"
     already_ran_datasets = datasets.filter(
         analysis__version__icontains=latest_major_version, 
         aligner=aligner["value"],
     )
 
-    libraries_analyzed = [
-        dataset.library.library_id for dataset in already_ran_datasets]
-
-
-    libraries_to_run = [
-        dataset.library.library_id for dataset in datasets.difference(already_ran_datasets)]
-
-    # libraries_analyzed = []
-    # libraries_to_run = []
-    # for dataset in already_ran_datasets:
-    #     libraries_analyzed.append(OrderedDict(
-    #         sample=dataset.sample.sample_id,
-    #         library=dataset.library.library_id,)
-    #     )
-
-    # for dataset in datasets.difference(already_ran_datasets):
-    #     sample_lib = OrderedDict(
-    #         sample=dataset.sample.sample_id,
-    #         library=dataset.library.library_id,
-    #     )   
-    #     print(sample_lib in already_ran_datasets)
-
-    #     if sample_lib in already_ran_datasets:
-    #         print(f"{sample_lib} already ran")
-    #         continue 
-
-    #     libraries_to_run.append(dict(sample_lib))
+    libraries_analyzed = [dataset.library.library_id for dataset in already_ran_datasets]
+    libraries_to_run = list(set(libraries + input_libraries) - set(libraries_analyzed))
 
     print(libraries_analyzed)
     print(libraries_to_run)
@@ -207,7 +194,6 @@ def create_qc_analyses_for_pseudobulk(request):
             version="v0.3.1",
             jira_ticket="SC-0000",
             args=dict(library_id=library_id, aligner=aligner_name),
-            # owner=request.user,
         )
 
     return redirect('/analyses/')
