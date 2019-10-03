@@ -37,6 +37,7 @@ class Tag(models.Model):
         null=True,
     )
 
+
     def __str__(self):
         return self.name
 
@@ -476,7 +477,7 @@ class SequenceDataset(models.Model):
 
     tags = models.ManyToManyField(
         Tag,
-        blank=True,
+        blank=True
     )
 
     BAM = 'BAM'
@@ -893,7 +894,7 @@ class FileInstance(models.Model):
     is_deleted = models.BooleanField(
         default=False,
     )
-    
+
     def __str__(self):
         return str(self.file_resource) + '-' +  self.storage.name
 
@@ -979,3 +980,73 @@ class Submission(models.Model):
 
     def __str__(self):
         return str(self.sample.sample_id)
+
+
+class Curation(models.Model):
+    """
+    Simple text curation associated with datasets.
+    """
+
+    history = HistoricalRecords()
+
+    name = create_id_field(unique=True)
+
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    sequencedatasets = models.ManyToManyField(
+        SequenceDataset,
+        blank=True
+    )
+
+    def __str__(self):
+        return self.name
+
+    def count_sequence_datasets(self):
+        return len(self.sequencedatasets.all())
+
+    def get_absolute_url(self):
+        return reverse("curation-detail", args=(self.id,))
+
+    def get_created_date(self):
+        if self.history.last():
+            return self.history.last().history_date.date().strftime("%Y-%m-%d")
+        else:
+            return "Not Provided"
+
+
+
+# Validator for curation version
+curation_version_validator = RegexValidator(
+    regex=r"v\d+\.\d+\.\d+",
+    message=' must be in "v<MAJOR>.<MINOR>.<PATCH>"; for example, "v0.0.1"',
+)
+
+
+class CurationHistory(models.Model):
+    curation_name = models.ForeignKey(
+        Curation,
+        on_delete=models.CASCADE,
+        blank=False)
+
+    update_time = models.DateTimeField(
+        default=timezone.now,
+    )
+    user_name = models.CharField(
+        max_length=50,
+        null=True
+    )
+    operation = models.CharField(
+        max_length=100
+        )
+
+    version = models.CharField(
+        max_length=200,
+        default="v1.0.0",
+        validators=[curation_version_validator,],
+    )
+
+    def __str__(self):
+        return str(self.curation_name)

@@ -1,0 +1,19 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Curations
+{% endblock %}
+
+{% block body %}
+    <div class="container" style="padding:0; margin-bottom:5px;">
+        <h4 style="float:left;">Select a Curation to view its details</h4>
+    </div>
+    <div class="container" style="background-color:#F5F5F5;">
+        {% if curations %}
+            {% include "tantalus/datatable/curation_list.html" %}
+        {% else %}
+            <h><i class="text-warning">No curations yet.</i></h>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -51,11 +51,15 @@
                     <td><a href="{% url 'analysis-list' %}">Analyses</a> <i class="counter">{{analysis_count}}</i></td>
                     <td>
                         <p style="float:right;">
-                        <a href="{% url 'analysis-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>   
+                        <a href="{% url 'analysis-add' %}"><i class="fa fa-plus" aria-hidden="true" style="color:green;"></i> Add</a></p>
                     </td>
                 </tr>
                 <tr class="home-page-row">
                     <td><a href="{% url 'tag-list' %}">Tags</a> <i class="counter">{{tag_count}}</i></td>
+                    <td></td>
+                </tr>
+                <tr class="home-page-row">
+                    <td><a href="{% url 'curation-list' %}">Curations</a> <i class="counter">{{curation_count}}</i></td>
                     <td></td>
                 </tr>
                 <tr class="home-page-row">

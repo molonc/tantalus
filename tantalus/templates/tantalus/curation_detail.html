@@ -1,0 +1,49 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Curation Detail
+{% endblock %}
+
+{% block body %}
+
+    <div class="container detail-container" style="background-color:#F5F5F5; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if curation %}
+            <table class="table-condensed">
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Curation Name</th>
+                    <td style="padding: 0; padding-left: 35px;">{{curation.name}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Number of Sequence Datasets</th>
+                    <td style="padding: 0; padding-left: 35px;">{{curation.count_sequence_datasets}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Owner</th>
+                    {% if curation.owner %}
+                        <td style="padding: 0; padding-left: 35px;">{{curation.owner}}</td>
+                    {% else %}
+                        <td style="padding: 0; padding-left: 35px;">None</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Created Date</th>
+                    <td style="padding: 0; padding-left: 35px;">{{curation.get_created_date}}</td>
+                </tr>
+            </table>
+        {% else %}
+            <h5><i class="text-warning">No Curation Details yet.</i></h5>
+        {% endif %}
+    </div>
+
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if sequence_datasets %}
+             {% include "tantalus/datatable/curation_sequence_datasets.html" %}
+        {% else %}
+            <h5><i class="text-warning">No Sequence Datasets associated with this Curation yet.</i></h5>
+        {% endif %}
+    </div>
+
+
+
+{% endblock %}

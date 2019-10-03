@@ -156,7 +156,6 @@ class PatientDetail(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         # TODO: add other fields to the view?
         context = super(PatientDetail, self).get_context_data(**kwargs)
-
         sample_set = self.object.sample_set.all()
         sample_list = []
         sample_url = []
@@ -1007,6 +1006,7 @@ class TagDetail(LoginRequiredMixin, DetailView):
         return context
 
 
+
 @method_decorator(login_required, name='dispatch')
 class TagDatasetDelete(View):
     """
@@ -1019,6 +1019,61 @@ class TagDatasetDelete(View):
         msg = "Successfully removed datasest "
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('tag-detail',kwargs={'pk':pk_2}))
+
+@login_required
+@Render("tantalus/curation_list.html")
+def curation_list(request):
+    """
+    List of Curations.
+    """
+    curations = tantalus.models.Curation.objects.all().order_by('name')
+    #print(len(curations))
+    context = {
+        'curations': curations,
+    }
+    return context
+
+
+@method_decorator(login_required, name='dispatch')
+class CurationDelete(View):
+    """
+    tantalus.models.Curation delete page.
+    """
+    def get(self, request, pk):
+        get_object_or_404(tantalus.models.Curation,pk=pk).delete()
+        msg = "Successfully deleted curation"
+        messages.success(request, msg)
+        return HttpResponseRedirect(reverse('curation-list'))
+
+
+class CurationDetail(LoginRequiredMixin, DetailView):
+    login_url = LOGIN_URL
+
+    model = tantalus.models.Curation
+    template_name = "tantalus/curation_detail.html"
+
+    def get_context_data(self, object):
+        curation = get_object_or_404(tantalus.models.Curation, pk=object.id)
+        sequence_datasets = curation.sequencedatasets.all()
+        context = {
+            'curation': curation,
+            'sequence_datasets': sequence_datasets,
+        }
+        return context
+
+
+@method_decorator(login_required, name='dispatch')
+class CurationDatasetDelete(View):
+    """
+    tantalus.models.Curation dataset delete page.
+    """
+    def get(self, request, pk,pk_2):
+        dataset = get_object_or_404(tantalus.models.SequenceDataset,pk=pk)
+        curation = get_object_or_404(tantalus.models.Curation,pk=pk_2)
+        curation.sequencedataset_set.remove(dataset)
+        msg = "Successfully removed datasest "
+        messages.success(request, msg)
+        return HttpResponseRedirect(reverse('curation-detail',kwargs={'pk':pk_2}))
 
 class ResultJSON(BaseDatatableView):
     model = tantalus.models.ResultsDataset
@@ -1681,6 +1736,6 @@ class HomeView(TemplateView):
             'result_count': tantalus.models.ResultsDataset.objects.all().count(),
             'analysis_count': tantalus.models.Analysis.objects.all().count(),
             'tag_count': tantalus.models.Tag.objects.all().count(),
+            'curation_count': tantalus.models.Curation.objects.all().count(),
         }
         return context
-

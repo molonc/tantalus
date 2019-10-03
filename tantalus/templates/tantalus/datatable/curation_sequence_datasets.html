@@ -1,0 +1,33 @@
+
+<h4>Sequence Datasets</h4>
+
+<div class="table-responsive">
+    <table id="sequence-dataset-datatable" class="table-striped table-bordered">
+        <thead>
+            <th>Dataset ID</th>
+            <th>Dataset Name</th>
+            <th>Type</th>
+            <th>Samples</th>
+            <th style="white-space: nowrap;">Libraries</th>
+            <th>Library Type</th>
+            <th>Is Complete</th>
+            <th></th>
+        </thead>
+        <tbody>
+            {% for dataset in sequence_datasets %}
+                <tr>
+                    <td><a href="{% url 'dataset-detail' dataset.id %}">{{dataset.id}}</a></td>
+                    <td>{{dataset.name}}</td>
+                    <td>{{dataset.dataset_type}}</td>
+                    <td><a href="{% url 'sample-detail' dataset.sample.id %}">{{dataset.sample.sample_id}}</a></td>
+                    <td><a href="https://colossus.canadacentral.cloudapp.azure.com/dlp/library/{{dataset.library.library_id}}">{{dataset.library.library_id}}</a></td>
+                    <td>{{dataset.library.library_type}}</td>
+                    <td>{{dataset.get_is_complete}}</td>
+                    <td>
+                        <a href="{% url 'curation-dataset-delete' pk=dataset.id pk_2=curation.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
