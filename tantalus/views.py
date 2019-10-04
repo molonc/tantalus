@@ -1093,6 +1093,7 @@ class CurationEdit(TemplateView):
         messages.error(request, msg)
         return self.get_context_and_render(request, form, pk=pk)
 
+        
 @method_decorator(login_required, name='dispatch')
 class CurationDatasetDelete(View):
     """
@@ -1101,7 +1102,7 @@ class CurationDatasetDelete(View):
     def get(self, request, pk,pk_2):
         dataset = get_object_or_404(tantalus.models.SequenceDataset,pk=pk)
         curation = get_object_or_404(tantalus.models.Curation,pk=pk_2)
-        curation.sequencedataset_set.remove(dataset)
+        curation.sequencedatasets.remove(dataset)
         msg = "Successfully removed datasest "
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('curation-detail',kwargs={'pk':pk_2}))
