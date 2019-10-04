@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^export-sample-create-template/$', tantalus.views.export_sample_create_template, name='export-sample-create-template'),
     url(r'^curations/$', tantalus.views.curation_list, name='curation-list'),
     url(r'^curations/detail/(?P<pk>\d+)$', tantalus.views.CurationDetail.as_view(), name='curation-detail'),
+    url(r'^curations/edit/(?P<pk>\d+)$', tantalus.views.CurationEdit.as_view(), name='curation-edit'),
     url(r'^curations/delete/(?P<pk>\d+)$', tantalus.views.CurationDelete.as_view(), name='curation-delete'),
     url(r'^curations/detail/(?P<pk>\d+)/deletedataset/(?P<pk_2>[0-9]+)$', tantalus.views.CurationDatasetDelete.as_view(), name='curation-dataset-delete'),
     #url(r'^curations/detail/(?P<pk>\d+)/adddataset/(?P<pk_2>[0-9]+)$', tantalus.views.TagDatasetAdd.as_view(), name='curation-dataset-add'),

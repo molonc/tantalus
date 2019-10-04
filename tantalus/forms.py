@@ -106,7 +106,7 @@ class PatientForm(forms.ModelForm):
         patient_id = self.cleaned_data.get('patient_id', False)
         if(patient_id[:2] != "SA"):
             raise ValidationError("Error!. SA IDs must start with SA")
-        return patient_id         
+        return patient_id
 
 
 class UploadPatientForm(forms.Form):
@@ -145,7 +145,7 @@ class UploadPatientForm(forms.Form):
 
         SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
         SA_ids = []
-        
+
         for patient in SA_prefix_patients:
             SA_ids.append(int(patient.patient_id[2:]))
         SA_ids.sort()
@@ -281,7 +281,7 @@ class UploadSampleForm(forms.Form):
 
             try:
                 patient = tantalus.models.Patient.objects.get(reference_id=sample_row[reference_id_index])
-                sample_id = patient.patient_id + sample_row[suffix_index]       
+                sample_id = patient.patient_id + sample_row[suffix_index]
                 try:
                     #If to be created Sample ID already exists, raise IntegrityError
                     patient.sample_set.get(sample_id=sample_id)
@@ -702,4 +702,20 @@ class DatasetForm(forms.ModelForm):
         data = self.cleaned_data
         data["sample"] = tantalus.models.Sample.objects.get(id=data["sample"])
         data["library"] = tantalus.models.DNALibrary.objects.get(id=data["library"])
+        return data
+
+
+class CurationForm(forms.ModelForm):
+    class Meta:
+        model = tantalus.models.Curation
+        fields = [
+            'name',
+            'owner',
+            'sequencedatasets',
+        ]
+
+    def clean(self):
+        data = self.cleaned_data
+        #data["owner"] = tantalus.models.Sample.objects.get(id=data["owner"])
+        #data["sequencedatasets"] = tantalus.models.DNALibrary.objects.get(id=data["sequencedatasets"])
         return data

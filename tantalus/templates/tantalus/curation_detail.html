@@ -9,6 +9,7 @@
 
     <div class="container detail-container" style="background-color:#F5F5F5; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if curation %}
+        <a class="btn btn-primary btn-sm" style="float:right; margin-top:5px; margin-right:5px;" href="{% url 'curation-edit' pk=pk %}" >Edit</a>
             <table class="table-condensed">
                 <tr>
                     <th style="padding: 0; padding-top: 4px;">Curation Name</th>

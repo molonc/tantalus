@@ -1058,9 +1058,40 @@ class CurationDetail(LoginRequiredMixin, DetailView):
         context = {
             'curation': curation,
             'sequence_datasets': sequence_datasets,
+            'pk': object.id
         }
         return context
 
+class CurationEdit(TemplateView):
+
+    template_name = "tantalus/curation_edit.html"
+
+    def get_context_data(self, pk):
+        print("HELLO")
+        curation = tantalus.models.Curation.objects.get(id=pk)
+        form=tantalus.forms.CurationForm(instance=curation)
+        print("PRINTING FPRM")
+        print(form._html_output)
+        context = {
+            "form" : form,
+            "pk" : pk
+        }
+        return  context
+
+    def post(self, request, pk):
+        curation = tantalus.models.Curation.objects.get(id=pk)
+        form = tantalus.forms.CurationForm(request.POST, instance=curation)
+
+        if form.is_valid():
+            print(dir(form))
+            form.save()
+            msg = "Successfully updated the Dataset."
+            messages.success(request, msg)
+            return HttpResponseRedirect(curation.get_absolute_url())
+
+        msg = "Failed to update the Dataset. Please fix the errors below."
+        messages.error(request, msg)
+        return self.get_context_and_render(request, form, pk=pk)
 
 @method_decorator(login_required, name='dispatch')
 class CurationDatasetDelete(View):
