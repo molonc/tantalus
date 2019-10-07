@@ -1027,7 +1027,6 @@ def curation_list(request):
     List of Curations.
     """
     curations = tantalus.models.Curation.objects.all().order_by('name')
-    #print(len(curations))
     context = {
         'curations': curations,
     }
@@ -1066,6 +1065,13 @@ class CurationEdit(TemplateView):
 
     template_name = "tantalus/curation_edit.html"
 
+    def get_context_and_render(self, request, form, pk=None):
+        context = {
+            'pk':pk,
+            'form': form,
+        }
+        return render(request, self.template_name, context)
+
     def get_context_data(self, pk):
         print("HELLO")
         curation = tantalus.models.Curation.objects.get(id=pk)
@@ -1083,17 +1089,20 @@ class CurationEdit(TemplateView):
         form = tantalus.forms.CurationForm(request.POST, instance=curation)
 
         if form.is_valid():
-            print(dir(form))
             form.save()
-            msg = "Successfully updated the Dataset."
+            msg = "Successfully updated the Curation."
             messages.success(request, msg)
             return HttpResponseRedirect(curation.get_absolute_url())
+        else:
+            #if not valid, then catch and print all the errors
+            error_dict = json.loads(form.errors.as_json())
+            for field in error_dict:
+                error_message = error_dict[field][0]["message"]
+                messages.error(request, error_message)
+            form = tantalus.forms.CurationForm(instance=curation)
+            return self.get_context_and_render(request, form, pk=pk)
 
-        msg = "Failed to update the Dataset. Please fix the errors below."
-        messages.error(request, msg)
-        return self.get_context_and_render(request, form, pk=pk)
 
-        
 @method_decorator(login_required, name='dispatch')
 class CurationDatasetDelete(View):
     """

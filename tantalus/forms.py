@@ -716,6 +716,9 @@ class CurationForm(forms.ModelForm):
 
     def clean(self):
         data = self.cleaned_data
-        #data["owner"] = tantalus.models.Sample.objects.get(id=data["owner"])
-        #data["sequencedatasets"] = tantalus.models.DNALibrary.objects.get(id=data["sequencedatasets"])
+        curation_name = data["name"]
+        #check if the curation name already exists in the database
+        curation_list = tantalus.models.Curation.objects.filter(name=curation_name)
+        if curation_list:
+            self.add_error("name", "Curation name %s already exists." % (curation_name))
         return data
