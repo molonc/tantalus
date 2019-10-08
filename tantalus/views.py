@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
@@ -24,7 +25,6 @@ from django.forms.models import model_to_dict
 from django.shortcuts import redirect
 from django.contrib.sites.shortcuts import get_current_site
 from django.views.generic.edit import UpdateView
-
 from functools import reduce
 import account.models
 
@@ -1054,9 +1054,11 @@ class CurationDetail(LoginRequiredMixin, DetailView):
     def get_context_data(self, object):
         curation = get_object_or_404(tantalus.models.Curation, pk=object.id)
         sequence_datasets = curation.sequencedatasets.all()
+        curation_history = tantalus.models.CurationHistory.objects.filter(curation=curation)
         context = {
             'curation': curation,
             'sequence_datasets': sequence_datasets,
+            'curation_history':curation_history,
             'pk': object.id
         }
         return context
@@ -1073,11 +1075,8 @@ class CurationEdit(TemplateView):
         return render(request, self.template_name, context)
 
     def get_context_data(self, pk):
-        print("HELLO")
         curation = tantalus.models.Curation.objects.get(id=pk)
-        form=tantalus.forms.CurationForm(instance=curation)
-        print("PRINTING FPRM")
-        print(form._html_output)
+        form=tantalus.forms.CurationEditForm(instance=curation)
         context = {
             "form" : form,
             "pk" : pk
@@ -1086,9 +1085,13 @@ class CurationEdit(TemplateView):
 
     def post(self, request, pk):
         curation = tantalus.models.Curation.objects.get(id=pk)
-        form = tantalus.forms.CurationForm(request.POST, instance=curation)
-
+        original_data = curation.get_data()
+        form = tantalus.forms.CurationEditForm(request.POST, instance=curation)
         if form.is_valid():
+            changed_fields = form.changed_data
+            form_data = form.cleaned_data
+            if changed_fields:
+                get_form_changes(curation, changed_fields, request, form_data, original_data, "Edit")
             form.save()
             msg = "Successfully updated the Curation."
             messages.success(request, msg)
@@ -1099,8 +1102,74 @@ class CurationEdit(TemplateView):
             for field in error_dict:
                 error_message = error_dict[field][0]["message"]
                 messages.error(request, error_message)
-            form = tantalus.forms.CurationForm(instance=curation)
+            form = tantalus.forms.CurationEditForm(instance=curation)
             return self.get_context_and_render(request, form, pk=pk)
+
+def get_form_changes(curation_instance, changed_fields, request, form_data, original_data, user_operation):
+    '''
+    Helper function that fetches that changes happened in a form.
+    '''
+    curation_name = form_data["name"]
+    user = request.user
+    #time = timezone.now().strftime("%Y-%m-%d %H:%M:%S")
+    operations = []
+    for field in changed_fields:
+        if original_data:
+            old = original_data[field]
+        else:
+            old = "None"
+
+        if field == "sequencedatasets":
+            new = [seq_dataset.pk for seq_dataset in form_data[field]]
+            added = list(set(new) - set(old))
+            deleted = list(set(old) - set(new))
+            operation = "SequenceDataset(s) %s added, %s deleted." % (added, deleted)
+        else:
+            new = form_data[field]
+            operation = "%s changed from %s to %s" % (field, old, new)
+        operations.append(operation)
+    full_operation = "; ".join(operations)
+    history_object = tantalus.models.CurationHistory(
+            curation=curation_instance,
+            user_name=user,
+            operation=user_operation,
+            operation_description=full_operation,
+            version="v1.0.0"
+            )
+    history_object.save()
+
+
+
+class CurationCreate(LoginRequiredMixin, TemplateView):
+    template_name = "tantalus/curation_create.html"
+    def get_context_and_render(self, request, form):
+        context = {
+            'form': form,
+            }
+        return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        form = tantalus.forms.CurationCreateForm()
+        return self.get_context_and_render(request, form)
+
+    def post(self, request, *args, **kwargs):
+        form = tantalus.forms.CurationCreateForm(request.POST)
+        if form.is_valid():
+            instance = form.save()
+            changed_fields = form.changed_data
+            form_data = form.cleaned_data
+            get_form_changes(instance, changed_fields, request, form_data, None, "Create")
+            msg = "Successfully create the Curation."
+            messages.success(request, msg)
+            return HttpResponseRedirect(instance.get_absolute_url())
+        else:
+            #if not valid, then catch and print all the errors
+            error_dict = json.loads(form.errors.as_json())
+            for field in error_dict:
+                error_message = error_dict[field][0]["message"]
+                messages.error(request, error_message)
+            form = tantalus.forms.CurationCreateForm()
+            return self.get_context_and_render(request, form)
 
 
 @method_decorator(login_required, name='dispatch')
@@ -1115,6 +1184,12 @@ class CurationDatasetDelete(View):
         msg = "Successfully removed datasest "
         messages.success(request, msg)
         return HttpResponseRedirect(reverse('curation-detail',kwargs={'pk':pk_2}))
+
+class CurationHistoryDetail(LoginRequiredMixin, DetailView):
+    '''
+    Record the curation creation and modification history.
+    '''
+    pass
 
 class ResultJSON(BaseDatatableView):
     model = tantalus.models.ResultsDataset

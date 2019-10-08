@@ -14,6 +14,16 @@ class ResultsDatasetAdmin(admin.ModelAdmin):
 class SequencingLanesAdmin(admin.ModelAdmin):
     raw_id_fields = ('dna_library',)
 
+class CurationAdmin(admin.ModelAdmin):
+    class Meta:
+        model = Curation
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        print(form.cleaned_data)
+        print(request.user)
+        print(change)
+        print(obj)
+
 admin.site.register(Tag)
 admin.site.register(Project)
 admin.site.register(Patient)
@@ -35,4 +45,4 @@ admin.site.register(Submission)
 admin.site.register(AnalysisType)
 admin.site.register(ResultsDataset, ResultsDatasetAdmin)
 admin.site.register(CurationHistory)
-admin.site.register(Curation)
+admin.site.register(Curation, CurationAdmin)

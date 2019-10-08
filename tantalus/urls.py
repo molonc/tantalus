@@ -41,6 +41,7 @@ urlpatterns = [
     url(r'^curations/edit/(?P<pk>\d+)$', tantalus.views.CurationEdit.as_view(), name='curation-edit'),
     url(r'^curations/delete/(?P<pk>\d+)$', tantalus.views.CurationDelete.as_view(), name='curation-delete'),
     url(r'^curations/detail/(?P<pk>\d+)/deletedataset/(?P<pk_2>[0-9]+)$', tantalus.views.CurationDatasetDelete.as_view(), name='curation-dataset-delete'),
+    url(r'^curations/create$', tantalus.views.CurationCreate.as_view(), name='curation-create'),
     #url(r'^curations/detail/(?P<pk>\d+)/adddataset/(?P<pk_2>[0-9]+)$', tantalus.views.TagDatasetAdd.as_view(), name='curation-dataset-add'),
     #url(r'^curations/history$', tantalus.views.curation_history_list, name='curation-history-list'),
     url(r'^tags/$', tantalus.views.tag_list, name='tag-list'),

@@ -1,0 +1,28 @@
+
+<h4>Curation history</h4>
+
+<div class="table-responsive">
+    <table id="curation-history-datatable" class="table-striped table-bordered">
+        <thead>
+            <th>Operation</th>
+            <th>User</th>
+            <th>Operation Description</th>
+            <th>Time</th>
+            <th>Version</th>
+
+
+        </thead>
+        <tbody>
+            {% for history in curation_history %}
+                <tr>
+                    <td>{{history.operation}}</td>
+                    <td>{{history.user_name}}</td>
+                    <td>{{history.operation_description}}</td>
+                    <td>{{history.updated}}</td>
+                    <td>{{history.version}}</td>
+
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -13,7 +13,8 @@ from django.db.models import Max
 from simple_history.models import HistoricalRecords
 from polymorphic.models import PolymorphicModel
 import account.models
-
+from django.db.models import signals
+from django.dispatch import receiver
 
 def create_id_field(*args, **kwargs):
     return models.CharField(
@@ -1000,6 +1001,21 @@ class Curation(models.Model):
         SequenceDataset,
         blank=True
     )
+    updated = models.DateTimeField(auto_now=True, auto_now_add=False)
+    created = models.DateTimeField(auto_now=False, auto_now_add=True)
+
+    #created_at = models.DateTimeField(auto_now_add=True)
+
+    #def __init__(self, *args, **kwargs):
+    #    super(Curation, self).__init__(*args, **kwargs)
+    #    self.sequencedatasets_old = self.sequencedatasets.all()
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            operation = "Creat new curation."
+        else:
+            operation = "Modify the existing curation."
+        super(Curation, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -1010,13 +1026,20 @@ class Curation(models.Model):
     def get_absolute_url(self):
         return reverse("curation-detail", args=(self.id,))
 
-    def get_created_date(self):
-        if self.history.last():
-            return self.history.last().history_date.date().strftime("%Y-%m-%d")
+    def get_created_time(self):
+        if self.created:
+            return self.created.strftime("%Y-%m-%d %H:%M:%S")
         else:
             return "Not Provided"
-
-
+    def get_last_modified_time(self):
+        return self.updated.strftime("%Y-%m-%d %H:%M:%S")
+    def get_data(self):
+        data = {
+            "name": self.name,
+            "owner": str(self.owner),
+            "sequencedatasets": [ds.pk for ds in self.sequencedatasets.all()]
+            }
+        return data
 
 # Validator for curation version
 curation_version_validator = RegexValidator(
@@ -1026,20 +1049,21 @@ curation_version_validator = RegexValidator(
 
 
 class CurationHistory(models.Model):
-    curation_name = models.ForeignKey(
+    curation = models.ForeignKey(
         Curation,
         on_delete=models.CASCADE,
         blank=False)
 
-    update_time = models.DateTimeField(
-        default=timezone.now,
-    )
+    updated = models.DateTimeField(auto_now=True, auto_now_add=False)
     user_name = models.CharField(
         max_length=50,
         null=True
     )
     operation = models.CharField(
         max_length=100
+        )
+    operation_description = models.CharField(
+        max_length=1000
         )
 
     version = models.CharField(
@@ -1048,5 +1072,6 @@ class CurationHistory(models.Model):
         validators=[curation_version_validator,],
     )
 
+
     def __str__(self):
-        return str(self.curation_name)
+        return str(self.curation)

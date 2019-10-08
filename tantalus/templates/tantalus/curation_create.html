@@ -1,0 +1,23 @@
+{% extends "tantalus/base_view.html" %}
+{% load staticfiles %}
+
+{% block title %}
+    Sample Creation
+{% endblock %}
+
+{% block body %}
+    <div class="container graybg">
+        <form action="{% url 'curation-create' %}" method="POST">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Add a single curation</legend>
+                <table class="table-condensed">
+                    <thead>
+                    {{form}}
+                    </thead>
+                </table>
+            	<input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
+            </fieldset>
+        </form>
+    </div>
+{% endblock %}

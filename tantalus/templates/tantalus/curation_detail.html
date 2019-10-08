@@ -28,8 +28,12 @@
                     {% endif %}
                 </tr>
                 <tr>
-                    <th style="padding: 0; padding-top: 4px;">Created Date</th>
-                    <td style="padding: 0; padding-left: 35px;">{{curation.get_created_date}}</td>
+                    <th style="padding: 0; padding-top: 4px;">Created Time</th>
+                    <td style="padding: 0; padding-left: 35px;">{{curation.get_created_time}}</td>
+                </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Last Modified</th>
+                    <td style="padding: 0; padding-left: 35px;">{{curation.get_last_modified_time}}</td>
                 </tr>
             </table>
         {% else %}
@@ -40,6 +44,13 @@
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if sequence_datasets %}
              {% include "tantalus/datatable/curation_sequence_datasets.html" %}
+        {% else %}
+            <h5><i class="text-warning">No Sequence Datasets associated with this Curation yet.</i></h5>
+        {% endif %}
+    </div>
+    <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if curation_history %}
+             {% include "tantalus/datatable/curation_history.html" %}
         {% else %}
             <h5><i class="text-warning">No Sequence Datasets associated with this Curation yet.</i></h5>
         {% endif %}

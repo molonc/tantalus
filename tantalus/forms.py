@@ -705,7 +705,7 @@ class DatasetForm(forms.ModelForm):
         return data
 
 
-class CurationForm(forms.ModelForm):
+class CurationCreateForm(forms.ModelForm):
     class Meta:
         model = tantalus.models.Curation
         fields = [
@@ -721,4 +721,20 @@ class CurationForm(forms.ModelForm):
         curation_list = tantalus.models.Curation.objects.filter(name=curation_name)
         if curation_list:
             self.add_error("name", "Curation name %s already exists." % (curation_name))
+        return data
+
+class CurationEditForm(forms.ModelForm):
+    class Meta:
+        model = tantalus.models.Curation
+        fields = [
+            'name',
+            'owner',
+            'sequencedatasets',
+        ]
+        widgets = {
+        'name': forms.TextInput(attrs={'readonly':'readonly'})
+        }
+
+    def clean(self):
+        data = self.cleaned_data
         return data

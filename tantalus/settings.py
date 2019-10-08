@@ -47,6 +47,7 @@ INTERNAL_IPS = (
 INSTALLED_APPS = [
     'account',
     'tantalus',
+    #'tantalus.apps.TantalusConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
