@@ -96,7 +96,7 @@
         <a href="{% url 'account:login' %}">Login</a>
         {% endif %}
     </div>
-    
+
     <!-- Page title -->
     <div class="container subheader">
         <h2>{% block title %}{% endblock %}</h2>
@@ -116,6 +116,6 @@
             $("#datatable").show();
         </script>
     {% endblock %}
-
+		{% block scripts %}{% endblock %}
 </body>
 </html>

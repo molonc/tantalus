@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.auth import authenticate
 from tantalus.settings import JIRA_URL
 from django.db.models import F
-
+from django.contrib.admin.widgets import FilteredSelectMultiple
 import tantalus.models
 import account.models
 import requests
@@ -711,6 +711,7 @@ class CurationCreateForm(forms.ModelForm):
         fields = [
             'name',
             'owner',
+            'description',
             'sequencedatasets',
         ]
 
@@ -729,10 +730,12 @@ class CurationEditForm(forms.ModelForm):
         fields = [
             'name',
             'owner',
+            'description',
             'sequencedatasets',
         ]
         widgets = {
-        'name': forms.TextInput(attrs={'readonly':'readonly'})
+        'name': forms.TextInput(attrs={'readonly':'readonly'}),
+        #'sequencedatasets': FilteredSelectMultiple("verbose name", is_stacked=False),
         }
 
     def clean(self):

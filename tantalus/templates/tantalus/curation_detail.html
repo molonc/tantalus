@@ -35,6 +35,10 @@
                     <th style="padding: 0; padding-top: 4px;">Last Modified</th>
                     <td style="padding: 0; padding-left: 35px;">{{curation.get_last_modified_time}}</td>
                 </tr>
+                <tr>
+                    <th style="padding: 0; padding-top: 4px;">Description</th>
+                    <td style="padding: 0; padding-left: 35px;">{{curation.description}}</td>
+                </tr>
             </table>
         {% else %}
             <h5><i class="text-warning">No Curation Details yet.</i></h5>
@@ -52,7 +56,7 @@
         {% if curation_history %}
              {% include "tantalus/datatable/curation_history.html" %}
         {% else %}
-            <h5><i class="text-warning">No Sequence Datasets associated with this Curation yet.</i></h5>
+            <h5><i class="text-warning">No history record(s) associated with this Curation yet.</i></h5>
         {% endif %}
     </div>
 

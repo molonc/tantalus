@@ -1001,21 +1001,12 @@ class Curation(models.Model):
         SequenceDataset,
         blank=True
     )
+    description = models.CharField(
+        max_length=500,
+        null=True
+    )
     updated = models.DateTimeField(auto_now=True, auto_now_add=False)
     created = models.DateTimeField(auto_now=False, auto_now_add=True)
-
-    #created_at = models.DateTimeField(auto_now_add=True)
-
-    #def __init__(self, *args, **kwargs):
-    #    super(Curation, self).__init__(*args, **kwargs)
-    #    self.sequencedatasets_old = self.sequencedatasets.all()
-
-    def save(self, *args, **kwargs):
-        if self.pk is None:
-            operation = "Creat new curation."
-        else:
-            operation = "Modify the existing curation."
-        super(Curation, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -1037,6 +1028,7 @@ class Curation(models.Model):
         data = {
             "name": self.name,
             "owner": str(self.owner),
+            "description": self.description,
             "sequencedatasets": [ds.pk for ds in self.sequencedatasets.all()]
             }
         return data
