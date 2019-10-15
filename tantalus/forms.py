@@ -735,7 +735,6 @@ class CurationEditForm(forms.ModelForm):
         ]
         widgets = {
         'name': forms.TextInput(attrs={'readonly':'readonly'}),
-        #'sequencedatasets': FilteredSelectMultiple("verbose name", is_stacked=False),
         }
 
     def clean(self):

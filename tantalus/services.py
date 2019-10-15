@@ -1,5 +1,6 @@
 import tantalus.models
-###TODO: separate the case where a new curation is added and an existing curation if being changed
+from tantalus.utils import *
+
 def get_form_changes(curation_instance, changed_fields, request, form_data, original_data, user_operation):
     '''
     Helper function that fetches that changes happened in a form.
@@ -10,28 +11,36 @@ def get_form_changes(curation_instance, changed_fields, request, form_data, orig
     user = request.user
     #create an empty list to store the operations performed
     operations = []
-    #loop over the fields that have been changed by the user
-    for field in changed_fields:
-        if original_data:
+    #if the curation is being modified by the user
+    if original_data:
+        for field in changed_fields:
             old = original_data[field]
-        else:
-            old = "None"
-        if field == "sequencedatasets":
-            #get the current list of sequence datasets
-            new = [seq_dataset.pk for seq_dataset in form_data[field]]
-            #find the newly added seq datasets
-            added = list(set(new) - set(old))
-            #find the deleted seq datasets
-            deleted = list(set(old) - set(new))
-            #record the operation
-            print(old)
-            operation = "SequenceDataset(s) %s added, %s deleted." % (added, deleted)
-        else:
-            new = form_data[field]
-            operation = "%s changed from %s to %s" % (field, old, new)
-        operations.append(operation)
+            if field == "sequencedatasets":
+                #get the current list of sequence datasets
+                new = [seq_dataset.pk for seq_dataset in form_data[field]]
+                #find the newly added seq datasets
+                added = list(set(new) - set(old))
+                #find the deleted seq datasets
+                deleted = list(set(old) - set(new))
+                operation = "SequenceDataset(s) %s added, %s deleted." % (added, deleted)
+            else:
+                new = form_data[field]
+                operation = "%s changed from %s to %s" % (field, old, new)
+            operations.append(operation)
+            full_operation = ";\n".join(operations)
+    #else, if the curation is being created
+    else:
+        for field in changed_fields:
+            if field == "sequencedatasets":
+                #get the current list of sequence datasets
+                new = [seq_dataset.pk for seq_dataset in form_data[field]]
+            else:
+                new = form_data[field]
+            operation = "%s: %s" % (field, new)
+            operations.append(operation)
+            full_operation = "Curation is created with the following values: " + "; ".join(operations)
     #join the list of operations
-    full_operation = "; ".join(operations)
+
     #record this operation in the curation history table if exists
     history_set = tantalus.models.CurationHistory.objects.filter(curation=curation_instance)
     if history_set:
@@ -39,12 +48,6 @@ def get_form_changes(curation_instance, changed_fields, request, form_data, orig
         new_version = "v%s.0.0" % (int(latest_version.split(".")[0][1:])+1)
     else:
         new_version = "v1.0.0"
-    print(new_version)
-    history_object = tantalus.models.CurationHistory(
-            curation=curation_instance,
-            user_name=user,
-            operation=user_operation,
-            operation_description=full_operation,
-            version=new_version
-            )
+    #create a history record
+    history_object = create_curation_history(curation_instance, user, user_operation, full_operation, new_version)
     history_object.save()

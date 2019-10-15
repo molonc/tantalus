@@ -11,7 +11,6 @@
             <th style="white-space: nowrap;">Libraries</th>
             <th>Library Type</th>
             <th>Is Complete</th>
-            <th></th>
         </thead>
         <tbody>
             {% for dataset in sequence_datasets %}
@@ -23,9 +22,6 @@
                     <td><a href="https://colossus.canadacentral.cloudapp.azure.com/dlp/library/{{dataset.library.library_id}}">{{dataset.library.library_id}}</a></td>
                     <td>{{dataset.library.library_type}}</td>
                     <td>{{dataset.get_is_complete}}</td>
-                    <td>
-                        <a href="{% url 'curation-dataset-delete' pk=dataset.id pk_2=curation.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
-                    </td>
                 </tr>
             {% endfor %}
         </tbody>

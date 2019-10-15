@@ -1117,8 +1117,6 @@ class CurationEdit(LoginRequiredMixin, TemplateView):
             return self.get_context_and_render(request, form, pk=pk)
 
 
-
-
 class CurationCreate(LoginRequiredMixin, TemplateView):
     template_name = "tantalus/curation_create.html"
     def get_context_and_render(self, request, form):
@@ -1154,25 +1152,6 @@ class CurationCreate(LoginRequiredMixin, TemplateView):
                 messages.error(request, error_message)
             form = tantalus.forms.CurationCreateForm()
             return self.get_context_and_render(request, form)
-
-
-@method_decorator(login_required, name='dispatch')
-class CurationDatasetDelete(View):
-    """
-    tantalus.models.Curation dataset delete page.
-    """
-    def get(self, request, pk,pk_2):
-        #get the dataset using the pk
-        dataset = get_object_or_404(tantalus.models.SequenceDataset,pk=pk)
-        #get the curation using the pk
-        curation = get_object_or_404(tantalus.models.Curation,pk=pk_2)
-        #remove the dataset from the list of sequence datasets
-        curation.sequencedatasets.remove(dataset)
-        msg = "Successfully removed datasest "
-        #show the message on the top of the webpage
-        messages.success(request, msg)
-        return HttpResponseRedirect(reverse('curation-detail',kwargs={'pk':pk_2}))
-
 
 class ResultJSON(BaseDatatableView):
     model = tantalus.models.ResultsDataset
