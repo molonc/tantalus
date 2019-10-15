@@ -48,10 +48,10 @@ def create_curation_history(curation, user_name, operation, operation_descriptio
     Create a curation history object with the values provided.
     '''
     history_object = tantalus.models.CurationHistory(
-            curation=curation_instance,
-            user_name=user,
-            operation=user_operation,
-            operation_description=full_operation,
-            version=new_version
+            curation=curation,
+            user_name=user_name,
+            operation=operation,
+            operation_description=operation_description,
+            version=version
             )
     return history_object

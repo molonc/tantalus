@@ -1012,19 +1012,31 @@ class Curation(models.Model):
         return self.name
 
     def count_sequence_datasets(self):
+        '''
+        Return the number of sequence datasets that are associated with this curation.
+        '''
         return len(self.sequencedatasets.all())
 
     def get_absolute_url(self):
         return reverse("curation-detail", args=(self.id,))
 
     def get_created_time(self):
+        '''
+        Return the creation date of the curation.
+        '''
         if self.created:
             return self.created.strftime("%Y-%m-%d %H:%M:%S")
         else:
             return "Not Provided"
     def get_last_modified_time(self):
+        '''
+        Return the latest modification time of the curation.
+        '''
         return self.updated.strftime("%Y-%m-%d %H:%M:%S")
     def get_data(self):
+        '''
+        Return the data contained in the curation object.
+        '''
         data = {
             "name": self.name,
             "owner": str(self.owner),
