@@ -44,9 +44,11 @@ def get_form_changes(curation_instance, changed_fields, request, form_data, orig
     #record this operation in the curation history table if exists
     history_set = tantalus.models.CurationHistory.objects.filter(curation=curation_instance)
     if history_set:
+        #if there's modification history, then increase the version number
         latest_version = history_set.latest("version").version
-        new_version = "v%s.0.0" % (int(latest_version.split(".")[0][1:])+1)
+        new_version = "v%s.0.0" % (int(latest_version.split(".")[0][1:]) + 1)
     else:
+        #else, create a history object with version v1.0.0
         new_version = "v1.0.0"
     #create a history record
     history_object = create_curation_history(curation_instance, user, user_operation, full_operation, new_version)
