@@ -1065,18 +1065,18 @@ class CurationHistory(models.Model):
 
     updated = models.DateTimeField(
         auto_now=True,
-        auto_now_add=False,
-        blank=True)
+        auto_now_add=False)
     user_name = models.CharField(
         max_length=50,
         null=True
     )
     operation = models.CharField(
-        max_length=100
+        max_length=100,
+        default=""
         )
     operation_description = models.CharField(
         max_length=1000,
-        default=None
+        default=""
         )
 
     version = models.CharField(
