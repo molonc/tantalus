@@ -982,6 +982,11 @@ class Submission(models.Model):
     def __str__(self):
         return str(self.sample.sample_id)
 
+# Validator for curation version
+curation_version_validator = RegexValidator(
+    regex=r"v\d+\.\d+\.\d+",
+    message=' must be in "v<MAJOR>.<MINOR>.<PATCH>"; for example, "v0.0.1"',
+)
 
 class Curation(models.Model):
     """
@@ -1005,14 +1010,31 @@ class Curation(models.Model):
         max_length=500,
         null=True
     )
+    version = models.CharField(
+        max_length=200,
+        default="v1.0.0",
+        validators=[curation_version_validator,],
+    )
     updated = models.DateTimeField(
         auto_now=True,
-        auto_now_add=False)
+        auto_now_add=False
+        )
     created = models.DateTimeField(
         auto_now=False,
         auto_now_add=True,
-        blank=True)
-
+        blank=True
+        )
+    version = models.CharField(
+        max_length=200,
+        default="v1.0.0",
+        validators=[curation_version_validator,],
+        )
+    user = models.ForeignKey(
+        account.models.User,
+        related_name="modification_user",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
     def __str__(self):
         return self.name
 
@@ -1046,45 +1068,8 @@ class Curation(models.Model):
             "name": self.name,
             "owner": str(self.owner),
             "description": self.description,
-            "sequencedatasets": [ds.pk for ds in self.sequencedatasets.all()]
+            "sequencedatasets": [ds.pk for ds in self.sequencedatasets.all()],
+            "user": self.user,
+            "version": self.version
             }
         return data
-
-# Validator for curation version
-curation_version_validator = RegexValidator(
-    regex=r"v\d+\.\d+\.\d+",
-    message=' must be in "v<MAJOR>.<MINOR>.<PATCH>"; for example, "v0.0.1"',
-)
-
-
-class CurationHistory(models.Model):
-    curation = models.ForeignKey(
-        Curation,
-        on_delete=models.CASCADE,
-        blank=False)
-
-    updated = models.DateTimeField(
-        auto_now=True,
-        auto_now_add=False)
-    user_name = models.CharField(
-        max_length=50,
-        null=True
-    )
-    operation = models.CharField(
-        max_length=100,
-        default=""
-        )
-    operation_description = models.CharField(
-        max_length=1000,
-        default=""
-        )
-
-    version = models.CharField(
-        max_length=200,
-        default="v1.0.0",
-        validators=[curation_version_validator,],
-    )
-
-
-    def __str__(self):
-        return str(self.curation)

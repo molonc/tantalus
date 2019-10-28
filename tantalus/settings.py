@@ -97,7 +97,7 @@ TEMPLATES = [
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
-
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -111,7 +111,17 @@ DATABASES = {
         }
     }
 }
-
+'''
+DATABASES = {
+    'default': {# for older django versions use ".postgresql_psycopg2"
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': 'tantalus_dev_flora',
+    'USER': 'qfliu',
+    'PASSWORD': '',
+    'HOST': '',
+    'PORT': '5432',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators

@@ -55,3 +55,16 @@ def create_curation_history(curation, user_name, operation, operation_descriptio
             version=version
             )
     return history_object
+
+def create_curation_modification_detail(log_message, operation, curation_instance):
+    '''
+    Create a dict of curation modification history that is used to send to the frontend.
+    '''
+    modification_detail = {
+        "operation": operation,
+        "user": curation_instance.user,
+        "operation_log": log_message,
+        "updated": curation_instance.updated,
+        "version": curation_instance.version
+        }
+    return modification_detail

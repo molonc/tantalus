@@ -6,8 +6,8 @@
         <thead>
             <th>Operation</th>
             <th>User</th>
-            <th>Operation Description</th>
-            <th>Time</th>
+            <th>Description</th>
+            <th>Updated</th>
             <th>Version</th>
 
 
@@ -16,11 +16,10 @@
             {% for history in curation_history %}
                 <tr>
                     <td>{{history.operation}}</td>
-                    <td>{{history.user_name}}</td>
-                    <td>{{history.operation_description}}</td>
+                    <td>{{history.user}}</td>
+                    <td>{{history.operation_log}}</td>
                     <td>{{history.updated}}</td>
                     <td>{{history.version}}</td>
-
                 </tr>
             {% endfor %}
         </tbody>

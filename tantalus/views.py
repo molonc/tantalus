@@ -1060,12 +1060,34 @@ class CurationDetail(LoginRequiredMixin, DetailView):
         #get a list of sequence datasets associated with this curation
         sequence_datasets = curation.sequencedatasets.all()
         #get the curation history
-        curation_history = tantalus.models.CurationHistory.objects.filter(curation=curation)
-        #create context dict
+        curation_history = curation.history
+        curation_history_lst = []
+        # If there's a list of history objects associated with this curation, then go over the list
+        if len(curation.history.all()):
+            # Find the very first history record
+            current_history_object = curation_history.last()
+            # Generate the log messgae
+            edit_msg = get_curation_change(None, current_history_object.instance)
+            # Generate a list of info that is used to send to the frontend, display to the users
+            current_history = create_curation_modification_detail(edit_msg, "Created", current_history_object.instance)
+            # Add this history to the list
+            curation_history_lst.append(current_history)
+            # Next, go over all the histories
+            for i in range(len(curation.history.all()) - 1):
+                # Grab the next history object
+                next_history_object = current_history_object.next_record
+                # Generate the log messgae
+                edit_msg = get_curation_change(current_history_object.instance, next_history_object.instance)
+                # Generate the history detail for the history object
+                next_history = create_curation_modification_detail(edit_msg, "Modified", next_history_object.instance)
+                # Add this history object to the list
+                curation_history_lst.append(next_history)
+                current_history_object = next_history_object
+        #create context dict and send it to the front end
         context = {
             'curation': curation,
             'sequence_datasets': sequence_datasets,
-            'curation_history':curation_history,
+            'curation_history':curation_history_lst,
             'pk': object.id
         }
         return context
@@ -1093,16 +1115,17 @@ class CurationEdit(LoginRequiredMixin, TemplateView):
         curation = tantalus.models.Curation.objects.get(id=pk)
         #get a dict of information that the curation contains
         original_data = curation.get_data()
+        version = original_data["version"]
         form = tantalus.forms.CurationEditForm(request.POST, instance=curation)
         if form.is_valid():
-            #get a list of changed fields in the form
-            changed_fields = form.changed_data
-            #get the list of fields in the form
-            form_data = form.cleaned_data
-            #compare the values in the form and record the change in the CurationHistory table
-            if changed_fields:
-                get_form_changes(curation, changed_fields, request, form_data, original_data, "Edit")
-            form.save()
+            # Get the data from the html form
+            instance = form.save(commit=False)
+            # Get the current user who is modifying the form
+            instance.user = request.user
+            # Increase the version number
+            instance.version = "v" + str(int(version[1:].split(".")[0]) + 1) + ".0.0"
+            # Save the object
+            instance.save()
             msg = "Successfully updated the Curation."
             messages.success(request, msg)
             return HttpResponseRedirect(curation.get_absolute_url())
@@ -1135,12 +1158,12 @@ class CurationCreate(LoginRequiredMixin, TemplateView):
         form = tantalus.forms.CurationCreateForm(request.POST)
         #check if the form is valid
         if form.is_valid():
-            instance = form.save()
-            #check if any fields have been changed
-            changed_fields = form.changed_data
-            form_data = form.cleaned_data
-            #record the change inside the curation history table
-            get_form_changes(instance, changed_fields, request, form_data, None, "Create")
+            #Get the corresponding data from the form
+            instance = form.save(commit=False)
+            #Get the user who is creating the object
+            instance.user = request.user
+            instance.save()
+
             msg = "Successfully create the Curation."
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())

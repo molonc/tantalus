@@ -4,3 +4,4 @@
 tantalus.*
 venv
 tantalus/migrations
+tantalus/settings.py
