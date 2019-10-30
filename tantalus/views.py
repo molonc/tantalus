@@ -1078,7 +1078,6 @@ class CurationEdit(LoginRequiredMixin, TemplateView):
         curation = tantalus.models.Curation.objects.get(id=pk)
         #get a dict of information that the curation contains
         original_datasets = set(curation.sequencedatasets.all())
-        print(original_datasets)
         version = curation.version
         form = tantalus.forms.CurationEditForm(request.POST, instance=curation)
         if form.is_valid():
