@@ -2,7 +2,7 @@
 
 {% load staticfiles %}
 
-{% block title %}Edit Curation{% endblock %}
+{% block title %}Curation Creation{% endblock %}
 
 {% block body %}
 <div class="container graybg">
@@ -11,7 +11,7 @@
       <form action="{% url 'curation-create' %}" method="POST">
           {% csrf_token %}
           <fieldset>
-              <legend>Add a single curation</legend>
+              <legend>Create a new Curation</legend>
               <table class="table-condensed">
                   <thead>
                   {{form}}

@@ -17,7 +17,8 @@ class SequencingLanesAdmin(admin.ModelAdmin):
 class CurationAdmin(admin.ModelAdmin):
     class Meta:
         model = Curation
-    filter_horizontal = ('sequencedatasets',)
+    def has_change_permission(self, request, obj=None):
+        return False
 
 admin.site.register(Tag)
 admin.site.register(Project)

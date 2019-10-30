@@ -10,7 +10,7 @@
     <form action="{% url 'curation-edit' pk=pk %}" method="POST">
         {% csrf_token %}
          <fieldset>
-            <legend>Curation </legend>
+            <legend>Edit an existing Curation </legend>
             <table class="table-condensed">
                 <thead>
                 {{ form }}

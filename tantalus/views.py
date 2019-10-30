@@ -1034,20 +1034,6 @@ def curation_list(request):
     return context
 
 
-@method_decorator(login_required, name='dispatch')
-class CurationDelete(View):
-    """
-    tantalus.models.Curation delete page.
-    """
-    def get(self, request, pk):
-        #get the curation by pk, if it exists, then delete it
-        get_object_or_404(tantalus.models.Curation,pk=pk).delete()
-        msg = "Successfully deleted curation"
-        #show the success message on the top of the screen
-        messages.success(request, msg)
-        return HttpResponseRedirect(reverse('curation-list'))
-
-
 class CurationDetail(LoginRequiredMixin, DetailView):
     login_url = LOGIN_URL
 
@@ -1059,31 +1045,8 @@ class CurationDetail(LoginRequiredMixin, DetailView):
         curation = get_object_or_404(tantalus.models.Curation, pk=object.id)
         #get a list of sequence datasets associated with this curation
         sequence_datasets = curation.sequencedatasets.all()
-        #get the curation history
-        curation_history = curation.history
-        curation_history_lst = []
-        # If there's a list of history objects associated with this curation, then go over the list
-        if len(curation.history.all()):
-            # Find the very first history record
-            current_history_object = curation_history.last()
-            # Generate the log messgae
-            edit_msg = get_curation_change(None, current_history_object.instance)
-            # Generate a list of info that is used to send to the frontend, display to the users
-            current_history = create_curation_modification_detail(edit_msg, "Created", current_history_object.instance)
-            # Add this history to the list
-            curation_history_lst.append(current_history)
-            # Next, go over all the histories
-            for i in range(len(curation.history.all()) - 1):
-                # Grab the next history object
-                next_history_object = current_history_object.next_record
-                # Generate the log messgae
-                edit_msg = get_curation_change(current_history_object.instance, next_history_object.instance)
-                # Generate the history detail for the history object
-                next_history = create_curation_modification_detail(edit_msg, "Modified", next_history_object.instance)
-                # Add this history object to the list
-                curation_history_lst.append(next_history)
-                current_history_object = next_history_object
-        #create context dict and send it to the front end
+        #get the modification history of the curation
+        curation_history_lst = get_curation_change(curation.name)
         context = {
             'curation': curation,
             'sequence_datasets': sequence_datasets,
@@ -1114,8 +1077,9 @@ class CurationEdit(LoginRequiredMixin, TemplateView):
         #get the curation by pk
         curation = tantalus.models.Curation.objects.get(id=pk)
         #get a dict of information that the curation contains
-        original_data = curation.get_data()
-        version = original_data["version"]
+        original_datasets = set(curation.sequencedatasets.all())
+        print(original_datasets)
+        version = curation.version
         form = tantalus.forms.CurationEditForm(request.POST, instance=curation)
         if form.is_valid():
             # Get the data from the html form
@@ -1123,11 +1087,29 @@ class CurationEdit(LoginRequiredMixin, TemplateView):
             # Get the current user who is modifying the form
             instance.user = request.user
             # Increase the version number
-            instance.version = "v" + str(int(version[1:].split(".")[0]) + 1) + ".0.0"
-            # Save the object
-            instance.save()
-            msg = "Successfully updated the Curation."
-            messages.success(request, msg)
+            new_datasets = set(form.cleaned_data["sequencedatasets"])
+            added = new_datasets - original_datasets
+            deleted = original_datasets - new_datasets
+            #if the curation object is changed, increase the version number and create the modification history
+            if form.changed_data:
+                instance.version = "v" + str(int(version[1:].split(".")[0]) + 1) + ".0.0"
+                #make changes to the list of sequence datasets of the curation
+                for dataset in deleted:
+                    get_object_or_404(tantalus.models.CurationDataset,
+                        curation_instance=instance,
+                        sequencedataset_instance=dataset).delete()
+                for dataset in added:
+                    tantalus.models.CurationDataset.objects.create(
+                        curation_instance=instance,
+                        sequencedataset_instance=dataset,
+                        version = instance.version)
+                # Save the object
+                instance.save()
+                msg = "Successfully updated the Curation."
+                messages.success(request, msg)
+            else:
+                msg = "No change was detected."
+                messages.warning(request, msg)
             return HttpResponseRedirect(curation.get_absolute_url())
         else:
             #if the form is not valid, then catch and print all the errors
@@ -1163,7 +1145,13 @@ class CurationCreate(LoginRequiredMixin, TemplateView):
             #Get the user who is creating the object
             instance.user = request.user
             instance.save()
-
+            #next, save the m2m field
+            for dataset in form.cleaned_data["sequencedatasets"]:
+                tantalus.models.CurationDataset.objects.create(
+                    curation_instance=instance,
+                    sequencedataset_instance=dataset,
+                    version = instance.version)
+            #form.save_m2m()
             msg = "Successfully create the Curation."
             messages.success(request, msg)
             return HttpResponseRedirect(instance.get_absolute_url())

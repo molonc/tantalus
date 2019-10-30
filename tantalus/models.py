@@ -981,7 +981,6 @@ class Submission(models.Model):
 
     def __str__(self):
         return str(self.sample.sample_id)
-
 # Validator for curation version
 curation_version_validator = RegexValidator(
     regex=r"v\d+\.\d+\.\d+",
@@ -1004,6 +1003,8 @@ class Curation(models.Model):
     )
     sequencedatasets = models.ManyToManyField(
         SequenceDataset,
+        through="CurationDataset",
+        through_fields=('curation_instance', 'sequencedataset_instance'),
         blank=True
     )
     description = models.CharField(
@@ -1073,3 +1074,29 @@ class Curation(models.Model):
             "version": self.version
             }
         return data
+
+
+class CurationDataset(models.Model):
+    '''
+    A model that is used to keep track of the datasets change of a curation.
+    '''
+    history = HistoricalRecords()
+
+    curation_instance = models.ForeignKey(
+        Curation,
+        on_delete=models.CASCADE,
+        null=True
+    )
+
+    sequencedataset_instance = models.ForeignKey(
+        SequenceDataset,
+        on_delete=models.CASCADE,
+        null=True
+    )
+    version = models.CharField(
+        max_length=200,
+        default="v1.0.0",
+        validators=[curation_version_validator,],
+        )
+    def __str__(self):
+        return self.curation_instance.name

@@ -6,7 +6,6 @@
                 <th>Number of Sequence Datasets</th>
                 <th>Owner</th>
                 <th>Created Date</th>
-                <th>Delete</th>
             </tr>
         </thead>
         <tbody>
@@ -21,9 +20,6 @@
                         <td>None</td>
                     {% endif %}
                     <td>{{curation.get_created_time}}</td>
-                    <td>
-                    <a href="{% url 'curation-delete' pk=curation.id %}"><i class="icon-remove-sign" style="color:red"></i> delete</a>
-                    </td>
                 </tr>
             {% endfor %}
         </tbody>
