@@ -1,0 +1,27 @@
+  <div class="table-responsive">
+    <table id="datatable" class="table table-striped" style="display:none;">
+        <thead>
+            <tr>
+                <th>curation name</th>
+                <th>Number of Sequence Datasets</th>
+                <th>Owner</th>
+                <th>Created Date</th>
+            </tr>
+        </thead>
+        <tbody>
+        <br>
+            {% for curation in curations %}
+                <tr>
+                    <td><a href="{% url 'curation-detail' curation.id %}">{{curation.name}}</a></td>
+                    <td>{{curation.count_sequence_datasets}}</td>
+                    {% if curation.owner %}
+                        <td>{{curation.owner}}</td>
+                    {% else %}
+                        <td>None</td>
+                    {% endif %}
+                    <td>{{curation.get_created_time}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

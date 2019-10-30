@@ -1,0 +1,115 @@
+{% extends "tantalus/base_view.html" %}
+
+{% load staticfiles %}
+
+{% block title %}Curation Creation{% endblock %}
+
+{% block body %}
+<div class="container graybg">
+
+  <div class="container graybg">
+      <form action="{% url 'curation-create' %}" method="POST">
+          {% csrf_token %}
+          <fieldset>
+              <legend>Create a new Curation</legend>
+              <table class="table-condensed">
+                  <thead>
+                  {{form}}
+                  </thead>
+              </table>
+          </fieldset>
+
+         <div class="row" style="padding-left:20px;">
+             <div id="select-form" class="form-group" style="display: inline-block;">
+               <label for="sel1">Please select the sequence datasets:</label>
+                 <input class="form-control" id="select_input" type="text" placeholder="Search.." style="width: 250px;">
+                 <select multiple id="dataset_input" class="form-control" style="width: 250px;">
+                     {% for dataset in sequence_datasets %}
+                     <option value={{dataset.pk}}>{{dataset}}</option>
+                     {% endfor %}
+                 </select>
+             </div>
+
+             <div style="display: inline-block; vertical-align:top;">
+             <span id="add-items" class="glyphicon glyphicon-chevron-right" style="padding-top:30px"></span>
+                 <br/>
+             <span id="remove-items" class="glyphicon glyphicon-chevron-left"></span>
+             </div>
+
+             <div class="form-group" style="display: inline-block; vertical-align:top;">
+               <label for="sel1">Selected:</label>
+                 <input class="form-control" id="selected_input" type="text" placeholder="Search.." style="width: 250px;">
+                 <select multiple id="dataset_output" class="form-control"  style="width: 250px;">
+                 </select>
+             </div>
+         </div>
+         <input class="btn btn-primary btn-sm" type="submit" name="create" value="Create">
+         <a class="btn btn-default btn-sm" href="{% url 'curation-list' %}">Cancel</a>
+     </form>
+     <br>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    $(document).ready(function(){
+      document.getElementById('id_sequencedatasets').style.display = 'none';
+      $("#select_input").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("#dataset_input option").filter(function() {
+          $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+      });
+      $("#selected_input").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("#dataset_output option").filter(function() {
+          $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+      });
+    });
+
+    $('#add-items').on('click', function(e) {
+        var input = document.getElementById("dataset_input")
+         for (var i=0, len=input.options.length; i<len; i++) {
+            opt = input.options[i];
+            if (opt != undefined && opt.selected) {
+                len--
+                i--
+                $('#dataset_output').append(opt)
+            }
+        }
+        update_field()
+    })
+
+    $('#remove-items').on('click', function(e) {
+        var input = document.getElementById("dataset_output")
+         for (var i=0, len=input.options.length; i<len; i++) {
+            opt = input.options[i];
+            if (opt != undefined && opt.selected) {
+                len--
+                i--
+                $('#dataset_input').append(opt)
+            }
+        }
+        update_field()
+    })
+
+    function update_field(){
+        var input = document.getElementById("dataset_output")
+        var field = document.getElementById("id_sequencedatasets")
+        var result = []
+         for (var i=0, len=input.options.length; i<len; i++) {
+            result.push(input.options[i].value)
+         }
+         field.querySelector('div.selector option[value=valueB]')
+         for (var i=0, len=field.options.length; i<len; i++) {
+            opt = field.options[i];
+            opt.selected = false
+            if (result.indexOf(opt.value) > -1) {
+                opt.selected = true
+            }
+        }
+    }
+</script>
+{% endblock %}

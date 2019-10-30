@@ -14,6 +14,12 @@ class ResultsDatasetAdmin(admin.ModelAdmin):
 class SequencingLanesAdmin(admin.ModelAdmin):
     raw_id_fields = ('dna_library',)
 
+class CurationAdmin(admin.ModelAdmin):
+    class Meta:
+        model = Curation
+    def has_change_permission(self, request, obj=None):
+        return False
+
 admin.site.register(Tag)
 admin.site.register(Project)
 admin.site.register(Patient)
@@ -34,3 +40,4 @@ admin.site.register(Sow)
 admin.site.register(Submission)
 admin.site.register(AnalysisType)
 admin.site.register(ResultsDataset, ResultsDatasetAdmin)
+admin.site.register(Curation, CurationAdmin)

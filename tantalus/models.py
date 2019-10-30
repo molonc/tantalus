@@ -13,7 +13,8 @@ from django.db.models import Max
 from simple_history.models import HistoricalRecords
 from polymorphic.models import PolymorphicModel
 import account.models
-
+from django.db.models import signals
+from django.dispatch import receiver
 
 def create_id_field(*args, **kwargs):
     return models.CharField(
@@ -36,6 +37,7 @@ class Tag(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
+
 
     def __str__(self):
         return self.name
@@ -476,7 +478,7 @@ class SequenceDataset(models.Model):
 
     tags = models.ManyToManyField(
         Tag,
-        blank=True,
+        blank=True
     )
 
     BAM = 'BAM'
@@ -893,7 +895,7 @@ class FileInstance(models.Model):
     is_deleted = models.BooleanField(
         default=False,
     )
-    
+
     def __str__(self):
         return str(self.file_resource) + '-' +  self.storage.name
 
@@ -979,3 +981,122 @@ class Submission(models.Model):
 
     def __str__(self):
         return str(self.sample.sample_id)
+# Validator for curation version
+curation_version_validator = RegexValidator(
+    regex=r"v\d+\.\d+\.\d+",
+    message=' must be in "v<MAJOR>.<MINOR>.<PATCH>"; for example, "v0.0.1"',
+)
+
+class Curation(models.Model):
+    """
+    Simple text curation associated with datasets.
+    """
+
+    history = HistoricalRecords()
+
+    name = create_id_field(unique=True)
+
+    owner = models.ForeignKey(
+        account.models.User,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    sequencedatasets = models.ManyToManyField(
+        SequenceDataset,
+        through="CurationDataset",
+        through_fields=('curation_instance', 'sequencedataset_instance'),
+        blank=True
+    )
+    description = models.CharField(
+        max_length=500,
+        null=True
+    )
+    version = models.CharField(
+        max_length=200,
+        default="v1.0.0",
+        validators=[curation_version_validator,],
+    )
+    updated = models.DateTimeField(
+        auto_now=True,
+        auto_now_add=False
+        )
+    created = models.DateTimeField(
+        auto_now=False,
+        auto_now_add=True,
+        blank=True
+        )
+    version = models.CharField(
+        max_length=200,
+        default="v1.0.0",
+        validators=[curation_version_validator,],
+        )
+    user = models.ForeignKey(
+        account.models.User,
+        related_name="modification_user",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    def __str__(self):
+        return self.name
+
+    def count_sequence_datasets(self):
+        '''
+        Return the number of sequence datasets that are associated with this curation.
+        '''
+        return len(self.sequencedatasets.all())
+
+    def get_absolute_url(self):
+        return reverse("curation-detail", args=(self.id,))
+
+    def get_created_time(self):
+        '''
+        Return the creation date of the curation.
+        '''
+        if self.created:
+            return self.created.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            return "Not Provided"
+    def get_last_modified_time(self):
+        '''
+        Return the latest modification time of the curation.
+        '''
+        return self.updated.strftime("%Y-%m-%d %H:%M:%S")
+    def get_data(self):
+        '''
+        Return the data contained in the curation object.
+        '''
+        data = {
+            "name": self.name,
+            "owner": str(self.owner),
+            "description": self.description,
+            "sequencedatasets": [ds.pk for ds in self.sequencedatasets.all()],
+            "user": self.user,
+            "version": self.version
+            }
+        return data
+
+
+class CurationDataset(models.Model):
+    '''
+    A model that is used to keep track of the datasets change of a curation.
+    '''
+    history = HistoricalRecords()
+
+    curation_instance = models.ForeignKey(
+        Curation,
+        on_delete=models.CASCADE,
+        null=True
+    )
+
+    sequencedataset_instance = models.ForeignKey(
+        SequenceDataset,
+        on_delete=models.CASCADE,
+        null=True
+    )
+    version = models.CharField(
+        max_length=200,
+        default="v1.0.0",
+        validators=[curation_version_validator,],
+        )
+    def __str__(self):
+        return self.curation_instance.name

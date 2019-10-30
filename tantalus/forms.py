@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.auth import authenticate
 from tantalus.settings import JIRA_URL
 from django.db.models import F
-
+from django.contrib.admin.widgets import FilteredSelectMultiple
 import tantalus.models
 import account.models
 import requests
@@ -106,7 +106,7 @@ class PatientForm(forms.ModelForm):
         patient_id = self.cleaned_data.get('patient_id', False)
         if(patient_id[:2] != "SA"):
             raise ValidationError("Error!. SA IDs must start with SA")
-        return patient_id         
+        return patient_id
 
 
 class UploadPatientForm(forms.Form):
@@ -145,7 +145,7 @@ class UploadPatientForm(forms.Form):
 
         SA_prefix_patients = tantalus.models.Patient.objects.filter(patient_id__startswith='SA').order_by('-patient_id')
         SA_ids = []
-        
+
         for patient in SA_prefix_patients:
             SA_ids.append(int(patient.patient_id[2:]))
         SA_ids.sort()
@@ -281,7 +281,7 @@ class UploadSampleForm(forms.Form):
 
             try:
                 patient = tantalus.models.Patient.objects.get(reference_id=sample_row[reference_id_index])
-                sample_id = patient.patient_id + sample_row[suffix_index]       
+                sample_id = patient.patient_id + sample_row[suffix_index]
                 try:
                     #If to be created Sample ID already exists, raise IntegrityError
                     patient.sample_set.get(sample_id=sample_id)
@@ -702,4 +702,41 @@ class DatasetForm(forms.ModelForm):
         data = self.cleaned_data
         data["sample"] = tantalus.models.Sample.objects.get(id=data["sample"])
         data["library"] = tantalus.models.DNALibrary.objects.get(id=data["library"])
+        return data
+
+
+class CurationCreateForm(forms.ModelForm):
+    class Meta:
+        model = tantalus.models.Curation
+        fields = [
+            'name',
+            'owner',
+            'description',
+            'sequencedatasets',
+        ]
+
+    def clean(self):
+        data = self.cleaned_data
+        curation_name = data["name"]
+        #check if the curation name already exists in the database
+        curation_list = tantalus.models.Curation.objects.filter(name=curation_name)
+        if curation_list:
+            self.add_error("name", "Curation name %s already exists." % (curation_name))
+        return data
+
+class CurationEditForm(forms.ModelForm):
+    class Meta:
+        model = tantalus.models.Curation
+        fields = [
+            'name',
+            'owner',
+            'description',
+            'sequencedatasets',
+        ]
+        widgets = {
+        'name': forms.TextInput(attrs={'readonly':'readonly'}),
+        }
+
+    def clean(self):
+        data = self.cleaned_data
         return data
