@@ -1046,7 +1046,7 @@ class CurationDetail(LoginRequiredMixin, DetailView):
         #get a list of sequence datasets associated with this curation
         sequence_datasets = curation.sequencedatasets.all()
         #get the modification history of the curation
-        curation_history_lst = get_curation_change(curation.name)
+        curation_history_lst = get_curation_change(curation)
         context = {
             'curation': curation,
             'sequence_datasets': sequence_datasets,

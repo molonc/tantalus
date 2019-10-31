@@ -1,13 +1,13 @@
 from tantalus.models import *
 from tantalus.utils import *
 
-def get_curation_change(curation_name):
+def get_curation_change(curation):
     '''
     Generating the edit history of the given curation.
     '''
     curation_history_lst = []
     #get the histories of the given curation
-    curation_history = Curation.history.filter(name=curation_name).order_by('version')
+    curation_history = Curation.history.filter(name=curation.name, created=curation.created).order_by('version')
     attributes = ["sequencedatasets", "owner", "description"]
     previous_curation = None
     #loop through the curation history
@@ -24,10 +24,12 @@ def get_curation_change(curation_name):
                     deleted_list = []
                     added = CurationDataset.history.filter(
                         curation_instance__name=current_curation.name,
+                        curation_instance__created=current_curation.created,
                         version=version,
                         history_type='+')
                     deleted = CurationDataset.history.filter(
                         curation_instance__name=current_curation.name,
+                        curation_instance__created=current_curation.created,
                         version=previous_curation.version,
                         history_type='-')
                     if added or deleted:
