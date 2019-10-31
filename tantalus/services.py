@@ -28,7 +28,7 @@ def get_curation_change(curation_name):
                         history_type='+')
                     deleted = CurationDataset.history.filter(
                         curation_instance__name=current_curation.name,
-                        version=version,
+                        version=previous_curation.version,
                         history_type='-')
                     if added or deleted:
                         added_msg = ""
@@ -40,7 +40,7 @@ def get_curation_change(curation_name):
                         if added_list:
                             added_msg = ", ".join(added_list) + " added"
                         if deleted_list:
-                            deleted_msg = ", ".join(deleted_list) + "deleted"
+                            deleted_msg = ", ".join(deleted_list) + " deleted"
                         change = "SequenceDataset(s) %s %s" % (added_msg, deleted_msg)
                         changes.append(change)
                 else:

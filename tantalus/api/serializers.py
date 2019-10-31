@@ -274,3 +274,16 @@ class AnalysisSerializer(serializers.ModelSerializer):
     class Meta:
         model = tantalus.models.Analysis
         fields = '__all__'
+
+
+class CurationSerializer(serializers.ModelSerializer):
+    #sequencedatasets = SequenceDatasetSerializer()
+    class Meta:
+        model = tantalus.models.Curation
+        fields = '__all__'
+
+class CurationDatasetSerializer(serializers.ModelSerializer):
+    #sequencedatasets = SequenceDatasetSerializer()
+    class Meta:
+        model = tantalus.models.CurationDataset
+        fields = '__all__'

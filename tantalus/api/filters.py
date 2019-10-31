@@ -16,6 +16,8 @@ from tantalus.models import (
     ServerStorage,
     Storage,
     Tag,
+    Curation,
+    CurationDataset
 )
 
 
@@ -203,6 +205,25 @@ class SequenceDatasetFilter(filters.FilterSet):
             "file_resources__id": ["exact"],
         }
 
+class CurationFilter(filters.FilterSet):
+    """Filters for curations."""
+
+    class Meta(BaseFilterSet.Meta):
+        model = Curation
+        fields = {
+            "id": ["exact"],
+            "name": ["exact"],
+            "owner": ["exact"]
+        }
+
+class CurationDatasetFilter(filters.FilterSet):
+    """Filters for curations."""
+
+    class Meta(BaseFilterSet.Meta):
+        model = CurationDataset
+        fields = {
+            "curation_instance_id": ["exact"],
+        }
 
 class SequenceFileInfoFilter(BaseFilterSet):
     """Filters for sequence file infos."""
