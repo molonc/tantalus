@@ -47,7 +47,7 @@ def get_curation_change(curation):
                         changes.append(change)
                 else:
                     if getattr(previous_curation, attribute) != getattr(current_curation, attribute):
-                        change = "Field '%s' changed from %s to %s" % \
+                        change = "Field '%s' changed from '%s' to '%s'" % \
                             (attribute, getattr(previous_curation, attribute), getattr(current_curation, attribute))
                         changes.append(change)
             if changes:
@@ -64,6 +64,8 @@ def get_curation_change(curation):
                         history_type='+')
                     added_list = [str(ds.sequencedataset_instance.id) for ds in datasets]
                     added_msg = ", ".join(added_list)
+                    if not added_msg:
+                        added_msg = None
                     change = "Field 'Sequence Dataset' is created with %s" % (added_msg)
                 else:
                     change = "Field '%s' is created with %s" % (attribute, getattr(current_curation, attribute))

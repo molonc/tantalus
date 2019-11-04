@@ -222,7 +222,10 @@ class CurationDatasetFilter(filters.FilterSet):
     class Meta(BaseFilterSet.Meta):
         model = CurationDataset
         fields = {
-            "curation_instance_id": ["exact"],
+            "id": ["exact"],
+            "curation_instance": ["exact"],
+            "sequencedataset_instance": ["exact"],
+            "version": ["exact"],
         }
 
 class SequenceFileInfoFilter(BaseFilterSet):
