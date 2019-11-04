@@ -23,6 +23,8 @@ router.register(r'storage_server', views.ServerStorageViewSet)
 router.register(r'storage_azure_blob', views.AzureBlobStorageViewSet)
 router.register(r'storage_aws_s3', views.AwsS3StorageViewSet)
 router.register(r'tag', views.Tag)
+router.register(r'curation', views.CurationViewSet)
+router.register(r'curation_dataset', views.CurationDatasetViewSet)
 
 # TODO: refactor sisyphus so it points to these
 router.register(r'sequencedataset', views.SequenceDatasetViewSet)

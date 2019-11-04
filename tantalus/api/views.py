@@ -24,6 +24,8 @@ from tantalus.api.filters import (
     ServerStorageFilter,
     StorageFilter,
     TagFilter,
+    CurationFilter,
+    CurationDatasetFilter
 )
 import tantalus.models
 
@@ -222,6 +224,19 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
     filter_class = TagFilter
     pagination_class = VariableResultsSetPagination
 
+class CurationViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = tantalus.models.Curation.objects.all()
+    serializer_class = tantalus.api.serializers.CurationSerializer
+    filter_class = CurationFilter
+    pagination_class = VariableResultsSetPagination
+
+class CurationDatasetViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = tantalus.models.CurationDataset.objects.all()
+    serializer_class = tantalus.api.serializers.CurationDatasetSerializer
+    filter_class = CurationDatasetFilter
+    pagination_class = VariableResultsSetPagination
 
 class ResultsDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)

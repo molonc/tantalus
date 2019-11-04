@@ -1046,7 +1046,7 @@ class CurationDetail(LoginRequiredMixin, DetailView):
         #get a list of sequence datasets associated with this curation
         sequence_datasets = curation.sequencedatasets.all()
         #get the modification history of the curation
-        curation_history_lst = get_curation_change(curation.name)
+        curation_history_lst = get_curation_change(curation)
         context = {
             'curation': curation,
             'sequence_datasets': sequence_datasets,
@@ -1089,12 +1089,13 @@ class CurationEdit(LoginRequiredMixin, TemplateView):
             new_datasets = set(form.cleaned_data["sequencedatasets"])
             added = new_datasets - original_datasets
             deleted = original_datasets - new_datasets
+            unchanged = original_datasets.intersection(new_datasets)
             #if the curation object is changed, increase the version number and create the modification history
             if form.changed_data:
                 instance.version = "v" + str(int(version[1:].split(".")[0]) + 1) + ".0.0"
                 #make changes to the list of sequence datasets of the curation
                 for dataset in deleted:
-                    get_object_or_404(tantalus.models.CurationDataset,
+                    curationdataset = get_object_or_404(tantalus.models.CurationDataset,
                         curation_instance=instance,
                         sequencedataset_instance=dataset).delete()
                 for dataset in added:
@@ -1102,6 +1103,12 @@ class CurationEdit(LoginRequiredMixin, TemplateView):
                         curation_instance=instance,
                         sequencedataset_instance=dataset,
                         version = instance.version)
+                for dataset in unchanged:
+                    curationdataset = get_object_or_404(tantalus.models.CurationDataset,
+                        curation_instance=instance,
+                        sequencedataset_instance=dataset)
+                    curationdataset.version = instance.version
+                    curationdataset.save()
                 # Save the object
                 instance.save()
                 msg = "Successfully updated the Curation."
