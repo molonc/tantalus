@@ -225,11 +225,6 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
     pagination_class = VariableResultsSetPagination
 
 class CurationViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    """
-    To add datasets to a curation in this endpoint, use the following JSON format to POST:
-        { "name": "test_api_tag", "sequencedataset_set": [1, 2, 3, 4]}
-    Note that a post will update an existing curation by adding it to the given datasets
-    """
     permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.Curation.objects.all()
     serializer_class = tantalus.api.serializers.CurationSerializer
@@ -237,11 +232,6 @@ class CurationViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     pagination_class = VariableResultsSetPagination
 
 class CurationDatasetViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
-    """
-    To add datasets to a curation in this endpoint, use the following JSON format to POST:
-        { "name": "test_api_tag", "sequencedataset_set": [1, 2, 3, 4]}
-    Note that a post will update an existing curation by adding it to the given datasets
-    """
     permission_classes = (permissions.IsAuthenticated,)
     queryset = tantalus.models.CurationDataset.objects.all()
     serializer_class = tantalus.api.serializers.CurationDatasetSerializer
