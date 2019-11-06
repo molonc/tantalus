@@ -11,6 +11,7 @@
             <th>Reference Genome</th>
             <th>Aligner</th>
             <th>Dataset Owner</th>
+            <th>Is Complete</th>
         </thead>
         <tbody>
             {% for dataset in input_datasets %}
@@ -28,6 +29,7 @@
                     <td>{{dataset.reference_genome}}</td>
                     <td>{{dataset.aligner}}</td>
                     <td>{{dataset.owner}}</td>
+                    <td>{{dataset.get_is_complete}}</td>
                 </tr>
             {% endfor %}
         </tbody>
