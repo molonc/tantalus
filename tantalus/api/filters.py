@@ -196,7 +196,7 @@ class SequenceDatasetFilter(filters.FilterSet):
             "sequence_lanes__flowcell_id": ["exact"],
             "sequence_lanes__lane_number": ["exact"],
             "dataset_type": ["exact"],
-            "aligner__name": ["exact"],
+            "aligner__name": ["exact", "startswith"],
             "reference_genome__name": ["exact"],
             "analysis": ["exact"],
             "analysis__name": ["exact"],
