@@ -541,6 +541,12 @@ class SequenceDataset(models.Model):
         on_delete=models.CASCADE,
     )
 
+    region_split_length = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        default=None,
+    )
+
     is_production = models.BooleanField(
         default=False,
     )
