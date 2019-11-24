@@ -63,7 +63,7 @@ def data_migrate(apps, class_name):
     SequenceDataset = apps.get_model('tantalus', 'SequenceDataset')
     Submission = apps.get_model('tantalus', 'Submission')
 
-    for k,v in sample_id_fixup.iteritems():
+    for k,v in sample_id_fixup.items():
         try:
             sample_from = Sample.objects.get(sample_id=k)
             sample_to   = Sample.objects.get(sample_id=v)

@@ -1,7 +1,7 @@
 # Tantalus
 # Version 1.0
 
-FROM python:2.7.15
+FROM python:3.7.5
 
 ENV PYTHONUNBUFFERED 1
 
