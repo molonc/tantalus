@@ -147,6 +147,7 @@ class ResultsDatasetFilter(filters.FilterSet):
             "results_version": ["exact"],
             "tags__name": ["exact"],
             "libraries__library_id": ["exact"],
+            "samples__sample_id": ["exact"],
         }
 
 class PatientFilter(filters.FilterSet):
