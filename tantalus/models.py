@@ -279,10 +279,12 @@ class SequencingLane(models.Model):
 
     GSC = 'GSC'
     BRC = 'BRC'
+    IGO = 'IGO'
 
     sequencing_centre_choices = (
         (GSC, 'Genome Science Centre'),
         (BRC, 'Biomedical Research Centre'),
+        (IGO, 'IGO MSKCC'),
     )
 
     sequencing_centre = models.CharField(
