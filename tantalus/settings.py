@@ -21,7 +21,7 @@ SECRET_KEY = os.environ.get('TANTALUS_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 debug_raw = os.environ.get('TANTALUS_DEBUG', 'False')
-DEBUG = True
+DEBUG = False
 
 # Safeguard to ensure production code is not run during development
 IS_PRODUCTION = (os.environ.get('TANTALUS_IS_PRODUCTION', '') == 'thisismostdefinitelyproduction')
