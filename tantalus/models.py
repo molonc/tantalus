@@ -751,6 +751,7 @@ class ResultsDataset(models.Model):
 
     file_resources = models.ManyToManyField(
         FileResource,
+        blank=True,
     )
 
     is_production = models.BooleanField(
