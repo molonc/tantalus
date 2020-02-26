@@ -15,6 +15,9 @@ class ResultsDatasetAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
 class SequencingLanesAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     raw_id_fields = ('dna_library',)
 
+class AnalysisAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
+    raw_id_fields = ('logs', )
+
 class CurationAdmin(SimpleHistoryAdmin, admin.ModelAdmin):
     class Meta:
         model = Curation
@@ -39,6 +42,7 @@ admin.site.register(AwsS3Storage, SimpleHistoryAdmin)
 admin.site.register(FileInstance, FileInstanceAdmin)
 admin.site.register(Sow, SimpleHistoryAdmin)
 admin.site.register(Submission, SimpleHistoryAdmin)
+admin.site.register(Analysis, AnalysisAdmin)
 admin.site.register(AnalysisType, SimpleHistoryAdmin)
 admin.site.register(ResultsDataset, ResultsDatasetAdmin)
 admin.site.register(Curation, CurationAdmin)
