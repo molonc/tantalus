@@ -633,7 +633,6 @@ class Analysis(models.Model):
 
     name = models.CharField(
         max_length=200,
-        unique=True,
     )
 
     analysis_type = models.ForeignKey(
@@ -698,6 +697,9 @@ class Analysis(models.Model):
 
     def get_absolute_url(self):
         return reverse("analysis-detail", args=(self.id,))
+
+    class Meta:
+        unique_together = ('name', 'jira_ticket')
 
 
 class ResultsDataset(models.Model):
