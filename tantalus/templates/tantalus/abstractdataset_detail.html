@@ -97,6 +97,36 @@
         {% endif %}
     </div>
 
+    <div class="container detail-container" style="padding-bottom: 1em; margin-bottom: 0.5em">
+        {% if object.analysis %}
+            <h4>Related Analysis</h4>
+            <table class="table-condensed">
+                <tr>
+                    <th class="custom-table-header">Analysis ID</th>
+                    <td class="custom-table-detail"><a href="{% url 'analysis-detail' object.analysis.id %}">{{object.analysis.id}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Analysis Name</th>
+                    <td class="custom-table-detail">{{object.analysis.name}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Jira Ticket</th>
+                    <td class="custom-table-detail">{{object.analysis.jira_ticket}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Last Updated</th>
+                    <td class="custom-table-detail">{{object.analysis.last_updated}}</td>
+                </tr>
+                <tr>
+                    <th class="custom-table-header">Status</th>
+                    <td class="custom-table-detail">{{object.analysis.status}}</td>
+                </tr>
+            </table>
+        {% else %}
+            <h5><i class="text-warning">No linked analysis.</i></h5>
+        {% endif %}
+    </div>
+
     <div class="container detail-bordered-container" style="border: solid 1px #E0E0E0; padding-bottom: 1em; margin-bottom: 0.5em">
         {% if object %}
             {% include "tantalus/datatable/lanes.html" %}
