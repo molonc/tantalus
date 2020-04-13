@@ -380,7 +380,7 @@ class FileResource(models.Model):
     def get_storage_names(self):
         return list(
             FileInstance.objects.filter(
-                file_resource=self)
+                file_resource=self, is_deleted=False)
             .values_list('storage__name', flat=True)
             .distinct())
 
