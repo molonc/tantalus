@@ -73,7 +73,7 @@ class DNALibraryFilter(BaseFilterSet):
 
     class Meta(BaseFilterSet.Meta):
         model = DNALibrary
-        fields = {"id": ["exact"], "library_id": ["exact"]}
+        fields = {"id": ["exact"], "library_id": ["exact", "startswith"]}
 
 
 class FileInstanceFilter(BaseFilterSet):
