@@ -65,6 +65,7 @@ class AnalysisFilter(BaseFilterSet):
             "input_datasets__sample__sample_id": ["exact"],
             "input_results__samples__sample_id": ["exact"],
             "status": ["exact"],
+            "last_updated": ["lte", "gte"],
         }
 
 
