@@ -135,6 +135,11 @@ class FileResourceFilter(BaseFilterSet):
 class ResultsDatasetFilter(filters.FilterSet):
     """Filters for results datasets."""
 
+    def __init__(self, *args, **kwargs):
+        """Take care of filter names that render poorly."""
+        super(ResultsDatasetFilter, self).__init__(*args, **kwargs)
+        self.filters["file_resources__fileinstance__storage__name"].label = "File resources instance storage"
+
     class Meta(BaseFilterSet.Meta):
         model = ResultsDataset
         fields = {
@@ -151,6 +156,7 @@ class ResultsDatasetFilter(filters.FilterSet):
             "tags__name": ["exact"],
             "libraries__library_id": ["exact"],
             "samples__sample_id": ["exact"],
+            "file_resources__fileinstance__storage__name": ["exact"],
         }
 
 class PatientFilter(filters.FilterSet):
@@ -187,6 +193,11 @@ class SampleFilter(BaseFilterSet):
 class SequenceDatasetFilter(filters.FilterSet):
     """Filters for sequence datasets."""
 
+    def __init__(self, *args, **kwargs):
+        """Take care of filter names that render poorly."""
+        super(SequenceDatasetFilter, self).__init__(*args, **kwargs)
+        self.filters["file_resources__fileinstance__storage__name"].label = "File resources instance storage"
+
     class Meta(BaseFilterSet.Meta):
         model = SequenceDataset
         fields = {
@@ -208,6 +219,7 @@ class SequenceDatasetFilter(filters.FilterSet):
             "analysis__jira_ticket": ["exact"],
             "file_resources__filename": ["exact"],
             "file_resources__id": ["exact"],
+            "file_resources__fileinstance__storage__name": ["exact"],
         }
 
 class CurationFilter(filters.FilterSet):

@@ -95,7 +95,7 @@ class OwnerEditModelViewSet(viewsets.ModelViewSet):
 
 class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.Sample.objects.all()
+    queryset = tantalus.models.Sample.objects.all().distinct()
     serializer_class = tantalus.api.serializers.SampleSerializer
     filter_class = SampleFilter
     pagination_class = VariableResultsSetPagination
@@ -103,7 +103,7 @@ class SampleViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
 
 class PatientViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.Patient.objects.all()
+    queryset = tantalus.models.Patient.objects.all().distinct()
     serializer_class = tantalus.api.serializers.PatientSerializer
     filter_class = PatientFilter
     pagination_class = VariableResultsSetPagination
@@ -136,7 +136,7 @@ class SequenceFileInfoViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.DNALibrary.objects.all()
+    queryset = tantalus.models.DNALibrary.objects.all().distinct()
     serializer_class_readonly = tantalus.api.serializers.DNALibrarySerializer
     serializer_class_readwrite = tantalus.api.serializers.DNALibrarySerializer
     filter_class = DNALibraryFilter
@@ -145,7 +145,7 @@ class DNALibraryViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.SequencingLane.objects.all()
+    queryset = tantalus.models.SequencingLane.objects.all().distinct()
     serializer_class_readonly = tantalus.api.serializers.SequencingLaneSerializer
     serializer_class_readwrite = tantalus.api.serializers.SequencingLaneSerializer
     filter_class = SequencingLaneFilter
@@ -154,7 +154,7 @@ class SequencingLaneViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.SequenceDataset.objects.all()
+    queryset = tantalus.models.SequenceDataset.objects.all().distinct()
     serializer_class_readonly = tantalus.api.serializers.SequenceDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.SequenceDatasetSerializer
     filter_class = SequenceDatasetFilter
@@ -176,7 +176,7 @@ class SequenceDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
 
 class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.Storage.objects.all()
+    queryset = tantalus.models.Storage.objects.all().distinct()
     serializer_class = tantalus.api.serializers.StorageSerializer
     filter_class = StorageFilter
     pagination_class = VariableResultsSetPagination
@@ -184,7 +184,7 @@ class StorageViewSet(RestrictedQueryMixin, viewsets.ReadOnlyModelViewSet):
 
 class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.ServerStorage.objects.all()
+    queryset = tantalus.models.ServerStorage.objects.all().distinct()
     serializer_class = tantalus.api.serializers.ServerStorageSerializer
     filter_class = ServerStorageFilter
     pagination_class = VariableResultsSetPagination
@@ -192,14 +192,14 @@ class ServerStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
 
 class AzureBlobStorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.AzureBlobStorage.objects.all()
+    queryset = tantalus.models.AzureBlobStorage.objects.all().distinct()
     serializer_class = tantalus.api.serializers.AzureBlobStorageSerializer
     pagination_class = VariableResultsSetPagination
 
 
 class AwsS3StorageViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.AwsS3Storage.objects.all()
+    queryset = tantalus.models.AwsS3Storage.objects.all().distinct()
     serializer_class = tantalus.api.serializers.AwsS3StorageSerializer
 
 
@@ -219,28 +219,28 @@ class Tag(RestrictedQueryMixin, viewsets.ModelViewSet):
     Note that a post will update an existing tag by adding it to the given datasets
     """
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.Tag.objects.all()
+    queryset = tantalus.models.Tag.objects.all().distinct()
     serializer_class = tantalus.api.serializers.TagSerializer
     filter_class = TagFilter
     pagination_class = VariableResultsSetPagination
 
 class CurationViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.Curation.objects.all()
+    queryset = tantalus.models.Curation.objects.all().distinct()
     serializer_class = tantalus.api.serializers.CurationSerializer
     filter_class = CurationFilter
     pagination_class = VariableResultsSetPagination
 
 class CurationDatasetViewSet(RestrictedQueryMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.CurationDataset.objects.all()
+    queryset = tantalus.models.CurationDataset.objects.all().distinct()
     serializer_class = tantalus.api.serializers.CurationDatasetSerializer
     filter_class = CurationDatasetFilter
     pagination_class = VariableResultsSetPagination
 
 class ResultsDatasetViewSet(RestrictedQueryMixin, OwnerEditModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = tantalus.models.ResultsDataset.objects.all()
+    queryset = tantalus.models.ResultsDataset.objects.all().distinct()
     serializer_class_readonly = tantalus.api.serializers.ResultsDatasetSerializerRead
     serializer_class_readwrite = tantalus.api.serializers.ResultsDatasetSerializer
     filter_class = ResultsDatasetFilter
